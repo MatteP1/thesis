@@ -41,13 +41,13 @@ Page \thepage/\pageref{LastPage}\\
 \egroup\vspace{-0.cm}
 
 \subsection*{Project Description}
-Safety of computer programs is a highly desirable property, especially for critical pieces of software. With processors getting more threads and concurrent programs and algorithms becoming more prevalent, reasoning about the safety of programs must also evolve to support these features. One strategy for reasoning about the safety of programs is to define a logic, which one can then use to prove correctness of a given program.
+Correctness of computer programs is a highly desirable property, especially for safety critical pieces of software. With processors getting more threads and concurrent programs and algorithms becoming more prevalent, reasoning about correctness of programs must also evolve to support these features.
 
-A common synchronisation strategy is using \textit{locks} which allows for only a single thread to access protected data at a time. A plethora of different lock mechanisms have been put forward, each with their own positives and negatives. However, lock-free algorithms have also been proposed, which rely on primitive operations to achieve synchronisation.
+A strategy for reasoning about the correctness of programs is to define a logic, which one can then use to guarantee certain behaviour of programs. One such logic is \textit{Iris} which is a concurrent separation logic framework, meaning that it can be used to prove safety of concurrent programs that use a heap.
 
-This thesis will study concurrent data-structures that aim to facilitate synchronisation in concurrent programs. In particular, it will study the lock-free algorithm: The Michael-Scott Queue.
+Concurrent programs usually need a way of synchronising. A common technique  for this is using locks, which allows for only a single thread to access protected data at a time. A plethora of different lock mechanisms have been put forward, each with their own advantages and disadvantages. However, lock-free algorithms have also been proposed, which rely on primitive, atomic operations to achieve synchronisation.
 
-Further, the thesis will use \textit{Iris} to reason about the safety of the Michael-Scott Queue. Iris is a Concurrent Separation Logic Framework, meaning that it can be used to prove safety of concurrent programs that use a heap. Iris has been implemented in the Coq proof assistant, and this thesis also aims to formalise all the work within this implementation.
+This thesis will study concurrent data-structures that aim to facilitate synchronisation in concurrent programs. In particular, it will study the lock-free algorithm: \textit{The Michael-Scott Queue}. Further, the thesis will use Iris to reason about the safety of the Michael-Scott Queue. Iris has also been implemented in the Coq proof assistant, and this thesis also aims to use this implementation to mechanise all results.
 
 
 \subsection*{Provisional Activity Plan}
@@ -60,6 +60,6 @@ Further, the thesis will use \textit{Iris} to reason about the safety of the Mic
 \end{enumerate}
 
 \subsection*{Supervision Plan}
-Time has been allocated for meetings, with possible exceptions for the month of March.
+Time has been allocated for meetings.
 
 \end{document}
