@@ -1,2 +1,4 @@
 - In the paper on M&S queue, they state that it is safe but don't define what safe is?
   What should I actually prove? That it has the 5 properties listed?
+- When applying a rule for weakest precondition in Iris in Coq, is the bind rule (WP-BIND) implicitily invoked?
+  fx. invoking WP-ALLOC on let x := ref(1) in x. corresponds to applying WP-BIND and WP-ALLOC according to the rules of the lecture notes.
