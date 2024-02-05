@@ -1,0 +1,2 @@
+- In the paper on M&S queue, they state that it is safe but don't define what safe is?
+  What should I actually prove? That it has the 5 properties listed?
