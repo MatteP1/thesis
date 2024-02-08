@@ -1,5 +1,4 @@
-- In the paper on M&S queue, they state that it is safe but don't define what safe is?
-  What should I actually prove? That it has the 5 properties listed?
-- When applying a rule for weakest precondition in Iris in Coq, is the bind rule (WP-BIND) implicitily invoked?
-  fx. invoking WP-ALLOC on let x := ref(1) in x. corresponds to applying WP-BIND and WP-ALLOC according to the rules of the lecture notes.
-  (line 47 in lang.v in iris-tutorial)
+- In HeapLang, comparisons (including those in CmpXchg) can only be done between values where at least one of the values is val_compare_safe.
+  In particular, in lockfree ms queue, the cas compares pairs, which are not val_compare_safe.
+  Not a problem if ignore ABA, as then the ms queue simplifies to compare pointers.
+  See page 54 in https://plv.mpi-sws.org/iris/appendix-4.1.pdf#page54
