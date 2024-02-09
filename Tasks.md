@@ -1,5 +1,5 @@
 - [x] Read Iris Technical Reference
-- [ ] Read Iris from the ground up (Section 4.2 read)
+- [x] Read Iris from the ground up
 - [x] Read OFE file in theories
 - [ ] Finish Iris-Tutorial
 - [x] Find out if bug in M&S queue dequeue when only 1 node (outside of the dummy node) (Conclusion: No bug)
