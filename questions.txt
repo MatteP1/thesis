@@ -3,4 +3,4 @@
   Not a problem if ignore ABA, as then the ms queue simplifies to compare pointers.
   See page 54 in https://plv.mpi-sws.org/iris/appendix-4.1.pdf#page54
 
-- In the two-lock version, the Head and Tail pointer initially point to the same location. How to model this in Heaplang and Iris?
+- In the two-lock version, the Head and Tail pointer initially point to the same location. How to model this in Heaplang?
