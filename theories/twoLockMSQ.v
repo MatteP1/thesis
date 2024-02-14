@@ -3,37 +3,43 @@ From iris.heap_lang.lib Require Import lock spin_lock.
 
 Local Existing Instance spin_lock.
 
+Definition get_some : val :=
+	rec: "get_some" "x" :=
+		match: "x" with
+			  NONE => #() #() (* Crash if not some *)
+			| SOME "y" => "y"
+		end.
+
 Definition initialize : val := 
 	rec: "initialize" <> := 
-		let: "node" := ref (SOME (NONE, ref(NONE))) in
+		let: "node" := ref (SOME (NONE, ref (ref(NONE)))) in
 		let: "H_lock" := newlock #() in
 		let: "T_lock" := newlock #() in
-		ref (("node", "node"), ("H_lock", "T_lock")).
+		ref ((ref "node", ref "node"), ("H_lock", "T_lock")).
 
 Definition enqueue : val := 
 	rec: "enqueue" "Q" "value" :=
-		let: "node" := ref (SOME (SOME "value", ref(NONE))) in
-		acquire (Snd ( Snd (!"Q")));; (* Acqurie T_lock*)
-		let: "old_tail" := 
-			SOME (Fst ("get_some" (!(Snd (Fst(!"Q"))))), "node") in
-		(Snd (Fst!"Q")) <- "old_tail" ;;
-		"Q" <- ((Fst (Fst (!"Q")), "node"), Snd(!"Q")) ;;
+		let: "node" := ref (SOME (SOME "value", ref(ref(NONE)))) in
+		acquire (Snd ( Snd (!"Q")));; (* Acqurie T_lock *)
+		Snd ("get_some" (!(Snd (Fst(!"Q"))))) <- "node" ;;
+		Snd (Fst (!"Q")) <- "node" ;;
 		release (Snd (Snd (!"Q"))).
 
 Definition dequeue : val := 
 	rec: "dequeue" "Q" := 
-		acquire (Fst (Snd (!"Q")));; (* Acquire H_lock*)
-		let: "node" := (Fst (Fst (!"Q"))) in
-		let: "new_head" := Snd("get_some" (!"node")) in
-		if: "new_head" = NONEV then
+		acquire (Fst (Snd (!"Q")));; (* Acquire H_lock *)
+		let: "node" := !(Fst (Fst (!"Q"))) in (* Get Head node *)
+		let: "new_head" := !(Snd("get_some" (!"node"))) in (* Find Head.Next *)
+		if: !"new_head" = NONE then (* Check if Queue is empty *)
+			(* No Next node. Queue is empty. *)
 			release (Fst (Snd(!"Q"))) ;;
 			NONEV
 		else
-			let: "value" := (Fst (!"new_head")) in
-			"Q" <- (("new_head", (Snd(Fst(!"Q")))), Snd (! "Q"));;
-			release (Fst (Snd (!"Q")));;
-			"value".
-
+			(* Queue not empty. Pop first element in Queue *)
+			let: "value" := Fst (!"new_head") in (* Get its value *)
+			Fst (Fst (!"Q")) <- "new_head" (* Swing Head to next node *)
+			release (Fst (Snd (!"Q")));; (* Release H_lock *)
+			"value". (* Return value *)
 
 Section proofs.
 

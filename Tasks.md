@@ -5,8 +5,8 @@
 - [x] Find out if bug in M&S queue dequeue when only 1 node (outside of the dummy node) (Conclusion: No bug)
 - [ ] Implement in C ignoring pointer struct (and with memory leak: no free)
 - [x] Implement in Java
-- [ ] Implement Two-Lock MS-Queue in HeapLang
-  - [ ] Create an extra pointer reference to nodes, so that Head and Tail updates can be done as stores (See Contextual Refinement Paper)
+- [x] Implement Two-Lock MS-Queue in HeapLang
+  - [x] Create an extra pointer reference to nodes, so that Head and Tail updates can be done as stores (See Contextual Refinement Paper) - needed to do assignments like: Q–>Tail = node
 
 - [ ] Read Contextual Refinement Paper
 - [ ] Study the Agreement RA
