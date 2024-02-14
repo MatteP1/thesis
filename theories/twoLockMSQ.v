@@ -1,14 +1,16 @@
 From iris.heap_lang Require Import lang proofmode notation.
 From iris.heap_lang.lib Require Import lock spin_lock.
 
-Definition initialize `{!lock} : val := 
+Local Existing Instance spin_lock.
+
+Definition initialize : val := 
 	rec: "initialize" <> := 
 		let: "node" := ref (SOME (NONE, ref(NONE))) in
 		let: "H_lock" := newlock #() in
 		let: "T_lock" := newlock #() in
 		ref (("node", "node"), ("H_lock", "T_lock")).
 
-Definition enqueue `{!lock} : val := 
+Definition enqueue : val := 
 	rec: "enqueue" "Q" "value" :=
 		let: "node" := ref (SOME (SOME "value", ref(NONE))) in
 		acquire (Snd ( Snd (!"Q")));; (* Acqurie T_lock*)
@@ -18,7 +20,7 @@ Definition enqueue `{!lock} : val :=
 		"Q" <- ((Fst (Fst (!"Q")), "node"), Snd(!"Q")) ;;
 		release (Snd (Snd (!"Q"))).
 
-Definition dequeue `{!lock}: val := 
+Definition dequeue : val := 
 	rec: "dequeue" "Q" := 
 		acquire (Fst (Snd (!"Q")));; (* Acquire H_lock*)
 		let: "node" := (Fst (Fst (!"Q"))) in
