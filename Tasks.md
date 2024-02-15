@@ -8,7 +8,7 @@
 - [x] Implement Two-Lock MS-Queue in HeapLang
   - [x] Create an extra pointer reference to nodes, so that Head and Tail updates can be done as stores and so that compares can be done between pointers instead of pairs (See Contextual Refinement Paper) - needed to do assignments like: Q–>Tail = node
 
-- [ ] Study the Agreement RA
+- [x] Study the Agreement RA
 - [ ] Read Contextual Refinement Paper
 - [ ] Read chapter 13 of Iris Lecture Notes (Hocap style Specs)
 
