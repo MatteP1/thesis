@@ -7,114 +7,99 @@ typedef struct Pointer Pointer;
 typedef struct Node Node;
 typedef struct Queue Queue;
 
-struct Pointer {Node* ptr; int count;};
-struct Node {int value; Pointer next;};
-struct Queue {Pointer Head; Pointer Tail;};
+struct Node {int value; Node** next;};
+struct Queue {Node** Head; Node** Tail;};
 
-void printPointer(Pointer p){
-    printf("Pointer\n");
-    printf("Node*: %p\n", p.ptr);
-    printf("Count: %d\n", p.count);
-}
-
-void printNode (Node n){
+void printNode (Node* n){
     printf("Node\n");
-    printf("Value: %d\n", n.value);
-    printPointer(n.next);
+    printf("Value: %d\n", n->value);
 }
 
-void printQueue (Queue q){
+void printQueue (Queue* Q){
     printf("Queue\n");
     printf("Head ");
-    printPointer(q.Head);
-    printf("Tail" );
-    printPointer(q.Tail);
-}
-
-int pointerCompare (Pointer p1, Pointer p2) {
-    if (p1.count == p2.count && p1.ptr == p2.ptr){
-        return 1;
-    } else {
-        return 0;
-    }
+    printNode(*(Q->Head));
+    printf("Tail " );
+    printNode(*(Q->Tail));
 }
 
 Node* new_node() {
     Node* newnode = (Node*)malloc(sizeof(Node));
-    Pointer newpointer = {.ptr=NULL, .count=0};
     newnode->value = 0;
-    newnode->next=newpointer;
+    newnode->next = malloc(sizeof(void*));
+    *(newnode->next) = NULL;
     return newnode;
 }
 
 
-void initialize(Queue *Q){
+void initialize(Queue* Q){
     Node* newnode = new_node();
-    Q->Head.ptr = newnode;
-    Q->Tail.ptr = newnode;
+    Q->Head = malloc(sizeof(void*));
+    *(Q->Head) = newnode;
+    Q->Tail = malloc(sizeof(void*));
+    *(Q->Tail) = newnode;
 }
 
 void enqueue(Queue *Q, int value){
     Node* node = new_node();
     node->value = value;
-    node->next.ptr = NULL;
-    Pointer tail;
+    Node** tail;
     while (1) {
-        Pointer tail = Q->Tail;
-        Pointer next = tail.ptr->next;
-        printf("TAIL AND NEXT\n");
-        printPointer(tail);
-        printPointer(next);
-        if (next.ptr == NULL) {
-            Pointer np = {.ptr=node, .count = next.count + 1};
-            int test = atomic_compare_exchange_strong(&(tail.ptr->next), &next, np);
+        tail = Q->Tail;
+        Node** next = (*tail)->next;
+        if (*next == NULL) {
+            // printNode(*next);
+            // printNode(node);
+            int test = atomic_compare_exchange_strong((*tail)->next,
+                                                      next,
+                                                      node);
             if (test){
                 break;
             }
         } else {
-            Pointer np = {.ptr=next.ptr, .count = tail.count + 1};
-            atomic_compare_exchange_strong(&(Q->Tail), &tail, np);
+            atomic_compare_exchange_strong(Q->Tail, tail, *next);
         }
     }
-    Pointer np = {.ptr=node, .count = tail.count + 1};
-    atomic_compare_exchange_strong(&(Q->Tail), &tail, np);
+    atomic_compare_exchange_strong(Q->Tail, tail, node);
 }
 
 int dequeue(Queue *Q, int *pvalue){
-    Pointer head;
+    Node* head;
     while (1) {
-        Pointer head = Q->Head;
-        Pointer tail = Q->Tail;
-        Pointer next = head.ptr->next;
-        if (pointerCompare(head, Q->Head)) {
-            if (head.ptr == tail.ptr) {
-                if (next.ptr == NULL) {
+        Node** head = Q->Head;
+        Node** tail = Q->Tail;
+        Node** next = (*head)->next;
+        if (*head == *(Q->Head)) {
+            if (*head == *tail) {
+                if (*next == NULL) {
                     return 0;
                 }
-                Pointer np = {.ptr=next.ptr, .count = tail.count + 1};
-                atomic_compare_exchange_strong(&(Q->Tail), &tail, np);
+                atomic_compare_exchange_strong(Q->Tail, tail, *next);
             } else {
-                *pvalue = next.ptr->value;
-                Pointer np = {.ptr=next.ptr, .count = head.count + 1};
+                *pvalue = (*next)->value;
                 int test = 
-                    atomic_compare_exchange_strong(&(Q->Head), &head, np);
+                    atomic_compare_exchange_strong(Q->Head, head, *next);
                 if (test) {
                     break;
                 }
             }
         }
     }
-    free(head.ptr);
+    // Avoid freeing as M&S Queue is unsafe when freeing:
+    // It can happen that one thread frees head, and another tries to read 
+    // just before another tries to do head->next
+    // free(head);
     return 1;
 }
 
 
 int main() {
-    Queue* q = &((Queue) {.Head = NULL, .Tail = NULL});
-    initialize(q);
-    printQueue(*q);
-    enqueue(q, 4);
-    int* r = NULL;
-    dequeue(q, r);
-    printf("test: %d", *r);
+    Queue* Q = &((Queue) {.Head = NULL, .Tail = NULL});
+    initialize(Q);
+    printQueue(Q);
+    enqueue(Q, 4);
+    int* r = malloc(sizeof(int));
+    printQueue(Q);
+    dequeue(Q, r);
+    printf("test: %d\n", *r);
 }
