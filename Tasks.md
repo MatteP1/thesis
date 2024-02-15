@@ -6,7 +6,7 @@
 - [ ] Implement in C ignoring pointer struct (and with memory leak: no free)
 - [x] Implement in Java
 - [x] Implement Two-Lock MS-Queue in HeapLang
-  - [x] Create an extra pointer reference to nodes, so that Head and Tail updates can be done as stores (See Contextual Refinement Paper) - needed to do assignments like: Q–>Tail = node
+  - [x] Create an extra pointer reference to nodes, so that Head and Tail updates can be done as stores and so that compares can be done between pointers instead of pairs (See Contextual Refinement Paper) - needed to do assignments like: Q–>Tail = node
 
 - [ ] Read Contextual Refinement Paper
 - [ ] Study the Agreement RA
