@@ -3,14 +3,14 @@
 - [x] Read OFE file in theories
 - [x] Finish Iris-Tutorial
 - [x] Find out if bug in M&S queue dequeue when only 1 node (outside of the dummy node) (Conclusion: No bug)
-- [ ] Implement in C ignoring pointer struct (and with memory leak: no free)
-- [x] Implement in Java
+- [x] Implement lock-free in C ignoring pointer struct (and with memory leak: i.e. no free)
+- [x] Implement lock-free in Java
 - [x] Implement Two-Lock MS-Queue in HeapLang
   - [x] Create an extra pointer reference to nodes, so that Head and Tail updates can be done as stores and so that compares can be done between pointers instead of pairs (See Contextual Refinement Paper) - needed to do assignments like: Q–>Tail = node
 
-- [ ] Read Contextual Refinement Paper
-- [ ] Study the Agreement RA
-- [ ] Read chapter 13 of Iris Lecture Notes (Hocap style Specs)
+- [x] Study the Agreement RA
+- [x] Read Contextual Refinement Paper
+- [x] Read chapter 13 of Iris Lecture Notes (Hocap style Specs)
 
 - [x] Create Thesis Report file
 - [x] Add bibliography (Iris-Lecture-Notes, Contextual Refinement Paper, Iris from Ground up, etc)
