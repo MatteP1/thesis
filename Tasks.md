@@ -12,8 +12,8 @@
 - [ ] Study the Agreement RA
 - [ ] Read chapter 13 of Iris Lecture Notes (Hocap style Specs)
 
-- [ ] Create Thesis Report file
-- [ ] Add bibliography (Iris-Lecture-Notes, Contextual Refinement Paper, Iris from Ground up, etc)
+- [x] Create Thesis Report file
+- [x] Add bibliography (Iris-Lecture-Notes, Contextual Refinement Paper, Iris from Ground up, etc)
 
 - [x] Read and understand M&S queue with locks
 - [ ] Write down explanation of M&S Queue with locks (in latex)
