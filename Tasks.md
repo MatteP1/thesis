@@ -9,8 +9,8 @@
   - [x] Create an extra pointer reference to nodes, so that Head and Tail updates can be done as stores and so that compares can be done between pointers instead of pairs (See Contextual Refinement Paper) - needed to do assignments like: Q–>Tail = node
 
 - [x] Study the Agreement RA
-- [ ] Read Contextual Refinement Paper
-- [ ] Read chapter 13 of Iris Lecture Notes (Hocap style Specs)
+- [x] Read Contextual Refinement Paper
+- [x] Read chapter 13 of Iris Lecture Notes (Hocap style Specs)
 
 - [ ] Create Thesis Report file
 - [ ] Add bibliography (Iris-Lecture-Notes, Contextual Refinement Paper, Iris from Ground up, etc)
