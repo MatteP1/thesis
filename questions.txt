@@ -1,0 +1,4 @@
+- Is "persisten points to" predicate part of iris or should i define it myself?
+
+- How useful/accurate should my spec be?
+
