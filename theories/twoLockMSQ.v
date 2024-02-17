@@ -14,9 +14,11 @@ Definition get_some : val :=
 Definition initialize : val := 
 	rec: "initialize" <> := 
 		let: "node" := ref (SOME (NONE, ref (ref(NONE)))) in
+		let: "head" := ref "node" in
+		let: "tail" := ref "node" in
 		let: "H_lock" := newlock #() in
 		let: "T_lock" := newlock #() in
-		ref ((ref "node", ref "node"), ("H_lock", "T_lock")).
+		ref (("head", "tail"), ("H_lock", "T_lock")).
 
 Definition enqueue : val := 
 	rec: "enqueue" "Q" "value" :=
@@ -91,24 +93,77 @@ Context `{!heapGS Σ}.
 Context `{!lockG Σ}.
 Let N := nroot .@ "twoLockMSQ".
 
-(* Definition queue_invariant (head tail : loc) : iProp Σ := 
-	∃ xs, isList xs . *)
+(* Fixpoint is_queue_list (l tail : loc) xs : iProp Σ := 
+	match xs with
+	| [] => ∃ l' tail' : loc, l ↦ #l' ∗ 
+							  tail ↦ #tail' ∗ 
+							  ⌜l' = tail'⌝
+	| x :: xs' => 
+	(
+		∃ l' next: loc , l ↦ #l' ∗ 
+							l' ↦ (SOMEV (SOMEV #x, #next))
+							∗ (is_queue_list next tail xs')
+	)
+	end. *)
 
-Definition is_queue (v : val) : iProp Σ := 
+Definition is_queue (v : val) : iProp Σ :=
 	∃ head tail : loc, ∃ H_lock T_lock : val, ∃ γH γT : gname, 
-	∃ l : loc , ⌜v = #l⌝ ∗ l ↦ ((#head, #tail), (H_lock, T_lock))
-	∗ True (* H_lock is a lock*)
-	∗ True. (* T_lock is a lock*)
+	∃ l : loc , ⌜v = #l⌝ ∗ 
+				l ↦ ((#head, #tail), (H_lock, T_lock)) ∗
+				is_lock γH H_lock (∃ head' next : loc, 
+					∃ x,
+						head ↦ #head' ∗ 
+						head' ↦ (SOMEV (x, #next))
+					)
+				∗
+				is_lock γT T_lock (
+					∃ tail' next next' : loc, 
+					∃ x,
+						tail ↦ #tail' ∗ 
+						tail' ↦ (SOMEV (x, #next)) ∗
+						next ↦ #next' ∗
+						next' ↦ NONEV
+				  ).
 
-Lemma initialize_spec : {{{ True }}} initialize #() {{{v, RET v; True}}}.
+Lemma initialize_spec : {{{ True }}} 
+							initialize #() 
+						{{{ v, RET v; is_queue v }}}.
+Proof.
+	iIntros (Φ) "_ HΦ".
+	wp_lam. 
+	wp_pures.
+	wp_alloc n' as "Hn'".
+	wp_alloc n as "Hn".
+	wp_pures.
+	wp_alloc s' as "Hs'".
+	wp_pures.
+	wp_alloc h as "Hh".
+	wp_let.
+	wp_alloc t as "Ht".
+	wp_let.
+	wp_apply (newlock_spec with "Hh").
+	iIntros (lk1 γ1) "Hγ1".
+	wp_let.
+	wp_apply (newlock_spec with "Ht").
+	iIntros (lk2 γ2) "Hγ2".
+	wp_let.
+	wp_alloc q as "Hq".
+	iApply "HΦ".
+	iExists h, t, lk1, lk2, γ1, γ2, q.
+	iSplitR.
+	{ done. }
+	iFrame.
+	Admitted.
+
+Lemma enqueue_spec Q v : {{{ is_queue v }}} 
+							 enqueue Q v 
+						 {{{v, RET v; True}}}.
 Proof.
 	Admitted.
 
-Lemma enqueue_spec Q v : {{{ True }}} enqueue Q #v {{{v, RET v; True}}}.
-Proof.
-	Admitted.
-
-Lemma dequeue_spec Q : {{{ True }}} dequeue Q {{{v, RET v; True}}}.
+Lemma dequeue_spec Q v : {{{ is_queue v }}} 
+							 dequeue Q 
+						 {{{v, RET v; True}}}.
 Proof.
 	Admitted.
 
