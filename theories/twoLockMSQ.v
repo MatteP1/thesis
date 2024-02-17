@@ -1,3 +1,4 @@
+From iris.base_logic.lib Require Import gen_inv_heap.
 From iris.heap_lang Require Import lang proofmode notation.
 From iris.heap_lang.lib Require Import lock spin_lock.
 From iris.unstable.heap_lang Require Import interpreter.
@@ -91,6 +92,7 @@ Section proofs.
 
 Context `{!heapGS Σ}.
 Context `{!lockG Σ}.
+
 Let N := nroot .@ "twoLockMSQ".
 
 (* Fixpoint is_queue_list (l tail : loc) xs : iProp Σ := 
@@ -106,7 +108,21 @@ Let N := nroot .@ "twoLockMSQ".
 	)
 	end. *)
 
+Definition is_node (l : loc) : iProp Σ :=
+	∃ l l_next : loc, ∃ x,
+		l ↦□ (SOMEV (x, #l_next)).
+
+Definition inv (t : loc) : iProp Σ :=
+	inv N (∃ l : loc, t ↦ #l ∗ is_node l).
+
 Definition is_queue (v : val) : iProp Σ :=
+	∃ head tail : loc, ∃ H_lock T_lock : val, ∃ γH γT : gname, 
+	∃ l : loc , ⌜v = #l⌝ ∗ 
+		l ↦ ((#head, #tail), (H_lock, T_lock)) ∗
+		is_lock γH H_lock (inv head) ∗
+		is_lock γT T_lock (inv tail).
+
+(* Definition is_queue (v : val) : iProp Σ :=
 	∃ head tail : loc, ∃ H_lock T_lock : val, ∃ γH γT : gname, 
 	∃ l : loc , ⌜v = #l⌝ ∗ 
 				l ↦ ((#head, #tail), (H_lock, T_lock)) ∗
@@ -123,7 +139,7 @@ Definition is_queue (v : val) : iProp Σ :=
 						tail' ↦ (SOMEV (x, #next)) ∗
 						next ↦ #next' ∗
 						next' ↦ NONEV
-				  ).
+				  ). *)
 
 Lemma initialize_spec : {{{ True }}} 
 							initialize #() 
@@ -138,6 +154,8 @@ Proof.
 	wp_alloc s' as "Hs'".
 	wp_pures.
 	wp_alloc h as "Hh".
+	(* Figure out how to apply mapsto_persist *)
+	iMod (mapsto_persist with "Hs'") as "#Hs'".
 	wp_let.
 	wp_alloc t as "Ht".
 	wp_let.
