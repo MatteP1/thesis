@@ -19,6 +19,7 @@
 - [ ] Write down explanation of M&S Queue with locks (in latex)
 - [ ] Write down explanation of lock-free M&S Queue (in latex)
 
+- [ ] Define isNode predicate, and save this in lock invariant
 - [ ] State and prove correctness of M&S queue with locks
 
 - [ ] State and prove correctness of lock-free M&S Queue
