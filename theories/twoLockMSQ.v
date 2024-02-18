@@ -1,6 +1,7 @@
-From iris.base_logic.lib Require Import gen_inv_heap.
+From iris.algebra Require Import excl.
 From iris.heap_lang Require Import lang proofmode notation.
 From iris.heap_lang.lib Require Import lock spin_lock.
+From iris.base_logic.lib Require Export invariants.
 From iris.unstable.heap_lang Require Import interpreter.
 
 Local Existing Instance spin_lock.
@@ -109,18 +110,18 @@ Let N := nroot .@ "twoLockMSQ".
 	end. *)
 
 Definition is_node (l : loc) : iProp Σ :=
-	∃ l l_next : loc, ∃ x,
+	∃ l_next : loc, ∃ x,
 		l ↦□ (SOMEV (x, #l_next)).
 
-Definition inv (t : loc) : iProp Σ :=
-	inv N (∃ l : loc, t ↦ #l ∗ is_node l).
+Definition queue_inv (t : loc) : iProp Σ :=
+	∃ l : loc, t ↦ #l ∗ is_node l.
 
 Definition is_queue (v : val) : iProp Σ :=
 	∃ head tail : loc, ∃ H_lock T_lock : val, ∃ γH γT : gname, 
 	∃ l : loc , ⌜v = #l⌝ ∗ 
 		l ↦ ((#head, #tail), (H_lock, T_lock)) ∗
-		is_lock γH H_lock (inv head) ∗
-		is_lock γT T_lock (inv tail).
+		is_lock γH H_lock (inv N (queue_inv head)) ∗
+		is_lock γT T_lock (inv N (queue_inv tail)).
 
 (* Definition is_queue (v : val) : iProp Σ :=
 	∃ head tail : loc, ∃ H_lock T_lock : val, ∃ γH γT : gname, 
@@ -154,24 +155,36 @@ Proof.
 	wp_alloc s' as "Hs'".
 	wp_pures.
 	wp_alloc h as "Hh".
-	(* Figure out how to apply mapsto_persist *)
-	iMod (mapsto_persist with "Hs'") as "#Hs'".
 	wp_let.
+	iMod (pointsto_persist with "Hs'") as "#Hs'".
+	iAssert (is_node s') as "#Hs'node".
+	{
+		iExists n, NONEV. done.
+	}
+	iMod (inv_alloc N _ (queue_inv h) with "[Hh]") as "#HhInv".
+	{
+		iNext. iExists s'. iFrame. done.
+	}
 	wp_alloc t as "Ht".
 	wp_let.
-	wp_apply (newlock_spec with "Hh").
-	iIntros (lk1 γ1) "Hγ1".
+	iMod (inv_alloc N _ (queue_inv t) with "[Ht]") as "#HtInv".
+	{
+		iNext. iExists s'. iFrame. done.
+	}
+	wp_apply (newlock_spec with "HhInv").
+	iIntros (hlock γh) "Hγh".
 	wp_let.
-	wp_apply (newlock_spec with "Ht").
-	iIntros (lk2 γ2) "Hγ2".
+	wp_apply (newlock_spec with "HtInv").
+	iIntros (tlock γt) "Hγt".
 	wp_let.
 	wp_alloc q as "Hq".
 	iApply "HΦ".
-	iExists h, t, lk1, lk2, γ1, γ2, q.
+	iExists h, t, hlock, tlock, γh, γt, q.
 	iSplitR.
 	{ done. }
 	iFrame.
-	Admitted.
+	done.
+Qed.
 
 Lemma enqueue_spec Q v : {{{ is_queue v }}} 
 							 enqueue Q v 
