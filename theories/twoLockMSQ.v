@@ -96,22 +96,24 @@ Context `{!lockG Σ}.
 
 Let N := nroot .@ "twoLockMSQ".
 
-(* Fixpoint is_queue_list (l tail : loc) xs : iProp Σ := 
+(* Fixpoint is_node_list (l : loc) xs : iProp Σ := 
+	∃ l' : loc, l ↦ #l' ∗
 	match xs with
-	| [] => ∃ l' tail' : loc, l ↦ #l' ∗ 
-							  tail ↦ #tail' ∗ 
-							  ⌜l' = tail'⌝
+	| [] => l' ↦□ NONEV
 	| x :: xs' => 
-	(
-		∃ l' next: loc , l ↦ #l' ∗ 
-							l' ↦ (SOMEV (SOMEV #x, #next))
-							∗ (is_queue_list next tail xs')
-	)
+		∃ (l_next : loc),
+		l ↦□ (SOMEV (x, #l_next)) ∗
+		is_node_list l_next xs'
 	end. *)
 
+Definition points_to_node (l : loc) : iProp Σ :=
+	∃ (r : loc) (next : val), l ↦ #r ∗ r ↦□ next
+					∗ ((⌜next = NONEV⌝) ∨ (∃ (next_next : loc) y, ⌜next = (SOMEV (y, #next_next))⌝)).
+
 Definition is_node (l : loc) : iProp Σ :=
-	∃ l_next : loc, ∃ x,
-		l ↦□ (SOMEV (x, #l_next)).
+	∃ (l_next : loc) x,
+		l ↦□ (SOMEV (x, #l_next)) ∗
+		inv N (points_to_node (l_next)).
 
 Definition queue_inv (t : loc) : iProp Σ :=
 	∃ l : loc, t ↦ #l ∗ is_node l.
@@ -157,9 +159,12 @@ Proof.
 	wp_alloc h as "Hh".
 	wp_let.
 	iMod (pointsto_persist with "Hs'") as "#Hs'".
+	iMod (pointsto_persist with "Hn'") as "#Hn'".
+	iMod (inv_alloc N _ (points_to_node n) with "[Hn Hn']") as "#Hn".
+	{ iNext. iExists n', (InjLV #()). iFrame. iSplitR. done. iLeft. done. }
 	iAssert (is_node s') as "#Hs'node".
 	{
-		iExists n, NONEV. done.
+		iExists n, NONEV. iSplitR. done. done.
 	}
 	iMod (inv_alloc N _ (queue_inv h) with "[Hh]") as "#HhInv".
 	{
@@ -186,16 +191,129 @@ Proof.
 	done.
 Qed.
 
-Lemma enqueue_spec Q v : {{{ is_queue v }}} 
+Lemma enqueue_spec Q (v : val) : {{{ is_queue Q }}}
 							 enqueue Q v 
-						 {{{v, RET v; True}}}.
+						 {{{w, RET w; True}}}.
 Proof.
-	Admitted.
+	iIntros (Φ) "(%head & %tail & %H_lock & %T_lock & %γh & %γt & 
+				  %l & -> & Hq & #H_hlock & #H_tlock) HΦ".
+	wp_lam.
+	wp_let.
+	wp_pures.
+	wp_alloc null as "Hnull".
+	iMod (pointsto_persist with "Hnull") as "#Hnull".
+	wp_alloc next as "Hnext".
+	wp_alloc node as "Hnode".
+	iMod (pointsto_persist with "Hnode") as "#Hnode".
+	wp_let.
+	wp_load.
+	wp_pures.
+	wp_apply (acquire_spec with "H_tlock").
+	iIntros "(Hlocked_γt & #Hinv)".
+	wp_seq.
+	wp_load.
+	wp_pures.
+	wp_bind (! #tail)%E.
+	iInv "Hinv" as "(%tl & Htail & %tl_next & %x & #Htl & #Hinvn)".
+	wp_load.
+	iSplitL "Htail".
+	{ 
+		iExists tl. iModIntro. iNext. iFrame. iExists tl_next, x.
+		iFrame. auto.
+	}
+	iModIntro.
+	wp_load.
+	wp_lam.
+	wp_match.
+	wp_pures.
+	wp_bind (#tl_next <- #node)%E.
+	iInv "Hinvn" as "(%r & %r_next & Htl_next & Hr)".
+	wp_store.
+	iModIntro.
+	iSplitL "Htl_next".
+	{ iNext. iExists node, (InjRV (InjRV v, #next)). iFrame.
+		iSplitR. done. iRight. eauto. }
+	wp_seq.
+	wp_load.
+	wp_pures.
+	wp_bind (#tail <- #node)%E.
+	iInv "Hinv" as "(%tl2 & Htail & Htl2node)".
+	wp_store.
+	iSplitL "Htail Hnode Hnext Hnull".
+	{
+		iMod (inv_alloc N _ (points_to_node next) with "[Hnext Hnull]") as "#Hnext".
+		{
+			iNext. iExists null. eauto.
+		}
+		iModIntro. iNext. iExists node. iFrame. iExists next, (SOMEV v).
+		iSplitR. done. done.
+	}
+	iModIntro.
+	wp_seq.
+	wp_load.
+	wp_pures.
+	wp_apply (release_spec with "[$H_tlock $Hlocked_γt $Hinv]").
+	iApply "HΦ".
+Qed.
 
-Lemma dequeue_spec Q v : {{{ is_queue v }}} 
+Lemma dequeue_spec Q : {{{ is_queue Q }}} 
 							 dequeue Q 
 						 {{{v, RET v; True}}}.
 Proof.
-	Admitted.
+	iIntros (Φ) "(%head & %tail & %H_lock & %T_lock & %γh & %γt & 
+				  %l & -> & Hq & #H_hlock & #H_tlock) HΦ".
+	wp_lam.
+	wp_load.
+	wp_pures.
+	wp_apply (acquire_spec with "H_hlock").
+	iIntros "(Hlocked_γh & #Hinv)".
+	wp_seq.
+	wp_load.
+	wp_pures.
+	wp_bind (! #head)%E.
+	iInv "Hinv" as "(%hl & Hhead & %hl_next & %x & #Hhl & #Hinvn)".
+	wp_load.
+	iSplitL "Hhead".
+	{ 
+		iExists hl. iModIntro. iNext. iFrame. iExists hl_next, x.
+		iFrame. auto.
+	}
+	iModIntro.
+	wp_let.
+	wp_load.
+	wp_lam.
+	wp_match.
+	wp_pures.
+	wp_bind (! #hl_next)%E.
+	iInv "Hinvn" as ">(%r & %next & Hhl_next & #Hr & %Hor)".
+	wp_load.
+	iModIntro.
+	iSplitL "Hhl_next".
+	{
+		iNext. iExists r, next. auto.
+	}
+	wp_let.
+	destruct Hor as [Heq | [xnext [y Heq]]]; subst.
+	- wp_load.
+	  wp_pures.
+	  wp_load.
+	  wp_pures.
+	  wp_apply (release_spec with "[$H_hlock $Hinv $Hlocked_γh]").
+	  iIntros "_".
+	  wp_seq.
+	  iApply "HΦ".
+	  done.
+	- wp_load.
+	  wp_pures.
+	  wp_load.
+	  wp_lam.
+	  wp_match.
+	  wp_pures.
+	  wp_load.
+	  wp_pures.
+	  wp_bind (#head <- #r)%E.
+	  iInv "Hinv" as "(%hl2 & Hhead & %hl2_next & %z & #Hhl2 & #Hinvn2)".
+	  wp_store.
+Admitted.
 
 End proofs.
