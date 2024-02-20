@@ -96,53 +96,39 @@ Context `{!lockG Σ}.
 
 Let N := nroot .@ "twoLockMSQ".
 
-(* Fixpoint is_node_list (l : loc) xs : iProp Σ := 
-	∃ l' : loc, l ↦ #l' ∗
+(* Fixpoint is_node_list (l : loc) xs : iProp Σ :=
+	inv N (∃ l' : loc, l ↦ #l' ∗
 	match xs with
 	| [] => l' ↦□ NONEV
 	| x :: xs' => 
 		∃ (l_next : loc),
-		l ↦□ (SOMEV (x, #l_next)) ∗
+		l' ↦□ (SOMEV (x, #l_next)) ∗
 		is_node_list l_next xs'
-	end. *)
+	end). *)
 
-Definition points_to_node (l : loc) : iProp Σ :=
-	∃ (r : loc) (next : val), l ↦ #r ∗ r ↦□ next
-					∗ ((⌜next = NONEV⌝) ∨ (∃ (next_next : loc) y, ⌜next = (SOMEV (y, #next_next))⌝)).
+Fixpoint node_inv (l' : loc) xs : iProp Σ :=
+	match xs with
+	| [] => l' ↦□ NONEV
+	| x :: xs' => 
+		∃ l_next : loc,
+		l' ↦□ (SOMEV (x, #l_next)) ∗
+		∃ l_next' : loc,
+		l_next ↦ #l_next' ∗
+		node_inv l_next' xs'
+	end.
 
-Definition is_node (l : loc) : iProp Σ :=
-	∃ (l_next : loc) x,
-		l ↦□ (SOMEV (x, #l_next)) ∗
-		inv N (points_to_node (l_next)).
+Definition head_prop (head : loc) : iProp Σ :=
+	∃ head' : loc, head ↦ #head' ∗ (inv N (∃x xs, node_inv head' (x :: xs))).
 
-Definition queue_inv (t : loc) : iProp Σ :=
-	∃ l : loc, t ↦ #l ∗ is_node l.
+Definition tail_prop (tail : loc) : iProp Σ :=
+	∃ tail' : loc, tail ↦ #tail' ∗ (inv N (∃x xs, node_inv tail' (x :: xs))).
 
 Definition is_queue (v : val) : iProp Σ :=
 	∃ head tail : loc, ∃ H_lock T_lock : val, ∃ γH γT : gname, 
 	∃ l : loc , ⌜v = #l⌝ ∗ 
 		l ↦ ((#head, #tail), (H_lock, T_lock)) ∗
-		is_lock γH H_lock (inv N (queue_inv head)) ∗
-		is_lock γT T_lock (inv N (queue_inv tail)).
-
-(* Definition is_queue (v : val) : iProp Σ :=
-	∃ head tail : loc, ∃ H_lock T_lock : val, ∃ γH γT : gname, 
-	∃ l : loc , ⌜v = #l⌝ ∗ 
-				l ↦ ((#head, #tail), (H_lock, T_lock)) ∗
-				is_lock γH H_lock (∃ head' next : loc, 
-					∃ x,
-						head ↦ #head' ∗ 
-						head' ↦ (SOMEV (x, #next))
-					)
-				∗
-				is_lock γT T_lock (
-					∃ tail' next next' : loc, 
-					∃ x,
-						tail ↦ #tail' ∗ 
-						tail' ↦ (SOMEV (x, #next)) ∗
-						next ↦ #next' ∗
-						next' ↦ NONEV
-				  ). *)
+		is_lock γH H_lock (head_prop head) ∗
+		is_lock γT T_lock (tail_prop tail).
 
 Lemma initialize_spec : {{{ True }}} 
 							initialize #() 
@@ -151,40 +137,38 @@ Proof.
 	iIntros (Φ) "_ HΦ".
 	wp_lam. 
 	wp_pures.
-	wp_alloc n' as "Hn'".
-	wp_alloc n as "Hn".
+	wp_alloc null' as "Hnull'".
+	iMod (pointsto_persist with "Hnull'") as "#Hnull'".
+	wp_alloc null as "Hnull".
 	wp_pures.
-	wp_alloc s' as "Hs'".
+	wp_alloc node' as "Hnode'".
+	iMod (pointsto_persist with "Hnode'") as "#Hnode'".
 	wp_pures.
-	wp_alloc h as "Hh".
+	wp_alloc head as "Hhead".
 	wp_let.
-	iMod (pointsto_persist with "Hs'") as "#Hs'".
-	iMod (pointsto_persist with "Hn'") as "#Hn'".
-	iMod (inv_alloc N _ (points_to_node n) with "[Hn Hn']") as "#Hn".
-	{ iNext. iExists n', (InjLV #()). iFrame. iSplitR. done. iLeft. done. }
-	iAssert (is_node s') as "#Hs'node".
+	iMod (inv_alloc N _ (∃x xs, node_inv node' (x :: xs)) with "[Hnull]") as "#HnodeInv".
 	{
-		iExists n, NONEV. iSplitR. done. done.
+		iNext. iExists NONEV, []. cbn. iExists null. auto.
 	}
-	iMod (inv_alloc N _ (queue_inv h) with "[Hh]") as "#HhInv".
+	iAssert (head_prop head)%I with "[Hhead]" as "Hhead_prop".
 	{
-		iNext. iExists s'. iFrame. done.
+		iExists node'. auto.
 	}
-	wp_alloc t as "Ht".
+	wp_alloc tail as "Htail".
 	wp_let.
-	iMod (inv_alloc N _ (queue_inv t) with "[Ht]") as "#HtInv".
+	iAssert (head_prop tail)%I with "[Htail]" as "Htail_prop".
 	{
-		iNext. iExists s'. iFrame. done.
+		iExists node'. auto.
 	}
-	wp_apply (newlock_spec with "HhInv").
+	wp_apply (newlock_spec with "Hhead_prop").
 	iIntros (hlock γh) "Hγh".
 	wp_let.
-	wp_apply (newlock_spec with "HtInv").
+	wp_apply (newlock_spec with "Htail_prop").
 	iIntros (tlock γt) "Hγt".
 	wp_let.
-	wp_alloc q as "Hq".
+	wp_alloc queue as "Hqueue".
 	iApply "HΦ".
-	iExists h, t, hlock, tlock, γh, γt, q.
+	iExists head, tail, hlock, tlock, γh, γt, queue.
 	iSplitR.
 	{ done. }
 	iFrame.
@@ -200,39 +184,40 @@ Proof.
 	wp_lam.
 	wp_let.
 	wp_pures.
+	wp_alloc null' as "Hnull'".
+	iMod (pointsto_persist with "Hnull'") as "#Hnull'".
 	wp_alloc null as "Hnull".
-	iMod (pointsto_persist with "Hnull") as "#Hnull".
-	wp_alloc next as "Hnext".
-	wp_alloc node as "Hnode".
-	iMod (pointsto_persist with "Hnode") as "#Hnode".
+	wp_alloc node' as "Hnode'".
+	iMod (pointsto_persist with "Hnode'") as "#Hnode'".
 	wp_let.
 	wp_load.
 	wp_pures.
 	wp_apply (acquire_spec with "H_tlock").
-	iIntros "(Hlocked_γt & #Hinv)".
+	iIntros "(Hlocked_γt & %tail' & Htail & Htail_inv)".
 	wp_seq.
 	wp_load.
 	wp_pures.
 	wp_bind (! #tail)%E.
-	iInv "Hinv" as "(%tl & Htail & %tl_next & %x & #Htl & #Hinvn)".
+	iInv "Htail_inv" as "(%x & %xs & H)". simpl in *.
+	iDestruct "H" as "(%tail_next & #Htail' & %tail_next' & Htail_next & Htail_next_inv)".
 	wp_load.
-	iSplitL "Htail".
-	{ 
-		iExists tl. iModIntro. iNext. iFrame. iExists tl_next, x.
-		iFrame. auto.
+	iSplitL "Htail_next Htail_next_inv".
+	{  
+		iExists x, xs, tail_next. iModIntro. iNext. iSplitR; first done.
+		iExists tail_next'. iSplitL "Htail_next"; done.
 	}
 	iModIntro.
 	wp_load.
 	wp_lam.
 	wp_match.
 	wp_pures.
-	wp_bind (#tl_next <- #node)%E.
-	iInv "Hinvn" as "(%r & %r_next & Htl_next & Hr)".
+	wp_bind (#tail_next <- #node')%E.
+	(* STUCK: Don't know that tail_next points to something. *)
+	iInv "Htail_next_inv" as "(%l' & Htail_next & #Hl')".
 	wp_store.
 	iModIntro.
-	iSplitL "Htl_next".
-	{ iNext. iExists node, (InjRV (InjRV v, #next)). iFrame.
-		iSplitR. done. iRight. eauto. }
+	iSplitL "Htail_next".
+	{ iNext. iExists node. iFrame. }
 	wp_seq.
 	wp_load.
 	wp_pures.
