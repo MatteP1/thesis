@@ -19,7 +19,15 @@
 - [ ] Write down explanation of M&S Queue with locks (in latex)
 - [ ] Write down explanation of lock-free M&S Queue (in latex)
 
-- [ ] Define isNode predicate, and save this in lock invariant
-- [ ] State and prove correctness of M&S queue with locks
+- [ ] State and prove correctness of M&S queue with locks (non-concurrent)
+  - [ ] Locks protect nothing (True) and all resources are always available (not duplicable, hence non-concurrent)
+  - [ ] Track exact contents of queue
+  - [ ] Implement proof in Iris
+  - [ ] Prove correctness of simple client
+
+- [ ] State and prove correctness of M&S queue with locks (concurrent case)
+  - [ ] Define queue Invariant
+  - [ ] Do proof sketch on paper
+  - [ ] Implement proof in Iris (Coq)
 
 - [ ] State and prove correctness of lock-free M&S Queue
