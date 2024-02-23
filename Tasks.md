@@ -26,9 +26,10 @@
   - [ ] Prove correctness of simple client
 
 - [ ] State and prove correctness of M&S queue with locks (concurrent case)
-  - [ ] Define queue Invariant
+  - [ ] Change initialise so that locks are created before head and tail.
+  - [x] Define queue Invariant
   - [x] Change l_null to l_n+1
-  - [ ] Do proof sketch on paper
+  - [x] Do proof sketch on paper
   - [ ] Implement proof in Iris (Coq)
 
 - [ ] State and prove correctness of lock-free M&S Queue
