@@ -80,7 +80,12 @@
 \chapter{The Great Ideas}
 \label{ch:main}
 
-\lipsum[1-20] % dummy text
+Two-Lock Michael-Scott Queue discussion (The need for $xs_{old}$):
+
+As mentioned in the insights, it is possible for the tail to lag one node behind the head. This insight lead to including the old nodes of the queue in the queue invariant. This addition manifests in the end of the proof of dequeue. When we open the invariant to swing the head to the new node, we get that the entire queue is $xs$. After performing the write, we can then close the invariant with the same $xs$ that we opened the queue to (just written differently to signify that $x_{head}$ is now "old"). Because of this, we can supply the same predicate concerning the $tail$ (the or) that we opened the queue with, since these only mention $xs$, which remains the same.
+
+Had we not used an $xs_{old}$ and essentially just "forgotten" old nodes in the queue, we couldn't have done this. Say that we defined $xs$ as $xs = x_{head} :: xs_{rest}$ instead. Then, once we have to close the invariant, we cannot supply the $xs$, which we got when we opened the invariant. Our only choice (due to the fact that $head$ must point to $x_{n_head}$) is to close the invariant with $xs' = xs_{rest} = x_{n_head} :: xs_{n_rest}''$. However, clearly $xs' \neq xs$, so we cannot supply the same predicate concerning the $tail$ (the or) that we got when opening the invariant, since this predicate talks about $xs$, not $xs'$. Now, if we opened the invariant in the Dequeue case, then we could assert that $last xs = last xs'$, and hence still be able close the invariant. However, if we opened the invariant in the Both case, then we would need to assert that $2last xs = 2last xs'$. This is however not provable, since it might be the case that $xs_{n_rest}''$ is empty, and hence $2last xs'$ is $None$, whereas $2last xs = x_{n_head}$.
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
