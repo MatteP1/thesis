@@ -16,6 +16,8 @@
 \usepackage[useregional]{datetime2}
 \DTMlangsetup[en-US]{showdayofmonth=false}
 \usepackage{lipsum}
+\usepackage{iris}
+\usepackage{heaplang}
 
 \renewcommand*\sfdefault{lmss}
 \renewcommand*\ttdefault{txtt}
@@ -80,7 +82,38 @@
 \chapter{The Great Ideas}
 \label{ch:main}
 
-Two-Lock Michael-Scott Queue discussion (The need for $xs_{old}$):
+Key insights
+\begin{enumerate}
+  \item\label{MSQTL:insights:head} Head always points to the first node in the queue.
+  \item\label{MSQTL:insights:tail} Tail always point to either the last or second last node in the queue.
+  \item\label{MSQTL:insights:persistent} All but the last pointer in the queue (the pointer to null) never change
+\end{enumerate}
+
+Insight \ref{MSQTL:insights:tail} is true, as it holds initially, and every time a new node is enqueued, the tail pointer is updated to point to the last node, and no other nodes can be enqueue before the update takes place. However, just after the new node has been linked to the queue, the tail queue will be pointing to the second last node in the queue, until it is updated in the next line.
+
+Insight \ref{MSQTL:insights:persistent} means that we can mark all pointers in the queue (except the pointer to the null node) as persistent.
+
+Key insights (concurrent)
+\begin{enumerate}
+  \item All the same as before
+  \item\label{MSQTL:insights:lag} The tail can lag one node behind Head
+  \item\label{MSQTL:insights:states} At any given time, the queue is in one of four states:
+    \begin{enumerate}
+      \item\label{MSQTL:insights:state:static} No threads are interacting with the queue (\textbf{Static})
+      \item\label{MSQTL:insights:state:enqueue} A thread is enqueueing (\textbf{Enqueue})
+      \item\label{MSQTL:insights:state:dequeue} A thread is dequeuing (\textbf{Dequeue})
+      \item\label{MSQTL:insights:state:both} A thread is enqueueing and a thread is dequeuing (\textbf{Both})
+    \end{enumerate}
+\end{enumerate}
+
+Insight \ref{MSQTL:insights:lag} might seem a little surprising, and indeed it stands in contrast to property 5 in \cite{DBLP:conf/podc/MichaelS96}, which states that the tail always points to a node in the linked list. I also didn't realise this possibility until a proof attempt using a model that "forgot" old nodes lead to an unprovable case (see section \ref{MSQTL:Discussion:xs_old}). The situation can occur when the queue is empty, and a thread performs an incomplete enqueue; it attaches the new node to the end, but before it can swing the tail node to this new node, another thread performs a dequeue, which dequeues this new node, swings the head to it. Now the tail is lagging a node behind the head.
+
+It is not possible for the tail to point more than one node behind the head, as in order for this to happen, more nodes must be enqueued, but this can't happen before the current enqueue finishes, which will update the tail and bring it up to speed with the head.
+
+Fortunately, this isn't an issue for safety, but a consequence of this possibility is that when modelling the queue, we must remember at least one "old" node (i.e. a dequeued node), as the tail might be pointing to this node. For the sake of simplicity in the model, the choice is made to remember an arbitrary amount of old nodes, which is represented by the list $xs_{old}$.
+
+
+\subsubsection{Discussing the need for $xs_{old}$}\label{MSQTL:Discussion:xs_old}
 
 As mentioned in the insights, it is possible for the tail to lag one node behind the head. This insight lead to including the old nodes of the queue in the queue invariant. This addition manifests in the end of the proof of dequeue. When we open the invariant to swing the head to the new node, we get that the entire queue is $xs$. After performing the write, we can then close the invariant with the same $xs$ that we opened the queue to (just written differently to signify that $x_{head}$ is now "old"). Because of this, we can supply the same predicate concerning the $tail$ (the or) that we opened the queue with, since these only mention $xs$, which remains the same.
 
