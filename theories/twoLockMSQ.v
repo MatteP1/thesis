@@ -96,39 +96,89 @@ Context `{!lockG Σ}.
 
 Let N := nroot .@ "twoLockMSQ".
 
-(* Fixpoint is_node_list (l : loc) xs : iProp Σ :=
-	inv N (∃ l' : loc, l ↦ #l' ∗
-	match xs with
-	| [] => l' ↦□ NONEV
-	| x :: xs' => 
-		∃ (l_next : loc),
-		l' ↦□ (SOMEV (x, #l_next)) ∗
-		is_node_list l_next xs'
-	end). *)
 
-Fixpoint node_inv (l' : loc) xs : iProp Σ :=
-	match xs with
-	| [] => l' ↦□ NONEV
-	| x :: xs' => 
-		∃ l_next : loc,
-		l' ↦□ (SOMEV (x, #l_next)) ∗
-		∃ l_next' : loc,
-		l_next ↦ #l_next' ∗
-		node_inv l_next' xs'
+Definition fst (x : (loc * val * loc)) :=
+	match x with
+	| (l'ᵢ, vᵢ, lᵢ₁) => l'ᵢ
 	end.
 
-Definition head_prop (head : loc) : iProp Σ :=
-	∃ head' : loc, head ↦ #head' ∗ (inv N (∃x xs, node_inv head' (x :: xs))).
+Definition snd (x : (loc * val * loc)) :=
+	match x with
+	| (l'ᵢ, vᵢ, lᵢ₁) => vᵢ
+	end.
 
-Definition tail_prop (tail : loc) : iProp Σ :=
-	∃ tail' : loc, tail ↦ #tail' ∗ (inv N (∃x xs, node_inv tail' (x :: xs))).
+Definition trd (x : (loc * val * loc)) :=
+	match x with
+	| (l'ᵢ, vᵢ, lᵢ₁) => lᵢ₁
+	end.
+
+Fixpoint isLL (xs : list (loc * val * loc) ) : iProp Σ :=
+	match xs with
+	| [] => True
+	| [(l'ₙ, vₙ, lₙ₁)] =>
+		l'ₙ ↦□ (SOMEV (vₙ, #lₙ₁)) ∗
+		∃ l'ₙᵤₗₗ : loc, lₙ₁ ↦ #l'ₙᵤₗₗ ∗ l'ₙᵤₗₗ ↦□ NONEV
+	| (l'ᵢ, vᵢ, lᵢ₁) :: (((l'ᵢ₁, vᵢ₁, lᵢ₂) :: xs'') as xs') =>
+		l'ᵢ ↦□ (SOMEV (vᵢ, #lᵢ₁)) ∗
+		lᵢ₁ ↦□ #l'ᵢ₁ ∗ isLL xs'
+	end.
+
+
+Definition points_to_last (q : Qp) (l : loc) (xs : list (loc * val * loc)) : iProp Σ :=
+	match (last xs) with 
+	| Some x => l ↦{# q} #(fst x)
+	| None => False
+	end.
+
+Fixpoint snd_last {A} (xs : list A) : option A :=
+	match xs with
+	| nil => None
+	| a :: nil => None
+	| a :: b :: nil => Some a
+	| a :: xs' => snd_last xs'
+	end.
+
+Definition points_to_snd_last (q : Qp) (l : loc) (xs : list (loc * val * loc)) : iProp Σ :=
+	match (snd_last xs) with 
+	| Some x => l ↦{# q} #(fst x)
+	| None => False
+	end.
+
+(* TODO: Add tokens and S/F *)
+Definition queue_invariant (head tail : loc) : iProp Σ :=
+	∃ xs xs_old x_head xs_rest, ⌜xs = xs_old ++ [x_head] ++ xs_rest⌝ ∗ isLL xs ∗ (
+		(* Static *)
+		(
+			head ↦ #(fst x_head) ∗
+			points_to_last (1)%Qp tail xs
+		)
+		∨
+		(* Enqueue *)
+		(
+			head ↦ #(fst x_head) ∗
+			(points_to_last (1/2)%Qp tail xs ∨ points_to_snd_last ((1/2)%Qp) tail xs)
+		)
+		∨
+		(* Dequeue *)
+		(
+			head ↦{# 1/2} #(fst x_head) ∗
+			points_to_last (1)%Qp tail xs
+		)
+		∨
+		(* Both *)
+		(
+			head ↦{# 1/2} #(fst x_head) ∗
+			(points_to_last (1/2)%Qp tail xs ∨ points_to_snd_last (1/2)%Qp tail xs)
+		)
+	).
 
 Definition is_queue (v : val) : iProp Σ :=
 	∃ head tail : loc, ∃ H_lock T_lock : val, ∃ γH γT : gname, 
-	∃ l : loc , ⌜v = #l⌝ ∗ 
+	∃ l : loc , ⌜v = #l⌝ ∗
 		l ↦ ((#head, #tail), (H_lock, T_lock)) ∗
-		is_lock γH H_lock (head_prop head) ∗
-		is_lock γT T_lock (tail_prop tail).
+		inv N (queue_invariant head tail) ∗
+		is_lock γH H_lock (True) ∗ (* TODO : give Tok(E)*)
+		is_lock γT T_lock (True). (* TODO : give Tok(D)*)
 
 Lemma initialize_spec : {{{ True }}} 
 							initialize #() 
