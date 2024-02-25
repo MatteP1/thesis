@@ -117,7 +117,7 @@ Fixpoint isLL (xs : list (loc * val * loc) ) : iProp Σ :=
 	| [] => True
 	| [(l'ₙ, vₙ, lₙ₁)] =>
 		l'ₙ ↦□ (SOMEV (vₙ, #lₙ₁)) ∗
-		∃ l'ₙᵤₗₗ : loc, lₙ₁ ↦ #l'ₙᵤₗₗ ∗ l'ₙᵤₗₗ ↦□ NONEV
+		∃ l'_null : loc, lₙ₁ ↦ #l'_null ∗ l'_null ↦□ NONEV
 	| (l'ᵢ, vᵢ, lᵢ₁) :: (((l'ᵢ₁, vᵢ₁, lᵢ₂) :: xs'') as xs') =>
 		l'ᵢ ↦□ (SOMEV (vᵢ, #lᵢ₁)) ∗
 		lᵢ₁ ↦□ #l'ᵢ₁ ∗ isLL xs'
@@ -125,24 +125,10 @@ Fixpoint isLL (xs : list (loc * val * loc) ) : iProp Σ :=
 
 
 Definition points_to_last (q : Qp) (l : loc) (xs : list (loc * val * loc)) : iProp Σ :=
-	match (last xs) with 
-	| Some x => l ↦{# q} #(fst x)
-	| None => False
-	end.
-
-Fixpoint snd_last {A} (xs : list A) : option A :=
-	match xs with
-	| nil => None
-	| a :: nil => None
-	| a :: b :: nil => Some a
-	| a :: xs' => snd_last xs'
-	end.
+	∃ x_last xs' , ⌜xs = xs' ++ [x_last]⌝ ∗ l ↦{# q} #(fst x_last).
 
 Definition points_to_snd_last (q : Qp) (l : loc) (xs : list (loc * val * loc)) : iProp Σ :=
-	match (snd_last xs) with 
-	| Some x => l ↦{# q} #(fst x)
-	| None => False
-	end.
+	∃ x_snd_last x_last xs' , ⌜xs = xs' ++ [x_snd_last ; x_last]⌝ ∗ l ↦{# q} #(fst x_snd_last).
 
 (* TODO: Add tokens and S/F *)
 Definition queue_invariant (head tail : loc) : iProp Σ :=
