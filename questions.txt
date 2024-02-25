@@ -4,3 +4,4 @@ The other way is doable, but will require tedious induction proofs.
 - I currently use a trick where I keep half of the tail pointer in order to match up previous elements from invariant with elements from later opens.
 Is there a smarter way of doing this, or is this sufficient?
 
+- Is my definitions of points_to_last and points_to_snd_last fine?

@@ -18,6 +18,9 @@
 \usepackage{lipsum}
 \usepackage{iris}
 \usepackage{heaplang}
+\usepackage{tikz}
+\usetikzlibrary{calc,shapes.multipart,chains,arrows}
+
 
 \renewcommand*\sfdefault{lmss}
 \renewcommand*\ttdefault{txtt}
@@ -81,6 +84,51 @@
 
 \chapter{The Great Ideas}
 \label{ch:main}
+
+The Two-Lock Michael Scott Queue
+
+\begin{figure}[h]
+  \centering
+  \begin{tikzpicture}[
+    pair/.style = {
+      on chain,
+      rectangle split,
+      rectangle split horizontal,
+      rectangle split parts=2,
+      draw,
+      anchor=center,
+      text height=1.5ex,
+    },
+    perspointer/.style = {
+      on chain,
+      rectangle,
+      draw,
+      anchor=center,
+      text height=1.5ex,
+    },
+    pointer/.style = {
+      rectangle,
+      draw,
+      anchor=center,
+      text height=1.5ex,
+    },
+    start chain=going right,
+  ]
+
+  \node (l'1) [join={by ->}, perspointer,on chain] {$\loc'_1$};
+  \node (l1pair) [join={by ->, draw=blue}, pair,on chain] {$\val_1$ \nodepart{two} $\loc_2$};
+  \node (l'null) [join={by ->}, perspointer={a},on chain] {$\loc_{null}$};
+  \node (lnull) [join={by ->, draw=blue}, rectangle,on chain] {NONE};
+  \node (head) [pointer, above left=of l'1] {$\loc_{head}$};
+  \node (tail) [pointer, above right=of l'1] {$\loc_{tail}$};
+
+  \draw[->] (head) -- (l'1);
+  \draw[->] (tail) -- (l'1);
+  \end{tikzpicture}
+  \caption{Queue after initialisation}
+\end{figure}
+
+
 
 Key insights
 \begin{enumerate}
