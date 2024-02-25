@@ -112,7 +112,7 @@ Definition trd (x : (loc * val * loc)) :=
 	| (l'ᵢ, vᵢ, lᵢ₁) => lᵢ₁
 	end.
 
-Fixpoint isLL (xs : list (loc * val * loc) ) : iProp Σ :=
+(* Fixpoint isLL (xs : list (loc * val * loc) ) : iProp Σ :=
 	match xs with
 	| [] => True
 	| [(l'ₙ, vₙ, lₙ₁)] =>
@@ -121,18 +121,70 @@ Fixpoint isLL (xs : list (loc * val * loc) ) : iProp Σ :=
 	| (l'ᵢ, vᵢ, lᵢ₁) :: (((l'ᵢ₁, vᵢ₁, lᵢ₂) :: xs'') as xs') =>
 		l'ᵢ ↦□ (SOMEV (vᵢ, #lᵢ₁)) ∗
 		lᵢ₁ ↦□ #l'ᵢ₁ ∗ isLL xs'
+	end. *)
+
+(* Definitely provable. Just tedious. *)
+(* Lemma isLL_append : forall xs x y (l'_null : loc),
+	{{{isLL (xs ++ [x]) ∗
+	fst y ↦□ SOMEV (snd y, #(trd y)) ∗
+	trd y ↦ #l'_null ∗
+	l'_null ↦□ NONEV}}}
+		#(trd x) <- #(fst y)
+	{{{w, RET w; isLL (xs ++ [x; y]) }}}.
+Proof.
+	iIntros (xs ((l'ₙ, vₙ), lₙ₁) ((l'ₙ₁, vₙ₁), lₙ₂) l'_null Φ) "(HisLLxsx & Hfsty & Htrdy & Hl'_null) HΦ".
+	unfold fst, snd, trd.
+	iInduction xs as [|a xs'] "IH".
+	- admit.
+	- destruct xs' as [| b xs'']. *)
+
+
+Fixpoint isLL_chain (xs : list (loc * val * loc) ) : iProp Σ :=
+	match xs with
+	| [] => True
+	| [(l'₁, v₁, l₂)] => l'₁ ↦□ (SOMEV (v₁, #l₂))
+	| (l'ᵢ₁, vᵢ₁, lᵢ₂) :: (((l'ᵢ, vᵢ, lᵢ₁) :: xs'') as xs') =>
+		l'ᵢ₁ ↦□ (SOMEV (vᵢ₁, #lᵢ₂)) ∗
+		lᵢ₁ ↦□ #l'ᵢ₁ ∗ isLL_chain xs'
 	end.
 
+Definition isLL (xs : list (loc * val * loc) ) : iProp Σ :=
+	match xs with
+	| [] => True
+	| (l'ₙ, vₙ, lₙ₁) :: xs' =>
+		∃ l'_null : loc, lₙ₁ ↦ #l'_null ∗ l'_null ↦□ NONEV ∗
+		isLL_chain xs
+	end.
+
+Lemma isLL_enqueue : forall xs x y (l'_null : loc),
+	{{{isLL (x :: xs) ∗
+	fst y ↦□ SOMEV (snd y, #(trd y)) ∗
+	trd y ↦ #l'_null ∗
+	l'_null ↦□ NONEV}}}
+		#(trd x) <- #(fst y)
+	{{{w, RET w; isLL (y :: x :: xs) }}}.
+Proof.
+	iIntros (xs ((l'ₙ, vₙ), lₙ₁) ((l'ₙ₁, vₙ₁), lₙ₂) l'_null Φ) "(HisLLxsx & Hfsty & Htrdy & Hl'_null) HΦ"; unfold fst, snd, trd.
+	unfold isLL. iDestruct "HisLLxsx" as "(%l'_old_null & Hlₙ₁ & Hl'_old_null & HisLL_chain_xs)".
+	wp_store.
+	iClear "Hl'_old_null". clear l'_old_null.
+	iMod (pointsto_persist with "Hlₙ₁") as "Hlₙ₁".
+	iApply "HΦ".
+	iModIntro. iExists l'_null. iFrame.
+Qed.
 
 Definition points_to_last (q : Qp) (l : loc) (xs : list (loc * val * loc)) : iProp Σ :=
-	∃ x_last xs' , ⌜xs = xs' ++ [x_last]⌝ ∗ l ↦{# q} #(fst x_last).
+	∃ x_last xs' , ⌜xs = x_last :: xs'⌝ ∗ l ↦{# q} #(fst x_last).
 
 Definition points_to_snd_last (q : Qp) (l : loc) (xs : list (loc * val * loc)) : iProp Σ :=
-	∃ x_snd_last x_last xs' , ⌜xs = xs' ++ [x_snd_last ; x_last]⌝ ∗ l ↦{# q} #(fst x_snd_last).
+	∃ x_snd_last x_last xs' , ⌜xs = x_last :: x_snd_last :: xs'⌝ ∗ l ↦{# q} #(fst x_snd_last).
 
 (* TODO: Add tokens and S/F *)
 Definition queue_invariant (head tail : loc) : iProp Σ :=
-	∃ xs xs_old x_head xs_rest, ⌜xs = xs_old ++ [x_head] ++ xs_rest⌝ ∗ isLL xs ∗ (
+	∃ xs xs_rest x_head xs_old,
+	⌜xs = xs_rest ++ [x_head] ++ xs_old⌝ ∗
+	isLL xs ∗
+	(
 		(* Static *)
 		(
 			head ↦ #(fst x_head) ∗
