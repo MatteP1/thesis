@@ -16,11 +16,9 @@ Definition get_some : val :=
 Definition initialize : val := 
 	rec: "initialize" <> := 
 		let: "node" := ref (SOME (NONE, ref (ref(NONE)))) in
-		let: "head" := ref "node" in
-		let: "tail" := ref "node" in
 		let: "H_lock" := newlock #() in
 		let: "T_lock" := newlock #() in
-		ref (("head", "tail"), ("H_lock", "T_lock")).
+		ref ((ref "node", ref "node"), ("H_lock", "T_lock")).
 
 Definition enqueue : val := 
 	rec: "enqueue" "Q" "value" :=
@@ -156,7 +154,7 @@ Definition isLL (xs : list (loc * val * loc) ) : iProp Σ :=
 		isLL_chain xs
 	end.
 
-Lemma isLL_enqueue : forall xs x y (l'_null : loc),
+Lemma isLL_extend : forall xs x y (l'_null : loc),
 	{{{isLL (x :: xs) ∗
 	fst y ↦□ SOMEV (snd y, #(trd y)) ∗
 	trd y ↦ #l'_null ∗

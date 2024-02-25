@@ -1,4 +1,6 @@
-- Is "persisten points to" predicate part of iris or should i define it myself?
+- Should the list (xs) have the newest elements first and oldest last, or vice versa. Having newest first makes proofs easier as the queue only grows.
+The other way is doable, but will require tedious induction proofs.
 
-- How useful/accurate should my spec be?
+- I currently use a trick where I keep half of the tail pointer in order to match up previous elements from invariant with elements from later opens.
+Is there a smarter way of doing this, or is this sufficient?
 
