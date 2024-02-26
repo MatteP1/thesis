@@ -5,3 +5,5 @@ The other way is doable, but will require tedious induction proofs.
 Is there a smarter way of doing this, or is this sufficient?
 
 - Is my definitions of points_to_last and points_to_snd_last fine?
+
+- Should I use In x xs instead of xs = xs_old ++ x :: xs_rest (and then use In_split to get xs_old and xs_rest when needed)
