@@ -3,6 +3,8 @@
 
 - Further, I can also remove the "Some" around the pair making up a node, without affecting safety. I suspect they made nodes be SOME/NONE to deal with types. Making the NULL pointer be NONEV and removing the SOME makes the program ill-typed.
 
+- Alternatively, we can model pointers as Some l or None, where l is a location. Then None corresponds to Null pointer. This makes it well-typed again, and makes more intuitive sense.
+
 - Should the list (xs) have the newest elements first and oldest last, or vice versa. Having newest first makes proofs easier as the queue only grows.
 The other way is doable, but will require tedious induction proofs.
 
