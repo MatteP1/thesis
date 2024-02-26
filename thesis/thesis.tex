@@ -36,7 +36,7 @@
 \newcommand{\initialise}{\operatorname{initialize}}
 \newcommand{\enqueue}{\operatorname{enqueue}}
 \newcommand{\dequeue}{\operatorname{dequeue}}
-\newcommand{\getsome}{\operatorname{get\_some}}
+% \newcommand{\getsome}{\operatorname{get\_some}}
 
 \newcommand{\todo}[1]{{\color[rgb]{.5,0,0}\textbf{$\blacktriangleright$#1$\blacktriangleleft$}}}
 
@@ -102,7 +102,7 @@ The Two-Lock Michael Scott Queue
 
 I present here he an implementation of the Two-lock MS-Queue in HeapLang. This implementation differs slightly from the original, presented in \cite{DBLP:conf/podc/MichaelS96}, but most changes simply reflect the differences in the two languages.
 
-The queue consists of 3 functions: $\initialise$, $\enqueue$, and $\dequeue$, as well as an auxiliary function $\getsome$. $\getsome$ simply extracts the contents of an option value, crashing if it is none. I now present each of the three main functions in turn.
+The queue consists of 3 functions: $\initialise$, $\enqueue$, and $\dequeue$ which I now present in turn.
 
 
 $\initialise$
@@ -151,15 +151,17 @@ The reader may wonder why there is an extra, intermediary pointer, between nodes
     start chain=going right,
   ]
 
+  % Linked List
   \node (l'1) [join={by ->}, perspointer,on chain] {$\loc'_1$};
   \node (l1pair) [join={by ->, draw=blue}, pair,on chain] {$\None$ \nodepart{two} $\loc_2$};
-  \node (l'null) [join={by ->}, perspointer={a},on chain] {$\loc_{null}$};
-  \node (lnull) [join={by ->, draw=blue}, rectangle,on chain] {NONE};
+  \node (null) [join={by ->, draw=black}, rectangle,on chain] {$\None$};
+
+  % Head and tail
   \node (head) [pointer, above left=of l'1] {$\loc_{head}$};
   \node (tail) [pointer, above right=of l'1] {$\loc_{tail}$};
-
   \draw[->] (head) -- (l'1);
   \draw[->] (tail) -- (l'1);
+  
   \end{tikzpicture}
   \caption{Queue after initialisation}
   \label{MSQTL:impl:figure:init}
@@ -167,7 +169,7 @@ The reader may wonder why there is an extra, intermediary pointer, between nodes
 
 \begin{align*}
   \langkw{let} \initialise := &\\
-                    & \Let node = \Ref(\Some (\None, \Ref(\Ref(\None)))) in\\
+                    & \Let node = \Ref((\None, \Ref(\None))) in\\
                     & \Let H\_lock = newlock \TT in\\
                     & \Let T\_lock = newlock \TT in\\
                     & \Ref ((\Ref(node), \Ref(node)), (H\_lock, T\_lock))
@@ -175,9 +177,9 @@ The reader may wonder why there is an extra, intermediary pointer, between nodes
 
 \begin{align*}
   \langkw{let} \enqueue \ Q \ value :=&\\
-		& \Let node = \Ref (\Some (\Some value, \Ref(\Ref(\None)))) in\\
+		& \Let node = \Ref ((\Some value, \Ref(\None))) in\\
 		& \acquire (\Snd (\Snd (\deref Q)));\\
-		& \Snd (\getsome \deref(\deref(\Snd (\Fst(\deref Q))))) \gets node;\\
+		& \Snd (\deref(\deref(\Snd (\Fst(\deref Q))))) \gets node;\\
 		& \Snd (\Fst (\deref Q)) \gets node;\\
 		& \release (\Snd (\Snd (\deref Q)))
 \end{align*}
@@ -186,12 +188,12 @@ The reader may wonder why there is an extra, intermediary pointer, between nodes
   \langkw{let} \dequeue \ Q :=&\\ 
 		& \acquire (\Fst (\Snd (\deref Q)));\\
 		& \Let node = \deref (\Fst (\Fst (\deref Q))) in\\
-		& \Let new\_head = \deref (\Snd(\getsome (\deref node))) in\\
-		& \If \deref new\_head = \None then\\
+		& \Let new\_head = \deref (\Snd(\deref node)) in\\
+		& \If new\_head = \None then\\
 			& \hspace{20pt} \release (\Fst (\Snd(\deref Q)));\\
 			& \hspace{20pt} \None\\
 		& \Else\\
-			& \hspace{20pt} \Let value = \Fst (\getsome (\deref new\_head)) in\\
+			& \hspace{20pt} \Let value = \Fst (\deref new\_head) in\\
 			& \hspace{20pt} \Fst (\Fst (\deref Q)) \gets new\_head;\\
 			& \hspace{20pt} \release (\Fst (\Snd (\deref Q)));\\
       & \hspace{20pt} value

@@ -1,6 +1,8 @@
 - Is it fine to let model the NULL pointer as simply NONEV?
   Modelling it as Ref(None) seems unnecessary (and makes the implementation less like the original). It also adds unnecessary complications to the specification. It is not necessary for proving safety, and it is hard to justify why it should be a ref to None.
 
+- Further, I can also remove the "Some" around the pair making up a node, without affecting safety. I suspect they made nodes be SOME/NONE to deal with types. Making the NULL pointer be NONEV and removing the SOME makes the program ill-typed.
+
 - Should the list (xs) have the newest elements first and oldest last, or vice versa. Having newest first makes proofs easier as the queue only grows.
 The other way is doable, but will require tedious induction proofs.
 
@@ -10,3 +12,7 @@ The other way is doable, but will require tedious induction proofs.
 
 - Should I use In x xs instead of xs = xs_old ++ x :: xs_rest (and then use In_split to get xs_old and xs_rest when needed)
 Which style is most compatible with HOCAP?
+
+- Is there already an RA for tokens?
+
+- I want to create a spec for sequential uses of Two-lock M&S Queue, which tracks exact contents of queue. Is this a good idea? If so, how should I structure my coq file?

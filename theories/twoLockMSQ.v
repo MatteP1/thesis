@@ -6,25 +6,25 @@ From iris.unstable.heap_lang Require Import interpreter.
 
 Local Existing Instance spin_lock.
 
-Definition get_some : val :=
+(* Definition get_some : val :=
 	rec: "get_some" "x" :=
 		match: "x" with
 			  NONE => #() #() (* Crash if not some *)
 			| SOME "y" => "y"
-		end.
+		end. *)
 
 Definition initialize : val :=
 	rec: "initialize" <> :=
-		let: "node" := ref (SOME (NONE, ref (ref(NONE)))) in
+		let: "node" := ref (NONE, ref (NONE)) in
 		let: "H_lock" := newlock #() in
 		let: "T_lock" := newlock #() in
 		ref ((ref "node", ref "node"), ("H_lock", "T_lock")).
 
 Definition enqueue : val :=
 	rec: "enqueue" "Q" "value" :=
-		let: "node" := ref (SOME (SOME "value", ref(ref(NONE)))) in
-		acquire (Snd ( Snd (!"Q"))) ;; (* Acqurie T_lock *)
-		Snd (get_some !(!(Snd (Fst(!"Q"))))) <- "node" ;;
+		let: "node" := ref (SOME "value", ref(NONE)) in
+		acquire (Snd (Snd (!"Q"))) ;; (* Acqurie T_lock *)
+		Snd (!(!(Snd (Fst(!"Q"))))) <- "node" ;;
 		Snd (Fst (!"Q")) <- "node" ;;
 		release (Snd (Snd (!"Q"))).
 
@@ -32,14 +32,14 @@ Definition dequeue : val :=
 	rec: "dequeue" "Q" :=
 		acquire (Fst (Snd (!"Q")));; (* Acquire H_lock *)
 		let: "node" := !(Fst (Fst (!"Q"))) in (* Get Head node *)
-		let: "new_head" := !(Snd(get_some (!"node"))) in (* Find Head.Next *)
-		if: !"new_head" = NONE then (* Check if Queue is empty *)
+		let: "new_head" := !(Snd(!"node")) in (* Find Head.Next *)
+		if: "new_head" = NONE then (* Check if Queue is empty *)
 			(* No Next node. Queue is empty. *)
 			release (Fst (Snd(!"Q"))) ;;
 			NONEV
 		else
 			(* Queue not empty. Pop first element in Queue *)
-			let: "value" := Fst (get_some (!"new_head")) in (* Get its value *)
+			let: "value" := Fst (!"new_head") in (* Get its value *)
 			Fst (Fst (!"Q")) <- "new_head" ;; (* Swing Head to next node *)
 			release (Fst (Snd (!"Q"))) ;; (* Release H_lock *)
 			"value". (* Return value *)
@@ -95,20 +95,10 @@ Context `{!lockG Σ}.
 Let N := nroot .@ "twoLockMSQ".
 
 
-Definition fst (x : (loc * val * loc)) :=
-	match x with
-	| (l'ᵢ, vᵢ, lᵢ₁) => l'ᵢ
-	end.
-
-Definition snd (x : (loc * val * loc)) :=
-	match x with
-	| (l'ᵢ, vᵢ, lᵢ₁) => vᵢ
-	end.
-
-Definition trd (x : (loc * val * loc)) :=
-	match x with
-	| (l'ᵢ, vᵢ, lᵢ₁) => lᵢ₁
-	end.
+(* Notaion for triples *)
+Notation fst x := (let '(a, b, c) := x in a).
+Notation snd x := (let '(a, b, c) := x in b).
+Notation trd x := (let '(a, b, c) := x in c).
 
 (* Fixpoint isLL (xs : list (loc * val * loc) ) : iProp Σ :=
 	match xs with
@@ -140,35 +130,30 @@ Proof.
 Fixpoint isLL_chain (xs : list (loc * val * loc) ) : iProp Σ :=
 	match xs with
 	| [] => True
-	| [(l'₁, v₁, l₂)] => l'₁ ↦□ (SOMEV (v₁, #l₂))
+	| [(l'₁, v₁, l₂)] => l'₁ ↦□ (v₁, #l₂)
 	| (l'ᵢ₁, vᵢ₁, lᵢ₂) :: (((l'ᵢ, vᵢ, lᵢ₁) :: xs'') as xs') =>
-		l'ᵢ₁ ↦□ (SOMEV (vᵢ₁, #lᵢ₂)) ∗
+		l'ᵢ₁ ↦□ (vᵢ₁, #lᵢ₂) ∗
 		lᵢ₁ ↦□ #l'ᵢ₁ ∗ isLL_chain xs'
 	end.
 
 Definition isLL (xs : list (loc * val * loc) ) : iProp Σ :=
 	match xs with
 	| [] => True
-	| (l'ₙ, vₙ, lₙ₁) :: xs' =>
-		∃ l'_null : loc, lₙ₁ ↦ #l'_null ∗ l'_null ↦□ NONEV ∗
-		isLL_chain xs
+	| (l'ₙ, vₙ, lₙ₁) :: xs' => lₙ₁ ↦ NONEV ∗ isLL_chain xs
 	end.
 
-Lemma isLL_extend : forall xs x y (l'_null : loc),
-	{{{isLL (x :: xs) ∗
-	fst y ↦□ SOMEV (snd y, #(trd y)) ∗
-	trd y ↦ #l'_null ∗
-	l'_null ↦□ NONEV}}}
-		#(trd x) <- #(fst y)
-	{{{w, RET w; isLL (y :: x :: xs) }}}.
+Lemma isLL_extend : forall xs (x y : (loc * val * loc)),
+	{{{ isLL (x :: xs) ∗
+		fst y ↦□ (snd y, #(trd y)) ∗
+		trd y ↦ NONEV }}}
+			#(trd x) <- #(fst y)
+	{{{ w, RET w; isLL (y :: x :: xs) }}}.
 Proof.
-	iIntros (xs ((l'ₙ, vₙ), lₙ₁) ((l'ₙ₁, vₙ₁), lₙ₂) l'_null Φ) "(HisLLxsx & Hfsty & Htrdy & Hl'_null) HΦ"; unfold fst, snd, trd.
-	unfold isLL. iDestruct "HisLLxsx" as "(%l'_old_null & Hlₙ₁ & Hl'_old_null & HisLL_chain_xs)".
+	iIntros (xs ((l'ₙ, vₙ), lₙ₁) ((l'ₙ₁, vₙ₁), lₙ₂) Φ) "([Hlₙ₁ HisLL_chain_xs] & Hfsty & Htrdy) HΦ".
 	wp_store.
-	iClear "Hl'_old_null". clear l'_old_null.
 	iMod (pointsto_persist with "Hlₙ₁") as "Hlₙ₁".
 	iApply "HΦ".
-	iModIntro. iExists l'_null. iFrame.
+	iModIntro. iFrame.
 Qed.
 
 Definition points_to_last (q : Qp) (l : loc) (xs : list (loc * val * loc)) : iProp Σ :=
@@ -208,13 +193,14 @@ Definition queue_invariant (head tail : loc) : iProp Σ :=
 		)
 	).
 
-Definition is_queue (v : val) : iProp Σ :=
+Definition is_queue (q : val) : iProp Σ :=
 	∃ head tail : loc, ∃ H_lock T_lock : val, ∃ γH γT : gname, 
-	∃ l : loc , ⌜v = #l⌝ ∗
-		l ↦ ((#head, #tail), (H_lock, T_lock)) ∗
+	∃ l : loc , ⌜q = #l⌝ ∗
+		l ↦□ ((#head, #tail), (H_lock, T_lock)) ∗
 		inv N (queue_invariant head tail) ∗
 		is_lock γH H_lock (True) ∗ (* TODO : give Tok(E)*)
 		is_lock γT T_lock (True). (* TODO : give Tok(D)*)
+
 
 Lemma initialize_spec : {{{ True }}} 
 							initialize #() 

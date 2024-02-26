@@ -10,7 +10,7 @@
 
 - [x] Study the Agreement RA
 - [x] Read Contextual Refinement Paper
-- [x] Read chapter 13 of Iris Lecture Notes (Hocap style Specs)
+- [ ] Read chapter 13 of Iris Lecture Notes (Hocap style Specs)
 
 - [x] Create Thesis Report file
 - [x] Add bibliography (Iris-Lecture-Notes, Contextual Refinement Paper, Iris from Ground up, etc)
