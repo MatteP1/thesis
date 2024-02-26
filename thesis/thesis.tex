@@ -25,6 +25,19 @@
 \renewcommand*\sfdefault{lmss}
 \renewcommand*\ttdefault{txtt}
 
+\newcommand{\isLock}{\operatorname{isLock}}
+\newcommand{\locked}{\operatorname{locked}}
+\newcommand{\issued}{\operatorname{issued}}
+\newcommand{\newLock}{\operatorname{newLock}}
+\newcommand{\acquire}{\operatorname{acquire}}
+\newcommand{\wait}{\operatorname{wait}}
+\newcommand{\release}{\operatorname{release}}
+\newcommand{\lockInv}{\operatorname{lockInv}}
+\newcommand{\initialise}{\operatorname{initialize}}
+\newcommand{\enqueue}{\operatorname{enqueue}}
+\newcommand{\dequeue}{\operatorname{dequeue}}
+\newcommand{\getsome}{\operatorname{get\_some}}
+
 \newcommand{\todo}[1]{{\color[rgb]{.5,0,0}\textbf{$\blacktriangleright$#1$\blacktriangleleft$}}}
 
 \begin{document}
@@ -87,6 +100,29 @@
 
 The Two-Lock Michael Scott Queue
 
+I present here he an implementation of the Two-lock MS-Queue in HeapLang. This implementation differs slightly from the original, presented in \cite{DBLP:conf/podc/MichaelS96}, but most changes simply reflect the differences in the two languages.
+
+The queue consists of 3 functions: $\initialise$, $\enqueue$, and $\dequeue$, as well as an auxiliary function $\getsome$. $\getsome$ simply extracts the contents of an option value, crashing if it is none. I now present each of the three main functions in turn.
+
+
+$\initialise$
+
+The underlying data structure making up the queue is a singly-linked list. The linked-list will always contain at least one element, called the \emph{sentinel} node, marking the beginning of the queue. Note that the sentinel node is itself not part of the queue, but all nodes following it are. The queue keeps a head pointer ($\loc_{head}$) which always points to the sentinel, and a tail pointer ($\loc_{tail}$) which points to some node in the linked list.
+
+$\initialise$ will first create a single node -- the sentinel -- marking the start of the linked list. It then creates two locks, $H\_lock$ and $T\_lock$, protecting the head and tail pointers, respectively. Finally, it creates the head and tail pointers, both pointing to the sentinel. The queue is then a pointer to a structure containing the head, the tail, and the two locks.\\
+Figure \ref{MSQTL:impl:figure:init} illustrates the structure of the queue after initialisation.
+
+Note that in the original specification, a queue is a pointer to a 4-tuple $(\loc_{head}, \loc_{tail}, H\_lock, T\_lock)$. Since HeapLang doesn't support 4-tuples, we instead represent the queue as a pointer to a pair of pairs: $((\loc_{head}, \loc_{tail}), (H\_lock, T\_lock))$.
+
+
+$\enqueue$
+
+\todo{explain enqueue}
+
+The reader may wonder why there is an extra, intermediary pointer, between nodes of the linked list, and why the head and tail pointers point to these instead of the pairs making up the linked list. In the original implementation, nodes are allocated on the heap. To simulate this in HeapLang, when creating a new node, we create a pointer to a pair making up the node. Now, in the C-like language used in the original specification, an assignment operator is available, which is not present in HeapLang. So in order to mimic this behaviour, we model variables as pointers. In this way, we can model a variable $\lvar$ as a location $\loc_{\lvar}$, and the value stored at $\loc_{\lvar}$ is the current value of $\lvar$. This means that the variable head in the original becomes a location $\loc_{head}$, and the value stored at the location is what head is currently assigned to. Since head is a pointer, then the value saved at that location will also be a pointer.
+
+
+
 \begin{figure}[h]
   \centering
   \begin{tikzpicture}[
@@ -116,7 +152,7 @@ The Two-Lock Michael Scott Queue
   ]
 
   \node (l'1) [join={by ->}, perspointer,on chain] {$\loc'_1$};
-  \node (l1pair) [join={by ->, draw=blue}, pair,on chain] {$\val_1$ \nodepart{two} $\loc_2$};
+  \node (l1pair) [join={by ->, draw=blue}, pair,on chain] {$\None$ \nodepart{two} $\loc_2$};
   \node (l'null) [join={by ->}, perspointer={a},on chain] {$\loc_{null}$};
   \node (lnull) [join={by ->, draw=blue}, rectangle,on chain] {NONE};
   \node (head) [pointer, above left=of l'1] {$\loc_{head}$};
@@ -126,7 +162,40 @@ The Two-Lock Michael Scott Queue
   \draw[->] (tail) -- (l'1);
   \end{tikzpicture}
   \caption{Queue after initialisation}
+  \label{MSQTL:impl:figure:init}
 \end{figure}
+
+\begin{align*}
+  \langkw{let} \initialise := &\\
+                    & \Let node = \Ref(\Some (\None, \Ref(\Ref(\None)))) in\\
+                    & \Let H\_lock = newlock \TT in\\
+                    & \Let T\_lock = newlock \TT in\\
+                    & \Ref ((\Ref(node), \Ref(node)), (H\_lock, T\_lock))
+\end{align*}
+
+\begin{align*}
+  \langkw{let} \enqueue \ Q \ value :=&\\
+		& \Let node = \Ref (\Some (\Some value, \Ref(\Ref(\None)))) in\\
+		& \acquire (\Snd (\Snd (\deref Q)));\\
+		& \Snd (\getsome \deref(\deref(\Snd (\Fst(\deref Q))))) \gets node;\\
+		& \Snd (\Fst (\deref Q)) \gets node;\\
+		& \release (\Snd (\Snd (\deref Q)))
+\end{align*}
+
+\begin{align*}
+  \langkw{let} \dequeue \ Q :=&\\ 
+		& \acquire (\Fst (\Snd (\deref Q)));\\
+		& \Let node = \deref (\Fst (\Fst (\deref Q))) in\\
+		& \Let new\_head = \deref (\Snd(\getsome (\deref node))) in\\
+		& \If \deref new\_head = \None then\\
+			& \hspace{20pt} \release (\Fst (\Snd(\deref Q)));\\
+			& \hspace{20pt} \None\\
+		& \Else\\
+			& \hspace{20pt} \Let value = \Fst (\getsome (\deref new\_head)) in\\
+			& \hspace{20pt} \Fst (\Fst (\deref Q)) \gets new\_head;\\
+			& \hspace{20pt} \release (\Fst (\Snd (\deref Q)));\\
+      & \hspace{20pt} value
+\end{align*}
 
 
 

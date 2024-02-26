@@ -13,23 +13,23 @@ Definition get_some : val :=
 			| SOME "y" => "y"
 		end.
 
-Definition initialize : val := 
-	rec: "initialize" <> := 
+Definition initialize : val :=
+	rec: "initialize" <> :=
 		let: "node" := ref (SOME (NONE, ref (ref(NONE)))) in
 		let: "H_lock" := newlock #() in
 		let: "T_lock" := newlock #() in
 		ref ((ref "node", ref "node"), ("H_lock", "T_lock")).
 
-Definition enqueue : val := 
+Definition enqueue : val :=
 	rec: "enqueue" "Q" "value" :=
 		let: "node" := ref (SOME (SOME "value", ref(ref(NONE)))) in
-		acquire (Snd ( Snd (!"Q")));; (* Acqurie T_lock *)
+		acquire (Snd ( Snd (!"Q"))) ;; (* Acqurie T_lock *)
 		Snd (get_some !(!(Snd (Fst(!"Q"))))) <- "node" ;;
 		Snd (Fst (!"Q")) <- "node" ;;
 		release (Snd (Snd (!"Q"))).
 
-Definition dequeue : val := 
-	rec: "dequeue" "Q" := 
+Definition dequeue : val :=
+	rec: "dequeue" "Q" :=
 		acquire (Fst (Snd (!"Q")));; (* Acquire H_lock *)
 		let: "node" := !(Fst (Fst (!"Q"))) in (* Get Head node *)
 		let: "new_head" := !(Snd(get_some (!"node"))) in (* Find Head.Next *)
@@ -177,7 +177,7 @@ Definition points_to_last (q : Qp) (l : loc) (xs : list (loc * val * loc)) : iPr
 Definition points_to_snd_last (q : Qp) (l : loc) (xs : list (loc * val * loc)) : iProp Σ :=
 	∃ x_snd_last x_last xs' , ⌜xs = x_last :: x_snd_last :: xs'⌝ ∗ l ↦{# q} #(fst x_snd_last).
 
-(* TODO: Add tokens and S/F *)
+(* TODO: Add tokens *)
 Definition queue_invariant (head tail : loc) : iProp Σ :=
 	∃ xs xs_rest x_head xs_old,
 	⌜xs = xs_rest ++ [x_head] ++ xs_old⌝ ∗

@@ -3,7 +3,6 @@
 #include <pthread.h>
 #include <stdlib.h>
 
-typedef struct Pointer Pointer;
 typedef struct Node Node;
 typedef struct Queue Queue;
 

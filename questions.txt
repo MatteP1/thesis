@@ -1,9 +1,12 @@
+- Is it fine to let model the NULL pointer as simply NONEV?
+  Modelling it as Ref(None) seems unnecessary (and makes the implementation less like the original). It also adds unnecessary complications to the specification. It is not necessary for proving safety, and it is hard to justify why it should be a ref to None.
+
 - Should the list (xs) have the newest elements first and oldest last, or vice versa. Having newest first makes proofs easier as the queue only grows.
 The other way is doable, but will require tedious induction proofs.
 
-- I currently use a trick where I keep half of the tail pointer in order to match up previous elements from invariant with elements from later opens.
-Is there a smarter way of doing this, or is this sufficient?
-
 - Is my definitions of points_to_last and points_to_snd_last fine?
 
+- Does my invariant make sense?
+
 - Should I use In x xs instead of xs = xs_old ++ x :: xs_rest (and then use In_split to get xs_old and xs_rest when needed)
+Which style is most compatible with HOCAP?

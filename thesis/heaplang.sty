@@ -26,6 +26,7 @@
 \def\Let#1=#2in{\langkw{let} \spac #1 \mathrel{=} #2 \spac \langkw{in} \spac}
 \def\If#1then{\langkw{if} \spac #1 \spac \langkw{then} \spac}
 \def\Else{\spac\langkw{else} \spac}
+\def\Ref(#1){\langkw{ref}\spac (#1)}
 \def\Rec#1#2={\langkw{rec}\spac\operatorname{#1}#2 \mathrel{=} }
 \def\Skip{\langkw{skip}}
 \def\Assert{\operatorname{\langkw{assert}}}
@@ -91,3 +92,6 @@
 \def\RecE#1#2={\langkw{rec}_\exprForm\spac\operatorname{#1}#2 \mathrel{=} }
 \def\InlE{\Inl_\exprForm}
 \def\InrE{\Inr_\exprForm}
+
+\newcommand{\Some}{\operatorname{Some}}
+\newcommand{\None}{\operatorname{None}}
