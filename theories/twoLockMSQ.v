@@ -6,12 +6,6 @@ From iris.unstable.heap_lang Require Import interpreter.
 
 Local Existing Instance spin_lock.
 
-(* Definition get_some : val :=
-	rec: "get_some" "x" :=
-		match: "x" with
-			  NONE => #() #() (* Crash if not some *)
-			| SOME "y" => "y"
-		end. *)
 
 Definition initialize : val :=
 	rec: "initialize" <> :=
@@ -150,60 +144,56 @@ Proof.
 	iModIntro. iFrame.
 Qed.
 
-(* TODO: Remove *)
-Definition points_to_last (q : Qp) (l : loc) (xs : list (loc * val * loc)) : iProp Σ :=
-	∃ x_last xs' , ⌜xs = x_last :: xs'⌝ ∗ l ↦{# q} #(fst x_last).
-
-(* TODO: Remove *)
-Definition points_to_snd_last (q : Qp) (l : loc) (xs : list (loc * val * loc)) : iProp Σ :=
-	∃ x_snd_last x_last xs' , ⌜xs = x_last :: x_snd_last :: xs'⌝ ∗ l ↦{# q} #(fst x_snd_last).
-
 Definition isLast {A} (x : A) xs := ∃ xs_rest, xs = x :: xs_rest.
-Definition is2Last {A} (x : A) xs := ∃ x_first xs_rest, xs = x_first :: x :: xs_rest.
+Definition isSndLast {A} (x : A) xs := ∃ x_first xs_rest, xs = x_first :: x :: xs_rest.
 
-(* TODO: Add tokens *)
-Definition queue_invariant (head tail : loc) : iProp Σ :=
-	∃ xs xs_rest x_head xs_old,
+Definition queue_invariant (head tail : loc) (Q_γ : Qgnames) : iProp Σ :=
+	∃ xs xs_rest xs_old (x_head x_tail: (loc * val * loc)),
 	⌜xs = xs_rest ++ [x_head] ++ xs_old⌝ ∗
 	isLL xs ∗
 	(
 		(* Static *)
 		(
 			head ↦ #(fst x_head) ∗
-			∃x_last, ⌜isLast x_last xs⌝ ∗ tail ↦ #(fst x_last)
+			tail ↦ #(fst x_tail) ∗ ⌜isLast x_tail xs⌝ ∗
+			ToknE Q_γ ∗ ToknD Q_γ ∗ TokUpdated Q_γ
 		)
 		∨
 		(* Enqueue *)
 		(
 			head ↦ #(fst x_head) ∗
-			(points_to_last (1/2)%Qp tail xs ∨ points_to_snd_last ((1/2)%Qp) tail xs)
-			(* TODO: change to using isLast/is2last *)
+			tail ↦{#1/2} #(fst x_tail) ∗
+				(⌜isLast x_tail xs⌝ ∗ TokBefore Q_γ ∨
+				 ⌜isSndLast x_tail xs⌝ ∗ TokAfter Q_γ) ∗
+			TokE Q_γ ∗ ToknD Q_γ
 		)
 		∨
 		(* Dequeue *)
 		(
-			head ↦{# 1/2} #(fst x_head) ∗
-			points_to_last (1)%Qp tail xs
-			(* TODO: change to using isLast/is2last *)
+			head ↦{#1/2} #(fst x_head) ∗
+			tail ↦ #(fst x_tail) ∗ ⌜isLast x_tail xs⌝ ∗
+			ToknE Q_γ ∗ TokD Q_γ ∗ TokUpdated Q_γ
 		)
 		∨
 		(* Both *)
 		(
-			head ↦{# 1/2} #(fst x_head) ∗
-			(points_to_last (1/2)%Qp tail xs ∨ points_to_snd_last (1/2)%Qp tail xs)
-			(* TODO: change to using isLast/is2last *)
+			head ↦{#1/2} #(fst x_head) ∗
+			tail ↦{#1/2} #(fst x_tail) ∗
+				(⌜isLast x_tail xs⌝ ∗ TokBefore Q_γ ∨
+				 ⌜isSndLast x_tail xs⌝ ∗ TokAfter Q_γ) ∗
+			TokE Q_γ ∗ TokD Q_γ
 		)
 	).
 
 Definition is_queue (q : val) (Q_γ: Qgnames) : iProp Σ :=
-	∃ head tail : loc, ∃ H_lock T_lock : val, 
+	∃ head tail : loc, ∃ H_lock T_lock : val,
 	∃ l : loc , ⌜q = #l⌝ ∗
 		l ↦□ ((#head, #tail), (H_lock, T_lock)) ∗
-		inv N (queue_invariant head tail) ∗
+		inv N (queue_invariant head tail Q_γ) ∗
 		is_lock Q_γ.(γ_Hlock) H_lock (TokD Q_γ) ∗
 		is_lock Q_γ.(γ_Tlock) T_lock (TokE Q_γ).
 
-
+(* TODO: Finish proof. *)
 Lemma initialize_spec : {{{ True }}} 
 							initialize #() 
 						{{{ v Q_γ, RET v; is_queue v Q_γ}}}.
