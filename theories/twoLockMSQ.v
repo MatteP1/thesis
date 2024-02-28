@@ -91,40 +91,34 @@ Section proofs.
 
 Context `{!heapGS Σ}.
 Context `{!lockG Σ}.
+Context `{!inG Σ (exclR unitO)}.
 
 Let N := nroot .@ "twoLockMSQ".
 
+Record Qgnames := {γ_Hlock : gname;
+				  γ_Tlock : gname;
+				  γ_E : gname;
+				  γ_nE : gname;
+				  γ_D : gname;
+				  γ_nD : gname;
+				  γ_Before : gname;
+				  γ_After : gname;
+				  }.
+
+Definition TokHlock (g : Qgnames) := own g.(γ_Hlock) (Excl ()).
+Definition TokTlock (g : Qgnames) := own g.(γ_Tlock) (Excl ()).
+Definition TokE (g : Qgnames) := own g.(γ_E) (Excl ()).
+Definition ToknE (g : Qgnames) := own g.(γ_nE) (Excl ()).
+Definition TokD (g : Qgnames) := own g.(γ_D) (Excl ()).
+Definition ToknD (g : Qgnames) := own g.(γ_nD) (Excl ()).
+Definition TokBefore (g : Qgnames) := own g.(γ_Before) (Excl ()).
+Definition TokAfter (g : Qgnames) := own g.(γ_After) (Excl ()).
+Definition TokUpdated (g : Qgnames) := ((TokBefore g) ∗ (TokAfter g))%I.
 
 (* Notaion for triples *)
 Notation fst x := (let '(a, b, c) := x in a).
 Notation snd x := (let '(a, b, c) := x in b).
 Notation trd x := (let '(a, b, c) := x in c).
-
-(* Fixpoint isLL (xs : list (loc * val * loc) ) : iProp Σ :=
-	match xs with
-	| [] => True
-	| [(l'ₙ, vₙ, lₙ₁)] =>
-		l'ₙ ↦□ (SOMEV (vₙ, #lₙ₁)) ∗
-		∃ l'_null : loc, lₙ₁ ↦ #l'_null ∗ l'_null ↦□ NONEV
-	| (l'ᵢ, vᵢ, lᵢ₁) :: (((l'ᵢ₁, vᵢ₁, lᵢ₂) :: xs'') as xs') =>
-		l'ᵢ ↦□ (SOMEV (vᵢ, #lᵢ₁)) ∗
-		lᵢ₁ ↦□ #l'ᵢ₁ ∗ isLL xs'
-	end. *)
-
-(* Definitely provable. Just tedious. *)
-(* Lemma isLL_append : forall xs x y (l'_null : loc),
-	{{{isLL (xs ++ [x]) ∗
-	fst y ↦□ SOMEV (snd y, #(trd y)) ∗
-	trd y ↦ #l'_null ∗
-	l'_null ↦□ NONEV}}}
-		#(trd x) <- #(fst y)
-	{{{w, RET w; isLL (xs ++ [x; y]) }}}.
-Proof.
-	iIntros (xs ((l'ₙ, vₙ), lₙ₁) ((l'ₙ₁, vₙ₁), lₙ₂) l'_null Φ) "(HisLLxsx & Hfsty & Htrdy & Hl'_null) HΦ".
-	unfold fst, snd, trd.
-	iInduction xs as [|a xs'] "IH".
-	- admit.
-	- destruct xs' as [| b xs'']. *)
 
 
 Fixpoint isLL_chain (xs : list (loc * val * loc) ) : iProp Σ :=
@@ -156,11 +150,16 @@ Proof.
 	iModIntro. iFrame.
 Qed.
 
+(* TODO: Remove *)
 Definition points_to_last (q : Qp) (l : loc) (xs : list (loc * val * loc)) : iProp Σ :=
 	∃ x_last xs' , ⌜xs = x_last :: xs'⌝ ∗ l ↦{# q} #(fst x_last).
 
+(* TODO: Remove *)
 Definition points_to_snd_last (q : Qp) (l : loc) (xs : list (loc * val * loc)) : iProp Σ :=
 	∃ x_snd_last x_last xs' , ⌜xs = x_last :: x_snd_last :: xs'⌝ ∗ l ↦{# q} #(fst x_snd_last).
+
+Definition isLast {A} (x : A) xs := ∃ xs_rest, xs = x :: xs_rest.
+Definition is2Last {A} (x : A) xs := ∃ x_first xs_rest, xs = x_first :: x :: xs_rest.
 
 (* TODO: Add tokens *)
 Definition queue_invariant (head tail : loc) : iProp Σ :=
@@ -171,44 +170,48 @@ Definition queue_invariant (head tail : loc) : iProp Σ :=
 		(* Static *)
 		(
 			head ↦ #(fst x_head) ∗
-			points_to_last (1)%Qp tail xs
+			∃x_last, ⌜isLast x_last xs⌝ ∗ tail ↦ #(fst x_last)
 		)
 		∨
 		(* Enqueue *)
 		(
 			head ↦ #(fst x_head) ∗
 			(points_to_last (1/2)%Qp tail xs ∨ points_to_snd_last ((1/2)%Qp) tail xs)
+			(* TODO: change to using isLast/is2last *)
 		)
 		∨
 		(* Dequeue *)
 		(
 			head ↦{# 1/2} #(fst x_head) ∗
 			points_to_last (1)%Qp tail xs
+			(* TODO: change to using isLast/is2last *)
 		)
 		∨
 		(* Both *)
 		(
 			head ↦{# 1/2} #(fst x_head) ∗
 			(points_to_last (1/2)%Qp tail xs ∨ points_to_snd_last (1/2)%Qp tail xs)
+			(* TODO: change to using isLast/is2last *)
 		)
 	).
 
-Definition is_queue (q : val) : iProp Σ :=
-	∃ head tail : loc, ∃ H_lock T_lock : val, ∃ γH γT : gname, 
+Definition is_queue (q : val) (Q_γ: Qgnames) : iProp Σ :=
+	∃ head tail : loc, ∃ H_lock T_lock : val, 
 	∃ l : loc , ⌜q = #l⌝ ∗
 		l ↦□ ((#head, #tail), (H_lock, T_lock)) ∗
 		inv N (queue_invariant head tail) ∗
-		is_lock γH H_lock (True) ∗ (* TODO : give Tok(E)*)
-		is_lock γT T_lock (True). (* TODO : give Tok(D)*)
+		is_lock Q_γ.(γ_Hlock) H_lock (TokD Q_γ) ∗
+		is_lock Q_γ.(γ_Tlock) T_lock (TokE Q_γ).
 
 
 Lemma initialize_spec : {{{ True }}} 
 							initialize #() 
-						{{{ v, RET v; is_queue v }}}.
+						{{{ v Q_γ, RET v; is_queue v Q_γ}}}.
 Proof.
 	iIntros (Φ) "_ HΦ".
 	wp_lam. 
 	wp_pures.
+	iMod (own_alloc (Excl ()) ) as (γ_E) "Hγ_E"; first done.
 	wp_alloc null' as "Hnull'".
 	iMod (pointsto_persist with "Hnull'") as "#Hnull'".
 	wp_alloc null as "Hnull".
