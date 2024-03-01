@@ -232,6 +232,19 @@ It is not possible for the tail to point more than one node behind the head, as 
 Fortunately, this isn't an issue for safety, but a consequence of this possibility is that when modelling the queue, we must remember at least one "old" node (i.e. a dequeued node), as the tail might be pointing to this node. For the sake of simplicity in the model, the choice is made to remember an arbitrary amount of old nodes, which is represented by the list $xs_{old}$.
 
 
+With these insights, we can now define the queue invariant.
+
+\begin{definition}[Two-Lock M&S-Queue Invariant]\label{MSQTL:spec:invariant}
+  \todo{Write it in}
+\end{definition}
+
+The specification for the two-lock Michael Scott Queue \textit{can} be proven using the queue invariant \ref{MSQTL:spec:invariant}. However, during the proof, a simpler (but arguably less intuitive) queue invariant was discovered This simpler invariant is equivalent to \ref{MSQTL:spec:invariant} and has the added benefit of being easier to work with in the proofs. Thus, we shall be using this version of the queue invariant during the proofs.
+
+\begin{definition}[Simplified Two-Lock M&S-Queue Invariant]\label{MSQTL:spec:invariant:simple}
+  \todo{Write it in}
+\end{definition}
+
+
 \subsubsection{Discussing the need for $xs_{old}$}\label{MSQTL:Discussion:xs_old}
 
 As mentioned in the insights, it is possible for the tail to lag one node behind the head. This insight lead to including the old nodes of the queue in the queue invariant. This addition manifests in the end of the proof of dequeue. When we open the invariant to swing the head to the new node, we get that the entire queue is $xs$. After performing the write, we can then close the invariant with the same $xs$ that we opened the queue to (just written differently to signify that $x_{head}$ is now "old"). Because of this, we can supply the same predicate concerning the $tail$ (the or) that we opened the queue with, since these only mention $xs$, which remains the same.
