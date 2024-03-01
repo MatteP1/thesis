@@ -287,6 +287,60 @@ Definition queue_invariant (l_head l_tail : loc) (Q_γ : Qgnames) : iProp Σ :=
 		)
 	).
 
+Definition queue_invariant_simple (l_head l_tail : loc) (Q_γ : Qgnames) : iProp Σ :=
+	∃ xs xs_rest xs_old (x_head x_tail: (loc * val * loc)),
+	⌜xs = xs_rest ++ [x_head] ++ xs_old⌝ ∗ isLL xs ∗
+	(
+		(
+			(l_head ↦ #(fst x_head) ∗ ToknD Q_γ) ∨ 
+			(l_head ↦{#1/2} #(fst x_head) ∗ TokD Q_γ)
+		) ∗
+		(
+			(l_tail ↦ #(fst x_tail) ∗ ⌜isLast x_tail xs⌝ ∗ ToknE Q_γ ∗ TokUpdated Q_γ) ∨
+			(
+				l_tail ↦{#1/2} #(fst x_tail) ∗ TokE Q_γ ∗
+				(
+					(⌜isLast x_tail xs⌝ ∗ TokBefore Q_γ) ∨
+				 	(⌜isSndLast x_tail xs⌝ ∗ TokAfter Q_γ)
+				)
+			)
+		)
+	).
+
+Lemma queue_invariant_equiv_simple : forall l_head l_tail Q_γ,
+	(queue_invariant l_head l_tail Q_γ) ∗-∗
+	(queue_invariant_simple l_head l_tail Q_γ).
+Proof.
+	iIntros (l_head l_tail Q_γ).
+	iSplit.
+	- iIntros "(%xs & %xs_rest & %xs_old & %x_head & %x_tail & Hxs_split & HisLL_xs & [H_Static | [H_Enqueue | [H_Dequeue | H_Both]]])"; 
+	iExists xs, xs_rest, xs_old, x_head, x_tail; iFrame.
+	  + iDestruct "H_Static" as "(Hl_head & Hl_tail & HisLast & HTokne & HToknD & HTokUpdated)".
+		iSplitL "Hl_head HToknD"; first (iLeft; iFrame).
+		iLeft. iFrame.
+	  + iDestruct "H_Enqueue" as "(Hl_head & Hl_tail & [[HisLast HTokAfter] | [HisSndLast HAfter]] & HToke & HToknD)".
+	    * iSplitL "Hl_head HToknD"; first (iLeft; iFrame). 
+		  iRight. iFrame. iLeft. iFrame.
+		* iSplitL "Hl_head HToknD"; first (iLeft; iFrame). 
+		  iRight. iFrame. iRight. iFrame.
+	  + iDestruct "H_Dequeue" as "(Hl_head & Hl_tail & HisLast & HTokne & HTokD & HTokUpdated)".
+		iSplitL "Hl_head HTokD"; first (iRight; iFrame).
+		iLeft. iFrame.
+	  + iDestruct "H_Both" as "(Hl_head & Hl_tail & [[HisLast HTokAfter] | [HisSndLast HAfter]] & HToke & HTokD)".
+	    * iSplitL "Hl_head HTokD"; first (iRight; iFrame). 
+		  iRight. iFrame. iLeft. iFrame.
+		* iSplitL "Hl_head HTokD"; first (iRight; iFrame). 
+		  iRight. iFrame. iRight. iFrame.
+	- iIntros "(%xs & %xs_rest & %xs_old & %x_head & %x_tail & Hxs_split & HisLL_xs & [[Hl_head HToknD] | [Hl_head HTokD]] & [(Hl_tail & HisLast & HToknE & HTokUpdated) | (Hl_tail & HTokE & [[HisLast HTokBefore] | [HisSndLast HTokAfter]])])";
+	iExists xs, xs_rest, xs_old, x_head, x_tail; iFrame.
+	  + iLeft. iFrame.
+	  + iRight. iLeft. iFrame. iLeft. iFrame.
+	  + iRight. iLeft. iFrame. iRight. iFrame.
+	  + iRight. iRight. iLeft. iFrame.
+	  + iRight. iRight. iRight. iFrame. iLeft. iFrame.
+	  + iRight. iRight. iRight. iFrame. iRight. iFrame.
+Qed.
+
 Definition is_queue (q : val) (Q_γ: Qgnames) : iProp Σ :=
 	∃ head tail : loc, ∃ H_lock T_lock : val,
 	∃ l : loc , ⌜q = #l⌝ ∗
