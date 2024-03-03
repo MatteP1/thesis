@@ -706,7 +706,42 @@ Proof.
 	  iDestruct "H_queue_inv_inv" as "(%xs_3 & %xs_rest_3 & %xs_old_3 & %x_head_3 & %x_tail_3 & >%H_eq_xs_3 & H_isLL_xs_3 & [ [Hl_head >HToknD2] | [>Hl_head2 HTokD] ] & H_tail)".
 	  1: admit. (* Impossible ToknD *)
 	  iCombine "Hl_head1 Hl_head2" as "Hl_head" gives "[_ %Hhead_eq3]".
-	  (* TODO: Finish *)
+	  rewrite dfrac_op_own.
+	  rewrite Qp.half_half.
+	  wp_store.
+	  iModIntro.
+	  iSplitL "Hl_head H_tail HToknD H_isLL_xs_3".
+	  {
+		iNext.
+		iPoseProof (isLL_and_chain with "H_isLL_xs_3") as "[H_isLL_xs_3 #H_isLL_chain_xs_3]".
+		subst.
+		iAssert (⌜x_head = x_head_3⌝)%I as "->".
+		{
+			iApply (isLL_chain_agree x_head x_head_3 xs_rest xs_old xs_rest_3 xs_old_3); by simplify_eq.
+		}
+		(* Sync up xs_rest_2 with xs_rest_3 *)
+		destruct xs_rest_3 as [|x_tail_3_2 xs_rest_3'].
+		- (* Impossible case. xs_rest_3 must contain at least one element. *)
+		  iDestruct "H_isLL_xs_3" as "[H_x_head_3_null _]".
+		  iCombine "H_x_head_3_null Htrd_x_head_next" as "_" gives "[_ %Hcontra]".
+		  simplify_eq.
+		- destruct (list_first_last x_tail_3_2 xs_rest_3') as [x_head_next_3 [xs_rest_3'' Hxs_rest_eq_3]].
+		  rewrite Hxs_rest_eq_3.
+		  rewrite <- app_assoc. rewrite <- app_assoc.
+		  iAssert (⌜x_head_next = x_head_next_3⌝)%I as "->"; first by iApply isLL_chain_agree_next.
+		  iApply queue_invariant_equiv_simple.
+		  iExists (xs_rest_3'' ++ [x_head_next_3] ++ [x_head_3] ++ xs_old_3), xs_rest_3'', ([x_head_3] ++ xs_old_3), x_head_next_3, x_tail_3.
+		  iFrame. iSplitR; first done. iLeft. iFrame.
+	  }
+	  wp_seq.
+	  wp_load.
+	  wp_pures.
+	  wp_apply (release_spec with "[$H_hlock $HTokD $Hlocked_γ_Hlock]").
+	  iIntros (_).
+	  wp_seq.
+	  iModIntro.
+	  iApply "HΦ".
+	  done.
 Admitted.
 
 End proofs.
