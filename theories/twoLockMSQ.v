@@ -264,6 +264,7 @@ Proof.
 Qed.
 	  
 
+Definition isFirst {A} (x : A) xs := ∃ xs_rest, xs = xs_rest ++ [x].
 Definition isLast {A} (x : A) xs := ∃ xs_rest, xs = x :: xs_rest.
 Definition isSndLast {A} (x : A) xs := ∃ x_first xs_rest, xs = x_first :: x :: xs_rest.
 
@@ -367,9 +368,10 @@ Definition is_queue (q : val) (Q_γ: Qgnames) : iProp Σ :=
 		is_lock Q_γ.(γ_Hlock) H_lock (TokD Q_γ) ∗
 		is_lock Q_γ.(γ_Tlock) T_lock (TokE Q_γ).
 
-Lemma initialize_spec : {{{ True }}} 
-							initialize #() 
-						{{{ v Q_γ, RET v; is_queue v Q_γ}}}.
+Lemma initialize_spec : 
+	{{{ True }}} 
+		initialize #() 
+	{{{ v Q_γ, RET v; is_queue v Q_γ}}}.
 Proof.
 	iIntros (Φ) "_ HΦ".
 	wp_lam.
@@ -601,9 +603,10 @@ Proof.
 	done.
 Admitted.
 
-Lemma dequeue_spec Q (qg : Qgnames) : {{{ is_queue Q qg}}} 
-							 dequeue Q 
-						 {{{v, RET v; True}}}.
+Lemma dequeue_spec Q (qg : Qgnames) : 
+	{{{ is_queue Q qg}}} 
+		dequeue Q 
+	{{{v, RET v; True}}}.
 Proof.
 	iIntros (Φ) "(%l_head & %l_tail & %H_lock & %T_lock & %l_queue & -> &
 				 #Hl_queue & #H_queue_inv & #H_hlock & #H_tlock) HΦ".
@@ -743,5 +746,203 @@ Proof.
 	  iApply "HΦ".
 	  done.
 Admitted.
+
+
+
+
+(* SEQUENTIAL *)
+
+Record QSeqgnames := {γ_Hlock_seq 	: gname;
+					  γ_Tlock_seq 	: gname;
+					 }.
+
+Definition is_queue_seq (q : val) (xs_queue: list (loc * val * loc)) (Q_γ: QSeqgnames) : iProp Σ :=
+	∃ head tail : loc, ∃ H_lock T_lock : val, ∃x_head x_tail : (loc * val * loc),
+	∃ l : loc , ⌜q = #l⌝ ∗
+		l ↦□ ((#head, #tail), (H_lock, T_lock)) ∗
+		isLL (xs_queue ++ [x_head]) ∗
+		head ↦ #(fst x_head) ∗
+		tail ↦ #(fst x_tail) ∗ ⌜isLast x_tail (xs_queue ++ [x_head])⌝ ∗
+		is_lock Q_γ.(γ_Hlock_seq) H_lock (True) ∗
+		is_lock Q_γ.(γ_Tlock_seq) T_lock (True).
+
+
+Lemma initialize_spec_seq : 
+	{{{ True }}} 
+		initialize #() 
+	{{{ v Q_γ, RET v; is_queue_seq v [] Q_γ }}}.
+Proof.
+	iIntros (Φ _) "HΦ".
+	wp_lam.
+	wp_alloc l_2 as "Hl_2".
+	wp_alloc l'_1 as "Hl'_1".
+	wp_pures.
+	iMod (pointsto_persist with "Hl'_1") as "#Hl'_1".
+	wp_pures.
+	wp_apply (newlock_spec True); first done.
+	iIntros (hlock γ_Hlock) "Hγ_Hlock".
+	wp_let.
+	wp_apply (newlock_spec True); first done.
+	iIntros (tlock γ_Tlock) "Hγ_Tlock".
+	wp_let.
+	wp_alloc l_tail as "Hl_tail".
+	wp_alloc l_head as "Hl_head".
+	set (Queue_gnames := {| γ_Hlock_seq := γ_Hlock;
+							γ_Tlock_seq := γ_Tlock;
+					|}).
+	wp_alloc l_queue as "Hl_queue".
+	iMod (pointsto_persist with "Hl_queue") as "#Hl_queue".
+	iApply ("HΦ" $! #l_queue Queue_gnames).
+	iModIntro.
+	iExists l_head, l_tail, hlock, tlock. 
+	do 2 iExists (l'_1, NONEV, l_2).
+	iExists l_queue.
+	iFrame.
+	do 3 (iSplit; first done).
+	by iExists [].
+Qed.
+
+Lemma enqueue_spec_seq Q (v : val) (xs : list (loc * val * loc)) (qg : QSeqgnames) :
+	{{{ is_queue_seq Q xs qg }}}
+		enqueue Q v 
+	{{{w x, RET w; ⌜snd x = SOMEV v⌝ ∗ is_queue_seq Q (x :: xs) qg }}}.
+Proof.
+	iIntros (Φ) "(%l_head & %l_tail & %H_lock & %T_lock & %x_head & %x_tail &
+				  %l_queue & -> & #Hl_queue & H_isLL_xs & Hl_head & Hl_tail &
+				  %HisLast_x_tail & #H_hlock & #H_tlock) HΦ".
+	destruct HisLast_x_tail as [xs_rest Hxs_split].
+	rewrite Hxs_split.
+	iDestruct "H_isLL_xs" as "[Htrd_x_tail #H_isLL_chain_xs]".
+	wp_lam.
+	wp_let.
+	wp_pures.
+	wp_alloc lₙ₂ as "Hlₙ₂".
+	wp_alloc l'ₙ₁ as "Hl'ₙ₁".
+	iMod (pointsto_persist with "Hl'ₙ₁") as "#Hl'ₙ₁".
+	wp_let.
+	wp_load.
+	wp_pures.
+	wp_apply (acquire_spec with "H_tlock").
+	iIntros "(Hlocked_γ_Tlock & _)".
+	wp_seq.
+	wp_load.
+	wp_pures.
+	wp_load.
+	subst.
+	iPoseProof (isLL_chain_node [] x_tail xs_rest with "[H_isLL_chain_xs]") as "Hfst_x_tail"; first done.
+	wp_load.
+	wp_pures.
+	wp_store.
+	iMod (pointsto_persist with "Htrd_x_tail") as "#Htrd_x_tail".
+	wp_load.
+	wp_pures.
+	wp_store.
+	wp_load.
+	wp_pures.
+	wp_apply (release_spec with "[$H_tlock $Hlocked_γ_Tlock]").
+	iIntros (_).
+	iApply ("HΦ" $! #() (l'ₙ₁, SOMEV v, lₙ₂)).
+	iSplit; first done.
+	iExists l_head, l_tail, H_lock, T_lock, x_head, (l'ₙ₁, SOMEV v, lₙ₂), l_queue.
+	iFrame.
+	do 2 (iSplit; first done).
+	iSplit.
+	{
+		iSimpl.
+		rewrite Hxs_split.
+		repeat iSplit; done.
+	}
+	iSplit; first by iExists (xs ++ [x_head]).
+	iSplit; done.
+Qed.
+
+Lemma dequeue_spec_seq Q (xs : list (loc * val * loc)) (qg : QSeqgnames) : 
+	{{{ is_queue_seq Q xs qg }}}
+		dequeue Q
+	{{{ v, RET v; (⌜xs = []⌝ ∗ ⌜v = NONEV⌝ ∗ is_queue_seq Q xs qg) ∨
+				  (∃x xs', ⌜xs = xs' ++ [x]⌝ ∗ ⌜v = snd x⌝ ∗
+													is_queue_seq Q xs' qg) }}}.
+Proof.
+	iIntros (Φ) "(%l_head & %l_tail & %H_lock & %T_lock & %x_head & %x_tail &
+				  %l_queue & -> & #Hl_queue & H_isLL_xs & Hl_head & Hl_tail &
+				  %HisLast_x_tail & #H_hlock & #H_tlock) HΦ".
+	iPoseProof (isLL_and_chain with "H_isLL_xs") as "[H_isLL_xs #H_isLL_chain_xs]".
+	wp_lam.
+	wp_load.
+	wp_pures.
+	wp_apply (acquire_spec with "H_hlock").
+	iIntros "(Hlocked_γ_Hlock & _)".
+	wp_seq.
+	wp_load.
+	wp_pures.
+	wp_load.
+	wp_let.
+	iPoseProof (isLL_chain_node xs x_head [] with "[H_isLL_chain_xs]") as "Hfst_x_head"; first done.
+	wp_load.
+	wp_pures.
+	(* Is the queue empty? *)
+	destruct xs as [| x' xs_queue' ].
+	- (* Queue is empty *)
+	  iDestruct "H_isLL_xs" as "[Htrd_x_head _]".
+	  wp_load.
+	  wp_let.
+	  wp_pures.
+	  wp_load.
+	  wp_pures.
+	  wp_apply (release_spec with "[$H_hlock $Hlocked_γ_Hlock]").
+	  iIntros (_).
+	  wp_seq.
+	  iModIntro.
+	  iApply ("HΦ" $! NONEV).
+	  iLeft.
+	  do 2 (iSplit; first done).
+	  iExists l_head, l_tail, H_lock, T_lock, x_head, x_tail, l_queue.
+	  iFrame.
+	  repeat iSplit; done.
+	- (* Queue is not empty *)
+	  destruct (list_first_last x' xs_queue') as [x_head_next [xs_queue'' Hxs_queue_eq]].
+	  rewrite Hxs_queue_eq.
+	  iPoseProof (isLL_chain_split xs_queue'' [x_head_next; x_head] with "[H_isLL_chain_xs]") as "[_ H_isLL_chain_x_head_next]"; first by rewrite <- app_assoc.
+	  iDestruct "H_isLL_chain_x_head_next" as "(Hfst_x_head_next & H_trd_x_head & _)".
+	  wp_load.
+	  wp_let.
+	  wp_pures.
+	  wp_load.
+	  wp_pures.
+	  wp_load.
+	  wp_pures.
+	  wp_store.
+	  wp_load.
+	  wp_pures.
+	  wp_apply (release_spec with "[$H_hlock $Hlocked_γ_Hlock]").
+	  iIntros (_).
+	  wp_seq.
+	  iModIntro.
+	  iApply ("HΦ" $! (snd x_head_next)).
+	  iRight.
+	  iExists x_head_next, xs_queue''.
+	  do 2 (iSplit; first done).
+	  iExists l_head, l_tail, H_lock, T_lock, x_head_next, x_tail, l_queue.
+	  iFrame.
+	  do 2 (iSplit; first done).
+	  iSplitL "H_isLL_xs".
+	  {
+		rewrite <- Hxs_queue_eq.
+		iDestruct "H_isLL_xs" as "[H_trd_x_tail _]".
+		iFrame.
+		iPoseProof (isLL_chain_split (x' :: xs_queue') [x_head] with "H_isLL_chain_xs") as "[HisLL_chain_no_head _]".
+		done.
+	  }
+	  iSplit.
+	  {
+		iPureIntro.
+		rewrite <- Hxs_queue_eq.
+		exists (xs_queue').
+		destruct HisLast_x_tail as [xs' Heq].
+		inversion Heq.
+		reflexivity.
+	  }
+	  by iSplit.
+Qed.
 
 End proofs.

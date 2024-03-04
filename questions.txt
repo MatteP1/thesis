@@ -1,34 +1,10 @@
-- Is it fine to let model the NULL pointer as simply NONEV?
-  Modelling it as Ref(None) seems unnecessary (and makes the implementation less like the original). It also adds unnecessary complications to the specification. It is not necessary for proving safety, and it is hard to justify why it should be a ref to None.
+- How should I structure my coq file (sequential and concurrent)?
+  Also all of helper lemmas?
 
-- Further, I can also remove the "Some" around the pair making up a node, without affecting safety. I suspect they made nodes be SOME/NONE to deal with types. Making the NULL pointer be NONEV and removing the SOME makes the program ill-typed.
+- How to prove isLL_chain persistent?
 
-- Alternatively, we can model pointers as Some l or None, where l is a location. Then None corresponds to Null pointer. This makes it well-typed again, and makes more intuitive sense.
+- How to prove all the cases with two tokens?
 
-A: It is fine to have it be type-unsound, as long as I can prove safety.
+- Is sequential spec fine?
 
-- Should the list (xs) have the newest elements first and oldest last, or vice versa. Having newest first makes proofs easier as the queue only grows.
-The other way is doable, but will require tedious induction proofs.
-
-A: having the newest enqueued first in the queue is fine.
-
-- Is my definitions of points_to_last and points_to_snd_last fine?
-
-A: Change to isLast/is2Last.
-
-- Does my invariant make sense?
-
-A: Yes.
-
-- Should I use In x xs instead of xs = xs_old ++ x :: xs_rest (and then use In_split to get xs_old and xs_rest when needed)
-Which style is most compatible with HOCAP?
-
-A: without In is fine.
-
-- Is there already an RA for tokens?
-
-A: Kinda. It is created using ExclR UnitO.
-
-- I want to create a spec for sequential uses of Two-lock M&S Queue, which tracks exact contents of queue. Is this a good idea? If so, how should I structure my coq file?
-
-Good idea, do this.
+- Do I have any bad practises in my proofs?

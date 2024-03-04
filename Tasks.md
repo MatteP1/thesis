@@ -17,19 +17,28 @@
 
 - [x] Read and understand M&S queue with locks
 - [ ] Write down explanation of M&S Queue with locks (in latex)
+  - [ ] Show a simple client (e.g. from tests in Coq)
 - [ ] Write down explanation of lock-free M&S Queue (in latex)
 
-- [ ] State and prove correctness of M&S queue with locks (non-concurrent)
-  - [ ] Locks protect nothing (True) and all resources are always available (not duplicable, hence non-concurrent)
-  - [ ] Track exact contents of queue
-  - [ ] Implement proof in Iris
-  - [ ] Prove correctness of simple client
+- [x] State and prove correctness of M&S queue with locks (non-concurrent)
+  - [x] Locks protect nothing (True) and all resources are always available (not duplicable, hence non-concurrent)
+  - [x] Track exact contents of queue
+  - [x] Implement proof in Iris
 
-- [ ] State and prove correctness of M&S queue with locks (concurrent case)
+- [x] State and prove correctness of M&S queue with locks (concurrent case)
   - [x] Change initialise so that locks are created before head and tail.
   - [x] Define queue Invariant
   - [x] Change l_null to l_n+1
   - [x] Do proof sketch on paper
-  - [ ] Implement proof in Iris (Coq)
+  - [x] Implement proof in Iris (Coq)
+
+- [ ] Clean up proof of concurrent spec for M&S queue with locks in Coq
+- [ ] Clean up proof of Sequential spec for M&S queue with locks in Coq
+
+- [ ] Write about the sequential spec for two-lock M&S queue in the report
+  - [ ] Mention how it can be used to track exact contents of queue
+  - [ ] Can be used to prove a precise spec for sequential client used in testing.
+- [ ] Write about the concurrent spec for two-lock M&S queue in the report
+  - [ ] Talk about adequacy as a reason for safety.
 
 - [ ] State and prove correctness of lock-free M&S Queue
