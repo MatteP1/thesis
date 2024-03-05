@@ -110,23 +110,23 @@ Definition TokBefore (g : Qgnames) := own g.(γ_Before) (Excl ()).
 Definition TokAfter (g : Qgnames) := own g.(γ_After) (Excl ()).
 Definition TokUpdated (g : Qgnames) := ((TokBefore g) ∗ (TokAfter g))%I.
 
-(* Notaion for triples *)
-(* TODO: rename fst to "in", snd to "n_val", and trd to "out". Maybe n_in *)
-(* TODO: maybe "n_in" and "n_out" to avoid clashing with keywords *)
-Definition fst {A B C} (x : A * B * C ) := (let '(a, b, c) := x in a).
-Definition snd {A B C} (x : A * B * C ) := (let '(a, b, c) := x in b).
-Definition trd {A B C} (x : A * B * C ) := (let '(a, b, c) := x in c).
+(* Notation for nodes *)
+Definition n_in {A B C} (x : A * B * C ) := (let '(a, b, c) := x in a).
+Definition n_val {A B C} (x : A * B * C ) := (let '(a, b, c) := x in b).
+Definition n_out {A B C} (x : A * B * C ) := (let '(a, b, c) := x in c).
 
 
 Fixpoint isLL_chain (xs : list (loc * val * loc) ) : iProp Σ :=
 	match xs with
 	| [] => True
-	| [x] => (fst x) ↦□ (snd x, #(trd x))
-	| xᵢ₁ :: ((xᵢ :: xs'') as xs') =>
-		fst(xᵢ₁) ↦□ (snd xᵢ₁, #(trd xᵢ₁)) ∗
-		(trd xᵢ) ↦□ #(fst xᵢ₁) ∗ isLL_chain xs'
+	| [x] => n_in x ↦□ (n_val x, #(n_out x))
+	| x :: ((x' :: xs'') as xs') =>
+				n_in x ↦□ (n_val x, #(n_out x)) ∗
+				n_out x' ↦□ #(n_in x) ∗
+				isLL_chain xs'
 	end.
 
+(* isLL_chain is persistent for all xs *)
 (* TODO: Prove this! *)
 Global Instance isLL_chain_persistent xs : Persistent (isLL_chain xs).
 Proof.
@@ -135,7 +135,7 @@ Proof.
 Definition isLL (xs : list (loc * val * loc) ) : iProp Σ :=
 	match xs with
 	| [] => True
-	| x :: xs' => (trd x) ↦ NONEV ∗ isLL_chain xs
+	| x :: xs' => (n_out x) ↦ NONEV ∗ isLL_chain xs
 	end.
 
 Lemma isLL_and_chain : forall xs,
@@ -145,14 +145,15 @@ Proof.
 	iIntros (xs) "HisLLxs".
 	destruct xs as [| x' xs']; first done.
 	unfold isLL.
-	iPoseProof "HisLLxs" as "[Htrdx' #HisLLxs]".
-	auto.
+	iPoseProof "HisLLxs" as "[Hn_outx' #HisLLxs]".
+	iFrame.
+	by iSplit.
 Qed.
 
-Lemma fst_equal (x y : (loc * val * loc)) :
-	⌜#(fst x) = #(fst y)⌝ -∗
-	fst x ↦□ (snd x, #(trd x)) -∗
-	fst y ↦□ (snd y, #(trd y)) -∗
+Lemma n_in_equal (x y : (loc * val * loc)) :
+	⌜#(n_in x) = #(n_in y)⌝ -∗
+	n_in x ↦□ (n_val x, #(n_out x)) -∗
+	n_in y ↦□ (n_val y, #(n_out y)) -∗
 	⌜x = y⌝.
 Proof.
 	iIntros (Heq_loc) "Hx Hy".
@@ -168,16 +169,16 @@ Qed.
 
 Lemma isLL_chain_node : forall xs_1 x xs_2,
 	isLL_chain (xs_1 ++ x :: xs_2) -∗
-	fst(x) ↦□ (snd x, #(trd x)).
+	n_in(x) ↦□ (n_val x, #(n_out x)).
 Proof.
 	iIntros (xs_1 x xs_2) "#HisLL_chain".
 	iInduction xs_1 as [| y xs'_1] "IH".
-	- simpl.
-	  destruct xs_2.
+	- destruct xs_2.
 	  + done.
-	  + iDestruct "HisLL_chain" as "(Hx & _ & _)"; auto.
-	- iApply "IH". destruct xs'_1 as [| y' xs''_1];
-	  	iDestruct "HisLL_chain" as "(_ & _ & H)"; done.
+	  + by iDestruct "HisLL_chain" as "(Hx & _ & _)".
+	- iApply "IH". 
+	  destruct xs'_1 as [| y' xs''_1];
+	  iDestruct "HisLL_chain" as "(_ & _ & H)"; done.
 Qed.
 
 Lemma isLL_chain_split : forall xs ys,
@@ -186,87 +187,77 @@ Lemma isLL_chain_split : forall xs ys,
 Proof.
 	iIntros (xs ys) "#HisLL_chain_xs_ys".
 	iInduction xs as [|x' xs'] "IH".
-	- auto.
+	- by iSplit.
 	- destruct xs' as [| x'' xs''].
 	  + destruct ys as [| y' ys'].
-		* auto.
-		* iDestruct "HisLL_chain_xs_ys" as "(Hx' & Htrdy' & HIsLL_chain_ys')".
-		  fold isLL_chain. iSplitL; done.
+		* by iSplit.
+		* iDestruct "HisLL_chain_xs_ys" as "(Hx' & Hn_outy' & HIsLL_chain_ys')".
+		  fold isLL_chain. iSplit; done.
 	  + iAssert (isLL_chain (x'' :: xs'') ∗ isLL_chain ys)%I as "[IHxs' IHys]".
 	  	{
 			iApply "IH". iDestruct "HisLL_chain_xs_ys" as "(_ & _ & Hchain)"; done.
 		}
-		iSplitL; auto.
-		iDestruct "HisLL_chain_xs_ys" as "(Hfstx' & Htrdx'' & _)".
+		iSplit; try done.
+		iDestruct "HisLL_chain_xs_ys" as "(Hn_inx' & Hn_outx'' & _)".
 		unfold isLL_chain; auto.
 Qed.
 
-Lemma isLL_chain_agree : forall x_1 y_1 xs xs' ys ys',
-	⌜fst x_1 = fst y_1⌝ -∗
-	isLL_chain (xs ++ [x_1] ++ xs') -∗
-	isLL_chain (ys ++ [y_1] ++ ys') -∗
-	⌜x_1 = y_1⌝.
+Lemma isLL_chain_agree : forall x y xs xs' ys ys',
+	⌜n_in x = n_in y⌝ -∗
+	isLL_chain (xs ++ [x] ++ xs') -∗
+	isLL_chain (ys ++ [y] ++ ys') -∗
+	⌜x = y⌝.
 Proof.
-	iIntros (x_1 y_1 xs xs' ys ys' Heqfst_x1y1) "#HisLL_chainxs #HisLL_chainys".
-	iApply fst_equal.
-	- iPureIntro. by rewrite Heqfst_x1y1.
-	- by iApply (isLL_chain_node xs x_1 xs').
-	- by iApply (isLL_chain_node ys y_1 ys').
+	iIntros (x y xs xs' ys ys' Heqn_in_xy) "#HisLL_chainxs #HisLL_chainys".
+	iApply n_in_equal.
+	- iPureIntro. by rewrite Heqn_in_xy.
+	- by iApply (isLL_chain_node xs x xs').
+	- by iApply (isLL_chain_node ys y ys').
 Qed.
 
-(* TODO: make proof nicer *)
 Lemma isLL_chain_agree_next : forall x y z ys ys' zs zs',
 	isLL_chain (ys ++ [y ; x] ++ ys') -∗
 	isLL_chain (zs ++ [z ; x] ++ zs') -∗
 	⌜y = z⌝.
 Proof.
 	iIntros (x y z ys ys' zs zs') "#HisLL_chainys #HisLL_chainzs".
-	iAssert (isLL_chain (ys ++ [y ; x]) ∗ isLL_chain ys')%I as "[HisLL_chainysyx _]".
-	{ iApply isLL_chain_split. by rewrite app_assoc. }
-	iAssert (isLL_chain ys ∗ isLL_chain ([y ; x]))%I as "[_ HisLL_chainy]".
-	{ by iApply isLL_chain_split. }
-	iAssert (isLL_chain (zs ++ [z ; x]) ∗ isLL_chain zs')%I as "[HisLL_chainzszx _]".
-	{ iApply isLL_chain_split. iClear "HisLL_chainys". by rewrite app_assoc. }
-	iAssert (isLL_chain zs ∗ isLL_chain ([z ; x]))%I as "[_ HisLL_chainz]".
-	{ by iApply isLL_chain_split. }
-	unfold isLL_chain.
-	iDestruct "HisLL_chainy" as "(#Hfsty_2 & #Htrdy_1 & Hfsty_1)".
-	iDestruct "HisLL_chainz" as "(#Hfsztz_2 & #Htrdz_1 & Hfstz_1)".
-	iCombine "Htrdy_1 Htrdz_1" gives "[_ %Heq_fst]".
+	iPoseProof (isLL_chain_split ys ([y ; x] ++ ys') with "HisLL_chainys") as "[_ HisLL_chain_yxys']".
+	iPoseProof (isLL_chain_split [y ; x] ys' with "HisLL_chain_yxys'") as "[HisLL_chain_yx _]".
+	iPoseProof (isLL_chain_split zs ([z ; x] ++ zs') with "HisLL_chainzs") as "[_ HisLL_chain_zxzs']".
+	iPoseProof (isLL_chain_split [z ; x] zs' with "HisLL_chain_zxzs'") as "[HisLL_chain_zx _]".
+	iClear "HisLL_chainys HisLL_chainzs HisLL_chain_yxys' HisLL_chain_zxzs'".
+	iDestruct "HisLL_chain_yx" as "(#Hn_iny_2 & #Hn_outy_1 & Hn_iny_1)".
+	iDestruct "HisLL_chain_zx" as "(#Hfsztz_2 & #Hn_outz_1 & Hn_inz_1)".
+	iCombine "Hn_outy_1 Hn_outz_1" gives "[_ %Heq_n_in]".
 	simplify_eq.
-	iApply fst_equal; auto. iPureIntro. by rewrite Heq_fst.
+	iApply n_in_equal; try done. by rewrite Heq_n_in.
 Qed.
-
-
-(* Todo: consider removing *)
-Lemma isLL_extend : forall xs (x y : (loc * val * loc)),
-	{{{ isLL (x :: xs) ∗
-		fst y ↦□ (snd y, #(trd y)) ∗
-		trd y ↦ NONEV }}}
-			#(trd x) <- #(fst y)
-	{{{ w, RET w; isLL (y :: x :: xs) }}}.
-Proof.
-	iIntros (xs x y Φ) "([Hlₙ₁ HisLL_chain_xs] & Hfsty & Htrdy) HΦ".
-	wp_store.
-	iMod (pointsto_persist with "Hlₙ₁") as "Hlₙ₁".
-	iApply "HΦ".
-	iModIntro. iFrame.
-Qed.
-
-Lemma list_first_last {A} : forall (x_first : A) xs,
-	∃x_last xs', x_first :: xs = xs' ++ [x_last].
-Proof.
-	intros x_first xs. generalize dependent x_first.
-	induction xs as [|x' xs'' IH]; intros x_first.
-	- exists x_first, []. done.
-	- destruct (IH x') as [x_last' [xs' Hxs_eq]].
-	  exists x_last', (x_first :: xs'). simpl. f_equal. done.
-Qed.
-	  
 
 Definition isFirst {A} (x : A) xs := ∃ xs_rest, xs = xs_rest ++ [x].
 Definition isLast {A} (x : A) xs := ∃ xs_rest, xs = x :: xs_rest.
 Definition isSndLast {A} (x : A) xs := ∃ x_first xs_rest, xs = x_first :: x :: xs_rest.
+
+Lemma exists_first {A} : forall (xs : list A),
+	~(xs = nil) ->
+	∃x_first, isFirst x_first xs.
+Proof.
+	induction xs as [|x xs' IH]; first done.
+	intros _.
+	destruct xs' as [|x' xs'']; first by exists x, [].
+	destruct IH as [x_first [xs_rest H_eq]]; first done.
+	exists x_first, (x :: xs_rest).
+	by rewrite H_eq.
+Qed.
+
+Lemma exists_last {A} : forall (xs : list A),
+	~(xs = nil) ->
+	∃x_last, isLast x_last xs.
+Proof.
+	intros [|x xs']; first done.
+	intros _.
+	by exists x, xs'.
+Qed.
+
 
 Definition queue_invariant (l_head l_tail : loc) (Q_γ : Qgnames) : iProp Σ :=
 	∃ xs xs_rest xs_old (x_head x_tail: (loc * val * loc)),
@@ -275,15 +266,15 @@ Definition queue_invariant (l_head l_tail : loc) (Q_γ : Qgnames) : iProp Σ :=
 	(
 		(* Static *)
 		(
-			l_head ↦ #(fst x_head) ∗
-			l_tail ↦ #(fst x_tail) ∗ ⌜isLast x_tail xs⌝ ∗
+			l_head ↦ #(n_in x_head) ∗
+			l_tail ↦ #(n_in x_tail) ∗ ⌜isLast x_tail xs⌝ ∗
 			ToknE Q_γ ∗ ToknD Q_γ ∗ TokUpdated Q_γ
 		)
 		∨
 		(* Enqueue *)
 		(
-			l_head ↦ #(fst x_head) ∗
-			l_tail ↦{#1/2} #(fst x_tail) ∗
+			l_head ↦ #(n_in x_head) ∗
+			l_tail ↦{#1/2} #(n_in x_tail) ∗
 				(⌜isLast x_tail xs⌝ ∗ TokBefore Q_γ ∨
 				 ⌜isSndLast x_tail xs⌝ ∗ TokAfter Q_γ) ∗
 			TokE Q_γ ∗ ToknD Q_γ
@@ -291,15 +282,15 @@ Definition queue_invariant (l_head l_tail : loc) (Q_γ : Qgnames) : iProp Σ :=
 		∨
 		(* Dequeue *)
 		(
-			l_head ↦{#1/2} #(fst x_head) ∗
-			l_tail ↦ #(fst x_tail) ∗ ⌜isLast x_tail xs⌝ ∗
+			l_head ↦{#1/2} #(n_in x_head) ∗
+			l_tail ↦ #(n_in x_tail) ∗ ⌜isLast x_tail xs⌝ ∗
 			ToknE Q_γ ∗ TokD Q_γ ∗ TokUpdated Q_γ
 		)
 		∨
 		(* Both *)
 		(
-			l_head ↦{#1/2} #(fst x_head) ∗
-			l_tail ↦{#1/2} #(fst x_tail) ∗
+			l_head ↦{#1/2} #(n_in x_head) ∗
+			l_tail ↦{#1/2} #(n_in x_tail) ∗
 				(⌜isLast x_tail xs⌝ ∗ TokBefore Q_γ ∨
 				 ⌜isSndLast x_tail xs⌝ ∗ TokAfter Q_γ) ∗
 			TokE Q_γ ∗ TokD Q_γ
@@ -311,13 +302,13 @@ Definition queue_invariant_simple (l_head l_tail : loc) (Q_γ : Qgnames) : iProp
 	⌜xs = xs_rest ++ [x_head] ++ xs_old⌝ ∗ isLL xs ∗
 	(
 		(
-			(l_head ↦ #(fst x_head) ∗ ToknD Q_γ) ∨ 
-			(l_head ↦{#1/2} #(fst x_head) ∗ TokD Q_γ)
+			(l_head ↦ #(n_in x_head) ∗ ToknD Q_γ) ∨ 
+			(l_head ↦{#1/2} #(n_in x_head) ∗ TokD Q_γ)
 		) ∗
 		(
-			(l_tail ↦ #(fst x_tail) ∗ ⌜isLast x_tail xs⌝ ∗ ToknE Q_γ ∗ TokUpdated Q_γ) ∨
+			(l_tail ↦ #(n_in x_tail) ∗ ⌜isLast x_tail xs⌝ ∗ ToknE Q_γ ∗ TokUpdated Q_γ) ∨
 			(
-				l_tail ↦{#1/2} #(fst x_tail) ∗ TokE Q_γ ∗
+				l_tail ↦{#1/2} #(n_in x_tail) ∗ TokE Q_γ ∗
 				(
 					(⌜isLast x_tail xs⌝ ∗ TokBefore Q_γ) ∨
 				 	(⌜isSndLast x_tail xs⌝ ∗ TokAfter Q_γ)
@@ -441,7 +432,7 @@ Proof.
 	wp_bind (! #l_tail)%E.
 	iInv "H_queue_inv" as "(%xs & %xs_rest & %xs_old & %x_head & %x_tail & #Hxs_eq & HisLL_xs & >Hcases)".
 	(* Open in Static / Dequeue *)
-	iAssert (ToknE qg ∗ (l_head ↦ #(fst x_head) ∗ ToknD qg ∨ l_head ↦{#1 / 2} #(fst x_head) ∗ TokD qg) ∗ l_tail ↦ #(fst x_tail) ∗ ⌜isLast x_tail xs⌝ ∗ TokE qg ∗ TokUpdated qg)%I with "[Hcases HTokE]" as "(HToknE & HEnqueue_Both)".
+	iAssert (ToknE qg ∗ (l_head ↦ #(n_in x_head) ∗ ToknD qg ∨ l_head ↦{#1 / 2} #(n_in x_head) ∗ TokD qg) ∗ l_tail ↦ #(n_in x_tail) ∗ ⌜isLast x_tail xs⌝ ∗ TokE qg ∗ TokUpdated qg)%I with "[Hcases HTokE]" as "(HToknE & HEnqueue_Both)".
 	{
 		iDestruct "Hcases" as "[HStatic | [HEnqueue | [HDequeue | HBoth]]]".
 		- iDestruct "HStatic" as "(Hl_head & Hl_tail & H_isLast & HToknE & HToknD & HTokUpdated)". iFrame. iLeft. iFrame.
@@ -452,7 +443,7 @@ Proof.
 	iDestruct "HEnqueue_Both" as "(Hl_head_case & [Hl_tail1 Hl_tail2] & [%xs_fromtail %H_isLast] & HTokE & HTokUpdated)".
 	wp_load.
 	iModIntro.
-	iAssert (fst x_tail ↦□ (snd x_tail, #(trd x_tail)) ∗ isLL (xs))%I with "[HisLL_xs]" as "[#Hx_tail HisLL_xs]".
+	iAssert (n_in x_tail ↦□ (n_val x_tail, #(n_out x_tail)) ∗ isLL (xs))%I with "[HisLL_xs]" as "[#Hx_tail HisLL_xs]".
 	{ 
 		rewrite H_isLast. iDestruct "HisLL_xs" as "[Hnull Hchain]".
 		destruct xs_fromtail.
@@ -474,10 +465,10 @@ Proof.
 	}
 	wp_load.
 	wp_pures.
-	wp_bind (#(trd x_tail) <- #l'ₙ₁)%E.
+	wp_bind (#(n_out x_tail) <- #l'ₙ₁)%E.
 	iInv "H_queue_inv" as "(%xs_2 & %xs_rest_2 & %xs_old_2 & %x_head_2 & %x_tail_2 & #Hxs_eq_2 & HisLL_xs_2 & >Hcases_2)".
 	(* Open in Enqueue / Both : Before *)
-	iAssert (ToknE qg ∗ TokAfter qg ∗ (l_head ↦ #(fst x_head_2) ∗ ToknD qg ∨ l_head ↦{#1 / 2} #(fst x_head_2) ∗ TokD qg) ∗ l_tail ↦{#1 / 2} #(fst x_tail_2) ∗ (⌜isLast x_tail_2 xs_2⌝ ∗ TokBefore qg) ∗ TokE qg)%I with "[Hcases_2 HToknE HTokAfter]" as "(HToknE & HTokAfter & HEnqueue_Both)".
+	iAssert (ToknE qg ∗ TokAfter qg ∗ (l_head ↦ #(n_in x_head_2) ∗ ToknD qg ∨ l_head ↦{#1 / 2} #(n_in x_head_2) ∗ TokD qg) ∗ l_tail ↦{#1 / 2} #(n_in x_tail_2) ∗ (⌜isLast x_tail_2 xs_2⌝ ∗ TokBefore qg) ∗ TokE qg)%I with "[Hcases_2 HToknE HTokAfter]" as "(HToknE & HTokAfter & HEnqueue_Both)".
 	{
 		iDestruct "Hcases_2" as "[HStatic | [HEnqueue | [HDequeue | HBoth]]]".
 		- admit. (* Impossible: ToknE *)
@@ -495,10 +486,10 @@ Proof.
 	}
 	iDestruct "HEnqueue_Both" as "(Hl_head_case & Hl_tail1 & ([%xs_fromtail_2 %H_isLast_2] & HTokBefore) & HTokE)".
 	iCombine "Hl_tail1 Hl_tail2" as "Hl_tail" gives "[_ %Htail_eq]".
-	iAssert (▷(trd x_tail ↦ NONEV ∗ isLL_chain xs_2))%I with "[HisLL_xs_2]" as "[Hnull HisLL_chain_xs_2]".
+	iAssert (▷(n_out x_tail ↦ NONEV ∗ isLL_chain xs_2))%I with "[HisLL_xs_2]" as "[Hnull HisLL_chain_xs_2]".
 	{
 		iNext.
-		iAssert (fst x_tail_2 ↦□ (snd x_tail_2, #(trd x_tail_2)) ∗ isLL (xs_2))%I with "[HisLL_xs_2]" as "[#Hx_tail_2 HisLL_xs_2]".
+		iAssert (n_in x_tail_2 ↦□ (n_val x_tail_2, #(n_out x_tail_2)) ∗ isLL (xs_2))%I with "[HisLL_xs_2]" as "[#Hx_tail_2 HisLL_xs_2]".
 		{
 			rewrite H_isLast_2. iDestruct "HisLL_xs_2" as "[Hnull Hchain]".
 			destruct xs_fromtail_2.
@@ -506,18 +497,18 @@ Proof.
 			- iDestruct "Hchain" as "[#H1 H2]"; iFrame. auto.
 		}
 		iAssert (⌜x_tail = x_tail_2⌝%I) as "<-".
-		{ iApply fst_equal; auto. }
+		{ iApply n_in_equal; auto. }
 		by rewrite H_isLast_2.
 	}
 	wp_store.
-	iAssert (fst x_tail_2 ↦□ (snd x_tail_2, #(trd x_tail_2)) ∗ isLL_chain xs_2)%I with "[HisLL_chain_xs_2]" as "[#Hx_tail_2 HisLL_chain_xs_2]".
+	iAssert (n_in x_tail_2 ↦□ (n_val x_tail_2, #(n_out x_tail_2)) ∗ isLL_chain xs_2)%I with "[HisLL_chain_xs_2]" as "[#Hx_tail_2 HisLL_chain_xs_2]".
 	{
 		rewrite H_isLast_2. destruct xs_fromtail_2.
 		- iPoseProof "HisLL_chain_xs_2" as "#HisLL_chain_xs_2". iFrame. auto.
 		- iDestruct "HisLL_chain_xs_2" as "[#H1 H2]"; iFrame. auto.
 	}
 	iAssert (⌜x_tail = x_tail_2⌝%I) as "<-".
-	{ iApply fst_equal; auto. }
+	{ iApply n_in_equal; auto. }
 	iMod (pointsto_persist with "Hnull") as "#Hnull".
 	iDestruct "Hl_tail" as "[Hl_tail1 Hl_tail2]".
 	iModIntro.
@@ -547,7 +538,7 @@ Proof.
 	wp_bind (#l_tail <- #l'ₙ₁)%E.
 	iInv "H_queue_inv" as "(%xs_3 & %xs_rest_3 & %xs_old_3 & %x_head_3 & %x_tail_3 & #Hxs_eq_3 & HisLL_xs_3 & >Hcases_3)".
 	(* Open in Enqueue / Both : After *)
-	iAssert (ToknE qg ∗ TokBefore qg ∗ (l_head ↦ #(fst x_head_3) ∗ ToknD qg ∨ l_head ↦{#1 / 2} #(fst x_head_3) ∗ TokD qg) ∗ l_tail ↦{#1 / 2} #(fst x_tail_3) ∗ (⌜isSndLast x_tail_3 xs_3⌝ ∗ TokAfter qg) ∗ TokE qg)%I with "[Hcases_3 HToknE HTokBefore]" as "(HToknE & HTokBefore & HEnqueue_Both)".
+	iAssert (ToknE qg ∗ TokBefore qg ∗ (l_head ↦ #(n_in x_head_3) ∗ ToknD qg ∨ l_head ↦{#1 / 2} #(n_in x_head_3) ∗ TokD qg) ∗ l_tail ↦{#1 / 2} #(n_in x_tail_3) ∗ (⌜isSndLast x_tail_3 xs_3⌝ ∗ TokAfter qg) ∗ TokE qg)%I with "[Hcases_3 HToknE HTokBefore]" as "(HToknE & HTokBefore & HEnqueue_Both)".
 	{
 		iDestruct "Hcases_3" as "[HStatic | [HEnqueue | [HDequeue | HBoth]]]".
 		- admit. (* Impossible: ToknE *)
@@ -635,10 +626,10 @@ Proof.
 	}
 	wp_let.
 	subst.
-	iPoseProof (isLL_chain_node with "H_isLL_chain_xs_1") as "H_fst_x_head".
+	iPoseProof (isLL_chain_node with "H_isLL_chain_xs_1") as "H_n_in_x_head".
 	wp_load.
 	wp_pures.
-	wp_bind (! #(trd x_head))%E.
+	wp_bind (! #(n_out x_head))%E.
 	iInv "H_queue_inv" as "H_queue_inv_inv".
 	iPoseProof (queue_invariant_equiv_simple with "H_queue_inv_inv") as "H_queue_inv_inv".
 	iDestruct "H_queue_inv_inv" as "(%xs_2 & %xs_rest_2 & %xs_old_2 & %x_head_2 & %x_tail_2 & >%H_eq_xs_2 & H_isLL_xs_2 & [ [Hl_head >HToknD2] | [>Hl_head2 HTokD] ] & H_tail)".
@@ -655,10 +646,10 @@ Proof.
 	(* Case analysis: Is queue empty? *)
 	destruct xs_rest_2 as [| x_tail_2_2 xs_rest_2'].
 	- (* Queue is empty. *)
-	  iDestruct "H_isLL_xs_2" as "[Htrd_x_head_null _]".
+	  iDestruct "H_isLL_xs_2" as "[Hn_out_x_head_null _]".
 	  wp_load.
 	  iModIntro.
-	  iSplitL "Hl_head HToknD H_tail Htrd_x_head_null".
+	  iSplitL "Hl_head HToknD H_tail Hn_out_x_head_null".
 	  {
 		iNext. iApply queue_invariant_equiv_simple.
 		iExists ([] ++ [x_head] ++ xs_old_2), [], xs_old_2, x_head, x_tail_2.
@@ -676,7 +667,7 @@ Proof.
 	  iApply "HΦ".
 	  done.
 	- (* Queue is non-empty*)
-	  destruct (list_first_last x_tail_2_2 xs_rest_2') as [x_head_next [xs_rest_2'' Hxs_rest_eq]].
+	  destruct (exists_first (x_tail_2_2 :: xs_rest_2')) as [x_head_next [xs_rest_2'' Hxs_rest_eq]]; first done.
 	  rewrite Hxs_rest_eq.
 	  iAssert (▷(isLL_chain [x_head_next; x_head]))%I as "H_isLL_chain_x_head_next".
 	  {
@@ -687,7 +678,7 @@ Proof.
 		iDestruct (isLL_chain_split with "H") as "[H' _]".
 		done.
 	  }
-	  iDestruct "H_isLL_chain_x_head_next" as "(Hfst_x_head_next & Htrd_x_head_next & Hfst_x_head)".
+	  iDestruct "H_isLL_chain_x_head_next" as "(Hn_in_x_head_next & Hn_out_x_head_next & Hn_in_x_head)".
 	  wp_load.
 	  iModIntro.
 	  iDestruct "Hl_head" as "[Hl_head1 Hl_head2]".
@@ -703,7 +694,7 @@ Proof.
 	  wp_pures.
 	  wp_load.
 	  wp_pures.
-	  wp_bind (#l_head <- #(fst x_head_next))%E.
+	  wp_bind (#l_head <- #(n_in x_head_next))%E.
 	  iInv "H_queue_inv" as "H_queue_inv_inv".
 	  iPoseProof (queue_invariant_equiv_simple with "H_queue_inv_inv") as "H_queue_inv_inv".
 	  iDestruct "H_queue_inv_inv" as "(%xs_3 & %xs_rest_3 & %xs_old_3 & %x_head_3 & %x_tail_3 & >%H_eq_xs_3 & H_isLL_xs_3 & [ [Hl_head >HToknD2] | [>Hl_head2 HTokD] ] & H_tail)".
@@ -726,9 +717,9 @@ Proof.
 		destruct xs_rest_3 as [|x_tail_3_2 xs_rest_3'].
 		- (* Impossible case. xs_rest_3 must contain at least one element. *)
 		  iDestruct "H_isLL_xs_3" as "[H_x_head_3_null _]".
-		  iCombine "H_x_head_3_null Htrd_x_head_next" as "_" gives "[_ %Hcontra]".
+		  iCombine "H_x_head_3_null Hn_out_x_head_next" as "_" gives "[_ %Hcontra]".
 		  simplify_eq.
-		- destruct (list_first_last x_tail_3_2 xs_rest_3') as [x_head_next_3 [xs_rest_3'' Hxs_rest_eq_3]].
+		- destruct (exists_first (x_tail_3_2 :: xs_rest_3')) as [x_head_next_3 [xs_rest_3'' Hxs_rest_eq_3]]; first done.
 		  rewrite Hxs_rest_eq_3.
 		  rewrite <- app_assoc. rewrite <- app_assoc.
 		  iAssert (⌜x_head_next = x_head_next_3⌝)%I as "->"; first by iApply isLL_chain_agree_next.
@@ -761,8 +752,8 @@ Definition is_queue_seq (q : val) (xs_queue: list (loc * val * loc)) (Q_γ: QSeq
 	∃ l : loc , ⌜q = #l⌝ ∗
 		l ↦□ ((#head, #tail), (H_lock, T_lock)) ∗
 		isLL (xs_queue ++ [x_head]) ∗
-		head ↦ #(fst x_head) ∗
-		tail ↦ #(fst x_tail) ∗ ⌜isLast x_tail (xs_queue ++ [x_head])⌝ ∗
+		head ↦ #(n_in x_head) ∗
+		tail ↦ #(n_in x_tail) ∗ ⌜isLast x_tail (xs_queue ++ [x_head])⌝ ∗
 		is_lock Q_γ.(γ_Hlock_seq) H_lock (True) ∗
 		is_lock Q_γ.(γ_Tlock_seq) T_lock (True).
 
@@ -805,14 +796,14 @@ Qed.
 Lemma enqueue_spec_seq Q (v : val) (xs : list (loc * val * loc)) (qg : QSeqgnames) :
 	{{{ is_queue_seq Q xs qg }}}
 		enqueue Q v 
-	{{{w x, RET w; ⌜snd x = SOMEV v⌝ ∗ is_queue_seq Q (x :: xs) qg }}}.
+	{{{w x, RET w; ⌜n_val x = SOMEV v⌝ ∗ is_queue_seq Q (x :: xs) qg }}}.
 Proof.
 	iIntros (Φ) "(%l_head & %l_tail & %H_lock & %T_lock & %x_head & %x_tail &
 				  %l_queue & -> & #Hl_queue & H_isLL_xs & Hl_head & Hl_tail &
 				  %HisLast_x_tail & #H_hlock & #H_tlock) HΦ".
 	destruct HisLast_x_tail as [xs_rest Hxs_split].
 	rewrite Hxs_split.
-	iDestruct "H_isLL_xs" as "[Htrd_x_tail #H_isLL_chain_xs]".
+	iDestruct "H_isLL_xs" as "[Hn_out_x_tail #H_isLL_chain_xs]".
 	wp_lam.
 	wp_let.
 	wp_pures.
@@ -829,11 +820,11 @@ Proof.
 	wp_pures.
 	wp_load.
 	subst.
-	iPoseProof (isLL_chain_node [] x_tail xs_rest with "[H_isLL_chain_xs]") as "Hfst_x_tail"; first done.
+	iPoseProof (isLL_chain_node [] x_tail xs_rest with "[H_isLL_chain_xs]") as "Hn_in_x_tail"; first done.
 	wp_load.
 	wp_pures.
 	wp_store.
-	iMod (pointsto_persist with "Htrd_x_tail") as "#Htrd_x_tail".
+	iMod (pointsto_persist with "Hn_out_x_tail") as "#Hn_out_x_tail".
 	wp_load.
 	wp_pures.
 	wp_store.
@@ -860,7 +851,7 @@ Lemma dequeue_spec_seq Q (xs : list (loc * val * loc)) (qg : QSeqgnames) :
 	{{{ is_queue_seq Q xs qg }}}
 		dequeue Q
 	{{{ v, RET v; (⌜xs = []⌝ ∗ ⌜v = NONEV⌝ ∗ is_queue_seq Q xs qg) ∨
-				  (∃x xs', ⌜xs = xs' ++ [x]⌝ ∗ ⌜v = snd x⌝ ∗
+				  (∃x xs', ⌜xs = xs' ++ [x]⌝ ∗ ⌜v = n_val x⌝ ∗
 													is_queue_seq Q xs' qg) }}}.
 Proof.
 	iIntros (Φ) "(%l_head & %l_tail & %H_lock & %T_lock & %x_head & %x_tail &
@@ -877,13 +868,13 @@ Proof.
 	wp_pures.
 	wp_load.
 	wp_let.
-	iPoseProof (isLL_chain_node xs x_head [] with "[H_isLL_chain_xs]") as "Hfst_x_head"; first done.
+	iPoseProof (isLL_chain_node xs x_head [] with "[H_isLL_chain_xs]") as "Hn_in_x_head"; first done.
 	wp_load.
 	wp_pures.
 	(* Is the queue empty? *)
 	destruct xs as [| x' xs_queue' ].
 	- (* Queue is empty *)
-	  iDestruct "H_isLL_xs" as "[Htrd_x_head _]".
+	  iDestruct "H_isLL_xs" as "[Hn_out_x_head _]".
 	  wp_load.
 	  wp_let.
 	  wp_pures.
@@ -900,10 +891,10 @@ Proof.
 	  iFrame.
 	  repeat iSplit; done.
 	- (* Queue is not empty *)
-	  destruct (list_first_last x' xs_queue') as [x_head_next [xs_queue'' Hxs_queue_eq]].
+	  destruct (exists_first (x' :: xs_queue')) as [x_head_next [xs_queue'' Hxs_queue_eq]]; first done.
 	  rewrite Hxs_queue_eq.
 	  iPoseProof (isLL_chain_split xs_queue'' [x_head_next; x_head] with "[H_isLL_chain_xs]") as "[_ H_isLL_chain_x_head_next]"; first by rewrite <- app_assoc.
-	  iDestruct "H_isLL_chain_x_head_next" as "(Hfst_x_head_next & H_trd_x_head & _)".
+	  iDestruct "H_isLL_chain_x_head_next" as "(Hn_in_x_head_next & H_n_out_x_head & _)".
 	  wp_load.
 	  wp_let.
 	  wp_pures.
@@ -918,7 +909,7 @@ Proof.
 	  iIntros (_).
 	  wp_seq.
 	  iModIntro.
-	  iApply ("HΦ" $! (snd x_head_next)).
+	  iApply ("HΦ" $! (n_val x_head_next)).
 	  iRight.
 	  iExists x_head_next, xs_queue''.
 	  do 2 (iSplit; first done).
@@ -928,7 +919,7 @@ Proof.
 	  iSplitL "H_isLL_xs".
 	  {
 		rewrite <- Hxs_queue_eq.
-		iDestruct "H_isLL_xs" as "[H_trd_x_tail _]".
+		iDestruct "H_isLL_xs" as "[H_n_out_x_tail _]".
 		iFrame.
 		iPoseProof (isLL_chain_split (x' :: xs_queue') [x_head] with "H_isLL_chain_xs") as "[HisLL_chain_no_head _]".
 		done.
