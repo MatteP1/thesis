@@ -21,9 +21,16 @@
 \usepackage{tikz}
 \usetikzlibrary{calc,shapes.multipart,chains,arrows}
 
-
 \renewcommand*\sfdefault{lmss}
 \renewcommand*\ttdefault{txtt}
+
+% Theorems, Corollaries, and Lemmas
+\newtheorem{theorem}{Theorem}
+\newtheorem{corollary}{Corollary}[theorem]
+\newtheorem{lemma}[theorem]{Lemma}
+
+\newtheorem{definition}{Definition}[section]
+
 
 \newcommand{\isLock}{\operatorname{isLock}}
 \newcommand{\locked}{\operatorname{locked}}
@@ -36,7 +43,9 @@
 \newcommand{\initialise}{\operatorname{initialize}}
 \newcommand{\enqueue}{\operatorname{enqueue}}
 \newcommand{\dequeue}{\operatorname{dequeue}}
-% \newcommand{\getsome}{\operatorname{get\_some}}
+
+\newcommand{\locin}[1]{\loc_{#1\_\text{in}}}
+\newcommand{\locout}[1]{\loc_{#1\_\text{out}}}
 
 \newcommand{\todo}[1]{{\color[rgb]{.5,0,0}\textbf{$\blacktriangleright$#1$\blacktriangleleft$}}}
 
@@ -122,6 +131,50 @@ $\enqueue$
 The reader may wonder why there is an extra, intermediary pointer, between nodes of the linked list, and why the head and tail pointers point to these instead of the pairs making up the linked list. In the original implementation, nodes are allocated on the heap. To simulate this in HeapLang, when creating a new node, we create a pointer to a pair making up the node. Now, in the C-like language used in the original specification, an assignment operator is available, which is not present in HeapLang. So in order to mimic this behaviour, we model variables as pointers. In this way, we can model a variable $\lvar$ as a location $\loc_{\lvar}$, and the value stored at $\loc_{\lvar}$ is the current value of $\lvar$. This means that the variable head in the original becomes a location $\loc_{head}$, and the value stored at the location is what head is currently assigned to. Since head is a pointer, then the value saved at that location will also be a pointer.
 
 
+\begin{figure}[h]
+  \centering
+  \begin{tikzpicture}[
+    pair/.style = {
+      on chain,
+      rectangle split,
+      rectangle split horizontal,
+      rectangle split parts=2,
+      draw,
+      anchor=center,
+      text height=1.5ex,
+    },
+    perspointer/.style = {
+      on chain,
+      rectangle,
+      draw,
+      anchor=center,
+      text height=1.5ex,
+    },
+    pointer/.style = {
+      rectangle,
+      draw,
+      anchor=center,
+      text height=1.5ex,
+    },
+    start chain=going right,
+  ]
+
+  % Linked List
+  \node (l'1) [join={by ->}, perspointer,on chain] {$\locin{1}$};
+  \node (l1pair) [join={by ->, draw=blue}, pair,on chain] {$\None$ \nodepart{two} $\locout{1}$};
+  \node (null) [join={by ->, draw=black}, rectangle,on chain] {$\None$};
+
+  % Head and tail
+  \node (head) [pointer, above left=of l'1] {$\loc_{head}$};
+  \node (tail) [pointer, above right=of l'1] {$\loc_{tail}$};
+  \draw[->] (head) -- (l'1);
+  \draw[->] (tail) -- (l'1);
+  
+  \end{tikzpicture}
+  \caption{Queue after initialisation}
+  \label{MSQTL:impl:figure:init}
+\end{figure}
+
 
 \begin{figure}[h]
   \centering
@@ -152,20 +205,79 @@ The reader may wonder why there is an extra, intermediary pointer, between nodes
   ]
 
   % Linked List
-  \node (l'1) [join={by ->}, perspointer,on chain] {$\loc'_1$};
-  \node (l1pair) [join={by ->, draw=blue}, pair,on chain] {$\None$ \nodepart{two} $\loc_2$};
+  \node (l'1) [join={by ->}, perspointer,on chain] {$\locin{1}$};
+  \node (l1pair) [join={by ->, draw=blue}, pair,on chain] {$v_1$ \nodepart{two} $\locout{1}$};
+  \node (l'2) [join={by ->, draw=blue}, perspointer,on chain] {$\locin{2}$};
+  \node (l2pair) [join={by ->, draw=blue}, pair,on chain] {$v_2$ \nodepart{two} $\locout{2}$};
+  \node (null) [join={by ->, dotted, draw=black}, rectangle,on chain] {$\None$};
+
+  \node (l'3) [perspointer, above right=of l2pair] {$\locin{3}$};
+  \node (l3pair) [join={by ->, draw=blue}, pair,on chain] {$v_3$ \nodepart{two} $\locout{3}$};
+  \node (null) [join={by ->, draw=black}, rectangle,on chain] {$\None$};
+  \draw[->, dashed, draw=blue] (l2pair) -- (l'3);
+
+  % Head and tail
+  \node (head) [pointer, above=of l'1] {$\loc_{head}$};
+  \node (tail) [pointer, above=of l'2] {$\loc_{tail}$};
+  \draw[->] (head) -- (l'1);
+  \draw[->, dotted] (tail) -- (l'2);
+  \draw[->, dashed] (tail) -- (l'3);
+  
+  \end{tikzpicture}
+  \caption{Enqueuing an element to a queue with one element.}
+  \label{MSQTL:impl:figure:enqueue}
+\end{figure}
+
+
+\begin{figure}[h]
+  \centering
+  \begin{tikzpicture}[
+    pair/.style = {
+      on chain,
+      rectangle split,
+      rectangle split horizontal,
+      rectangle split parts=2,
+      draw,
+      anchor=center,
+      text height=1.5ex,
+    },
+    perspointer/.style = {
+      on chain,
+      rectangle,
+      draw,
+      anchor=center,
+      text height=1.5ex,
+    },
+    pointer/.style = {
+      rectangle,
+      draw,
+      anchor=center,
+      text height=1.5ex,
+    },
+    start chain=going right,
+  ]
+
+  % Linked List
+  \node (l1in) [join={by ->}, perspointer,on chain] {$\locin{1}$};
+  \node (l1pair) [join={by ->, draw=blue}, pair,on chain] {$v_1$ \nodepart{two} $\locout{1}$};
+  \node (l2in) [join={by ->, draw=blue}, perspointer,on chain] {$\locin{2}$};
+  \node (l2pair) [join={by ->, draw=blue}, pair,on chain] {$v_2$ \nodepart{two} $\locout{2}$};
+  \node (l3in) [join={by ->, draw=blue}, perspointer,on chain] {$\locin{3}$};
+  \node (l3pair) [join={by ->, draw=blue}, pair,on chain] {$v_3$ \nodepart{two} $\locout{3}$};
   \node (null) [join={by ->, draw=black}, rectangle,on chain] {$\None$};
 
   % Head and tail
-  \node (head) [pointer, above left=of l'1] {$\loc_{head}$};
-  \node (tail) [pointer, above right=of l'1] {$\loc_{tail}$};
-  \draw[->] (head) -- (l'1);
-  \draw[->] (tail) -- (l'1);
+  \node (head) [pointer, above=of l1pair] {$\loc_{head}$};
+  \node (tail) [pointer, above=of l3in] {$\loc_{tail}$};
+  \draw[->, dotted] (head) -- (l1in);
+  \draw[->, dashed] (head) -- (l2in);
+  \draw[->] (tail) -- (l3in);
   
   \end{tikzpicture}
-  \caption{Queue after initialisation}
-  \label{MSQTL:impl:figure:init}
+  \caption{Dequeueing an element ($v_2$) from a queue with two elements ($v_2$, $v_3$).}
+  \label{MSQTL:impl:figure:dequeue}
 \end{figure}
+
 
 \begin{align*}
   \langkw{let} \initialise := &\\
@@ -234,13 +346,13 @@ Fortunately, this isn't an issue for safety, but a consequence of this possibili
 
 With these insights, we can now define the queue invariant.
 
-\begin{definition}[Two-Lock M&S-Queue Invariant]\label{MSQTL:spec:invariant}
+\begin{definition}[Two-Lock M\&S-Queue Invariant]\label{MSQTL:spec:invariant}
   \todo{Write it in}
 \end{definition}
 
 The specification for the two-lock Michael Scott Queue \textit{can} be proven using the queue invariant \ref{MSQTL:spec:invariant}. However, during the proof, a simpler (but arguably less intuitive) queue invariant was discovered This simpler invariant is equivalent to \ref{MSQTL:spec:invariant} and has the added benefit of being easier to work with in the proofs. Thus, we shall be using this version of the queue invariant during the proofs.
 
-\begin{definition}[Simplified Two-Lock M&S-Queue Invariant]\label{MSQTL:spec:invariant:simple}
+\begin{definition}[Simplified Two-Lock M\&S-Queue Invariant]\label{MSQTL:spec:invariant:simple}
   \todo{Write it in}
 \end{definition}
 
