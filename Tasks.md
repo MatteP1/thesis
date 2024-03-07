@@ -16,8 +16,7 @@
 - [x] Add bibliography (Iris-Lecture-Notes, Contextual Refinement Paper, Iris from Ground up, etc)
 
 - [x] Read and understand M&S queue with locks
-- [ ] Write down explanation of M&S Queue with locks (in latex)
-  - [ ] Show a simple client (e.g. from tests in Coq)
+- [x] Write down explanation of M&S Queue with locks (in latex)
 - [ ] Write down explanation of lock-free M&S Queue (in latex)
 
 - [x] State and prove correctness of M&S queue with locks (non-concurrent)

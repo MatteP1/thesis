@@ -16,6 +16,8 @@
 \usepackage[useregional]{datetime2}
 \DTMlangsetup[en-US]{showdayofmonth=false}
 \usepackage{lipsum}
+\usepackage{caption}
+\usepackage{subcaption}
 \usepackage{iris}
 \usepackage{heaplang}
 \usepackage{tikz}
@@ -111,25 +113,42 @@ The Two-Lock Michael Scott Queue
 
 I present here he an implementation of the Two-lock MS-Queue in HeapLang. This implementation differs slightly from the original, presented in \cite{DBLP:conf/podc/MichaelS96}, but most changes simply reflect the differences in the two languages.
 
-The queue consists of 3 functions: $\initialise$, $\enqueue$, and $\dequeue$ which I now present in turn.
 
-
-$\initialise$
+Preliminaries
 
 The underlying data structure making up the queue is a singly-linked list. The linked-list will always contain at least one element, called the \emph{sentinel} node, marking the beginning of the queue. Note that the sentinel node is itself not part of the queue, but all nodes following it are. The queue keeps a head pointer ($\loc_{head}$) which always points to the sentinel, and a tail pointer ($\loc_{tail}$) which points to some node in the linked list.
 
+In my implementation, a node can be thought of as a triple $(\locin{i}, v_i, \locout{i})$. The location $\locin{i}$ points to the pair $(v_i, \locout{i})$, where $v_i$ is the value of the node, and $\locout{i}$ either points to $\None$ which represents the null pointer, or to the next node in the linked list. When we say that a location $\loc$ points to a node $(\locin{i}, v_i, \locout{i})$, we mean that $\loc \mapsto \locin{i}$. Hence, if we have two adjacent nodes $(\locin{i}, v_i, \locout{i})$, $(\locin{i+1}, v_{i+1}, \locout{i+1})$ in the linked list, then we have the following structure: $\locin{i} \mapsto (v_i, \locout{i})$, $\locout{i} \mapsto \locin{i+1}$, and $\locin{i+1} \mapsto v_{i+1}, \locout{i+1}$.
+
+The reader may wonder why there is an extra, intermediary "in" pointer, between the pairs of the linked list, and why the "out" pointer couldn't point directly to the next pair. In the original implementation \cite{DBLP:conf/podc/MichaelS96}, nodes are allocated on the heap. To simulate this in HeapLang, when creating a new node, we create a pointer to a pair making up the node. Now, in the C-like language used in the original specification, an assignment operator is available which is not present in HeapLang. So in order to mimic this behaviour, we model variables as pointers. In this way, we can model a variable $\lvar$ as a location $\loc_{\lvar}$, and the value stored at $\loc_{\lvar}$ is the current value of $\lvar$. This means that the variable $\locout{i}$ (called "next" in the original) becomes a location $\loc_{head}$, and the value stored at the location is what head is currently assigned to. Since $\locout{i}$ is supposed to be a variable containing a pointer, then the value saved at that location will also be a pointer.
+
+
+The queue consists of 3 functions: $\initialise$, $\enqueue$, and $\dequeue$ which I now present in turn.
+
+$\initialise$
+
 $\initialise$ will first create a single node -- the sentinel -- marking the start of the linked list. It then creates two locks, $H\_lock$ and $T\_lock$, protecting the head and tail pointers, respectively. Finally, it creates the head and tail pointers, both pointing to the sentinel. The queue is then a pointer to a structure containing the head, the tail, and the two locks.\\
-Figure \ref{MSQTL:impl:figure:init} illustrates the structure of the queue after initialisation.
+Figure \ref{MSQTL:impl:figure:init} illustrates the structure of the queue after initialisation. Note that one of the pointers is coloured blue. This represents a \emph{persistent} pointer; a pointer that will never be updated again. All "in" pointers $\locin{i}$, are persistent, meaning that they will always point to $(v_i, \locout{i})$. We shall use the notation $\loc \mapsto \square v$ (introduced in \cite{DBLP:conf/cpp/VindumB21}) to mean that $\loc$ points persistently to $v$.
 
 Note that in the original specification, a queue is a pointer to a 4-tuple $(\loc_{head}, \loc_{tail}, H\_lock, T\_lock)$. Since HeapLang doesn't support 4-tuples, we instead represent the queue as a pointer to a pair of pairs: $((\loc_{head}, \loc_{tail}), (H\_lock, T\_lock))$.
 
 
 $\enqueue$
 
-\todo{explain enqueue}
+To enqueue a value, we must create a new node, append it to the underlying linked-list, and swing the tail pointer to this new node. These three operations are depicted in figure \ref{MSQTL:impl:figure:enqueue}.
 
-The reader may wonder why there is an extra, intermediary pointer, between nodes of the linked list, and why the head and tail pointers point to these instead of the pairs making up the linked list. In the original implementation, nodes are allocated on the heap. To simulate this in HeapLang, when creating a new node, we create a pointer to a pair making up the node. Now, in the C-like language used in the original specification, an assignment operator is available, which is not present in HeapLang. So in order to mimic this behaviour, we model variables as pointers. In this way, we can model a variable $\lvar$ as a location $\loc_{\lvar}$, and the value stored at $\loc_{\lvar}$ is the current value of $\lvar$. This means that the variable head in the original becomes a location $\loc_{head}$, and the value stored at the location is what head is currently assigned to. Since head is a pointer, then the value saved at that location will also be a pointer.
+$\enqueue$ takes as argument the value to be enqueued and creates a new node containing this value (corresponding to figure \ref{MSQTL:impl:figure:enqueue:a}). This creation doesn't interact with the underlying queue data-structure, hence why we don't acquire the $T\_lock$ first. After creating the new node, we must make the last node in the linked list point to it. Since this operation interacts with the queue, we first acquire the $T\_lock$. Once we obtain the lock, we make the last node in the linked list point to our new node (figure \ref{MSQTL:impl:figure:enqueue:b}). Following this, we swing $\loc_{tail}$ to the new last node in the linked list (figure \ref{MSQTL:impl:figure:enqueue:c}).
 
+Figure \ref{MSQTL:impl:figure:enqueue} also illustrates when pointers become persistent; once the previous last node is updated to point to the newly inserted node, that pointer will never be updated again, hence becoming persistent.
+
+
+$\dequeue$
+
+It is of course only possible to dequeue an element from the queue if the queue contains at least one element. Hence, the first thing $\dequeue$ does is check if the queue is empty. We can detect an empty queue by checking if the sentinel is the last node in the linked list. Being the last node in the linked list corresponds to having the "out" node be $\None$. If this is the case, then the queue is empty and the code returns $\None$. Otherwise, there is a node just after the sentinel, which is the first node of the queue. To dequeue it, we first read the associated value, and next we swing the head to it, making it the new sentinel. Finally, we return the value we read.
+
+Since all of these operations interact with the queue, we shall only perform them after having acquired $H\_lock$.
+
+Figure \ref{MSQTL:impl:figure:dequeue} illustrates running dequeue on a non-empty queue. Note that the only change is that the head pointer is swung to the next node in the linked list; the old sentinel is not deleted, it just become unreachable from the heap pointer. In this way, the linked list only ever grows.
 
 \begin{figure}[h]
   \centering
@@ -178,52 +197,155 @@ The reader may wonder why there is an extra, intermediary pointer, between nodes
 
 \begin{figure}[h]
   \centering
-  \begin{tikzpicture}[
-    pair/.style = {
-      on chain,
-      rectangle split,
-      rectangle split horizontal,
-      rectangle split parts=2,
-      draw,
-      anchor=center,
-      text height=1.5ex,
-    },
-    perspointer/.style = {
-      on chain,
-      rectangle,
-      draw,
-      anchor=center,
-      text height=1.5ex,
-    },
-    pointer/.style = {
-      rectangle,
-      draw,
-      anchor=center,
-      text height=1.5ex,
-    },
-    start chain=going right,
-  ]
-
-  % Linked List
-  \node (l'1) [join={by ->}, perspointer,on chain] {$\locin{1}$};
-  \node (l1pair) [join={by ->, draw=blue}, pair,on chain] {$v_1$ \nodepart{two} $\locout{1}$};
-  \node (l'2) [join={by ->, draw=blue}, perspointer,on chain] {$\locin{2}$};
-  \node (l2pair) [join={by ->, draw=blue}, pair,on chain] {$v_2$ \nodepart{two} $\locout{2}$};
-  \node (null) [join={by ->, dotted, draw=black}, rectangle,on chain] {$\None$};
-
-  \node (l'3) [perspointer, above right=of l2pair] {$\locin{3}$};
-  \node (l3pair) [join={by ->, draw=blue}, pair,on chain] {$v_3$ \nodepart{two} $\locout{3}$};
-  \node (null) [join={by ->, draw=black}, rectangle,on chain] {$\None$};
-  \draw[->, dashed, draw=blue] (l2pair) -- (l'3);
-
-  % Head and tail
-  \node (head) [pointer, above=of l'1] {$\loc_{head}$};
-  \node (tail) [pointer, above=of l'2] {$\loc_{tail}$};
-  \draw[->] (head) -- (l'1);
-  \draw[->, dotted] (tail) -- (l'2);
-  \draw[->, dashed] (tail) -- (l'3);
+  \begin{subfigure}{\textwidth}
+    \begin{tikzpicture}[
+      pair/.style = {
+        on chain,
+        rectangle split,
+        rectangle split horizontal,
+        rectangle split parts=2,
+        draw,
+        anchor=center,
+        text height=1.5ex,
+      },
+      perspointer/.style = {
+        on chain,
+        rectangle,
+        draw,
+        anchor=center,
+        text height=1.5ex,
+      },
+      pointer/.style = {
+        rectangle,
+        draw,
+        anchor=center,
+        text height=1.5ex,
+      },
+      start chain=going right,
+    ]
   
-  \end{tikzpicture}
+    % Linked List
+    \node (l'1) [join={by ->}, perspointer,on chain] {$\locin{1}$};
+    \node (l1pair) [join={by ->, draw=blue}, pair,on chain] {$v_1$ \nodepart{two} $\locout{1}$};
+    \node (l'2) [join={by ->, draw=blue}, perspointer,on chain] {$\locin{2}$};
+    \node (l2pair) [join={by ->, draw=blue}, pair,on chain] {$v_2$ \nodepart{two} $\locout{2}$};
+    \node (null) [join={by ->, draw=black}, rectangle,on chain] {$\None$};
+  
+    \node (l'3) [perspointer, above right=of l2pair] {$\locin{3}$};
+    \node (l3pair) [join={by ->, draw=blue}, pair,on chain] {$v_3$ \nodepart{two} $\locout{3}$};
+    \node (null) [join={by ->, draw=black}, rectangle,on chain] {$\None$};
+  
+    % Head and tail
+    \node (head) [pointer, above=of l'1] {$\loc_{head}$};
+    \node (tail) [pointer, above=of l'2] {$\loc_{tail}$};
+    \draw[->] (head) -- (l'1);
+    \draw[->] (tail) -- (l'2);
+    
+    \end{tikzpicture}
+    \caption{Queue after creating the new node $(\locin{3}, v_3, \locout{3})$ to be added to the queue.}
+    \label{MSQTL:impl:figure:enqueue:a}
+    \vspace{2em}
+  \end{subfigure}
+  \begin{subfigure}{\textwidth}
+    \begin{tikzpicture}[
+      pair/.style = {
+        on chain,
+        rectangle split,
+        rectangle split horizontal,
+        rectangle split parts=2,
+        draw,
+        anchor=center,
+        text height=1.5ex,
+      },
+      perspointer/.style = {
+        on chain,
+        rectangle,
+        draw,
+        anchor=center,
+        text height=1.5ex,
+      },
+      pointer/.style = {
+        rectangle,
+        draw,
+        anchor=center,
+        text height=1.5ex,
+      },
+      start chain=going right,
+    ]
+  
+    % Linked List
+    \node (l'1) [join={by ->}, perspointer,on chain] {$\locin{1}$};
+    \node (l1pair) [join={by ->, draw=blue}, pair,on chain] {$v_1$ \nodepart{two} $\locout{1}$};
+    \node (l'2) [join={by ->, draw=blue}, perspointer,on chain] {$\locin{2}$};
+    \node (l2pair) [join={by ->, draw=blue}, pair,on chain] {$v_2$ \nodepart{two} $\locout{2}$};
+    \node (null) [join={by ->, dotted, draw=black}, rectangle,on chain] {\textcolor{gray}{$\None$}};
+  
+    \node (l'3) [perspointer, above right=of l2pair] {$\locin{3}$};
+    \node (l3pair) [join={by ->, draw=blue}, pair,on chain] {$v_3$ \nodepart{two} $\locout{3}$};
+    \node (null) [join={by ->, draw=black}, rectangle,on chain] {$\None$};
+    \draw[->, draw=blue] (l2pair) -- (l'3);
+  
+    % Head and tail
+    \node (head) [pointer, above=of l'1] {$\loc_{head}$};
+    \node (tail) [pointer, above=of l'2] {$\loc_{tail}$};
+    \draw[->] (head) -- (l'1);
+    \draw[->] (tail) -- (l'2);
+    
+    \end{tikzpicture}
+    \caption{Queue after adding the new node to linked list.}
+    \label{MSQTL:impl:figure:enqueue:b}
+    \vspace{2em}
+  \end{subfigure}
+  \begin{subfigure}{\textwidth}
+    \begin{tikzpicture}[
+      pair/.style = {
+        on chain,
+        rectangle split,
+        rectangle split horizontal,
+        rectangle split parts=2,
+        draw,
+        anchor=center,
+        text height=1.5ex,
+      },
+      perspointer/.style = {
+        on chain,
+        rectangle,
+        draw,
+        anchor=center,
+        text height=1.5ex,
+      },
+      pointer/.style = {
+        rectangle,
+        draw,
+        anchor=center,
+        text height=1.5ex,
+      },
+      start chain=going right,
+    ]
+  
+    % Linked List
+    \node (l'1) [join={by ->}, perspointer,on chain] {$\locin{1}$};
+    \node (l1pair) [join={by ->, draw=blue}, pair,on chain] {$v_1$ \nodepart{two} $\locout{1}$};
+    \node (l'2) [join={by ->, draw=blue}, perspointer,on chain] {$\locin{2}$};
+    \node (l2pair) [join={by ->, draw=blue}, pair,on chain] {$v_2$ \nodepart{two} $\locout{2}$};
+    \node (null) [join={by ->, dotted, draw=black}, rectangle,on chain] {\textcolor{gray}{$\None$}};
+  
+    \node (l'3) [perspointer, above right=of l2pair] {$\locin{3}$};
+    \node (l3pair) [join={by ->, draw=blue}, pair,on chain] {$v_3$ \nodepart{two} $\locout{3}$};
+    \node (null) [join={by ->, draw=black}, rectangle,on chain] {$\None$};
+    \draw[->, draw=blue] (l2pair) -- (l'3);
+  
+    % Head and tail
+    \node (head) [pointer, above=of l'1] {$\loc_{head}$};
+    \node (tail) [pointer, above=of l'2] {$\loc_{tail}$};
+    \draw[->] (head) -- (l'1);
+    \draw[->, dotted] (tail) -- (l'2);
+    \draw[->] (tail) -- (l'3);
+    
+    \end{tikzpicture}
+    \caption{Queue after swinging tail pointer to the new node.}
+    \label{MSQTL:impl:figure:enqueue:c}
+  \end{subfigure}
   \caption{Enqueuing an element to a queue with one element.}
   \label{MSQTL:impl:figure:enqueue}
 \end{figure}
@@ -274,7 +396,7 @@ The reader may wonder why there is an extra, intermediary pointer, between nodes
   \draw[->] (tail) -- (l3in);
   
   \end{tikzpicture}
-  \caption{Dequeueing an element ($v_2$) from a queue with two elements ($v_2$, $v_3$).}
+  \caption{Dequeueing an element ($v_2$) from a queue with two elements ($v_2$, $v_3$). The dotted line represents the state before the dequeue, and the dashed line is the state after dequeuing.}
   \label{MSQTL:impl:figure:dequeue}
 \end{figure}
 
@@ -312,6 +434,7 @@ The reader may wonder why there is an extra, intermediary pointer, between nodes
 \end{align*}
 
 
+Sequential Specification
 
 Key insights
 \begin{enumerate}
@@ -323,6 +446,10 @@ Key insights
 Insight \ref{MSQTL:insights:tail} is true, as it holds initially, and every time a new node is enqueued, the tail pointer is updated to point to the last node, and no other nodes can be enqueue before the update takes place. However, just after the new node has been linked to the queue, the tail queue will be pointing to the second last node in the queue, until it is updated in the next line.
 
 Insight \ref{MSQTL:insights:persistent} means that we can mark all pointers in the queue (except the pointer to the null node) as persistent.
+
+
+
+Concurrent Specification
 
 Key insights (concurrent)
 \begin{enumerate}
@@ -337,7 +464,7 @@ Key insights (concurrent)
     \end{enumerate}
 \end{enumerate}
 
-Insight \ref{MSQTL:insights:lag} might seem a little surprising, and indeed it stands in contrast to property 5 in \cite{DBLP:conf/podc/MichaelS96}, which states that the tail always points to a node in the linked list. I also didn't realise this possibility until a proof attempt using a model that "forgot" old nodes lead to an unprovable case (see section \ref{MSQTL:Discussion:xs_old}). The situation can occur when the queue is empty, and a thread performs an incomplete enqueue; it attaches the new node to the end, but before it can swing the tail node to this new node, another thread performs a dequeue, which dequeues this new node, swings the head to it. Now the tail is lagging a node behind the head.
+Insight \ref{MSQTL:insights:lag} might seem a little surprising, and indeed it stands in contrast to property 5 in \cite{DBLP:conf/podc/MichaelS96}, which states that the tail never lags behind head. I also didn't realise this possibility until a proof attempt using a model that "forgot" old nodes lead to an unprovable case (see section \ref{MSQTL:Discussion:xs_old}). The situation can occur when the queue is empty, and a thread performs an incomplete enqueue; it attaches the new node to the end, but before it can swing the tail to this new node, another thread performs a dequeue, which dequeues this new node, swinging the head to it. Now the tail is lagging a node behind the head.
 
 It is not possible for the tail to point more than one node behind the head, as in order for this to happen, more nodes must be enqueued, but this can't happen before the current enqueue finishes, which will update the tail and bring it up to speed with the head.
 
