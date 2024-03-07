@@ -1,9 +1,7 @@
 - How should I structure my coq file (sequential and concurrent)?
   Also all of helper lemmas?
 
-- How to prove isLL_chain persistent?
-
-- How to prove all the cases with two tokens?
+- Is it a normal way I have proved that isLL_chain persistent?
 
 - Is sequential spec fine?
 
