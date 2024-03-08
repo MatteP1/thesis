@@ -30,6 +30,8 @@
   - [x] Change l_null to l_n+1
   - [x] Do proof sketch on paper
   - [x] Implement proof in Iris (Coq)
+  - [ ] Add a predicate that should hold of all elements in queue (see isBag)
+  - [x] use {} and [] instead of i: 
 
 - [ ] Clean up proof of concurrent spec for M&S queue with locks in Coq
 - [ ] Clean up proof of Sequential spec for M&S queue with locks in Coq
