@@ -48,3 +48,32 @@ Proof.
 	  	* f_equal. by eapply IH.
 		* by eapply IH.
 Qed.
+
+
+Fixpoint proj_val (xs: list (loc * val * loc)) :=
+match xs with
+| [] => []
+| x :: xs' => n_val x :: proj_val xs'
+end.
+
+Lemma proj_val_split: forall xs_1 xs_2,
+	proj_val (xs_1 ++ xs_2) = proj_val xs_1 ++ proj_val xs_2.
+Proof.
+	induction xs_1 as [| x xs'_1 IH]; intros xs_2.
+	- done.
+	- simpl. f_equal. apply IH.
+Qed.
+
+Fixpoint wrap_some (xs: list val) :=
+match xs with
+| [] => []
+| x :: xs' => (SOMEV x) :: wrap_some xs'
+end.
+
+Lemma wrap_some_split: forall xs_1 xs_2,
+	wrap_some (xs_1 ++ xs_2) = wrap_some xs_1 ++ wrap_some xs_2.
+Proof.
+	induction xs_1 as [| x xs'_1 IH]; intros xs_2.
+	- done.
+	- simpl. f_equal. apply IH.
+Qed.

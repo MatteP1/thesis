@@ -156,35 +156,6 @@ Definition is_queue_seq (q : val) (xs_queue: list (loc * val * loc)) (Q_γ: SeqQ
 		is_lock Q_γ.(γ_Tlock_seq) T_lock (True).
 
 
-Fixpoint proj_val (xs: list (loc * val * loc)) :=
-match xs with
-| [] => []
-| x :: xs' => n_val x :: proj_val xs'
-end.
-
-Lemma proj_val_split: forall xs_1 xs_2,
-	proj_val (xs_1 ++ xs_2) = proj_val xs_1 ++ proj_val xs_2.
-Proof.
-	induction xs_1 as [| x xs'_1 IH]; intros xs_2.
-	- done.
-	- simpl. f_equal. apply IH.
-Qed.
-
-Fixpoint wrap_some (xs: list val) :=
-match xs with
-| [] => []
-| x :: xs' => (SOMEV x) :: wrap_some xs'
-end.
-
-Lemma wrap_some_split: forall xs_1 xs_2,
-	wrap_some (xs_1 ++ xs_2) = wrap_some xs_1 ++ wrap_some xs_2.
-Proof.
-	induction xs_1 as [| x xs'_1 IH]; intros xs_2.
-	- done.
-	- simpl. f_equal. apply IH.
-Qed.
-
-
 Definition is_queue_seq_val (q : val) (xs_queue: list val) (Q_γ: SeqQgnames) : iProp Σ :=
 	∃ (xs : list (loc * val * loc)), ⌜proj_val xs = wrap_some xs_queue⌝ ∗ 
 	is_queue_seq q xs Q_γ.
