@@ -6,3 +6,5 @@
 - Is sequential spec fine?
 
 - Do I have any bad practises in my proofs?
+
+- What's next? Hocap? Lock-free?
