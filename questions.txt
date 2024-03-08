@@ -1,16 +1,4 @@
-- How should I structure my coq file (sequential and concurrent)?
-  Also all of helper lemmas?
-    yes. Split into separate files.
-
-- Is it a normal way I have proved that isLL_chain persistent?
-  Yes.
-
-- Is sequential spec fine?
-  Aren't the implementation details leaking out?
-    Yes, this is fixed now.
-
-- Do I have any bad practises in my proofs?
-  Fixed
+- sequential and concurrent spec rely on same definitions/lemmas (e.g. isLL). But if I separate them out into "common", then the Sigma becomes different. How to deal with this?
 
 - What's next? Hocap? Lock-free?
   Hocap. Prepare some stuff for Wednesday
