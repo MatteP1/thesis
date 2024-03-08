@@ -7,4 +7,4 @@
   (See bottom of page 121 in https://iris-project.org/tutorial-pdfs/iris-lecture-notes.pdf)
   This would also seem a bit weird as the abstract state would then contain locations, which is implementation specific.
 
-  Let the abstract state xs_val be a list of values. Then existentially quantify a list xs containing (loc * val * loc), whose value projection is xs_val: proj_val xs = xs_val
+  Let the abstract state xs_v be a list of values. Then existentially quantify a list xs containing (loc * val * loc), whose value projection is xs_v: proj_val xs = xs_v
