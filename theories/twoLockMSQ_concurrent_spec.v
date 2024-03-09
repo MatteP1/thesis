@@ -301,12 +301,12 @@ Proof.
 Qed.
 
 Definition is_queue (Ψ : val -> iProp Σ) (q : val) (Q_γ: Qgnames) : iProp Σ :=
-	∃ head tail : loc, ∃ H_lock T_lock : val,
-	∃ l : loc , ⌜q = #l⌝ ∗
-		l ↦□ ((#head, #tail), (H_lock, T_lock)) ∗
-		inv N (queue_invariant Ψ head tail Q_γ) ∗
-		is_lock Q_γ.(γ_Hlock) H_lock (TokD Q_γ) ∗
-		is_lock Q_γ.(γ_Tlock) T_lock (TokE Q_γ).
+	∃ l_queue head tail : loc, ∃ H_lock T_lock : val,
+	⌜q = #l_queue⌝ ∗
+	l_queue ↦□ ((#head, #tail), (H_lock, T_lock)) ∗
+	inv N (queue_invariant Ψ head tail Q_γ) ∗
+	is_lock Q_γ.(γ_Hlock) H_lock (TokD Q_γ) ∗
+	is_lock Q_γ.(γ_Tlock) T_lock (TokE Q_γ).
 
 Lemma initialize_spec (Ψ : val -> iProp Σ):
 	{{{ True }}}
@@ -353,7 +353,7 @@ Proof.
 	iMod (pointsto_persist with "Hl_queue") as "#Hl_queue".
 	iApply ("HΦ" $! #l_queue Queue_gnames).
 	iModIntro.
-	iExists l_head, l_tail, hlock, tlock, l_queue.
+	iExists l_queue, l_head, l_tail, hlock, tlock.
 	by repeat iSplit.
 Qed.
 
@@ -362,7 +362,7 @@ Lemma enqueue_spec Q Ψ (v : val) (qg : Qgnames) :
 		enqueue Q v
 	{{{ w, RET w; True }}}.
 Proof.
-	iIntros (Φ) "[(%l_head & %l_tail & %H_lock & %T_lock & %l_queue & -> &
+	iIntros (Φ) "[(%l_queue & %l_head & %l_tail & %H_lock & %T_lock & -> &
 				 #Hl_queue & #H_queue_inv & #H_hlock & #H_tlock) HΨ_v] HΦ".
 	wp_lam.
 	wp_let.
@@ -506,7 +506,7 @@ Lemma dequeue_spec Q Ψ (qg : Qgnames) :
 		dequeue Q 
 	{{{ v, RET v; ⌜v = NONEV⌝ ∨ (∃ x_v, ⌜v = SOMEV x_v⌝ ∗ Ψ x_v) }}}.
 Proof.
-	iIntros (Φ) "(%l_head & %l_tail & %H_lock & %T_lock & %l_queue & -> &
+	iIntros (Φ) "(%l_queue & %l_head & %l_tail & %H_lock & %T_lock & -> &
 				 #Hl_queue & #H_queue_inv & #H_hlock & #H_tlock) HΦ".
 	wp_lam.
 	wp_load.
