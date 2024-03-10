@@ -146,14 +146,14 @@ Record SeqQgnames := {γ_Hlock_seq 	: gname;
 					 }.
 
 Definition is_queue_seq (q : val) (xs_v: list val) (Q_γ: SeqQgnames) : iProp Σ :=
-	∃ l_queue head tail : loc, ∃ H_lock T_lock : val,
+	∃ l_queue l_head l_tail : loc, ∃ H_lock T_lock : val,
 	⌜q = #l_queue⌝ ∗
-	l_queue ↦□ ((#head, #tail), (H_lock, T_lock)) ∗
+	l_queue ↦□ ((#l_head, #l_tail), (H_lock, T_lock)) ∗
 	∃ (xs_queue : list (loc * val * loc)), ∃x_head x_tail : (loc * val * loc),
 	⌜proj_val xs_queue = wrap_some xs_v⌝ ∗
 	isLL (xs_queue ++ [x_head]) ∗
-	head ↦ #(n_in x_head) ∗
-	tail ↦ #(n_in x_tail) ∗ ⌜isLast x_tail (xs_queue ++ [x_head])⌝ ∗
+	l_head ↦ #(n_in x_head) ∗
+	l_tail ↦ #(n_in x_tail) ∗ ⌜isLast x_tail (xs_queue ++ [x_head])⌝ ∗
 	is_lock Q_γ.(γ_Hlock_seq) H_lock (True) ∗
 	is_lock Q_γ.(γ_Tlock_seq) T_lock (True).
 
@@ -168,18 +168,17 @@ Proof.
 	wp_alloc l_1_in as "Hl_1_in".
 	wp_pures.
 	iMod (pointsto_persist with "Hl_1_in") as "#Hl_1_in".
-	wp_pures.
 	wp_apply (newlock_spec True); first done.
 	iIntros (hlock γ_Hlock) "Hγ_Hlock".
 	wp_let.
 	wp_apply (newlock_spec True); first done.
 	iIntros (tlock γ_Tlock) "Hγ_Tlock".
-	wp_let.
-	wp_alloc l_tail as "Hl_tail".
-	wp_alloc l_head as "Hl_head".
 	set (Queue_gnames := {| γ_Hlock_seq := γ_Hlock;
 							γ_Tlock_seq := γ_Tlock;
 					|}).
+	wp_let.
+	wp_alloc l_tail as "Hl_tail".
+	wp_alloc l_head as "Hl_head".
 	wp_alloc l_queue as "Hl_queue".
 	iMod (pointsto_persist with "Hl_queue") as "#Hl_queue".
 	iApply ("HΦ" $! #l_queue Queue_gnames).
@@ -221,7 +220,6 @@ Proof.
 	wp_load.
 	wp_pures.
 	wp_load.
-	subst.
 	iPoseProof (isLL_chain_node [] x_tail xs_rest with "[H_isLL_chain_xs]") as "Hn_in_x_tail"; first done.
 	wp_load.
 	wp_pures.

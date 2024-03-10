@@ -301,10 +301,10 @@ Proof.
 Qed.
 
 Definition is_queue (Ψ : val -> iProp Σ) (q : val) (Q_γ: Qgnames) : iProp Σ :=
-	∃ l_queue head tail : loc, ∃ H_lock T_lock : val,
+	∃ l_queue l_head l_tail : loc, ∃ H_lock T_lock : val,
 	⌜q = #l_queue⌝ ∗
-	l_queue ↦□ ((#head, #tail), (H_lock, T_lock)) ∗
-	inv N (queue_invariant Ψ head tail Q_γ) ∗
+	l_queue ↦□ ((#l_head, #l_tail), (H_lock, T_lock)) ∗
+	inv N (queue_invariant Ψ l_head l_tail Q_γ) ∗
 	is_lock Q_γ.(γ_Hlock) H_lock (TokD Q_γ) ∗
 	is_lock Q_γ.(γ_Tlock) T_lock (TokE Q_γ).
 

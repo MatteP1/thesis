@@ -457,7 +457,7 @@ The sequential specification we wish to prove is the following:
 \begin{align*}
   &\exists \isqueue : \Val \to \List \ \Val \to Qgnames \to \Prop.\\
   &\quad\quad\hoare{\TRUE}{\initialise \TT}{v . \exists Q_\gname, \isqueue\ v\ []\ Q_\gname}\\
-  &\land\quad\forall q, v, xs_v, Q_\gname. \hoare{\isqueue \; q \; xs_v \; Q_\gname}{\enqueue\ q\ v}{v . \isqueue\ q\ (v :: xs_v)\ Q_\gname}\\
+  &\land\quad\forall q, v, xs_v, Q_\gname. \hoare{\isqueue \; q \; xs_v \; Q_\gname}{\enqueue\ q\ v}{w . \isqueue\ q\ (v :: xs_v)\ Q_\gname}\\
   &\land\quad\forall q, xs_v, Q_\gname. \hoare{\isqueue \; q \; xs_v \; Q_\gname}{\dequeue\ q}{v . \begin{array}{l}(xs_v = [] \ast v = \None \ast \isqueue\ q\ xs_v\ Q_\gname) \; \lor\\ (\exists x_v, xs_v' \ . \ xs_v = xs_v' \catenate [x_v] \ast v = \Some x_v \ast \isqueue\ q\ xs_v'\ Q_\gname) \end{array}}
 \end{align*}
 
@@ -477,13 +477,13 @@ Observation \ref{MSQTL:insights:tail} captures the fact that, while enqueueing, 
 Insight \ref{MSQTL:insights:persistent} means that we can mark all pointers in the queue (except the pointer to the null node) as persistent. This is technically not needed in the sequential case, but we will incorporate it now, as we will need it in the concurrent setting.
 
 \begin{align*}
-  \isqueue \; q \; xs_v \; Q_\gname = &\exists l_{queue}, head, tail \in \Loc . \exists H_{lock}, T_{lock} \in \Val . \\
-  &q = l_{queue} \ast l_{queue} \mapsto\persistently ((head, tail), (H_{lock}, T_{lock})) \ast\\
+  \isqueue \; q \; xs_v \; Q_\gname = &\exists \loc_{queue}, \loc_{head}, \loc_{tail} \in \Loc . \exists H_{lock}, T_{lock} \in \Val . \\
+  &q = \loc_{queue} \ast \loc_{queue} \mapsto\persistently ((\loc_{head}, \loc_{tail}), (H_{lock}, T_{lock})) \ast\\
   &\exists xs_{queue} \in \List (\Loc \times \Val \times \Loc) . \exists x_{head}, x_{tail} \in (\Loc \times \Val \times \Loc) .\\
 	&proj\_val \ xs_{queue} = wrap\_some \ xs_v \ast\\
 	&\isLL (xs_{queue} ++ [x_{head}]) \ast\\
-	&head \mapsto (\nIn{x_{head}}) \ast\\
-	&tail \mapsto (\nIn{x_{tail}}) \ast isLast \ x_{tail} \ (xs_{queue} ++ [x_{head}]) \ast\\
+	&\loc_{head} \mapsto (\nIn{x_{head}}) \ast\\
+	&\loc_{tail} \mapsto (\nIn{x_{tail}}) \ast isLast \ x_{tail} \ (xs_{queue} ++ [x_{head}]) \ast\\
 	&isLock \ Q_\gname.\gname_{Hlock} \ H_{lock} \ \TRUE \ast\\
 	&isLock \ Q_\gname.\gname_{Tlock} \ T_{lock} \ \TRUE.
 \end{align*}
@@ -510,7 +510,36 @@ Then, to define $\isLL$, we add that the last node in the linked list points to 
 
 \subsection{Proof outline}
 
-\todo{give proof outline}
+\subsubsection{initialise}
+Proving the initialise spec amounts to stepping through the code, giving us the required resources, and then using these to create an instance of $\isqueue$ with the obtained resources. To begin with, we step through the lines creating the first node, giving us locations $\locin{1}$, $\locout{1}$ with $\locout{1} \mapsto \None$ and $\locin{1} \mapsto (\None, \locout{1})$. We can then update the later points-to predicate to become persistent, giving us $\locin{1} \mapsto\persistent (\None, \locout{1})$. We then step to the creation of the two locks, where we shall use the newlock specification asserting that the locks should protect $\TRUE$. This gives us two ghost names, $\gname_{Tlock}$, $\gname_{Tlock}$, which we will collect in a $Qgnames$ pair, $Q_\gname$.
+Next, we step through the allocations of the head, tail, and queue, which gives us locations $\loc_{head}$, $\loc_{tail}$, $\loc_{queue}$, such that both $\loc_{head}$ and $\loc_{tail}$ point to node $1$, and such that $\loc_{queue}$ points to the structure containing the head, tail, and two locks. This last points to predicate we update to become persistent.
+With this, we now have all the resources needed to prove the post-condition: $\exists Q_\gname . \isqueue \ \loc_{queue} \ Q_\gname$. Proving this follows by a sequence of framing away the resources we obtained and instantiating existentials with the values we got above. Most noteworthy, we pick the empty list for $xs_{queue}$, and node $1$ for $xs_{head}$ and $xs_{tail}$.
+
+
+\subsubsection{Enqueue}
+\todo{add line numbers to code, and refer to them in proof}
+For enqueue, we get in our pre-condition $\isqueue \; q \; xs_v \; Q_\gname$, and we wish to that, if we run $\enqueue\ q\ v$, then we will get the $\isqueue\ q\ (v :: xs_v)\ Q_\gname$. The proposition $\isqueue \; q \; xs_v \; Q_\gname$ gives us all the resources we will need to step through the code.
+Firstly, we create a new node, node $x_{new}$, with $\nVal{x_{new}} = v$.
+We then have to acquire the lock, which will just give us $\TRUE$.
+
+The next line adds node $x_new$ to the linked list, by first finding the tail, from the queue pointer $\loc_{queue}$, and then finding the node that the tail points to, denoted $x_{tail}$, and finally writing updating the out location of $x_{tail}$ to point to $x_new$. The resources needed to do this are all described in $\isqueue \; q \; xs_v \; Q_\gname$. Firstly, it tells us that $\loc_{queue}$ points to the structure containing $\loc_{tail}$. Secondly, it tells us that $\loc_{tail}$ points to $x_{tail}$, which is the last node in the linked list ($xs_{queue} ++ [x_{head}]$). Thirdly, since we know that $x_{tail}$ is the last node in the linked list, then by the $\isLL$ predicate, we know that $x_{tail}$ points to $\None$ and that it has the node-like structure described by $\isLLchain$. This is all we need to step through the line, adding $x_{new}$ to the linked list. After performing the write, we then get that $x_{tail}$ points to $x_{new}$, instead of $\None$. We make this points-to predicate persistent.
+
+The next line swings the tail to $x_{new}$. As describe above, we already know that $\loc_{tail}$ points to $x_{tail}$, so we have the required resources to perform the write. Afterwards, we get that $\loc_{tail}$ points to $x_{new}$.
+
+Finally, we release the lock using the release specification (and we simply give back $\TRUE$), and the only thing left is to prove the postcondition: $\isqueue\ q\ (v :: xs_v)\ Q_\gname$. For the existentials, we shall pick the ones we got from the precondition, with the exception for $xs_{queue}$ and $x_{tail}$. For $xs_{queue}$, we shall use the same $xs_{queue}$ we got from the precondition, but with $xs_new$ cons'ed to it, and for $x_{tail}$, we chose the new tail node: $x_{new}$. With these choices, proving $\isqueue\ q\ (v :: xs_v)\ Q_\gname$ is fairly straightforward.
+
+\subsubsection{Dequeue}
+
+For $\dequeue\ q$, our precondition is $\isqueue \; q \; xs_v \; Q_\gname$, and we our post condition states that either the queue is empty, or there is a tail element which is returned by the function, and removed from the queue.
+
+Stepping through the function, we first do the superfluous acquire. Next, we get the head node $x_{head}$ through the queue pointer $\loc_{queue}$. As described above for Enqueue, we get the resource to do this through $\isqueue \; q \; xs_v \; Q_\gname$. The $\isqueue$ predicate also tells us that $x_{head}$ is a node in the linked list (described by the $\isLL$ predicate), hence we can step through the code in the next line, which finds the node that $x_{head}$ is pointing to. Now, depending on whether or not the queue is empty, $x_{head}$ either points to $\None$, or some node $x_{head\_next}$. Thus, we shall perform a case analysis on $xs_{queue}$.
+
+\textbf{$xs_{queue}$ is empty}: In this case, we will have that $\isLL [x_{head}]$, which tells us that $x_head$ points to $\None$. Hence, the "then" branch of the "if" will be taken. This branch simply releases the lock and returns $\None$. In this case, we prove the first disjunction in the post-condition. Since $xs_v$ is reflected in $xs_{queue}$, then we will be able to conclude that $xs_v$ is empty, and since we haven't modified the queue, we can create $\isqueue \; q \; xs_v \; Q_\gname$ using the same resources we got from the pre-condition.
+
+\textbf{$xs_{queue}$ is not empty}: In this case, we can conclude that there must be some node $x_{head\_next}$, which is the first node in $xs_{queue}$. I.e. $xs_{queue} = xs'_{queue} ++ [x_{head\_next}]$. We can thus use the $\isLL$ predicate to conclude that $x_{head}$ must point to $x_{head\_next}$. Hence the else branch will be taken. Since $x_{head\_next}$ is part of the linked list, then $\isLL$ tells us it has the node-like structure, allowing us to extract its value in the first line of the else branch.\\
+In the next line, we make the head pointer, $\loc_{head}$ point to $x_{head\_next}$, and we have the resource to do this through $\isqueue \; q \; xs_v \; Q_\gname$.\\
+Finally, we release the lock and return the value we got from $x_{head\_next}$. We must now prove the post-condition, and this time we prove the second disjunct. Since $xs_v$ is reflected in $xs_{queue}$, then it must also be the case that $xs_v$ is non-empty, and it has a first element, $x_v$, which is related to the first element of $xs_{queue}$, i.e. $x_{head\_next}$. This allows us to conclude that the returned value ($\nVal{x_{head\_next}}$) is exactly $x_v$, but wrapped in a $\Some$, as we had to prove. 
+Finally, we must prove $\isqueue\ q\ xs_v'\ Q_\gname$, where $xs_v'$ is $xs_v$ but with $x_v$ removed. For the existentials, we pick the same values we got from the precondition, wit the exception of $xs_{queue}$ and $x_{head}$. For $xs_{queue}$ we pick the same $xs_{queue}$ we got from the precondition, but with the first element, $x_{head\_next}$ removed. By doing this, $xs_{queue}$ will be reflexed in $xs_v'$. For $x_head$, we pick the new head, which we have obtained that $\loc_{head}$ points to: $x_{head\_next}$. With these choices, we can prove the predicate.
 
 
 \section{Concurrent Specification}
@@ -550,11 +579,26 @@ With these insights, we can now define the queue invariant.
   \todo{Write it in}
 \end{definition}
 
-The specification for the two-lock Michael Scott Queue \textit{can} be proven using the queue invariant \ref{MSQTL:spec:invariant}. However, during the proof, a simpler (but arguably less intuitive) queue invariant was discovered This simpler invariant is equivalent to \ref{MSQTL:spec:invariant} and has the added benefit of being easier to work with in the proofs. Thus, we shall be using this version of the queue invariant during the proofs.
+The specification for the two-lock Michael Scott Queue \textit{can} be proven using the queue invariant \ref{MSQTL:spec:invariant}, and the proof outline below will also be using this. However, a simpler (but arguably less intuitive) queue invariant was discovered. This simpler invariant is equivalent to \ref{MSQTL:spec:invariant} and has the benefit of being easier to work with in the mechanised proofs. Thus, in the mechanised proofs, the simpler variant is used. The simpler variant can be found in the appendix \todo{add appendix}.
 
-\begin{definition}[Simplified Two-Lock M\&S-Queue Invariant]\label{MSQTL:spec:invariant:simple}
-  \todo{Write it in}
-\end{definition}
+% \begin{definition}[Simplified Two-Lock M\&S-Queue Invariant]\label{MSQTL:spec:invariant:simple}
+%   \todo{Write it in}
+% \end{definition}
+
+
+
+\subsection{Proof outline}
+\todo{prove persistency of isqueue}
+The proofs structure for the specifications are largely similar to the sequential counterparts. The major difference is that we don't have access to the resource all the time; we must get it from the invariant, and we also have to keep track of which state we are in.
+
+\subsubsection{initialise}
+\todo{do}
+
+\subsubsection{Enqueue}
+\todo{do}
+
+\subsubsection{Dequeue}
+\todo{do}
 
 
 \subsubsection{Discussing the need for $xs_{old}$}\label{MSQTL:Discussion:xs_old}
