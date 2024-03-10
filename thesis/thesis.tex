@@ -542,18 +542,21 @@ Finally, we release the lock and return the value we got from $x_{head\_next}$. 
 Finally, we must prove $\isqueue\ q\ xs_v'\ Q_\gname$, where $xs_v'$ is $xs_v$ but with $x_v$ removed. For the existentials, we pick the same values we got from the precondition, wit the exception of $xs_{queue}$ and $x_{head}$. For $xs_{queue}$ we pick the same $xs_{queue}$ we got from the precondition, but with the first element, $x_{head\_next}$ removed. By doing this, $xs_{queue}$ will be reflexed in $xs_v'$. For $x_head$, we pick the new head, which we have obtained that $\loc_{head}$ points to: $x_{head\_next}$. With these choices, we can prove the predicate.
 
 
+
 \section{Concurrent Specification}
-\todo{update to reflect changes in Coq}
+For the concurrent specification, we will need $\isqueue$ to be duplicable. To achieve this, we shall initially give up on tracking the abstract state of the queue, and instead add a predicate $\Phi$, which we will ensure holds for all elements of the queue. In this way, when dequeueing, we at least know that if we get some value, then $\Phi$ holds of this value. The specification we wish to prove is as follows.
 \begin{align*}
-  &\exists \isqueue : \Val \mapsto Qgnames \mapsto \Prop.\\
-  &\quad\quad \forall v, Q_\gname . \isqueue \; v \; Q_\gname \implies \persistently \isqueue \; v \; Q_\gname\\
-  &\land\quad\hoare{\TRUE}{\initialise \TT}{v . \exists Q_\gname, \isqueue\ v\ Q_\gname}\\
-  &\land\quad\forall q, v, Q_\gname. \hoare{\isqueue \; v \; Q_\gname}{\enqueue\ q\ v}{v . \TRUE}\\
-  &\land\quad\forall q, v, Q_\gname. \hoare{\isqueue \; v \; Q_\gname}{\dequeue\ q}{v . \TRUE}
+  &\exists \isqueue : (\Val \to \Prop) \to \Val \to Qgnames \to \Prop.\\
+  &\forall \Phi : \Val \to \Prop.\\
+  &\quad\quad \forall v, Q_\gname . \isqueue \ \Phi \ v \ Q_\gname \implies \persistently \isqueue \ \Phi \ v \ Q_\gname\\
+  &\land\quad\hoare{\TRUE}{\initialise \TT}{v . \exists Q_\gname, \isqueue\ \Phi \ v \ Q_\gname}\\
+  &\land\quad\forall q, v, Q_\gname. \hoare{\isqueue \ \Phi \ q \ Q_\gname \ast \Phi \ v}{\enqueue\ q\ v}{v . \TRUE}\\
+  &\land\quad\forall q, Q_\gname. \hoare{\isqueue \ \Phi \ q \ Q_\gname}{\dequeue\ q}{v . v = \None \lor (\exists x_v, v = \Some x_v \ast \Phi \ x_v)}
 \end{align*}
 
-
-Key insights (concurrent)
+\section{Proving the Concurrent Specification}
+\subsection[The isqueue predicate]{The $\isqueue$ Predicate}
+As we did for the sequential specification, we note here some useful observations
 \begin{enumerate}
   \item\label{MSQTL:insights:oldnodes} Nodes in the linked list are never deleted. Hence, the linked list only ever grows.
   \item\label{MSQTL:insights:lag} The tail can lag one node behind Head.
@@ -566,18 +569,22 @@ Key insights (concurrent)
     \end{enumerate}
 \end{enumerate}
 
-Insight \ref{MSQTL:insights:lag} might seem a little surprising, and indeed it stands in contrast to property 5 in \cite{DBLP:conf/podc/MichaelS96}, which states that the tail never lags behind head. I also didn't realise this possibility until a proof attempt using a model that "forgot" old nodes lead to an unprovable case (see section \ref{MSQTL:Discussion:xs_old}). The situation can occur when the queue is empty, and a thread performs an incomplete enqueue; it attaches the new node to the end, but before it can swing the tail to this new node, another thread performs a dequeue, which dequeues this new node, swinging the head to it. Now the tail is lagging a node behind the head.
+Observation \ref{MSQTL:insights:lag} might seem a little surprising, and indeed it stands in contrast to property 5 in \cite{DBLP:conf/podc/MichaelS96}, which states that the tail never lags behind head. I also didn't realise this possibility until a proof attempt using a model that "forgot" old nodes lead to an unprovable case (see section \ref{MSQTL:Discussion:xs_old}). The situation can occur when the queue is empty, and a thread performs an incomplete enqueue; it attaches the new node to the end, but before it can swing the tail to this new node, another thread performs a dequeue, which dequeues this new node, swinging the head to it. Now the tail is lagging a node behind the head.
 
 It is not possible for the tail to point more than one node behind the head, as in order for this to happen, more nodes must be enqueued, but this can't happen before the current enqueue finishes, which will update the tail and bring it up to speed with the head.
 
 Fortunately, this isn't an issue for safety, but a consequence of this possibility is that when modelling the queue, we must remember at least one "old" node (i.e. a dequeued node), as the tail might be pointing to this node. For the sake of simplicity in the model, the choice is made to remember an arbitrary amount of old nodes, which is represented by the list $xs_{old}$.
 
+Observation \ref{MSQTL:insights:states} is a simple consequence of the implementation using two locks.
 
-With these insights, we can now define the queue invariant.
+Since we want $\isqueue$ to be persistent, then we cannot directly state the points-to predicates as we did in the sequential case. However, we will still need all the same resources to be able to prove the specification. The solution is to have an invariant which describes the concrete state of the queue. In the proofs, when we need access to some resource, we shall then access it by opening the invariant. We now present the invariant and explain it afterwards.
 
 \begin{definition}[Two-Lock M\&S-Queue Invariant]\label{MSQTL:spec:invariant}
   \todo{Write it in}
 \end{definition}
+
+\todo{explain the invariant: Concrete xs, and abstract xs\_v, with xs\_queue being reflected in xs\_v, tokens (and RA), the four states, quotient points to, isSndLast}
+
 
 The specification for the two-lock Michael Scott Queue \textit{can} be proven using the queue invariant \ref{MSQTL:spec:invariant}, and the proof outline below will also be using this. However, a simpler (but arguably less intuitive) queue invariant was discovered. This simpler invariant is equivalent to \ref{MSQTL:spec:invariant} and has the benefit of being easier to work with in the mechanised proofs. Thus, in the mechanised proofs, the simpler variant is used. The simpler variant can be found in the appendix \todo{add appendix}.
 

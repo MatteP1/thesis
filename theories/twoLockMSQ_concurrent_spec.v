@@ -308,10 +308,14 @@ Definition is_queue (Ψ : val -> iProp Σ) (q : val) (Q_γ: Qgnames) : iProp Σ 
 	is_lock Q_γ.(γ_Hlock) H_lock (TokD Q_γ) ∗
 	is_lock Q_γ.(γ_Tlock) T_lock (TokE Q_γ).
 
+(* is_queue is persistent *)
+Global Instance is_queue_persistent Ψ q Q_γ : Persistent (is_queue Ψ q Q_γ).
+Proof. apply _. Qed.
+
 Lemma initialize_spec (Ψ : val -> iProp Σ):
 	{{{ True }}}
 		initialize #()
-	{{{ v Q_γ, RET v; is_queue Ψ v Q_γ}}}.
+	{{{ v Q_γ, RET v; is_queue Ψ v Q_γ }}}.
 Proof.
 	iIntros (Φ) "_ HΦ".
 	wp_lam.
@@ -501,9 +505,9 @@ Proof.
 	done.
 Qed.
 
-Lemma dequeue_spec Q Ψ (qg : Qgnames) : 
-	{{{ is_queue Ψ Q qg }}} 
-		dequeue Q 
+Lemma dequeue_spec Q Ψ (qg : Qgnames) :
+	{{{ is_queue Ψ Q qg }}}
+		dequeue Q
 	{{{ v, RET v; ⌜v = NONEV⌝ ∨ (∃ x_v, ⌜v = SOMEV x_v⌝ ∗ Ψ x_v) }}}.
 Proof.
 	iIntros (Φ) "(%l_queue & %l_head & %l_tail & %H_lock & %T_lock & -> &
