@@ -117,15 +117,16 @@
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\chapter{The Great Ideas}
-\label{ch:main}
+\chapter{Preliminaries}
+\label{ch:preliminaries}
+\todo{Description of HeapLang, Iris, Verified in Coq (Weakest precondition vs Hoare triples)}
 
-The Two-Lock Michael Scott Queue
+\chapter{The Two-Lock Michael Scott Queue}
 
 I present here he an implementation of the Two-lock MS-Queue in HeapLang. This implementation differs slightly from the original, presented in \cite{DBLP:conf/podc/MichaelS96}, but most changes simply reflect the differences in the two languages.
 
 
-Preliminaries
+\section{Preliminaries}
 
 The underlying data structure making up the queue is a singly-linked list. The linked-list will always contain at least one element, called the \emph{sentinel} node, marking the beginning of the queue. Note that the sentinel node is itself not part of the queue, but all nodes following it are. The queue keeps a head pointer ($\loc_{head}$) which always points to the sentinel, and a tail pointer ($\loc_{tail}$) which points to some node in the linked list.
 
@@ -134,9 +135,11 @@ In my implementation, a node can be thought of as a triple $(\locin{i}, v_i, \lo
 The reader may wonder why there is an extra, intermediary "in" pointer, between the pairs of the linked list, and why the "out" pointer couldn't point directly to the next pair. In the original implementation \cite{DBLP:conf/podc/MichaelS96}, nodes are allocated on the heap. To simulate this in HeapLang, when creating a new node, we create a pointer to a pair making up the node. Now, in the C-like language used in the original specification, an assignment operator is available which is not present in HeapLang. So in order to mimic this behaviour, we model variables as pointers. In this way, we can model a variable $\lvarA$ as a location $\loc_{\lvarA}$, and the value stored at $\loc_{\lvarA}$ is the current value of $\lvarA$. This means that the variable $\locout{i}$ (called "next" in the original) becomes a location $\loc_{head}$, and the value stored at the location is what head is currently assigned to. Since $\locout{i}$ is supposed to be a variable containing a pointer, then the value saved at that location will also be a pointer.
 
 
+\section{implementation}\label{section:two_lock:impl}
+
 The queue consists of 3 functions: $\initialise$, $\enqueue$, and $\dequeue$ which I now present in turn.
 
-$\initialise$
+\subsection[initialise]{$\initialise$}
 
 $\initialise$ will first create a single node -- the sentinel -- marking the start of the linked list. It then creates two locks, $H\_lock$ and $T\_lock$, protecting the head and tail pointers, respectively. Finally, it creates the head and tail pointers, both pointing to the sentinel. The queue is then a pointer to a structure containing the head, the tail, and the two locks.\\
 Figure \ref{MSQTL:impl:figure:init} illustrates the structure of the queue after initialisation. Note that one of the pointers is coloured blue. This represents a \emph{persistent} pointer; a pointer that will never be updated again. All "in" pointers $\locin{i}$, are persistent, meaning that they will always point to $(v_i, \locout{i})$. We shall use the notation $\loc \mapsto \square v$ (introduced in \cite{DBLP:conf/cpp/VindumB21}) to mean that $\loc$ points persistently to $v$.
@@ -144,7 +147,7 @@ Figure \ref{MSQTL:impl:figure:init} illustrates the structure of the queue after
 Note that in the original specification, a queue is a pointer to a 4-tuple $(\loc_{head}, \loc_{tail}, H\_lock, T\_lock)$. Since HeapLang doesn't support 4-tuples, we instead represent the queue as a pointer to a pair of pairs: $((\loc_{head}, \loc_{tail}), (H\_lock, T\_lock))$.
 
 
-$\enqueue$
+\subsection[enqueue]{$\enqueue$}
 
 To enqueue a value, we must create a new node, append it to the underlying linked-list, and swing the tail pointer to this new node. These three operations are depicted in figure \ref{MSQTL:impl:figure:enqueue}.
 
@@ -152,8 +155,7 @@ $\enqueue$ takes as argument the value to be enqueued and creates a new node con
 
 Figure \ref{MSQTL:impl:figure:enqueue} also illustrates when pointers become persistent; once the previous last node is updated to point to the newly inserted node, that pointer will never be updated again, hence becoming persistent.
 
-
-$\dequeue$
+\subsection[dequeue]{$\dequeue$}
 
 It is of course only possible to dequeue an element from the queue if the queue contains at least one element. Hence, the first thing $\dequeue$ does is check if the queue is empty. We can detect an empty queue by checking if the sentinel is the last node in the linked list. Being the last node in the linked list corresponds to having the "out" node be $\None$. If this is the case, then the queue is empty and the code returns $\None$. Otherwise, there is a node just after the sentinel, which is the first node of the queue. To dequeue it, we first read the associated value, and next we swing the head to it, making it the new sentinel. Finally, we return the value we read.
 
@@ -445,16 +447,51 @@ Figure \ref{MSQTL:impl:figure:dequeue} illustrates running dequeue on a non-empt
 \end{align*}
 
 
-Sequential Specification
+\section{Sequential Specification}
 
+Let us first prove a specification for the two-lock michael scott queue in the simple case where we don't allows for concurrency. In this case, we know that only a single thread will interact with the queue at any given point in a sequential manner. This means that we give a specification that tracks the exact contents of the queue. To this end, we shall define the abstract state of the queue, denoted $xs_v$ as a list of HeapLang values. I.e. $xs_v : \List \ \Val$. We adopt the convention that enqueueing an element is done by adding it to the front of the list, and dequeueing removes the last element of the list (if such an element exists). The reason for this choice is purely technical.
+
+Since the queue uses two locks, we will get two ghost names; one for each lock. For this specification, these are the only two ghost names we will need. However, for the later specifications, we will use more resource algebra, and will need more ghost names. Thus, to ease notation, we shall define the type "$Qgnames$" whose purpose is to keep track of the ghost names used for a specific queue. Since we only have two ghost names for this specification, element of $Qgnames$ will simply be pairs. For an element $Q_\gname \in Qgnames$, the first element of the pair, written $Q_\gname.\gname_{Hlock}$, will contain the ghost name for the head lock, and the second element, $Q_\gname.\gname_{Tlock}$, the ghost name for the head lock.
+
+The sequential specification we wish to prove is the following:
 \begin{align*}
-  &\exists \isqueue : \Val \to \List (\Loc \times \Val \times \Loc) \to Qgnames \to \Prop.\\
+  &\exists \isqueue : \Val \to \List \ \Val \to Qgnames \to \Prop.\\
   &\quad\quad\hoare{\TRUE}{\initialise \TT}{v . \exists Q_\gname, \isqueue\ v\ []\ Q_\gname}\\
-  &\land\quad\forall q, v, xs, Q_\gname. \hoare{\isqueue \; v \; xs \; Q_\gname}{\enqueue\ q\ v}{v . \exists x, \nVal{x} = \Some v \ast \isqueue\ q\ (x :: xs)\ Q_\gname}\\
-  &\land\quad\forall q, v, xs, Q_\gname. \hoare{\isqueue \; v \; xs \; Q_\gname}{\dequeue\ q}{v . \begin{array}{l}(xs = [] \ast v = \None \ast \isqueue\ q\ xs\ Q_\gname) \; \lor\\ (\exists x, xs'. xs = xs' \catenate [x] \ast v = \nVal{x} \ast \isqueue\ q\ xs'\ Q_\gname) \end{array}}
+  &\land\quad\forall q, v, xs_v, Q_\gname. \hoare{\isqueue \; q \; xs_v \; Q_\gname}{\enqueue\ q\ v}{v . \isqueue\ q\ (v :: xs_v)\ Q_\gname}\\
+  &\land\quad\forall q, xs_v, Q_\gname. \hoare{\isqueue \; q \; xs_v \; Q_\gname}{\dequeue\ q}{v . \begin{array}{l}(xs_v = [] \ast v = \None \ast \isqueue\ q\ xs_v\ Q_\gname) \; \lor\\ (\exists x_v, xs_v' \ . \ xs_v = xs_v' \catenate [x_v] \ast v = \Some x_v \ast \isqueue\ q\ xs_v'\ Q_\gname) \end{array}}
 \end{align*}
 
+The predicate $\isqueue \; q \; xs_v \; Q_\gname$ captures that the value $q$ is a queue, whose content matches that of our abstract representation $xs_v$, and the queue uses the ghost names described by $Q_\gname$. Note that the $\isqueue$ predicate is not required to be persistent, hence it cannot be duplicated and given to multiple threads. This is the sense in which this specification is sequential.
 
+\section{Proving the Sequential Specification}
+\subsection[The isqueue predicate]{The $\isqueue$ Predicate}
+To prove the specification we must give a specific $\isqueue$ predicate. To help guide us in designing this, we give the following observations about the behaviour of the implementation.
+\begin{enumerate}
+  \item\label{MSQTL:insights:head} Head always points to the first node in the queue.
+  \item\label{MSQTL:insights:tail} Tail always points to either the last or second last node in the queue.
+  \item\label{MSQTL:insights:persistent} All but the last pointer in the queue (the pointer to $\None$) never change.
+\end{enumerate}
+
+Observation \ref{MSQTL:insights:tail} captures the fact that, while enqueueing, a new node is first added to the linked list, and then later the tail is updated to point to the newly added node. Since only one thread can enqueue a node at a time (due to the lock), then the tail will only ever point to the last or second last due to the above. However, in a sequential setting, the tail will always appear to point to the last node, as no one can inspect the queue while the tail points to the second last.
+
+Insight \ref{MSQTL:insights:persistent} means that we can mark all pointers in the queue (except the pointer to the null node) as persistent. This is technically not needed in the sequential case, but we will incorporate it now, as we will need it in the concurrent setting.
+
+\begin{align*}
+  \isqueue \; q \; xs_v \; Q_\gname = &\exists l_{queue}, head, tail \in \Loc . \exists H_{lock}, T_{lock} \in \Val . \\
+  &q = l_{queue} \ast l_{queue} \mapsto\persistently ((head, tail), (H_{lock}, T_{lock})) \ast\\
+  &\exists xs_{queue} \in \List (\Loc \times \Val \times \Loc) . \exists x_{head}, x_{tail} \in (\Loc \times \Val \times \Loc) .\\
+	&proj\_val \ xs_{queue} = wrap\_some \ xs_v \ast\\
+	&\isLL (xs_{queue} ++ [x_{head}]) \ast\\
+	&head \mapsto (\nIn{x_{head}}) \ast\\
+	&tail \mapsto (\nIn{x_{tail}}) \ast isLast \ x_{tail} \ (xs_{queue} ++ [x_{head}]) \ast\\
+	&isLock \ Q_\gname.\gname_{Hlock} \ H_{lock} \ \TRUE \ast\\
+	&isLock \ Q_\gname.\gname_{Tlock} \ T_{lock} \ \TRUE.
+\end{align*}
+
+This $\isqueue$ predicate states that the value $q$ is a location, which always points to the structure containing the head, the tail, and the two locks. It also connects the abstract state $xs_v$ with the concrete state (represented by $xs_{queue}$), by stating that if you strip away the locations connecting the nodes and remove the $\Some$ around the values, then you get the abstract state $xs_v$. Next, the predicate specifies the concrete state. There is some head node $x_{head}$, which the head points to. This head node and the nodes in $xs_{queue}$ form the underlying linked list (specified using the $\isLL$ predicate below). There is also a tail node, which is the last node in the linked list, and the tail points to this node.
+Finally, we have the isLock predicate for our two locks. Since we are in a sequential setting, then the locks are superfluous, hence they simply protect $\TRUE$.
+
+The $\isLL$ predicate essentially creates the structure seen in the examples of section \ref{section:two_lock:impl}. It is defined in two steps. Firstly, we create all the persistent pointers in the linked list using the $\isLLchain$ predicate. Note that this in effect makes $\isLLchain \ xs$ persistent for all $xs$.
 \begin{definition}[Linked List Chain Predicate]
   \begin{align*}
     \isLLchain{[]} \equiv& \TRUE\\
@@ -463,6 +500,7 @@ Sequential Specification
   \end{align*}
 \end{definition}
 
+Then, to define $\isLL$, we add that the last node in the linked list points to $\None$.
 \begin{definition}[Linked List Predicate]
   \begin{align*}
     \isLL{[]} \equiv& \TRUE\\
@@ -470,24 +508,16 @@ Sequential Specification
   \end{align*}
 \end{definition}
 
-Key insights
-\begin{enumerate}
-  \item\label{MSQTL:insights:head} Head always points to the first node in the queue.
-  \item\label{MSQTL:insights:tail} Tail always point to either the last or second last node in the queue.
-  \item\label{MSQTL:insights:persistent} All but the last pointer in the queue (the pointer to null) never change
-\end{enumerate}
+\subsection{Proof outline}
 
-Insight \ref{MSQTL:insights:tail} is true, as it holds initially, and every time a new node is enqueued, the tail pointer is updated to point to the last node, and no other nodes can be enqueue before the update takes place. However, just after the new node has been linked to the queue, the tail queue will be pointing to the second last node in the queue, until it is updated in the next line.
-
-Insight \ref{MSQTL:insights:persistent} means that we can mark all pointers in the queue (except the pointer to the null node) as persistent.
+\todo{give proof outline}
 
 
-
-Concurrent Specification
-
+\section{Concurrent Specification}
+\todo{update to reflect changes in Coq}
 \begin{align*}
   &\exists \isqueue : \Val \mapsto Qgnames \mapsto \Prop.\\
-  &\quad\quad\persistently (\forall v, Q_\gname . \isqueue \; v \; Q_\gname \implies \persistently \isqueue \; v \; Q_\gname)\\
+  &\quad\quad \forall v, Q_\gname . \isqueue \; v \; Q_\gname \implies \persistently \isqueue \; v \; Q_\gname\\
   &\land\quad\hoare{\TRUE}{\initialise \TT}{v . \exists Q_\gname, \isqueue\ v\ Q_\gname}\\
   &\land\quad\forall q, v, Q_\gname. \hoare{\isqueue \; v \; Q_\gname}{\enqueue\ q\ v}{v . \TRUE}\\
   &\land\quad\forall q, v, Q_\gname. \hoare{\isqueue \; v \; Q_\gname}{\dequeue\ q}{v . \TRUE}
@@ -496,8 +526,8 @@ Concurrent Specification
 
 Key insights (concurrent)
 \begin{enumerate}
-  \item All the same as before
-  \item\label{MSQTL:insights:lag} The tail can lag one node behind Head
+  \item\label{MSQTL:insights:oldnodes} Nodes in the linked list are never deleted. Hence, the linked list only ever grows.
+  \item\label{MSQTL:insights:lag} The tail can lag one node behind Head.
   \item\label{MSQTL:insights:states} At any given time, the queue is in one of four states:
     \begin{enumerate}
       \item\label{MSQTL:insights:state:static} No threads are interacting with the queue (\textbf{Static})
@@ -528,7 +558,7 @@ The specification for the two-lock Michael Scott Queue \textit{can} be proven us
 
 
 \subsubsection{Discussing the need for $xs_{old}$}\label{MSQTL:Discussion:xs_old}
-
+\todo{Update to reflect changes in Coq}
 As mentioned in the insights, it is possible for the tail to lag one node behind the head. This insight lead to including the old nodes of the queue in the queue invariant. This addition manifests in the end of the proof of dequeue. When we open the invariant to swing the head to the new node, we get that the entire queue is $xs$. After performing the write, we can then close the invariant with the same $xs$ that we opened the queue to (just written differently to signify that $x_{head}$ is now "old"). Because of this, we can supply the same predicate concerning the $tail$ (the or) that we opened the queue with, since these only mention $xs$, which remains the same.
 
 Had we not used an $xs_{old}$ and essentially just "forgotten" old nodes in the queue, we couldn't have done this. Say that we defined $xs$ as $xs = x_{head} :: xs_{rest}$ instead. Then, once we have to close the invariant, we cannot supply the $xs$, which we got when we opened the invariant. Our only choice (due to the fact that $head$ must point to $x_{n_head}$) is to close the invariant with $xs' = xs_{rest} = x_{n_head} :: xs_{n_rest}''$. However, clearly $xs' \neq xs$, so we cannot supply the same predicate concerning the $tail$ (the or) that we got when opening the invariant, since this predicate talks about $xs$, not $xs'$. Now, if we opened the invariant in the Dequeue case, then we could assert that $last xs = last xs'$, and hence still be able close the invariant. However, if we opened the invariant in the Both case, then we would need to assert that $2last xs = 2last xs'$. This is however not provable, since it might be the case that $xs_{n_rest}''$ is empty, and hence $2last xs'$ is $None$, whereas $2last xs = x_{n_head}$.
