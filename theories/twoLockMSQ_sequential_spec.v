@@ -113,34 +113,6 @@ Proof.
 		unfold isLL_chain; auto.
 Qed.
 
-
-(* Fist and Last of lists *)
-Definition isFirst {A} (x : A) xs := ∃ xs_rest, xs = xs_rest ++ [x].
-Definition isLast {A} (x : A) xs := ∃ xs_rest, xs = x :: xs_rest.
-Definition isSndLast {A} (x : A) xs := ∃ x_first xs_rest, xs = x_first :: x :: xs_rest.
-
-Lemma exists_first {A} : forall (xs : list A),
-	~(xs = nil) ->
-	∃x_first, isFirst x_first xs.
-Proof.
-	induction xs as [|x xs' IH]; first done.
-	intros _.
-	destruct xs' as [|x' xs'']; first by exists x, [].
-	destruct IH as [x_first [xs_rest H_eq]]; first done.
-	exists x_first, (x :: xs_rest).
-	by rewrite H_eq.
-Qed.
-
-Lemma exists_last {A} : forall (xs : list A),
-	~(xs = nil) ->
-	∃x_last, isLast x_last xs.
-Proof.
-	intros [|x xs']; first done.
-	intros _.
-	by exists x, xs'.
-Qed.
-
-
 Record SeqQgnames := {γ_Hlock_seq 	: gname;
 					  γ_Tlock_seq 	: gname;
 					 }.

@@ -32,7 +32,7 @@
   - [x] Implement proof in Iris (Coq)
   - [x] Add a predicate that should hold of all elements in queue (see isBag)
   - [x] use {} and [] instead of i: 
-  - [ ] Rename xs_rest to xs_queue
+  - [x] Rename xs_rest to xs_queue
   - [x] Prove consistency of is_queue
 
 - [ ] Clean up proof of concurrent spec for M&S queue with locks in Coq

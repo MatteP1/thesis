@@ -580,13 +580,35 @@ Observation \ref{MSQTL:insights:states} is a simple consequence of the implement
 Since we want $\isqueue$ to be persistent, then we cannot directly state the points-to predicates as we did in the sequential case. However, we will still need all the same resources to be able to prove the specification. The solution is to have an invariant which describes the concrete state of the queue. In the proofs, when we need access to some resource, we shall then access it by opening the invariant. We now present the invariant and explain it afterwards.
 
 \begin{definition}[Two-Lock M\&S-Queue Invariant]\label{MSQTL:spec:invariant}
-  \todo{Write it in}
+  \begin{align*}
+    &\exists xs_v.\\
+    &\exists xs, xs_{queue}, xs_{old}, x_{head}, x_{tail} .\\
+    &xs = xs_{queue} ++ [x_{head}] ++ xs_{old} \ast\\
+    &\isLL \ xs \ast\\
+    &proj\_val \ xs_{queue} = wrap\_some \ xs_v \ast\\
+    &All \ xs_v \ \Phi \ast\\
+    &(\\
+    &\quad\quad\loc_{head} \mapsto (\nIn{x_{head}}) \ast \loc_{tail} \mapsto (\nIn{x_{tail}}) \ast isLast \ x_{tail} \ xs \ast\\
+    &\quad\quad ToknE Q_\gname \ast ToknD Q_\gname \ast TokUpdated Q_\gname\\
+    &\quad\lor\\
+    &\quad\quad\loc_{head} \mapsto (\nIn{x_{head}}) \ast \loc_{tail} \mapsto{1/2} (\nIn{x_{tail}}) \ast\\
+    &\quad\quad (isLast \ x_{tail} \ xs \ast TokBefore \ Q_\gname \lor isSndLast \ x_{tail} \ xs \ast TokAfter \ Q_\gname) \ast\\
+    &\quad\quad TokE Q_\gname \ast ToknD Q_\gname\\
+    &\quad\lor\\
+    &\quad\quad\loc_{head} \mapsto{1/2} (\nIn{x_{head}}) \ast \loc_{tail} \mapsto (\nIn{x_{tail}}) \ast isLast \ x_{tail} \ xs \ast\\
+    &\quad\quad ToknE Q_\gname \ast TokD Q_\gname \ast TokUpdated Q_\gname\\
+    &\quad\lor\\
+    &\quad\quad\loc_{head} \mapsto{1/2} (\nIn{x_{head}}) \ast \loc_{tail} \mapsto{1/2} (\nIn{x_{tail}}) \ast\\
+    &\quad\quad (isLast \ x_{tail} \ xs \ast TokBefore Q_\gname \lor isSndLast x_{tail} xs \ast TokAfter Q_\gname) \ast\\
+    &\quad\quad TokE Q_\gname \ast TokD Q_\gname\\
+    &)
+  \end{align*}
 \end{definition}
 
 \todo{explain the invariant: Concrete xs, and abstract xs\_v, with xs\_queue being reflected in xs\_v, tokens (and RA), the four states, quotient points to, isSndLast}
 
 
-The specification for the two-lock Michael Scott Queue \textit{can} be proven using the queue invariant \ref{MSQTL:spec:invariant}, and the proof outline below will also be using this. However, a simpler (but arguably less intuitive) queue invariant was discovered. This simpler invariant is equivalent to \ref{MSQTL:spec:invariant} and has the benefit of being easier to work with in the mechanised proofs. Thus, in the mechanised proofs, the simpler variant is used. The simpler variant can be found in the appendix \todo{add appendix}.
+The concurrent specification for the two-lock Michael Scott Queue \textit{can} be proven using the queue invariant \ref{MSQTL:spec:invariant}, and the proof outline below will also be using this. However, a simpler (but arguably less intuitive) queue invariant was discovered. This simpler invariant is equivalent to \ref{MSQTL:spec:invariant} and has the benefit of being easier to work with in the mechanised proofs. Thus, in the mechanised proofs, the simpler variant is used. The simpler variant can be found in the appendix \todo{add appendix}.
 
 % \begin{definition}[Simplified Two-Lock M\&S-Queue Invariant]\label{MSQTL:spec:invariant:simple}
 %   \todo{Write it in}
