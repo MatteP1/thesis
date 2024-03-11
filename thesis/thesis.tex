@@ -58,6 +58,12 @@
 \newcommand{\nVal}[1]{\operatorname{val} \; #1}
 \newcommand{\nOut}[1]{\operatorname{out} \; #1}
 
+\newcommand{\StaticState}{\textbf{Static}}
+\newcommand{\EnqueueState}{\textbf{Enqueue}}
+\newcommand{\DequeueState}{\textbf{Dequeue}}
+\newcommand{\BothState}{\textbf{Both}}
+
+
 \newcommand\catenate{\mathbin{\text{\ttfamily\upshape ++}}}
 
 \newcommand{\todo}[1]{{\color[rgb]{.5,0,0}\textbf{$\blacktriangleright$#1$\blacktriangleleft$}}}
@@ -562,10 +568,10 @@ As we did for the sequential specification, we note here some useful observation
   \item\label{MSQTL:insights:lag} The tail can lag one node behind Head.
   \item\label{MSQTL:insights:states} At any given time, the queue is in one of four states:
     \begin{enumerate}
-      \item\label{MSQTL:insights:state:static} No threads are interacting with the queue (\textbf{Static})
-      \item\label{MSQTL:insights:state:enqueue} A thread is enqueueing (\textbf{Enqueue})
-      \item\label{MSQTL:insights:state:dequeue} A thread is dequeuing (\textbf{Dequeue})
-      \item\label{MSQTL:insights:state:both} A thread is enqueueing and a thread is dequeuing (\textbf{Both})
+      \item\label{MSQTL:insights:state:static} No threads are interacting with the queue (\StaticState)
+      \item\label{MSQTL:insights:state:enqueue} A thread is enqueueing (\EnqueueState)
+      \item\label{MSQTL:insights:state:dequeue} A thread is dequeuing (\DequeueState)
+      \item\label{MSQTL:insights:state:both} A thread is enqueueing and a thread is dequeuing (\BothState)
     \end{enumerate}
 \end{enumerate}
 
@@ -578,37 +584,56 @@ Fortunately, this isn't an issue for safety, but a consequence of this possibili
 Observation \ref{MSQTL:insights:states} is a simple consequence of the implementation using two locks.
 
 Since we want $\isqueue$ to be persistent, then we cannot directly state the points-to predicates as we did in the sequential case. However, we will still need all the same resources to be able to prove the specification. The solution is to have an invariant which describes the concrete state of the queue. In the proofs, when we need access to some resource, we shall then access it by opening the invariant. We now present the invariant and explain it afterwards.
-
 \begin{definition}[Two-Lock M\&S-Queue Invariant]\label{MSQTL:spec:invariant}
   \begin{align*}
-    &\exists xs_v.\\
-    &\exists xs, xs_{queue}, xs_{old}, x_{head}, x_{tail} .\\
+    &queue\_invariant \ \Phi \ \loc_{head} \ \loc_{tail} \ Q_\gname =\\
+    &\exists xs_v. &&\text{(the abstract state)}\\
+    &\exists xs, xs_{queue}, xs_{old}, x_{head}, x_{tail} . &&\text{(the concrete state)}\\
     &xs = xs_{queue} ++ [x_{head}] ++ xs_{old} \ast\\
     &\isLL \ xs \ast\\
     &proj\_val \ xs_{queue} = wrap\_some \ xs_v \ast\\
     &All \ xs_v \ \Phi \ast\\
     &(\\
-    &\quad\quad\loc_{head} \mapsto (\nIn{x_{head}}) \ast \loc_{tail} \mapsto (\nIn{x_{tail}}) \ast isLast \ x_{tail} \ xs \ast\\
+    &\quad\quad\loc_{head} \mapsto (\nIn{x_{head}}) \ast \loc_{tail} \mapsto (\nIn{x_{tail}}) \ast isLast \ x_{tail} \ xs \ast &&\text{(\StaticState)}\\
     &\quad\quad ToknE Q_\gname \ast ToknD Q_\gname \ast TokUpdated Q_\gname\\
     &\quad\lor\\
-    &\quad\quad\loc_{head} \mapsto (\nIn{x_{head}}) \ast \loc_{tail} \mapsto{1/2} (\nIn{x_{tail}}) \ast\\
+    &\quad\quad\loc_{head} \mapsto (\nIn{x_{head}}) \ast \loc_{tail} \mapsto{1/2} (\nIn{x_{tail}}) \ast &&\text{(\EnqueueState)}\\
     &\quad\quad (isLast \ x_{tail} \ xs \ast TokBefore \ Q_\gname \lor isSndLast \ x_{tail} \ xs \ast TokAfter \ Q_\gname) \ast\\
     &\quad\quad TokE Q_\gname \ast ToknD Q_\gname\\
     &\quad\lor\\
-    &\quad\quad\loc_{head} \mapsto{1/2} (\nIn{x_{head}}) \ast \loc_{tail} \mapsto (\nIn{x_{tail}}) \ast isLast \ x_{tail} \ xs \ast\\
+    &\quad\quad\loc_{head} \mapsto{1/2} (\nIn{x_{head}}) \ast \loc_{tail} \mapsto (\nIn{x_{tail}}) \ast isLast \ x_{tail} \ xs \ast &&\text{(\DequeueState)}\\
     &\quad\quad ToknE Q_\gname \ast TokD Q_\gname \ast TokUpdated Q_\gname\\
     &\quad\lor\\
-    &\quad\quad\loc_{head} \mapsto{1/2} (\nIn{x_{head}}) \ast \loc_{tail} \mapsto{1/2} (\nIn{x_{tail}}) \ast\\
+    &\quad\quad\loc_{head} \mapsto{1/2} (\nIn{x_{head}}) \ast \loc_{tail} \mapsto{1/2} (\nIn{x_{tail}}) \ast &&\text{(\BothState)}\\
     &\quad\quad (isLast \ x_{tail} \ xs \ast TokBefore Q_\gname \lor isSndLast x_{tail} xs \ast TokAfter Q_\gname) \ast\\
     &\quad\quad TokE Q_\gname \ast TokD Q_\gname\\
     &)
   \end{align*}
 \end{definition}
+In contrast to the sequential specification, the abstract state is now existentially quantified, hence the exact contents of the queue are not tracked. But the concrete state of the queue is still reflected in the abstract state through a value projection and wrapping of values. Another difference is that we now also keep track of an arbitrary number of "old" nodes; nodes that are behind the head node, $x_{head}$. As discussed above, this inclusion is due to observation \ref{MSQTL:insights:lag}.\\
+As before, we also assert that the concrete state forms a linked list, as described by the $\isLL$ predicate.\\
+The proposition $All \ xs_v \ \Phi \ast$ states that all values in $xs_v$ (i.e. the values currently in the queue) satisfy the predicate $\Phi$. This will allow us to conclude that dequeued values satisfy $\Phi$.\\
+The final part of the invariant describes the four possible states of the queue, as described in \ref{MSQTL:insights:states}. Since the resources used by the queue are inside an invariant, and enqueueing/dequeueing threads need to access the resources of the queue multiple times, then we will have to open and close the invariant multiple times. Each time we open the invariant, the existentially quantified variables will not be the same as those from early accesses of the invariant (as they are existentially quantified). Thus, the threads must be able to "match up" variables from previous accesses to later accesses. The way we shall achieve this is by allowing threads to keep a \textit{fraction} of the points-to predicate that it is using. For instance, an enqueuing thread will have to access the points-to predicate concerning $\loc_{tail}$ multiple times, and in between accesses of the invariant, it can get to keep half of the points-to predicate. Thus, when it opens the invariant later, it will have $\loc_{tail} \mapsto{1/2} x_{tail}$ from an earlier access, and it will obtain the existence of some new $x_{tail}'$, such that $\loc_{tail} \mapsto{1/2} x_{tail}'$. Combining the two points-to predicates allows us to conclude that $x_{tail} = x_{tail}'$. In this way, we can match up variables from earlier access to variables in later accesses.\\
+In the \StaticState{} state where no thread is interacting with the queue, the queue owns all of the points-to predicates concerning the head and tail.\\
+In the \EnqueueState{} state, the enqueueing thread owns half of the tail pointer, and we distinguish between two cases, as discussed in \ref{MSQTL:insights:tail}: either the enqueueing thread has yet to add the new node to the linked list, or the new node has been added, but the tail pointer is still pointing to the previous tail node.\\
+In the \DequeueState{} state, the dequeueing thread owns half of the head pointer, and the tail is as in the \StaticState{} state.\\
+Finally, the \BothState{} state is essentially a combination of the \EnqueueState{} and \DequeueState{} states.
 
-\todo{explain the invariant: Concrete xs, and abstract xs\_v, with xs\_queue being reflected in xs\_v, tokens (and RA), the four states, quotient points to, isSndLast}
+To track which state the queue is in, we use \textit{tokens}. Tokens are defined using the exclusive resource algebra on the singleton set: $\exm{\TT}$. This resource algebra only has one valid element, and combining two elements will give the non-valid element $\bot$. Thus, if we own a particular token, then, upon opening the invariant, we can rule out certain states simply because they mention the token we own.\\
+We will use several tokens, each of which is the valid element of their own instance of $\exm{\TT}$. Different instances are distinguish between using ghost names. Hence, each token will be represented by a ghost name. As we did for the sequential specification, we group these ghost names into a tuple $Q_\gname$, and write, for instance $TokE Q_\gname$ to refer to the valid element of a particular instance. We proceed to explain the meaning of each of the tokens used in the invariant.
+\todo{make macros for the tokens}
+\begin{itemize}
+  \item $ToknE Q_\gname$ represents that no threads are enqueueing.
+  \item $TokE Q_\gname$ represents that a thread is enqueueing.
+  \item $ToknD Q_\gname$ represents that no threads are dequeueing.
+  \item $TokD Q_\gname$ represents that a thread is dequeueing.
+  \item $TokBefore Q_\gname$ represents that an enqueueing thread has not yet added the new node to the linked list.
+  \item $TokAfter Q_\gname$ represents that an enqueueing thread has added the new node to the linked list, but not yet swung the tail.
+  \item $TokUpdated Q_\gname$ is defined as $TokBefore Q_\gname \ast TokAfter Q_\gname$, and represents that the queue is up to date.
+\end{itemize}
 
 
-The concurrent specification for the two-lock Michael Scott Queue \textit{can} be proven using the queue invariant \ref{MSQTL:spec:invariant}, and the proof outline below will also be using this. However, a simpler (but arguably less intuitive) queue invariant was discovered. This simpler invariant is equivalent to \ref{MSQTL:spec:invariant} and has the benefit of being easier to work with in the mechanised proofs. Thus, in the mechanised proofs, the simpler variant is used. The simpler variant can be found in the appendix \todo{add appendix}.
+\textbf{Note}: The concurrent specification for the two-lock Michael Scott Queue \textit{can} be proven using the queue invariant \ref{MSQTL:spec:invariant}, and the proof outline below will also be using this. However, a simpler (but arguably less intuitive) queue invariant was discovered. This simpler invariant is equivalent to \ref{MSQTL:spec:invariant} and has the benefit of being easier to work with in the mechanised proofs. Thus, in the mechanised proofs, the simpler variant is used. The simpler variant can be found in the appendix \todo{add appendix}.
 
 % \begin{definition}[Simplified Two-Lock M\&S-Queue Invariant]\label{MSQTL:spec:invariant:simple}
 %   \todo{Write it in}
