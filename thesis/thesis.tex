@@ -63,6 +63,22 @@
 \newcommand{\DequeueState}{\textbf{Dequeue}}
 \newcommand{\BothState}{\textbf{Both}}
 
+\newcommand{\Qgnames}{Q_\gname}
+
+\newcommand{\TokE}[1]{\operatorname{TokE}\ #1}
+\newcommand{\TokEQg}{\TokE{\Qgnames}}
+\newcommand{\ToknE}[1]{\operatorname{ToknE}\ #1}
+\newcommand{\ToknEQg}{\ToknE{\Qgnames}}
+\newcommand{\TokD}[1]{\operatorname{TokD}\ #1}
+\newcommand{\TokDQg}{\TokD{\Qgnames}}
+\newcommand{\ToknD}[1]{\operatorname{ToknD}\ #1}
+\newcommand{\ToknDQg}{\ToknD{\Qgnames}}
+\newcommand{\TokBefore}[1]{\operatorname{TokBefore}\ #1}
+\newcommand{\TokBeforeQg}{\TokBefore{\Qgnames}}
+\newcommand{\TokAfter}[1]{\operatorname{TokAfter}\ #1}
+\newcommand{\TokAfterQg}{\TokBefore{\Qgnames}}
+\newcommand{\TokUpdated}[1]{\operatorname{TokUpdated}\ #1}
+\newcommand{\TokUpdatedQg}{\TokUpdated{\Qgnames}}
 
 \newcommand\catenate{\mathbin{\text{\ttfamily\upshape ++}}}
 
@@ -595,18 +611,18 @@ Since we want $\isqueue$ to be persistent, then we cannot directly state the poi
     &All \ xs_v \ \Phi \ast\\
     &(\\
     &\quad\quad\loc_{head} \mapsto (\nIn{x_{head}}) \ast \loc_{tail} \mapsto (\nIn{x_{tail}}) \ast isLast \ x_{tail} \ xs \ast &&\text{(\StaticState)}\\
-    &\quad\quad ToknE Q_\gname \ast ToknD Q_\gname \ast TokUpdated Q_\gname\\
+    &\quad\quad \ToknEQg \ast \ToknDQg \ast TokUpdatedQg\\
     &\quad\lor\\
     &\quad\quad\loc_{head} \mapsto (\nIn{x_{head}}) \ast \loc_{tail} \mapsto{1/2} (\nIn{x_{tail}}) \ast &&\text{(\EnqueueState)}\\
-    &\quad\quad (isLast \ x_{tail} \ xs \ast TokBefore \ Q_\gname \lor isSndLast \ x_{tail} \ xs \ast TokAfter \ Q_\gname) \ast\\
-    &\quad\quad TokE Q_\gname \ast ToknD Q_\gname\\
+    &\quad\quad (isLast \ x_{tail} \ xs \ast \TokBeforeQg \lor isSndLast \ x_{tail} \ xs \ast \TokAfterQg) \ast\\
+    &\quad\quad \TokEQg \ast \ToknDQg\\
     &\quad\lor\\
     &\quad\quad\loc_{head} \mapsto{1/2} (\nIn{x_{head}}) \ast \loc_{tail} \mapsto (\nIn{x_{tail}}) \ast isLast \ x_{tail} \ xs \ast &&\text{(\DequeueState)}\\
-    &\quad\quad ToknE Q_\gname \ast TokD Q_\gname \ast TokUpdated Q_\gname\\
+    &\quad\quad \ToknEQg \ast \TokDQg \ast TokUpdatedQg\\
     &\quad\lor\\
     &\quad\quad\loc_{head} \mapsto{1/2} (\nIn{x_{head}}) \ast \loc_{tail} \mapsto{1/2} (\nIn{x_{tail}}) \ast &&\text{(\BothState)}\\
-    &\quad\quad (isLast \ x_{tail} \ xs \ast TokBefore Q_\gname \lor isSndLast x_{tail} xs \ast TokAfter Q_\gname) \ast\\
-    &\quad\quad TokE Q_\gname \ast TokD Q_\gname\\
+    &\quad\quad (isLast \ x_{tail} \ xs \ast \TokBeforeQg \lor isSndLast x_{tail} xs \ast \TokAfterQg) \ast\\
+    &\quad\quad \TokEQg \ast \TokDQg\\
     &)
   \end{align*}
 \end{definition}
@@ -620,36 +636,46 @@ In the \DequeueState{} state, the dequeueing thread owns half of the head pointe
 Finally, the \BothState{} state is essentially a combination of the \EnqueueState{} and \DequeueState{} states.
 
 To track which state the queue is in, we use \textit{tokens}. Tokens are defined using the exclusive resource algebra on the singleton set: $\exm{\TT}$. This resource algebra only has one valid element, and combining two elements will give the non-valid element $\bot$. Thus, if we own a particular token, then, upon opening the invariant, we can rule out certain states simply because they mention the token we own.\\
-We will use several tokens, each of which is the valid element of their own instance of $\exm{\TT}$. Different instances are distinguish between using ghost names. Hence, each token will be represented by a ghost name. As we did for the sequential specification, we group these ghost names into a tuple $Q_\gname$, and write, for instance $TokE Q_\gname$ to refer to the valid element of a particular instance. We proceed to explain the meaning of each of the tokens used in the invariant.
-\todo{make macros for the tokens}
+We will use several tokens, each of which is the valid element of their own instance of $\exm{\TT}$. Different instances are distinguish between using ghost names. Hence, each token will be represented by a ghost name. As we did for the sequential specification, we group these ghost names into a tuple $\Qgnames$, and write, for instance $\TokEQg$ to refer to the valid element of a particular instance. We proceed to explain the meaning of each of the tokens used in the invariant.
 \begin{itemize}
-  \item $ToknE Q_\gname$ represents that no threads are enqueueing.
-  \item $TokE Q_\gname$ represents that a thread is enqueueing.
-  \item $ToknD Q_\gname$ represents that no threads are dequeueing.
-  \item $TokD Q_\gname$ represents that a thread is dequeueing.
-  \item $TokBefore Q_\gname$ represents that an enqueueing thread has not yet added the new node to the linked list.
-  \item $TokAfter Q_\gname$ represents that an enqueueing thread has added the new node to the linked list, but not yet swung the tail.
-  \item $TokUpdated Q_\gname$ is defined as $TokBefore Q_\gname \ast TokAfter Q_\gname$, and represents that the queue is up to date.
+  \item $\ToknEQg$ represents that no threads are enqueueing.
+  \item $\TokEQg$ represents that a thread is enqueueing.
+  \item $\ToknDQg$ represents that no threads are dequeueing.
+  \item $\TokDQg$ represents that a thread is dequeueing.
+  \item $\TokBeforeQg$ represents that an enqueueing thread has not yet added the new node to the linked list.
+  \item $\TokAfterQg$ represents that an enqueueing thread has added the new node to the linked list, but not yet swung the tail.
+  \item $\TokUpdatedQg$ is defined as $\TokBeforeQg \ast \TokAfterQg$, and represents that the queue is up to date.
 \end{itemize}
 
 
 \textbf{Note}: The concurrent specification for the two-lock Michael Scott Queue \textit{can} be proven using the queue invariant \ref{MSQTL:spec:invariant}, and the proof outline below will also be using this. However, a simpler (but arguably less intuitive) queue invariant was discovered. This simpler invariant is equivalent to \ref{MSQTL:spec:invariant} and has the benefit of being easier to work with in the mechanised proofs. Thus, in the mechanised proofs, the simpler variant is used. The simpler variant can be found in the appendix \todo{add appendix}.
-
 % \begin{definition}[Simplified Two-Lock M\&S-Queue Invariant]\label{MSQTL:spec:invariant:simple}
 %   \todo{Write it in}
 % \end{definition}
 
+With this, we can now give our definition of $\isqueue$.
+\begin{align*}
+  \isqueue \; q \; xs_v \; \Qgnames = &\exists \loc_{queue}, \loc_{head}, \loc_{tail} \in \Loc . \exists H_{lock}, T_{lock} \in \Val . \\
+  &q = \loc_{queue} \ast \loc_{queue} \mapsto\persistently ((\loc_{head}, \loc_{tail}), (H_{lock}, T_{lock})) \ast\\
+	&\exists \iname . \knowInv{\iname}{queue\_invariant \Phi \loc_{head} \loc_{tail} \Qgnames} \ast\\
+	&isLock \ Q_\gname.\gname_{Hlock} \ H_{lock} \ \TokDQg \ast\\
+	&isLock \ Q_\gname.\gname_{Tlock} \ T_{lock} \ \TokEQg.
+\end{align*}
+
+In contrast to the sequential specification, the locks now protect $\TokEQg$ and $\TokDQg$. The idea is that, when an enqueueing thread obtains $T_{lock}$, they will obtain the $\TokEQg$ token, which allows them to conclude that the queue state is either \StaticState{} or \DequeueState{}. Similarly for a dequeueing thread. We now proceed to prove the specification using the above $\isqueue$ predicate.
 
 
 \subsection{Proof outline}
-\todo{prove persistency of isqueue}
-The proofs structure for the specifications are largely similar to the sequential counterparts. The major difference is that we don't have access to the resource all the time; we must get it from the invariant, and we also have to keep track of which state we are in.
+Firstly, we must show that $\isqueue$ is persistent. This however follows from the fact that invariants are persistent, the $isLock$ predicates are persistent, persistent points-to predicates are persistent, and persistency is preserved by $\ast$ and quantifications (rules: persistently-sep, persistently-$\land$, persistently-$\exists$).
+
+The proofs structure for the specifications are largely similar to the sequential counterparts. The major difference is that we don't have access to the resources all the time; we must get them from the invariant. Further we also have to keep track of which state we are in. For the proof outlines below, these points will be the main focus.
 
 \subsubsection{initialise}
-\todo{do}
+We first step through the first line which gives us the sentinel node of the linked list. Next, we must create the two locks. To create the two tokens that the locks must protect, we use the ghost-alloc rule twice, which gives us two ghost names, one for each of the tokens. We put the ghost names into a tuple $\Qgnames$, and write $\TokEQg$ and $\TokDQg$ for the two ghost resources created by the ghost-alloc rule. We then create the locks, giving up the two tokens. Following this, we create the $\loc_{queue}$, $\loc_{head}$, and $\loc{tail}$ pointers. All that remains then is to prove the postcondition; the $\isqueue$ predicate. The persistent points-to predicate we got when we stepped through the code, and the $\isLock$ predicates we got when we created the locks. So all that remains is the invariant. We create the $queue\_invariant$ in the \StaticState{} state, most of which is analogous to the sequential specification. However, we will also need to supply the tokens required by the \StaticState{} state. Thus, we allocate the four tokens $\ToknEQg$, $\ToknDQg$, $\TokBeforeQg$, and $\TokAfterQg$ in the same way we allocated $\TokEQg$ and $\TokDQg$. We combine $\TokBeforeQg$ and $\TokAfterQg$ to get $\TokUpdatedQg$, and we now have all the tokens we need to create the $queue\_invariant$ in the \StaticState{} state. To create the invariant from $queue\_invariant$, we use the Inv-alloc rule (FUP).
 
 \subsubsection{Enqueue}
-\todo{do}
+We first step through the first line which gives us the new node $x_{new}$. We then acquire the tail lock $T_{lock}$, giving us $\TokEQg$. In the next line we must dereference the tail pointer, in order to get the tail node $x_tail$. This information, however, is inside the invariant. Invariant can only be opened if the expression being considered is atomic, but we can always make it atomic using the bind rule. Thus, we open the invariant, and since we have $\TokEQg$, we know that the queue is in state \StaticState{} or \DequeueState{}. In any case, we get that $\loc_{tail} \mapsto \nIn{x_{tail}}$, and that $x_{tail}$ is the last node in the linked list. We can then dereference $\loc_{tail}$, and must then close the invariant. We split up the points-to predicate $\loc_{tail} \mapsto \nIn{x_{tail}}$ in two, which leaves us with two of $\loc_{tail} \mapsto{1/2} \nIn{x_{tail}}$. We keep one of them, and use the other to close the invariant in the before case of state \EnqueueState{} or \BothState{}, depending on which state we opened the invariant into. By doing this, we give up $\TokEQg$, but we gain $\ToknEQg$ and $\TokAfterQg$. We can now step to the point where $x_{tail}$'s out is updated to point to $x_{new}$. However, the points-to predicate concerning $\nOut{x_{tail}}$ isn't persistent, and is hence inside the invariant. We thus have to open the invariant again. Since we have $\ToknEQg$ and $\TokAfterQg$, we know that we are in the before case of either state \EnqueueState{} or \BothState{}. We now get a different tail node, $x_{tail}'$, with $\loc_{tail} \mapsto{1/2} \nIn{x_{tail}'}$. However, since we kept $\loc_{tail} \mapsto{1/2} \nIn{x_{tail}}$, we can combine these, allowing us to conclude that $\nIn{x_{tail}} = \nIn{x_{tail}'}$. Due to the structue of nodes (as described by $\isLL$), we can further conclude that $x_{tail} = x_{tail}'$. This now gives us that $\nOut{x_{tail}} \mapsto \None$, and we can perform the store, adding $x_{new}$ to the linked list. We close the invariant again in either state \EnqueueState{} or \BothState{}, but this time in the after case, giving up $\TokAfterQg$, and obtaining $\TokBeforeQg$.\\
+The next line swings the tail pointer to the $x_{new}$. But to do this store, we must first know that $\loc_{tail}$ points to something. This resource is inside the invariant, so we must open the invariant one last time. Due to our tokens, we know that we are in the after case of state \EnqueueState{} or \BothState{}. This time, we get some $x_{tail}''$, with $\loc_{tail} \mapsto{1/2} x_{tail}''$, but we also get that $x_{tail}''$ is only the second last node in the linked list. Hence there is some other node $x_{new}'$, which is the last node, with $x_{tail}''$ pointing to it. As before, we use the points to predicate of $\loc_{tail}$ to get that $x_{tail}'' = x_{tail}$. Since $x_{tail}$ points to to $x_{new}$, and $x_{tail}''$ points to $x_{new}'$, we can further conclude that $x_{new} = x_{new}'$. Thus, we can perform the store, which now gives us that $\loc_{tail}$ points to $x_{new}'$; the last element in the linked list. With this, we can close the invariant in state \StaticState{} \DequeueState{}, giving up $\ToknEQg$ and $\TokUpdatedQg$, but getting $\TokEQg$. Finally, the code release the lock, which we can do since we have $\TokEQg$. The postcondition only says $\TRUE$, so there is nothing left to prove.
 
 \subsubsection{Dequeue}
 \todo{do}
