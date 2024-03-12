@@ -2,7 +2,7 @@
 
 - Should I include all the small definitions like is_first, is_snd_last in the report?
 
-- Formatting: format points to fraction? format persistent points to?
+- Formatting: format points to fraction? format persistent points to? format list append (xs ++ xs').
 
 - In the proof outlines, should I refer to the rules I am using (wp-X, ht-Y, Inv-Alloc, etc)?
   Should I present it in the style of hoare triples, manipulating pre and post conditions?
@@ -17,3 +17,8 @@
 - In the modular counter spec, is it really necessary to have the Cnt predicate in the post-condition? It is persistent after all...
 
 - Why is the client not allowed to open the invariant associated with the Cnt/is_queue predicate?
+  Guessed Answer: because I will have to use the view-shift while the invariant is open to prove the spec. This is only possible if the view-shift doesn't contain our invariant.
+
+- Fancy view shift in Coq/Iris?
+
+- Agreement in Coq/Iris?

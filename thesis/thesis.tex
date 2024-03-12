@@ -619,14 +619,14 @@ Since we want $\isqueue$ to be persistent, then we cannot directly state the poi
     &All \ xs_v \ \Phi \ast\\
     &(\\
     &\quad\quad\loc_{head} \mapsto (\nIn{x_{head}}) \ast \loc_{tail} \mapsto (\nIn{x_{tail}}) \ast isLast \ x_{tail} \ xs \ast &&\text{(\StaticState)}\\
-    &\quad\quad \ToknEQg \ast \ToknDQg \ast TokUpdatedQg\\
+    &\quad\quad \ToknEQg \ast \ToknDQg \ast \TokUpdatedQg\\
     &\quad\lor\\
     &\quad\quad\loc_{head} \mapsto (\nIn{x_{head}}) \ast \loc_{tail} \mapsto{1/2} (\nIn{x_{tail}}) \ast &&\text{(\EnqueueState)}\\
     &\quad\quad (isLast \ x_{tail} \ xs \ast \TokBeforeQg \lor isSndLast \ x_{tail} \ xs \ast \TokAfterQg) \ast\\
     &\quad\quad \TokEQg \ast \ToknDQg\\
     &\quad\lor\\
     &\quad\quad\loc_{head} \mapsto{1/2} (\nIn{x_{head}}) \ast \loc_{tail} \mapsto (\nIn{x_{tail}}) \ast isLast \ x_{tail} \ xs \ast &&\text{(\DequeueState)}\\
-    &\quad\quad \ToknEQg \ast \TokDQg \ast TokUpdatedQg\\
+    &\quad\quad \ToknEQg \ast \TokDQg \ast \TokUpdatedQg\\
     &\quad\lor\\
     &\quad\quad\loc_{head} \mapsto{1/2} (\nIn{x_{head}}) \ast \loc_{tail} \mapsto{1/2} (\nIn{x_{tail}}) \ast &&\text{(\BothState)}\\
     &\quad\quad (isLast \ x_{tail} \ xs \ast \TokBeforeQg \lor isSndLast x_{tail} xs \ast \TokAfterQg) \ast\\
@@ -666,8 +666,8 @@ With this, we can now give our definition of $\isqueue$.
   \isqueue \; v_q \; xs_v \; \Qgnames = &\exists \loc_{queue}, \loc_{head}, \loc_{tail} \in \Loc . \exists H_{lock}, T_{lock} \in \Val . \\
   &v_q = \loc_{queue} \ast \loc_{queue} \mapsto\persistently ((\loc_{head}, \loc_{tail}), (H_{lock}, T_{lock})) \ast\\
 	&\exists \iname . \knowInv{\iname}{queue\_invariant \Phi \loc_{head} \loc_{tail} \Qgnames} \ast\\
-	&isLock \ Q_\gname.\gname_{Hlock} \ H_{lock} \ \TokDQg \ast\\
-	&isLock \ Q_\gname.\gname_{Tlock} \ T_{lock} \ \TokEQg.
+	&isLock \ Q_\gname.\gname_{Hlock} \ H_{lock} \ (\TokDQg) \ast\\
+	&isLock \ Q_\gname.\gname_{Tlock} \ T_{lock} \ (\TokEQg).
 \end{align*}
 
 In contrast to the sequential specification, the locks now protect $\TokEQg$ and $\TokDQg$. The idea is that, when an enqueueing thread obtains $T_{lock}$, they will obtain the $\TokEQg$ token, which allows them to conclude that the queue state is either \StaticState{} or \DequeueState{}. Similarly for a dequeueing thread. We now proceed to prove the specification using the above $\isqueue$ predicate.
@@ -678,7 +678,7 @@ Firstly, we must show that $\isqueue$ is persistent. This however follows from t
 
 The proofs structure for the specifications are largely similar to the sequential counterparts. The major difference is that we don't have access to the resources all the time; we must get them from the invariant. Further we also have to keep track of which state we are in. For the proof outlines below, these points will be the main focus.
 
-\subsubsection{initialise}
+\subsubsection{Initialise}
 We first step through the first line which gives us the sentinel node of the linked list. Next, we must create the two locks. To create the two tokens that the locks must protect, we use the ghost-alloc rule twice, which gives us two ghost names, one for each of the tokens. We put the ghost names into a tuple $\Qgnames$, and write $\TokEQg$ and $\TokDQg$ for the two ghost resources created by the ghost-alloc rule. We then create the locks, giving up the two tokens. Following this, we create the $\loc_{queue}$, $\loc_{head}$, and $\loc{tail}$ pointers. All that remains then is to prove the postcondition; the $\isqueue$ predicate. The persistent points-to predicate we got when we stepped through the code, and the $\isLock$ predicates we got when we created the locks. So all that remains is the invariant. We create the $queue\_invariant$ in the \StaticState{} state, most of which is analogous to the sequential specification. However, we will also need to supply the tokens required by the \StaticState{} state. Thus, we allocate the four tokens $\ToknEQg$, $\ToknDQg$, $\TokBeforeQg$, and $\TokAfterQg$ in the same way we allocated $\TokEQg$ and $\TokDQg$. We combine $\TokBeforeQg$ and $\TokAfterQg$ to get $\TokUpdatedQg$, and we now have all the tokens we need to create the $queue\_invariant$ in the \StaticState{} state. To create the invariant from $queue\_invariant$, we use the Inv-alloc rule (FUP).
 
 \subsubsection{Enqueue}
