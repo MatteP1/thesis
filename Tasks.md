@@ -36,6 +36,8 @@
   - [x] Prove consistency of is_queue
 
 - [ ] Clean up proof of concurrent spec for M&S queue with locks in Coq
+  - [ ] Clear unused variables and propositions
+  - [ ] Remove _2 and _3 from subsequent invariant accesses
 - [x] Clean up proof of Sequential spec for M&S queue with locks in Coq
 
 - [ ] Write about the sequential spec for two-lock M&S queue in the report

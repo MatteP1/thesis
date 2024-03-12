@@ -27,16 +27,12 @@ Let N := nroot .@ "twoLockMSQ".
    	Further, all adjacent pairs, [x ; x'], are connected by x' pointing to x.
 	Example:
 	The list
-	[(l_5_in, x_5, l_5_out); 
-	 (l_4_in, x_4, l_4_out); 
-	 (l_3_in, x_3, l_3_out); 
-	 (l_2_in, x_2, l_2_out); 
-	 (l_1_in, x_1, l_1_out)] 
+	[(l_3_in, v_3, l_3_out); 
+	 (l_2_in, v_2, l_2_out); 
+	 (l_1_in, v_1, l_1_out)] 
 	generates:
-	(x_5, l_5_out) <- l_5_in 	∗	l_5_in <- l_4_out	∗
-	(x_4, l_4_out) <- l_4_in 	∗	l_4_in <- l_3_out	∗
-	(x_3, l_3_out) <- l_3_in 	∗	l_3_in <- l_2_out	∗
-	(x_2, l_2_out) <- l_2_in 	∗	l_2_in <- l_1_out	∗
+	(v_3, l_3_out) <- l_3_in 	∗	l_3_in <- l_2_out	∗
+	(v_2, l_2_out) <- l_2_in 	∗	l_2_in <- l_1_out	∗
 	(x_1, l_1_out) <- l_1_in
 
  *)
@@ -300,22 +296,22 @@ Proof.
 	iExists xs_v, xs, xs_queue, xs_old, x_head, x_tail; eauto 10 with iFrame.
 Qed.
 
-Definition is_queue (Ψ : val -> iProp Σ) (q : val) (Q_γ: Qgnames) : iProp Σ :=
+Definition is_queue (Ψ : val -> iProp Σ) (v_q : val) (Q_γ: Qgnames) : iProp Σ :=
 	∃ l_queue l_head l_tail : loc, ∃ H_lock T_lock : val,
-	⌜q = #l_queue⌝ ∗
+	⌜v_q = #l_queue⌝ ∗
 	l_queue ↦□ ((#l_head, #l_tail), (H_lock, T_lock)) ∗
 	inv N (queue_invariant Ψ l_head l_tail Q_γ) ∗
 	is_lock Q_γ.(γ_Hlock) H_lock (TokD Q_γ) ∗
 	is_lock Q_γ.(γ_Tlock) T_lock (TokE Q_γ).
 
 (* is_queue is persistent *)
-Global Instance is_queue_persistent Ψ q Q_γ : Persistent (is_queue Ψ q Q_γ).
+Global Instance is_queue_persistent Ψ v_q Q_γ : Persistent (is_queue Ψ v_q Q_γ).
 Proof. apply _. Qed.
 
 Lemma initialize_spec (Ψ : val -> iProp Σ):
 	{{{ True }}}
 		initialize #()
-	{{{ v Q_γ, RET v; is_queue Ψ v Q_γ }}}.
+	{{{ v_q Q_γ, RET v_q; is_queue Ψ v_q Q_γ }}}.
 Proof.
 	iIntros (Φ) "_ HΦ".
 	wp_lam.
@@ -361,9 +357,9 @@ Proof.
 	by repeat iSplit.
 Qed.
 
-Lemma enqueue_spec Q Ψ (v : val) (qg : Qgnames) :
-	{{{ is_queue Ψ Q qg ∗ Ψ v }}}
-		enqueue Q v
+Lemma enqueue_spec v_q Ψ (v : val) (qg : Qgnames) :
+	{{{ is_queue Ψ v_q qg ∗ Ψ v }}}
+		enqueue v_q v
 	{{{ w, RET w; True }}}.
 Proof.
 	iIntros (Φ) "[(%l_queue & %l_head & %l_tail & %H_lock & %T_lock & -> &
@@ -505,9 +501,9 @@ Proof.
 	done.
 Qed.
 
-Lemma dequeue_spec Q Ψ (qg : Qgnames) :
-	{{{ is_queue Ψ Q qg }}}
-		dequeue Q
+Lemma dequeue_spec v_q Ψ (qg : Qgnames) :
+	{{{ is_queue Ψ v_q qg }}}
+		dequeue v_q
 	{{{ v, RET v; ⌜v = NONEV⌝ ∨ (∃ x_v, ⌜v = SOMEV x_v⌝ ∗ Ψ x_v) }}}.
 Proof.
 	iIntros (Φ) "(%l_queue & %l_head & %l_tail & %H_lock & %T_lock & -> &

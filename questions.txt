@@ -16,3 +16,7 @@
 - In the proof outlines, should I refer to the rules I am using (wp-X, ht-Y, Inv-Alloc, etc)?
   Should I present it in the style of hoare triples, manipulating pre and post conditions?
   Or in the style of weakest precondition, matching the mechanised proofs?
+
+- Should I use I or We in the report? 
+  For instance: I open the invariant/We open the invariant.
+  If I refer to something "I" in particular did, should I just refer to myself as I? E.g. I didn't realise this possibility in my first attempt.

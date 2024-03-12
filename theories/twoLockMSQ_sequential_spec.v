@@ -27,16 +27,12 @@ Let N := nroot .@ "twoLockMSQ".
    	Further, all adjacent pairs, [x ; x'], are connected by x' pointing to x.
 	Example:
 	The list
-	[(l_5_in, x_5, l_5_out); 
-	 (l_4_in, x_4, l_4_out); 
-	 (l_3_in, x_3, l_3_out); 
-	 (l_2_in, x_2, l_2_out); 
-	 (l_1_in, x_1, l_1_out)] 
+	[(l_3_in, v_3, l_3_out); 
+	 (l_2_in, v_2, l_2_out); 
+	 (l_1_in, v_1, l_1_out)] 
 	generates:
-	(x_5, l_5_out) <- l_5_in 	∗	l_5_in <- l_4_out	∗
-	(x_4, l_4_out) <- l_4_in 	∗	l_4_in <- l_3_out	∗
-	(x_3, l_3_out) <- l_3_in 	∗	l_3_in <- l_2_out	∗
-	(x_2, l_2_out) <- l_2_in 	∗	l_2_in <- l_1_out	∗
+	(v_3, l_3_out) <- l_3_in 	∗	l_3_in <- l_2_out	∗
+	(v_2, l_2_out) <- l_2_in 	∗	l_2_in <- l_1_out	∗
 	(x_1, l_1_out) <- l_1_in
 
  *)
@@ -117,9 +113,9 @@ Record SeqQgnames := {γ_Hlock_seq 	: gname;
 					  γ_Tlock_seq 	: gname;
 					 }.
 
-Definition is_queue_seq (q : val) (xs_v: list val) (Q_γ: SeqQgnames) : iProp Σ :=
+Definition is_queue_seq (v_q : val) (xs_v: list val) (Q_γ: SeqQgnames) : iProp Σ :=
 	∃ l_queue l_head l_tail : loc, ∃ H_lock T_lock : val,
-	⌜q = #l_queue⌝ ∗
+	⌜v_q = #l_queue⌝ ∗
 	l_queue ↦□ ((#l_head, #l_tail), (H_lock, T_lock)) ∗
 	∃ (xs_queue : list (loc * val * loc)), ∃x_head x_tail : (loc * val * loc),
 	⌜proj_val xs_queue = wrap_some xs_v⌝ ∗
@@ -132,7 +128,7 @@ Definition is_queue_seq (q : val) (xs_v: list val) (Q_γ: SeqQgnames) : iProp Σ
 Lemma initialize_spec_seq : 
 	{{{ True }}} 
 		initialize #() 
-	{{{ v Q_γ, RET v; is_queue_seq v [] Q_γ }}}.
+	{{{ v_q Q_γ, RET v_q; is_queue_seq v_q [] Q_γ }}}.
 Proof.
 	iIntros (Φ _) "HΦ".
 	wp_lam.
@@ -165,10 +161,10 @@ Proof.
 	by iExists [].
 Qed.
 
-Lemma enqueue_spec_seq Q (v : val) (xs_v : list val) (qg : SeqQgnames) :
-	{{{ is_queue_seq Q xs_v qg }}}
-		enqueue Q v 
-	{{{w, RET w; is_queue_seq Q (v :: xs_v) qg }}}.
+Lemma enqueue_spec_seq v_q (v : val) (xs_v : list val) (qg : SeqQgnames) :
+	{{{ is_queue_seq v_q xs_v qg }}}
+		enqueue v_q v 
+	{{{w, RET w; is_queue_seq v_q (v :: xs_v) qg }}}.
 Proof.
 	iIntros (Φ) "(%l_queue & %l_head & %l_tail & %H_lock & %T_lock & -> &
 				 #Hl_queue & %xs_q & %x_head & %x_tail & %Hproj & H_isLL_xs &
@@ -220,12 +216,12 @@ Proof.
 	by iSplit.
 Qed.
 
-Lemma dequeue_spec_seq Q (xs_v : list val) (qg : SeqQgnames) : 
-	{{{ is_queue_seq Q xs_v qg }}}
-		dequeue Q
-	{{{ v, RET v; (⌜xs_v = []⌝ ∗ ⌜v = NONEV⌝ ∗ is_queue_seq Q xs_v qg) ∨
+Lemma dequeue_spec_seq v_q (xs_v : list val) (qg : SeqQgnames) : 
+	{{{ is_queue_seq v_q xs_v qg }}}
+		dequeue v_q
+	{{{ v, RET v; (⌜xs_v = []⌝ ∗ ⌜v = NONEV⌝ ∗ is_queue_seq v_q xs_v qg) ∨
 				  (∃x_v xs'_v, ⌜xs_v = xs'_v ++ [x_v]⌝ ∗ 
-				  		⌜v = SOMEV x_v⌝ ∗ is_queue_seq Q xs'_v qg) }}}.
+				  		⌜v = SOMEV x_v⌝ ∗ is_queue_seq v_q xs'_v qg) }}}.
 Proof.
 	iIntros (Φ) "(%l_queue & %l_head & %l_tail & %H_lock & %T_lock & -> &
 				 #Hl_queue & %xs_q & %x_head & %x_tail & %Hproj & H_isLL_xs &
