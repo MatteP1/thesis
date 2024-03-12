@@ -1,14 +1,5 @@
 - sequential and concurrent spec rely on same definitions/lemmas (e.g. isLL). But if I separate them out into "common", then the Sigma becomes different. How to deal with this?
 
-- What's next? Hocap? Lock-free?
-  Hocap. Prepare some stuff for Wednesday
-
-- For Hocap, would the concrete state be isLL xs, and the abstract state simply be xs?
-  (See bottom of page 121 in https://iris-project.org/tutorial-pdfs/iris-lecture-notes.pdf)
-  This would also seem a bit weird as the abstract state would then contain locations, which is implementation specific.
-
-  Let the abstract state xs_v be a list of values. Then existentially quantify a list xs containing (loc * val * loc), whose value projection is xs_v: proj_val xs = xs_v
-
 - Should I include all the small definitions like is_first, is_snd_last in the report?
 
 - Formatting: format points to fraction? format persistent points to?
@@ -20,3 +11,9 @@
 - Should I use I or We in the report? 
   For instance: I open the invariant/We open the invariant.
   If I refer to something "I" in particular did, should I just refer to myself as I? E.g. I didn't realise this possibility in my first attempt.
+
+- What is the notation for agreement?
+
+- In the modular counter spec, is it really necessary to have the Cnt predicate in the post-condition? It is persistent after all...
+
+- Why is the client not allowed to open the invariant associated with the Cnt/is_queue predicate?
