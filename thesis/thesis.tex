@@ -480,7 +480,7 @@ The sequential specification we wish to prove is the following:
   &\exists \isqueue : \Val \to \List \ \Val \to Qgnames \to \Prop.\\
   &\quad\quad\hoare{\TRUE}{\initialise \TT}{v_q . \exists Q_\gname, \isqueue\ v_q\ []\ Q_\gname}\\
   &\land\quad\forall v_q, v, xs_v, Q_\gname. \hoare{\isqueue \; v_q \; xs_v \; Q_\gname}{\enqueue\ v_q\ v}{w . \isqueue\ v_q\ (v :: xs_v)\ Q_\gname}\\
-  &\land\quad\forall v_q, xs_v, Q_\gname. \hoare{\isqueue \; v_q \; xs_v \; Q_\gname}{\dequeue\ v_q}{v . \begin{array}{l}(xs_v = [] \ast v = \None \ast \isqueue\ v_q\ xs_v\ Q_\gname) \; \lor\\ (\exists x_v, xs_v' \ . \ xs_v = xs_v' \catenate [x_v] \ast v = \Some x_v \ast \isqueue\ v_q\ xs_v'\ Q_\gname) \end{array}}
+  &\land\quad\forall v_q, xs_v, Q_\gname. \hoareV[t]{\isqueue \; v_q \; xs_v \; Q_\gname}{\dequeue\ v_q}{v . \begin{array}{l}(xs_v = [] \ast v = \None \ast \isqueue\ v_q\ xs_v\ Q_\gname) \; \lor\\ (\exists x_v, xs_v' \ . \ xs_v = xs_v' \catenate [x_v] \ast v = \Some x_v \ast \isqueue\ v_q\ xs_v'\ Q_\gname) \end{array}}
 \end{align*}
 
 The predicate $\isqueue \; v_q \; xs_v \; Q_\gname$ captures that the value $v_q$ is a queue, whose content matches that of our abstract representation $xs_v$, and the queue uses the ghost names described by $Q_\gname$. Note that the $\isqueue$ predicate is not required to be persistent, hence it cannot be duplicated and given to multiple threads. This is the sense in which this specification is sequential.
@@ -628,7 +628,7 @@ Since we want $\isqueue$ to be persistent, then we cannot directly state the poi
     &\quad\quad\loc_{head} \mapsto{1/2} (\nIn{x_{head}}) \ast \loc_{tail} \mapsto (\nIn{x_{tail}}) \ast isLast \ x_{tail} \ xs \ast &&\text{(\DequeueState)}\\
     &\quad\quad \ToknEQg \ast \TokDQg \ast \TokUpdatedQg\\
     &\quad\lor\\
-    &\quad\quad\loc_{head} \mapsto{1/2} (\nIn{x_{head}}) \ast \loc_{tail} \mapsto{1/2} (\nIn{x_{tail}}) \ast &&\text{(\BothState)}\\
+    &\quad\quad\loc_{head} \mapsto^{\frac{1}{2}} (\nIn{x_{head}}) \ast \loc_{tail} \mapsto{1/2} (\nIn{x_{tail}}) \ast &&\text{(\BothState)}\\
     &\quad\quad (isLast \ x_{tail} \ xs \ast \TokBeforeQg \lor isSndLast x_{tail} xs \ast \TokAfterQg) \ast\\
     &\quad\quad \TokEQg \ast \TokDQg\\
     &)

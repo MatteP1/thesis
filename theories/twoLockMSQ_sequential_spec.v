@@ -4,7 +4,6 @@ From iris.bi Require Import derived_laws.
 From iris.heap_lang Require Import lang proofmode notation.
 From iris.heap_lang.lib Require Import lock spin_lock.
 From iris.base_logic.lib Require Import invariants.
-From iris.unstable.heap_lang Require Import interpreter.
 From MSQueue Require Import twoLockMSQ_impl.
 From MSQueue Require Import twoLockMSQ_common.
 
@@ -19,95 +18,6 @@ Context `{!inG Σ (exclR unitO)}.
 Let N := nroot .@ "twoLockMSQ".
 
 (* ===== Sequential Specification for Two-lock M&S Queue ===== *)
-
-(* 
-	isLL is short for: 'is Linked List'.
-	isLL_chain states that every node x in xs satisfies 
-		n_in x ↦□ (n_val x, #(n_out x)).
-   	Further, all adjacent pairs, [x ; x'], are connected by x' pointing to x.
-	Example:
-	The list
-	[(l_3_in, v_3, l_3_out); 
-	 (l_2_in, v_2, l_2_out); 
-	 (l_1_in, v_1, l_1_out)] 
-	generates:
-	(v_3, l_3_out) <- l_3_in 	∗	l_3_in <- l_2_out	∗
-	(v_2, l_2_out) <- l_2_in 	∗	l_2_in <- l_1_out	∗
-	(x_1, l_1_out) <- l_1_in
-
- *)
-
-Fixpoint isLL_chain (xs : list (loc * val * loc) ) : iProp Σ :=
-	match xs with
-	| [] => True
-	| [x] => n_in x ↦□ (n_val x, #(n_out x))
-	| x :: ((x' :: xs'') as xs') =>
-				n_in x ↦□ (n_val x, #(n_out x)) ∗
-				n_out x' ↦□ #(n_in x) ∗
-				isLL_chain xs'
-	end.
-
-(* isLL_chain is persistent for all xs *)
-Global Instance isLL_chain_persistent xs : Persistent (isLL_chain xs).
-Proof.
-	induction xs as [|x [|x' xs']]; apply _.
-Qed.
-
-(* xs defines a linked list, when the tail (the first element of the list) points to NONEV, and all the nodes form a linked list chain. *)
-Definition isLL (xs : list (loc * val * loc) ) : iProp Σ :=
-	match xs with
-	| [] => True
-	| x :: xs' => (n_out x) ↦ NONEV ∗ isLL_chain xs
-	end.
-
-(* Since isLL_chain is persistent, we can always extract it from isLL. *)
-Lemma isLL_and_chain : forall xs,
-	isLL xs -∗
-	isLL xs ∗ isLL_chain xs.
-Proof.
-	iIntros (xs) "HisLLxs".
-	destruct xs as [| x' xs']; first done.
-	unfold isLL.
-	iPoseProof "HisLLxs" as "[Hx'_out #HisLLxs]".
-	iFrame.
-	by iSplit.
-Qed.
-
-(* If x is an element in an isLL_chain, then it is a node. *)
-Lemma isLL_chain_node : forall xs_1 x xs_2,
-	isLL_chain (xs_1 ++ x :: xs_2) -∗
-	n_in x ↦□ (n_val x, #(n_out x)).
-Proof.
-	iIntros (xs_1 x xs_2) "#HisLL_chain".
-	iInduction xs_1 as [| y xs'_1] "IH".
-	- destruct xs_2.
-	  + done.
-	  + by iDestruct "HisLL_chain" as "(Hx & _ & _)".
-	- iApply "IH". 
-	  destruct xs'_1 as [| y' xs''_1];
-	  iDestruct "HisLL_chain" as "(_ & _ & H)"; done.
-Qed.
-
-Lemma isLL_chain_split : forall xs ys,
-	isLL_chain (xs ++ ys) -∗
-	isLL_chain xs ∗ isLL_chain ys.
-Proof.
-	iIntros (xs ys) "#HisLL_chain_xs_ys".
-	iInduction xs as [|x' xs'] "IH".
-	- by iSplit.
-	- destruct xs' as [| x'' xs''].
-	  + destruct ys as [| y' ys'].
-		* by iSplit.
-		* iDestruct "HisLL_chain_xs_ys" as "(Hx' & Hy'_out & HIsLL_chain_ys')".
-		  fold isLL_chain. iSplit; done.
-	  + iAssert (isLL_chain (x'' :: xs'') ∗ isLL_chain ys)%I as "[IHxs' IHys]".
-	  	{
-			iApply "IH". iDestruct "HisLL_chain_xs_ys" as "(_ & _ & Hchain)"; done.
-		}
-		iSplit; try done.
-		iDestruct "HisLL_chain_xs_ys" as "(Hx'_in & Hx''_out & _)".
-		unfold isLL_chain; auto.
-Qed.
 
 Record SeqQgnames := {γ_Hlock_seq 	: gname;
 					  γ_Tlock_seq 	: gname;

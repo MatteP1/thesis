@@ -35,6 +35,11 @@
   - [x] Rename xs_rest to xs_queue
   - [x] Prove consistency of is_queue
 
+- [ ] State and prove Hocap style Spec of M&S queue with locks
+  - [ ] Make Q a proposition in enqueue
+  - [ ] Put viewshift in pre-condition (both coq and paper)
+  - [ ] Don't mention iname. Use namespaces. Say that there is some invariant namespace N(uparrow), and the viewshift can use anything N(uparrow), written Top\N(uparrow). The N is the prefix in the namespace N(uparrow).
+
 - [ ] Clean up proof of concurrent spec for M&S queue with locks in Coq
   - [ ] Clear unused variables and propositions
   - [ ] Remove _2 and _3 from subsequent invariant accesses

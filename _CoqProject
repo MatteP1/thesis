@@ -2,5 +2,6 @@
 
 theories/twoLockMSQ_impl.v
 theories/twoLockMSQ_common.v
-theories/twoLockMSQ_concurrent_spec.v
 theories/twoLockMSQ_sequential_spec.v
+theories/twoLockMSQ_concurrent_spec.v
+theories/twoLockMSQ_hocap_spec.v

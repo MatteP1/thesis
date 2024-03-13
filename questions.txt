@@ -1,24 +1,26 @@
-- sequential and concurrent spec rely on same definitions/lemmas (e.g. isLL). But if I separate them out into "common", then the Sigma becomes different. How to deal with this?
-
 - Should I include all the small definitions like is_first, is_snd_last in the report?
+  Just explain them in a few sentences.
 
 - Formatting: format points to fraction? format persistent points to? format list append (xs ++ xs').
+  \mapsto^{\frac{1}{2}}. persisently: superscript. Just define own (experiment).
 
 - In the proof outlines, should I refer to the rules I am using (wp-X, ht-Y, Inv-Alloc, etc)?
   Should I present it in the style of hoare triples, manipulating pre and post conditions?
   Or in the style of weakest precondition, matching the mechanised proofs?
 
-- Should I use I or We in the report? 
+  weakest-precondition style proofs are fine.
+  have a section explaining some of the basic rules (hoare-triples, weakest-precondition, inv-alloc, resource algebra), and also iris in general.
+
+- Should I use I or We in the report?
   For instance: I open the invariant/We open the invariant.
   If I refer to something "I" in particular did, should I just refer to myself as I? E.g. I didn't realise this possibility in my first attempt.
+  Use we in general, but I for personal experiences.
 
 - What is the notation for agreement?
+  ag (aginj in iris.sty)
 
 - In the modular counter spec, is it really necessary to have the Cnt predicate in the post-condition? It is persistent after all...
+not needed.
 
 - Why is the client not allowed to open the invariant associated with the Cnt/is_queue predicate?
-  Guessed Answer: because I will have to use the view-shift while the invariant is open to prove the spec. This is only possible if the view-shift doesn't contain our invariant.
-
-- Fancy view shift in Coq/Iris?
-
-- Agreement in Coq/Iris?
+  Answer: because I will have to use the view-shift while the invariant is open to prove the spec. This is only possible if the view-shift doesn't contain our invariant.
