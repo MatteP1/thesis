@@ -10,6 +10,8 @@
 
 - [x] Study the Agreement RA
 - [x] Read Contextual Refinement Paper
+- [ ] Reread about fancy updated and view-shift (sections in chapter 14 ILN)
+- [ ] Reread about invariant namespaces (chapter 14.5 ILN)
 - [ ] Read chapter 13 of Iris Lecture Notes (Hocap style Specs)
 
 - [x] Create Thesis Report file
@@ -34,9 +36,11 @@
   - [x] use {} and [] instead of i: 
   - [x] Rename xs_rest to xs_queue
   - [x] Prove consistency of is_queue
+  - [x] Rename qg to Q_γ
 
 - [ ] State and prove Hocap style Spec of M&S queue with locks
-  - [ ] Make Q a proposition in enqueue
+  - [x] Make Q a proposition in enqueue
+  - [ ] Define notation for the ownership of the contents of the queue. (e.g. queue_content_auth and queue_content_frac)
   - [ ] Put viewshift in pre-condition (both coq and paper)
   - [ ] Don't mention iname. Use namespaces. Say that there is some invariant namespace N(uparrow), and the viewshift can use anything N(uparrow), written Top\N(uparrow). The N is the prefix in the namespace N(uparrow).
 

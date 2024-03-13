@@ -201,8 +201,8 @@ Proof.
 	by repeat iSplit.
 Qed.
 
-Lemma enqueue_spec v_q Ψ (v : val) (qg : Qgnames) :
-	{{{ is_queue Ψ v_q qg ∗ Ψ v }}}
+Lemma enqueue_spec v_q Ψ (v : val) (Q_γ : Qgnames) :
+	{{{ is_queue Ψ v_q Q_γ ∗ Ψ v }}}
 		enqueue v_q v
 	{{{ w, RET w; True }}}.
 Proof.
@@ -229,7 +229,7 @@ Proof.
 	wp_bind (! #l_tail)%E.
 	(* Open in Static / Dequeue *)
 	iInv "H_queue_inv" as "H_queue_inv_open".
-	iPoseProof (queue_invariant_equiv_simple Ψ l_head l_tail qg with "H_queue_inv_open") as "H_queue_inv_open".
+	iPoseProof (queue_invariant_equiv_simple Ψ l_head l_tail Q_γ with "H_queue_inv_open") as "H_queue_inv_open".
 	iDestruct "H_queue_inv_open" as "(%xs_v & %xs & %xs_queue & %xs_old & %x_head & %x_tail & >%H_eq_xs & HisLL_xs & >%Hconc_abst_eq & HAll_xs & H_head & [ ( [Hl_tail1 Hl_tail2] & >[%xs_fromtail %H_isLast] & HToknE & HTokUpdated ) | (_ & >HTokE2 & _) ])"; last by iCombine "HTokE HTokE2" gives "%H". (* Impossible: TokE *)
 	wp_load.
 	iModIntro.
@@ -255,7 +255,7 @@ Proof.
 	wp_bind (#(n_out x_tail) <- #l_new_in)%E.
 	(* Open in Enqueue / Both : Before *)
 	iInv "H_queue_inv" as "H_queue_inv_open".
-	iPoseProof (queue_invariant_equiv_simple Ψ l_head l_tail qg with "H_queue_inv_open") as "H_queue_inv_open".
+	iPoseProof (queue_invariant_equiv_simple Ψ l_head l_tail Q_γ with "H_queue_inv_open") as "H_queue_inv_open".
 	iDestruct "H_queue_inv_open" as "(%xs_v_2 & %xs_2 & %xs_queue_2 & %xs_old_2 & %x_head_2 & %x_tail_2 & >%H_eq_xs_2 & HisLL_xs_2 & >%Hconc_abst_eq_2 & HAll_xs_2 & H_head & [ ( _ & _ & >HToknE2 & _ ) | (>Hl_tail1 & HTokE & [[>[%xs_fromtail_2 %H_isLast_2] HTokBefore] | [_ >HTokAfter2]]) ])"; 
 	[ by iCombine "HToknE HToknE2" gives "%H" | | (* Impossible: ToknE *)
 	  by iCombine "HTokAfter HTokAfter2" gives "%H" ]. (* Impossible: TokAfter *)
@@ -302,7 +302,7 @@ Proof.
 	wp_bind (#l_tail <- #l_new_in)%E.
 	(* Open in Enqueue / Both : After *)
 	iInv "H_queue_inv" as "H_queue_inv_open".
-	iPoseProof (queue_invariant_equiv_simple Ψ l_head l_tail qg with "H_queue_inv_open") as "H_queue_inv_open".
+	iPoseProof (queue_invariant_equiv_simple Ψ l_head l_tail Q_γ with "H_queue_inv_open") as "H_queue_inv_open".
 	iDestruct "H_queue_inv_open" as "(%xs_v_3 & %xs_3 & %xs_queue_3 & %xs_old_3 & %x_head_3 & %x_tail_3 & >%H_eq_xs_3 & HisLL_xs_3 & >%Hconc_abst_eq_3 & HAll_xs_3 & H_head & [ ( _ & _ & >HToknE2 & _ ) | (>Hl_tail1 & HTokE & [[_ >HTokBefore2] | [>(%x_new_2 & %xs_fromtail_3 & %H_isSndLast) HTokAfter]])])"; 
 	[ by iCombine "HToknE HToknE2" gives "%H" | (* Impossible: ToknE *)
 	  by iCombine "HTokBefore HTokBefore2" gives "%H" | ]. (* Impossible: TokBefore *)
@@ -345,8 +345,8 @@ Proof.
 	done.
 Qed.
 
-Lemma dequeue_spec v_q Ψ (qg : Qgnames) :
-	{{{ is_queue Ψ v_q qg }}}
+Lemma dequeue_spec v_q Ψ (Q_γ : Qgnames) :
+	{{{ is_queue Ψ v_q Q_γ }}}
 		dequeue v_q
 	{{{ v, RET v; ⌜v = NONEV⌝ ∨ (∃ x_v, ⌜v = SOMEV x_v⌝ ∗ Ψ x_v) }}}.
 Proof.
@@ -363,7 +363,7 @@ Proof.
 	wp_bind (! #l_head)%E.
 	(* Open in Static / Enqueue *)
 	iInv "H_queue_inv" as "H_queue_inv_open".
-	iPoseProof (queue_invariant_equiv_simple Ψ l_head l_tail qg with "H_queue_inv_open") as "H_queue_inv_open".
+	iPoseProof (queue_invariant_equiv_simple Ψ l_head l_tail Q_γ with "H_queue_inv_open") as "H_queue_inv_open".
 	iDestruct "H_queue_inv_open" as "(%xs_v & %xs & %xs_queue & %xs_old & %x_head & %x_tail & >%H_eq_xs & H_isLL_xs & >%Hconc_abst_eq & HAll_xs & [ [Hl_head HToknD] | [Hl_head >HTokD2] ] & H_tail)"; 
 	last by iCombine "HTokD HTokD2" gives "%H". (* Impossible: TokD*)
 	wp_load.
@@ -385,7 +385,7 @@ Proof.
 	wp_bind (! #(n_out x_head))%E.
 	(* Open in Dequeue / Both *)
 	iInv "H_queue_inv" as "H_queue_inv_open".
-	iPoseProof (queue_invariant_equiv_simple Ψ l_head l_tail qg with "H_queue_inv_open") as "H_queue_inv_open".
+	iPoseProof (queue_invariant_equiv_simple Ψ l_head l_tail Q_γ with "H_queue_inv_open") as "H_queue_inv_open".
 	iDestruct "H_queue_inv_open" as "(%xs_v_2 & %xs_2 & %xs_queue_2 & %xs_old_2 & %x_head_2 & %x_tail_2 & >%H_eq_xs_2 & H_isLL_xs_2 & >%Hconc_abst_eq_2 & HAll_xs_2 & [ [Hl_head >HToknD2] | [>Hl_head2 HTokD] ] & H_tail)";
 	first by iCombine "HToknD HToknD2" gives "%H". (* Impossible: ToknD*)
 	iPoseProof (isLL_and_chain with "H_isLL_xs_2") as "[H_isLL_xs_2 #HisLL_chain_xs_2]".
@@ -453,7 +453,7 @@ Proof.
 	  wp_bind (#l_head <- #(n_in x_head_next))%E.
 	  (* Open in Dequeue / Both *)
 	  iInv "H_queue_inv" as "H_queue_inv_open".
-	  iPoseProof (queue_invariant_equiv_simple Ψ l_head l_tail qg with "H_queue_inv_open") as "H_queue_inv_open".
+	  iPoseProof (queue_invariant_equiv_simple Ψ l_head l_tail Q_γ with "H_queue_inv_open") as "H_queue_inv_open".
 	  iDestruct "H_queue_inv_open" as "(%xs_v_3 & %xs_3 & %xs_queue_3 & %xs_old_3 & %x_head_3 & %x_tail_3 & >%H_eq_xs_3 & H_isLL_xs_3 & >%Hconc_abst_eq_3 & HAll_xs_3 & [ [Hl_head >HToknD2] | [>Hl_head2 HTokD] ] & H_tail)";
 	  first by iCombine "HToknD HToknD2" gives "%H". (* Impossible ToknD *)
 	  iCombine "Hl_head1 Hl_head2" as "Hl_head" gives "[_ %Hhead_eq3]".

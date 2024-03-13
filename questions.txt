@@ -19,8 +19,5 @@
 - What is the notation for agreement?
   ag (aginj in iris.sty)
 
-- In the modular counter spec, is it really necessary to have the Cnt predicate in the post-condition? It is persistent after all...
-not needed.
-
 - Why is the client not allowed to open the invariant associated with the Cnt/is_queue predicate?
   Answer: because I will have to use the view-shift while the invariant is open to prove the spec. This is only possible if the view-shift doesn't contain our invariant.

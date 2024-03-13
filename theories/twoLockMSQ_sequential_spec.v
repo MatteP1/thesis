@@ -71,10 +71,10 @@ Proof.
 	by iExists [].
 Qed.
 
-Lemma enqueue_spec_seq v_q (v : val) (xs_v : list val) (qg : SeqQgnames) :
-	{{{ is_queue_seq v_q xs_v qg }}}
+Lemma enqueue_spec_seq v_q (v : val) (xs_v : list val) (Q_γ : SeqQgnames) :
+	{{{ is_queue_seq v_q xs_v Q_γ }}}
 		enqueue v_q v 
-	{{{w, RET w; is_queue_seq v_q (v :: xs_v) qg }}}.
+	{{{w, RET w; is_queue_seq v_q (v :: xs_v) Q_γ }}}.
 Proof.
 	iIntros (Φ) "(%l_queue & %l_head & %l_tail & %H_lock & %T_lock & -> &
 				 #Hl_queue & %xs_q & %x_head & %x_tail & %Hproj & H_isLL_xs &
@@ -126,12 +126,12 @@ Proof.
 	by iSplit.
 Qed.
 
-Lemma dequeue_spec_seq v_q (xs_v : list val) (qg : SeqQgnames) : 
-	{{{ is_queue_seq v_q xs_v qg }}}
+Lemma dequeue_spec_seq v_q (xs_v : list val) (Q_γ : SeqQgnames) : 
+	{{{ is_queue_seq v_q xs_v Q_γ }}}
 		dequeue v_q
-	{{{ v, RET v; (⌜xs_v = []⌝ ∗ ⌜v = NONEV⌝ ∗ is_queue_seq v_q xs_v qg) ∨
+	{{{ v, RET v; (⌜xs_v = []⌝ ∗ ⌜v = NONEV⌝ ∗ is_queue_seq v_q xs_v Q_γ) ∨
 				  (∃x_v xs'_v, ⌜xs_v = xs'_v ++ [x_v]⌝ ∗ 
-				  		⌜v = SOMEV x_v⌝ ∗ is_queue_seq v_q xs'_v qg) }}}.
+				  		⌜v = SOMEV x_v⌝ ∗ is_queue_seq v_q xs'_v Q_γ) }}}.
 Proof.
 	iIntros (Φ) "(%l_queue & %l_head & %l_tail & %H_lock & %T_lock & -> &
 				 #Hl_queue & %xs_q & %x_head & %x_tail & %Hproj & H_isLL_xs &
