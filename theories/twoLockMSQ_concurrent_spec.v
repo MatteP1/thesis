@@ -232,10 +232,10 @@ Proof.
 	iPoseProof (queue_invariant_equiv_simple Ψ l_head l_tail Q_γ with "Hqueue_inv_open") as "Hqueue_inv_open".
 	iDestruct "Hqueue_inv_open" as "(%xs_v & %xs & %xs_queue & %xs_old & %x_head & %x_tail & >%Heq_xs & HisLL_xs & >%Hconc_abst_eq & HAll_xs & Hhead & [ ( [Hl_tail1 Hl_tail2] & >[%xs_fromtail %HisLast] & HToknE & HTokUpdated ) | (_ & >HTokE' & _) ])"; last by iCombine "HTokE HTokE'" gives "%H". (* Impossible: TokE *)
 	wp_load.
-	iModIntro.
 	iPoseProof (isLL_and_chain with "HisLL_xs") as "[HisLL_xs #HisLL_chain_xs]".
 	iPoseProof (isLL_chain_node [] x_tail xs_fromtail with "[HisLL_chain_xs]") as "#Hx_tail"; first by rewrite HisLast.
 	iDestruct "HTokUpdated" as "[HTokBefore HTokAfter]".
+	iModIntro.
 	(* Close in Enqueue / Both : Before *)
 	iSplitL "Hhead Hl_tail1 HTokE HTokBefore HisLL_xs HAll_xs".
 	{
@@ -273,13 +273,13 @@ Proof.
 	wp_store.
 	iMod (pointsto_persist with "Hx_tail_null") as "#Hx_tail_out".
 	iDestruct "Hl_tail" as "[Hl_tail1 Hl_tail2]".
-	iModIntro.
 	set xs_new := x_new :: xs.
 	iAssert (isLL xs_new) with "[Hl_new_out HisLL_chain_xs]" as "HisLL_xs_new".
 	{
 		unfold xs_new, isLL. iFrame. rewrite HisLast. unfold isLL_chain; auto.
 	}
 	iPoseProof (isLL_and_chain with "HisLL_xs_new") as "[HisLL_xs_new #HisLL_chain_xs_new]".
+	iModIntro.
 	(* Close in Enqueue / Both: After *)
 	iSplitL "Hhead Hl_tail1 HTokE HTokAfter HisLL_xs_new HAll_xs HΨ_v".
 	{
@@ -312,7 +312,6 @@ Proof.
 	rewrite dfrac_op_own.
 	rewrite Qp.half_half.
 	wp_store.
-	iModIntro.
 	iPoseProof (isLL_and_chain with "HisLL_xs") as "[HisLL_xs #HisLL_chain_xs]".
 	iAssert (⌜x_tail'' = x_tail⌝)%I as "->".
 	{
@@ -327,6 +326,7 @@ Proof.
 		iCombine "Hx_tail_out Hx_tail_out'" gives "[_ %H]".
 		by iApply n_in_equal.
 	}
+	iModIntro.
 	(* Close in Static / Dequeue *)
 	iSplitR "HTokE Hlocked_γ_Tlock HΦ".
 	{
