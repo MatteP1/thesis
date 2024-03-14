@@ -701,6 +701,15 @@ As mentioned in the observations, it is possible for the tail to lag one node be
 Had we not used an $xs_{old}$ and essentially just "forgotten" old nodes, we couldn't have done this. Say that we defined $xs$ as $xs = xs_{queue} ++ [x_{head}]$ instead. Then, once we have to close the invariant, we cannot supply $xs$, which we got when we opened the invariant. Our only choice (due to the fact that $loc_{head}$ must point to $x_{head\_next}$) is to close the invariant with $xs' = xs_{queue} = xs_{queue}' ++ [x_{head\_next}]$. However, clearly $xs' \neq xs$, so we cannot supply the same predicate concerning the $tail$ that we got when opening the invariant, since this predicate talks about $xs$, not $xs'$. Now, if we opened the invariant in the state \DequeueState{}, then we could conclude $isLast x_{tail} xs'$ from $isLast x_{tail} xs$, due to the relationship between $xs$ and $xs'$, and still be able close the invariant. However, if we opened the invariant in state \BothState{}, then we would need to assert $isSndLast x_{tail} xs'$ from $isSndLast x_{tail} xs$. This is however not provable, since $isSndLast x_{tail} xs$ allows for the case where $xs_{queue}'$ is empty, which makes $xs' = [x_{head\_next}]$, disallowing us to prove $isSndLast x_{tail} xs'$.
 
 
+\section{Hocap-style Specification}
+
+
+\subsection{Proof outline}
+The proofs are largely similar to the concurrent spec. For initialise, we must additionally allocate the ghost resource \todo{auth}$([]) \cdot$\todo{frac}([]). We can only do this if the element is valid, but this follows by the definitions of the resource algebras. For enqueue and dequeue, the only real changes are the points in the proof, where the concrete state of the queue is updated. 
+
+\textbf{Enqueue} We start by assuming the viewshift which allows us to update $P$ to $Q$ and \todo{auth}($xs_v$) to \todo{auth}($v :: xs_v$). We must then prove the hoare triple for the expression $\enqueue \ v_q \ v$. The only real change from the previous proof happens the second time we open the invariant; the first and third times, the abstract state doesn't change, hence we can simply frame away the newly added authoritative fragment concerning the abstract state, and continue as we did before. The second time we open the invariant, it is around the expression that adds the newly created node to the linked list (\todo{add line number}). When opening it, we get \todo{auth}($xs_v$). As before, we also get all the resources to match up variables and step through the code, updating the concrete state. To close the invariant, we must make the same choice of abstract state as we did previously: $v :: xs_v$. This, however, requires us to obtain \todo{auth}($v :: xs_v$). However, since we have \todo{auth}($xs_v$) and $P$ (from the precondition), we can apply the viewshift to obtain it, along with $Q$. This then allows us to close the invariant, and the proof proceeds as previously. At the end, we must also prove the postcondition $Q$, but this is no issue as we obtained that from the viewshift.
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \chapter{Conclusion}
