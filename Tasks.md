@@ -44,9 +44,9 @@
   - [ ] ASK QUESTION ABOUT VIEW SHIFT BEING PERSISTENT FIRST. Put viewshift in pre-condition (both coq and paper)
   - [ ] Don't mention iname. Use namespaces. Say that there is some invariant namespace N(uparrow), and the viewshift can use anything N(uparrow), written Top\N(uparrow). The N is the prefix in the namespace N(uparrow).
 
-- [ ] Clean up proof of concurrent spec for M&S queue with locks in Coq
-  - [ ] Clear unused variables and propositions
-  - [ ] Remove _2 and _3 from subsequent invariant accesses
+- [x] Clean up proof of concurrent spec for M&S queue with locks in Coq
+  - [x] Clear unused variables and propositions
+  - [x] Remove _2 and _3 from subsequent invariant accesses
 - [x] Clean up proof of Sequential spec for M&S queue with locks in Coq
 
 - [ ] Write about the sequential spec for two-lock M&S queue in the report
