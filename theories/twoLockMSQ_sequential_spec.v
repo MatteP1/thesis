@@ -24,18 +24,18 @@ Record SeqQgnames := {γ_Hlock_seq 	: gname;
 					 }.
 
 Definition is_queue_seq (v_q : val) (xs_v: list val) (Q_γ: SeqQgnames) : iProp Σ :=
-	∃ l_queue l_head l_tail : loc, ∃ H_lock T_lock : val,
+	∃ l_queue l_head l_tail : loc, ∃ h_lock t_lock : val,
 	⌜v_q = #l_queue⌝ ∗
-	l_queue ↦□ ((#l_head, #l_tail), (H_lock, T_lock)) ∗
+	l_queue ↦□ ((#l_head, #l_tail), (h_lock, t_lock)) ∗
 	∃ (xs_queue : list (loc * val * loc)), ∃x_head x_tail : (loc * val * loc),
 	⌜proj_val xs_queue = wrap_some xs_v⌝ ∗
 	isLL (xs_queue ++ [x_head]) ∗
 	l_head ↦ #(n_in x_head) ∗
 	l_tail ↦ #(n_in x_tail) ∗ ⌜isLast x_tail (xs_queue ++ [x_head])⌝ ∗
-	is_lock Q_γ.(γ_Hlock_seq) H_lock (True) ∗
-	is_lock Q_γ.(γ_Tlock_seq) T_lock (True).
+	is_lock Q_γ.(γ_Hlock_seq) h_lock (True) ∗
+	is_lock Q_γ.(γ_Tlock_seq) t_lock (True).
 
-Lemma initialize_spec_seq : 
+Lemma initialize_spec_seq :
 	{{{ True }}} 
 		initialize #() 
 	{{{ v_q Q_γ, RET v_q; is_queue_seq v_q [] Q_γ }}}.
@@ -47,10 +47,10 @@ Proof.
 	wp_pures.
 	iMod (pointsto_persist with "Hl_1_in") as "#Hl_1_in".
 	wp_apply (newlock_spec True); first done.
-	iIntros (hlock γ_Hlock) "Hγ_Hlock".
+	iIntros (h_lock γ_Hlock) "Hγ_Hlock".
 	wp_let.
 	wp_apply (newlock_spec True); first done.
-	iIntros (tlock γ_Tlock) "Hγ_Tlock".
+	iIntros (t_lock γ_Tlock) "Hγ_Tlock".
 	set (Queue_gnames := {| γ_Hlock_seq := γ_Hlock;
 							γ_Tlock_seq := γ_Tlock;
 					|}).
@@ -61,7 +61,7 @@ Proof.
 	iMod (pointsto_persist with "Hl_queue") as "#Hl_queue".
 	iApply ("HΦ" $! #l_queue Queue_gnames).
 	iModIntro.
-	iExists l_queue, l_head, l_tail, hlock, tlock.
+	iExists l_queue, l_head, l_tail, h_lock, t_lock.
 	do 2(iSplit; first done).
 	iFrame.
 	iExists [].
@@ -76,13 +76,13 @@ Lemma enqueue_spec_seq v_q (v : val) (xs_v : list val) (Q_γ : SeqQgnames) :
 		enqueue v_q v 
 	{{{w, RET w; is_queue_seq v_q (v :: xs_v) Q_γ }}}.
 Proof.
-	iIntros (Φ) "(%l_queue & %l_head & %l_tail & %H_lock & %T_lock & -> &
-				 #Hl_queue & %xs_q & %x_head & %x_tail & %Hproj & H_isLL_xs &
-				  Hl_head & Hl_tail & %HisLast_x_tail & #H_hlock &
-				  #H_tlock) HΦ".
+	iIntros (Φ) "(%l_queue & %l_head & %l_tail & %h_lock & %t_lock & -> &
+				 #Hl_queue & %xs_queue & %x_head & %x_tail & %Hproj & HisLL_xs &
+				  Hl_head & Hl_tail & %HisLast_x_tail & #Hh_lock &
+				  #Ht_lock) HΦ".
 	destruct HisLast_x_tail as [xs_rest Hxs_split].
 	rewrite Hxs_split.
-	iDestruct "H_isLL_xs" as "[Hn_out_x_tail #H_isLL_chain_xs]".
+	iDestruct "HisLL_xs" as "[Hn_out_x_tail #HisLL_chain_xs]".
 	wp_lam.
 	wp_let.
 	wp_pures.
@@ -92,13 +92,13 @@ Proof.
 	wp_let.
 	wp_load.
 	wp_pures.
-	wp_apply (acquire_spec with "H_tlock").
+	wp_apply (acquire_spec with "Ht_lock").
 	iIntros "(Hlocked_γ_Tlock & _)".
 	wp_seq.
 	wp_load.
 	wp_pures.
 	wp_load.
-	iPoseProof (isLL_chain_node [] x_tail xs_rest with "[H_isLL_chain_xs]") as "Hn_in_x_tail"; first done.
+	iPoseProof (isLL_chain_node [] x_tail xs_rest with "[HisLL_chain_xs]") as "Hn_in_x_tail"; first done.
 	wp_load.
 	wp_pures.
 	wp_store.
@@ -108,12 +108,12 @@ Proof.
 	wp_store.
 	wp_load.
 	wp_pures.
-	wp_apply (release_spec with "[$H_tlock $Hlocked_γ_Tlock]").
+	wp_apply (release_spec with "[$Ht_lock $Hlocked_γ_Tlock]").
 	iIntros (_).
 	iApply ("HΦ" $! #()).
-	iExists l_queue, l_head, l_tail, H_lock, T_lock.
+	iExists l_queue, l_head, l_tail, h_lock, t_lock.
 	do 2 (iSplit; first done).
-	iExists ((l_new_in, SOMEV v, l_new_out) :: xs_q), x_head, (l_new_in, SOMEV v, l_new_out).
+	iExists ((l_new_in, SOMEV v, l_new_out) :: xs_queue), x_head, (l_new_in, SOMEV v, l_new_out).
 	iSplit. { iPureIntro. simpl. f_equal. done. }
 	iFrame.
 	iSplit.
@@ -122,7 +122,7 @@ Proof.
 		rewrite Hxs_split.
 		repeat iSplit; done.
 	}
-	iSplit; first by iExists (xs_q ++ [x_head]).
+	iSplit; first by iExists (xs_queue ++ [x_head]).
 	by iSplit.
 Qed.
 
@@ -133,34 +133,34 @@ Lemma dequeue_spec_seq v_q (xs_v : list val) (Q_γ : SeqQgnames) :
 				  (∃x_v xs'_v, ⌜xs_v = xs'_v ++ [x_v]⌝ ∗ 
 				  		⌜v = SOMEV x_v⌝ ∗ is_queue_seq v_q xs'_v Q_γ) }}}.
 Proof.
-	iIntros (Φ) "(%l_queue & %l_head & %l_tail & %H_lock & %T_lock & -> &
-				 #Hl_queue & %xs_q & %x_head & %x_tail & %Hproj & H_isLL_xs &
-				  Hl_head & Hl_tail & %HisLast_x_tail & #H_hlock &
-				  #H_tlock) HΦ".
-	iPoseProof (isLL_and_chain with "H_isLL_xs") as "[H_isLL_xs #H_isLL_chain_xs]".
+	iIntros (Φ) "(%l_queue & %l_head & %l_tail & %h_lock & %t_lock & -> &
+				 #Hl_queue & %xs_queue & %x_head & %x_tail & %Hproj & HisLL_xs &
+				  Hl_head & Hl_tail & %HisLast_x_tail & #Hh_lock &
+				  #Ht_lock) HΦ".
+	iPoseProof (isLL_and_chain with "HisLL_xs") as "[HisLL_xs #HisLL_chain_xs]".
 	wp_lam.
 	wp_load.
 	wp_pures.
-	wp_apply (acquire_spec with "H_hlock").
+	wp_apply (acquire_spec with "Hh_lock").
 	iIntros "(Hlocked_γ_Hlock & _)".
 	wp_seq.
 	wp_load.
 	wp_pures.
 	wp_load.
 	wp_let.
-	iPoseProof (isLL_chain_node xs_q x_head [] with "[H_isLL_chain_xs]") as "Hn_in_x_head"; first done.
+	iPoseProof (isLL_chain_node xs_queue x_head [] with "[HisLL_chain_xs]") as "Hn_in_x_head"; first done.
 	wp_load.
 	wp_pures.
 	(* Is the queue empty? *)
-	destruct xs_q as [| x' xs_q' ].
+	destruct xs_queue as [| x' xs_queue' ].
 	- (* Queue is empty *)
-	  iDestruct "H_isLL_xs" as "[Hn_out_x_head _]".
+	  iDestruct "HisLL_xs" as "[Hn_out_x_head _]".
 	  wp_load.
 	  wp_let.
 	  wp_pures.
 	  wp_load.
 	  wp_pures.
-	  wp_apply (release_spec with "[$H_hlock $Hlocked_γ_Hlock]").
+	  wp_apply (release_spec with "[$Hh_lock $Hlocked_γ_Hlock]").
 	  iIntros (_).
 	  wp_seq.
 	  iModIntro.
@@ -168,16 +168,16 @@ Proof.
 	  iLeft.
 	  destruct xs_v; last inversion Hproj.
 	  do 2 (iSplit; first done).
-	  iExists l_queue, l_head, l_tail, H_lock, T_lock.
+	  iExists l_queue, l_head, l_tail, h_lock, t_lock.
 	  do 2 (iSplit; first done).
 	  iExists [], x_head, x_tail.
 	  iFrame.
 	  repeat iSplit; done.
 	- (* Queue is not empty *)
-	  destruct (exists_first (x' :: xs_q')) as [x_head_next [xs_q'' Hxs_q_eq]]; first done.
-	  rewrite Hxs_q_eq.
-	  iPoseProof (isLL_chain_split xs_q'' [x_head_next; x_head] with "[H_isLL_chain_xs]") as "[_ H_isLL_chain_x_head_next]"; first by rewrite <- app_assoc.
-	  iDestruct "H_isLL_chain_x_head_next" as "(H_x_head_next_in & H_x_head_out & _)".
+	  destruct (exists_first (x' :: xs_queue')) as [x_head_next [xs_queue'' Hxs_queue_eq]]; first done.
+	  rewrite Hxs_queue_eq.
+	  iPoseProof (isLL_chain_split xs_queue'' [x_head_next; x_head] with "[HisLL_chain_xs]") as "[_ HisLL_chain_x_head_next]"; first by rewrite <- app_assoc.
+	  iDestruct "HisLL_chain_x_head_next" as "(Hx_head_next_in & Hx_head_out & _)".
 	  wp_load.
 	  wp_let.
 	  wp_pures.
@@ -188,7 +188,7 @@ Proof.
 	  wp_store.
 	  wp_load.
 	  wp_pures.
-	  wp_apply (release_spec with "[$H_hlock $Hlocked_γ_Hlock]").
+	  wp_apply (release_spec with "[$Hh_lock $Hlocked_γ_Hlock]").
 	  iIntros (_).
 	  wp_seq.
 	  iModIntro.
@@ -200,29 +200,29 @@ Proof.
 	  iExists x_head_next_val, xs_val_rest.
 	  iSplit; first done.
 	  rewrite Hxs_val_rest_eq in Hproj.
-	  rewrite Hxs_q_eq in Hproj.
-	  rewrite (proj_val_split xs_q'' [x_head_next]) in Hproj.
+	  rewrite Hxs_queue_eq in Hproj.
+	  rewrite (proj_val_split xs_queue'' [x_head_next]) in Hproj.
 	  rewrite (wrap_some_split xs_val_rest [x_head_next_val]) in Hproj.
 	  simpl in Hproj.
 	  iSplit; first by iPureIntro; eapply list_last_eq.
-	  iExists l_queue, l_head, l_tail, H_lock, T_lock.
+	  iExists l_queue, l_head, l_tail, h_lock, t_lock.
 	  do 2 (iSplit; first done).
-	  iExists xs_q'', x_head_next, x_tail.
-	  iSplit; first by iPureIntro; apply (list_last_eq (proj_val xs_q'') (wrap_some xs_val_rest) (n_val x_head_next) (InjRV x_head_next_val) Hproj).
+	  iExists xs_queue'', x_head_next, x_tail.
+	  iSplit; first by iPureIntro; apply (list_last_eq (proj_val xs_queue'') (wrap_some xs_val_rest) (n_val x_head_next) (InjRV x_head_next_val) Hproj).
 	  iFrame.
-	  iSplitL "H_isLL_xs".
+	  iSplitL "HisLL_xs".
 	  {
-		rewrite <- Hxs_q_eq.
-		iDestruct "H_isLL_xs" as "[H_x_tail_out _]".
+		rewrite <- Hxs_queue_eq.
+		iDestruct "HisLL_xs" as "[Hx_tail_out _]".
 		iFrame.
-		iPoseProof (isLL_chain_split (x' :: xs_q') [x_head] with "H_isLL_chain_xs") as "[HisLL_chain_no_head _]".
+		iPoseProof (isLL_chain_split (x' :: xs_queue') [x_head] with "HisLL_chain_xs") as "[HisLL_chain_no_head _]".
 		done.
 	  }
 	  iSplit.
 	  {
 		iPureIntro.
-		rewrite <- Hxs_q_eq.
-		exists (xs_q').
+		rewrite <- Hxs_queue_eq.
+		exists (xs_queue').
 		destruct HisLast_x_tail as [xs' Heq].
 		inversion Heq.
 		reflexivity.

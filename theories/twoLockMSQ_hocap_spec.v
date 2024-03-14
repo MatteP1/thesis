@@ -112,24 +112,24 @@ Lemma queue_invariant_equiv_simple : forall l_head l_tail Q_γ,
 Proof.
 	iIntros (l_head l_tail Q_γ).
 	iSplit.
-	- iIntros "(%xs_v & HAbst_auth & %xs & %xs_queue & %xs_old & %x_head & %x_tail & Hxs_split & HisLL_xs & %Hconc_abst_eq & [H_Static | [H_Enqueue | [H_Dequeue | H_Both]]])"; 
+	- iIntros "(%xs_v & HAbst_auth & %xs & %xs_queue & %xs_old & %x_head & %x_tail & Hxs_split & HisLL_xs & %Hconc_abst_eq & [HStatic | [HEnqueue | [HDequeue | HBoth]]])"; 
 	iExists xs_v; iFrame; iExists xs, xs_queue, xs_old, x_head, x_tail; iFrame.
-	  + iDestruct "H_Static" as "(Hl_head & Hl_tail & HisLast & HTokne & HToknD & HTokUpdated)".
+	  + iDestruct "HStatic" as "(Hl_head & Hl_tail & HisLast & HTokne & HToknD & HTokUpdated)".
 	  	iSplit; first done.
 		iSplitL "Hl_head HToknD"; first (iLeft; iFrame).
 		iLeft. iFrame.
-	  + iDestruct "H_Enqueue" as "(Hl_head & Hl_tail & [[HisLast HTokAfter] | [HisSndLast HAfter]] & HToke & HToknD)".
+	  + iDestruct "HEnqueue" as "(Hl_head & Hl_tail & [[HisLast HTokAfter] | [HisSndLast HAfter]] & HToke & HToknD)".
 	    * iSplit; first done.
 		  iSplitL "Hl_head HToknD"; first (iLeft; iFrame). 
 		  iRight. iFrame. iLeft. iFrame.
 		* iSplit; first done.
 		  iSplitL "Hl_head HToknD"; first (iLeft; iFrame). 
 		  iRight. iFrame. iRight. iFrame.
-	  + iDestruct "H_Dequeue" as "(Hl_head & Hl_tail & HisLast & HTokne & HTokD & HTokUpdated)".
+	  + iDestruct "HDequeue" as "(Hl_head & Hl_tail & HisLast & HTokne & HTokD & HTokUpdated)".
 	    iSplit; first done.
 		iSplitL "Hl_head HTokD"; first (iRight; iFrame).
 		iLeft. iFrame.
-	  + iDestruct "H_Both" as "(Hl_head & Hl_tail & [[HisLast HTokAfter] | [HisSndLast HAfter]] & HToke & HTokD)".
+	  + iDestruct "HBoth" as "(Hl_head & Hl_tail & [[HisLast HTokAfter] | [HisSndLast HAfter]] & HToke & HTokD)".
 	    * iSplit; first done.
 		  iSplitL "Hl_head HTokD"; first (iRight; iFrame). 
 		  iRight. iFrame. iLeft. iFrame.
@@ -141,11 +141,11 @@ Proof.
 Qed.
 
 Definition is_queue (v_q : val) (Q_γ: Qgnames) : iProp Σ :=
-	∃ l_queue l_head l_tail : loc, ∃ H_lock T_lock : val,
+	∃ l_queue l_head l_tail : loc, ∃ h_lock T_lock : val,
 	⌜v_q = #l_queue⌝ ∗
-	l_queue ↦□ ((#l_head, #l_tail), (H_lock, T_lock)) ∗
+	l_queue ↦□ ((#l_head, #l_tail), (h_lock, T_lock)) ∗
 	inv N (queue_invariant l_head l_tail Q_γ) ∗
-	is_lock Q_γ.(γ_Hlock) H_lock (TokD Q_γ) ∗
+	is_lock Q_γ.(γ_Hlock) h_lock (TokD Q_γ) ∗
 	is_lock Q_γ.(γ_Tlock) T_lock (TokE Q_γ).
 
 (* is_queue is persistent *)
@@ -168,11 +168,11 @@ Proof.
 	wp_pures.
 	iMod token_alloc as (γ_D) "Hγ_D".
 	wp_apply (newlock_spec with "Hγ_D").
-	iIntros (hlock γ_Hlock) "Hγ_Hlock".
+	iIntros (h_lock γ_Hlock) "Hγ_Hlock".
 	wp_let.
 	iMod token_alloc as (γ_E) "Hγ_E".
 	wp_apply (newlock_spec with "Hγ_E").
-	iIntros (tlock γ_Tlock) "Hγ_Tlock".
+	iIntros (t_lock γ_Tlock) "Hγ_Tlock".
 	wp_let.
 	wp_alloc l_tail as "Hl_tail".
 	wp_alloc l_head as "Hl_head".
@@ -201,7 +201,7 @@ Proof.
 	iApply ("HΦ" $! #l_queue Queue_gnames).
 	iModIntro.
 	iFrame.
-	iExists l_queue, l_head, l_tail, hlock, tlock.
+	iExists l_queue, l_head, l_tail, h_lock, t_lock.
 	by repeat iSplit.
 Qed.
 
