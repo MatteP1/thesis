@@ -611,12 +611,11 @@ Since we want $\isqueue$ to be persistent, then we cannot directly state the poi
 \begin{definition}[Two-Lock M\&S-Queue Invariant]\label{MSQTL:spec:invariant}
   \begin{align*}
     &queue\_invariant \ \Phi \ \loc_{head} \ \loc_{tail} \ Q_\gname =\\
-    &\exists xs_v. &&\text{(abstract state)}\\
+    &\exists xs_v. All \ xs_v \ \Phi \ast &&\text{(abstract state)}\\
     &\exists xs, xs_{queue}, xs_{old}, x_{head}, x_{tail} . &&\text{(concrete state)}\\
     &xs = xs_{queue} ++ [x_{head}] ++ xs_{old} \ast\\
     &\isLL \ xs \ast\\
     &proj\_val \ xs_{queue} = wrap\_some \ xs_v \ast\\
-    &All \ xs_v \ \Phi \ast\\
     &(\\
     &\quad\quad\loc_{head} \mapsto (\nIn{x_{head}}) \ast \loc_{tail} \mapsto (\nIn{x_{tail}}) \ast isLast \ x_{tail} \ xs \ast &&\text{(\StaticState)}\\
     &\quad\quad \ToknEQg \ast \ToknDQg \ast \TokUpdatedQg\\

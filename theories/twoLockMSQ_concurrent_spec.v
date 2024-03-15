@@ -42,12 +42,12 @@ Definition TokAfter (g : Qgnames) := token g.(γ_After).
 Definition TokUpdated (g : Qgnames) := ((TokBefore g) ∗ (TokAfter g))%I.
 
 Definition queue_invariant (Ψ : val -> iProp Σ) (l_head l_tail : loc) (Q_γ : Qgnames) : iProp Σ :=
-	∃ xs_v, (* Abstract state *)
+	∃ xs_v, All xs_v Ψ ∗ (* Abstract state *)
 	∃ xs xs_queue xs_old (x_head x_tail: (loc * val * loc)), (* Concrete state *)
 	⌜xs = xs_queue ++ [x_head] ++ xs_old⌝ ∗
 	isLL xs ∗
+	(* Relation between concrete and abstract state *)
 	⌜proj_val xs_queue = wrap_some xs_v⌝ ∗
-	All xs_v Ψ ∗
 	(
 		(* Static *)
 		(
@@ -83,13 +83,12 @@ Definition queue_invariant (Ψ : val -> iProp Σ) (l_head l_tail : loc) (Q_γ : 
 	).
 
 Definition queue_invariant_simple (Ψ : val -> iProp Σ) (l_head l_tail : loc) (Q_γ : Qgnames) : iProp Σ :=
-	∃ xs_v, (* Abstract state *)
+	∃ xs_v, All xs_v Ψ ∗ (* Abstract state *)
 	∃ xs xs_queue xs_old (x_head x_tail: (loc * val * loc)), (* Concrete state *)
 	⌜xs = xs_queue ++ [x_head] ++ xs_old⌝ ∗
 	isLL xs ∗
 	(* Relation between concrete and abstract state *)
 	⌜proj_val xs_queue = wrap_some xs_v⌝ ∗
-	All xs_v Ψ ∗
 	(
 		(
 			(l_head ↦ #(n_in x_head) ∗ ToknD Q_γ) ∨ 
@@ -113,8 +112,8 @@ Lemma queue_invariant_equiv_simple : forall Ψ l_head l_tail Q_γ,
 Proof.
 	iIntros (Ψ l_head l_tail Q_γ).
 	iSplit.
-	- iIntros "(%xs_v & %xs & %xs_queue & %xs_old & %x_head & %x_tail & Hxs_split & HisLL_xs & %Hconc_abst_eq & HAll & [HStatic | [HEnqueue | [HDequeue | HBoth]]])"; 
-	iExists xs_v, xs, xs_queue, xs_old, x_head, x_tail; iFrame.
+	- iIntros "(%xs_v & HAll & %xs & %xs_queue & %xs_old & %x_head & %x_tail & Hxs_split & HisLL_xs & %Hconc_abst_eq & [HStatic | [HEnqueue | [HDequeue | HBoth]]])"; 
+	iExists xs_v; iFrame; iExists xs, xs_queue, xs_old, x_head, x_tail; iFrame.
 	  + iDestruct "HStatic" as "(Hl_head & Hl_tail & HisLast & HTokne & HToknD & HTokUpdated)".
 	  	iSplit; first done.
 		iSplitL "Hl_head HToknD"; first (iLeft; iFrame).
@@ -137,8 +136,8 @@ Proof.
 		* iSplit; first done.
 		  iSplitL "Hl_head HTokD"; first (iRight; iFrame). 
 		  iRight. iFrame. iRight. iFrame.
-	- iIntros "(%xs_v & %xs & %xs_queue & %xs_old & %x_head & %x_tail & Hxs_split & HisLL_xs & %Hconc_abst_eq & HAll & [[Hl_head HToknD] | [Hl_head HTokD]] & [(Hl_tail & HisLast & HToknE & HTokUpdated) | (Hl_tail & HTokE & [[HisLast HTokBefore] | [HisSndLast HTokAfter]])])";
-	iExists xs_v, xs, xs_queue, xs_old, x_head, x_tail; eauto 10 with iFrame.
+	- iIntros "(%xs_v & HAll & %xs & %xs_queue & %xs_old & %x_head & %x_tail & Hxs_split & HisLL_xs & %Hconc_abst_eq & [[Hl_head HToknD] | [Hl_head HTokD]] & [(Hl_tail & HisLast & HToknE & HTokUpdated) | (Hl_tail & HTokE & [[HisLast HTokBefore] | [HisSndLast HTokAfter]])])";
+	iExists xs_v; iFrame; iExists xs, xs_queue, xs_old, x_head, x_tail; eauto 10 with iFrame.
 Qed.
 
 Definition is_queue (Ψ : val -> iProp Σ) (v_q : val) (Q_γ: Qgnames) : iProp Σ :=
@@ -191,8 +190,12 @@ Proof.
 					|}).
 	iMod (inv_alloc N _ (queue_invariant Ψ l_head l_tail Queue_gnames) with "[Hl_head Hl_tail Hl_1_in Hl_1_out Hγ_nE Hγ_nD Hγ_Before Hγ_After]") as "#HqueueInv".
 	{
-		iNext. iExists [], [(l_1_in, NONEV, l_1_out)], [], [], (l_1_in, NONEV, l_1_out), (l_1_in, NONEV, l_1_out). cbn. iSplit; first done. iSplitL "Hl_1_in Hl_1_out"; first auto. do 2 (iSplit; first done).
-		iLeft. iFrame. iPureIntro. by exists [].
+		iNext. iExists []. iSplit; first done.
+		iExists [(l_1_in, NONEV, l_1_out)], [], [], (l_1_in, NONEV, l_1_out), (l_1_in, NONEV, l_1_out); iFrame.
+		do 3 (iSplit; first done).
+		iLeft.
+		iFrame.
+		by iExists [].
 	}
 	wp_alloc l_queue as "Hl_queue".
 	iMod (pointsto_persist with "Hl_queue") as "#Hl_queue".
@@ -231,7 +234,7 @@ Proof.
 	(* Open in Static / Dequeue *)
 	iInv "Hqueue_inv" as "Hqueue_inv_open".
 	iPoseProof (queue_invariant_equiv_simple Ψ l_head l_tail Q_γ with "Hqueue_inv_open") as "Hqueue_inv_open".
-	iDestruct "Hqueue_inv_open" as "(%xs_v & %xs & %xs_queue & %xs_old & %x_head & %x_tail & >%Heq_xs & HisLL_xs & >%Hconc_abst_eq & HAll_xs & Hhead & [ ( [Hl_tail1 Hl_tail2] & >[%xs_fromtail %HisLast] & HToknE & HTokUpdated ) | (_ & >HTokE' & _) ])"; last by iCombine "HTokE HTokE'" gives "%H". (* Impossible: TokE *)
+	iDestruct "Hqueue_inv_open" as "(%xs_v & HAll_xs & %xs & %xs_queue & %xs_old & %x_head & %x_tail & >%Heq_xs & HisLL_xs & >%Hconc_abst_eq & Hhead & [ ( [Hl_tail1 Hl_tail2] & >[%xs_fromtail %HisLast] & HToknE & HTokUpdated ) | (_ & >HTokE' & _) ])"; last by iCombine "HTokE HTokE'" gives "%H". (* Impossible: TokE *)
 	wp_load.
 	iPoseProof (isLL_and_chain with "HisLL_xs") as "[HisLL_xs #HisLL_chain_xs]".
 	iPoseProof (isLL_chain_node [] x_tail xs_fromtail with "[HisLL_chain_xs]") as "#Hx_tail"; first by rewrite HisLast.
@@ -242,8 +245,8 @@ Proof.
 	{
 		iNext.
 		iApply queue_invariant_equiv_simple.
-		iExists xs_v, xs, xs_queue, xs_old, x_head, x_tail.
-		iFrame.
+		iExists xs_v; iFrame.
+		iExists xs, xs_queue, xs_old, x_head, x_tail; iFrame.
 		do 2 (iSplit; first done).
 		iRight.
 		iFrame.
@@ -258,7 +261,7 @@ Proof.
 	(* Open in Enqueue / Both : Before *)
 	iInv "Hqueue_inv" as "Hqueue_inv_open".
 	iPoseProof (queue_invariant_equiv_simple Ψ l_head l_tail Q_γ with "Hqueue_inv_open") as "Hqueue_inv_open".
-	iDestruct "Hqueue_inv_open" as "(%xs_v & %xs & %xs_queue & %xs_old & %x_head & %x_tail' & >%Heq_xs & HisLL_xs & >%Hconc_abst_eq & HAll_xs & Hhead & [ ( _ & _ & >HToknE' & _ ) | (>Hl_tail1 & HTokE & [[>[%xs_fromtail %HisLast] HTokBefore] | [_ >HTokAfter']]) ])"; 
+	iDestruct "Hqueue_inv_open" as "(%xs_v & HAll_xs & %xs & %xs_queue & %xs_old & %x_head & %x_tail' & >%Heq_xs & HisLL_xs & >%Hconc_abst_eq & Hhead & [ ( _ & _ & >HToknE' & _ ) | (>Hl_tail1 & HTokE & [[>[%xs_fromtail %HisLast] HTokBefore] | [_ >HTokAfter']]) ])"; 
 	[ by iCombine "HToknE HToknE'" gives "%H" | | (* Impossible: ToknE *)
 	  by iCombine "HTokAfter HTokAfter'" gives "%H" ]. (* Impossible: TokAfter *)
 	iCombine "Hl_tail1 Hl_tail2" as "Hl_tail" gives "[_ %Htail_eq]".
@@ -286,7 +289,8 @@ Proof.
 	{
 		iNext.
 		iApply queue_invariant_equiv_simple.
-		iExists (v :: xs_v), xs_new, (x_new :: xs_queue), xs_old, x_head, x_tail.
+		iExists (v :: xs_v); iFrame.
+		iExists xs_new, (x_new :: xs_queue), xs_old, x_head, x_tail.
 		iSplit. { iPureIntro. unfold xs_new. cbn. rewrite Heq_xs. auto. }
 		iFrame.
 		iSplit. { iPureIntro. simpl. f_equal. done. }
@@ -306,7 +310,7 @@ Proof.
 	(* Open in Enqueue / Both : After *)
 	iInv "Hqueue_inv" as "Hqueue_inv_open".
 	iPoseProof (queue_invariant_equiv_simple Ψ l_head l_tail Q_γ with "Hqueue_inv_open") as "Hqueue_inv_open".
-	iDestruct "Hqueue_inv_open" as "(%xs_v & %xs & %xs_queue & %xs_old & %x_head & %x_tail'' & >%Heq_xs & HisLL_xs & >%Hconc_abst_eq & HAll_xs & Hhead & [ ( _ & _ & >HToknE' & _ ) | (>Hl_tail1 & HTokE & [[_ >HTokBefore'] | [>(%x_new' & %xs_fromtail & %HisSndLast) HTokAfter]])])"; 
+	iDestruct "Hqueue_inv_open" as "(%xs_v & HAll_xs & %xs & %xs_queue & %xs_old & %x_head & %x_tail'' & >%Heq_xs & HisLL_xs & >%Hconc_abst_eq & Hhead & [ ( _ & _ & >HToknE' & _ ) | (>Hl_tail1 & HTokE & [[_ >HTokBefore'] | [>(%x_new' & %xs_fromtail & %HisSndLast) HTokAfter]])])"; 
 	[ by iCombine "HToknE HToknE'" gives "%H" | (* Impossible: ToknE *)
 	  by iCombine "HTokBefore HTokBefore'" gives "%H" | ]. (* Impossible: TokBefore *)
 	iCombine "Hl_tail1 Hl_tail2" as "Hl_tail" gives "[_ %Htail_eq]".
@@ -333,10 +337,9 @@ Proof.
 	{
 		iNext.
 		iApply queue_invariant_equiv_simple.
-		iExists xs_v, xs, xs_queue, xs_old, x_head, x_new.
-		iSplit; first done.
-		iFrame.
-		iSplit; first done.
+		iExists xs_v; iFrame.
+		iExists xs, xs_queue, xs_old, x_head, x_new; iFrame.
+		do 2 (iSplit; first done).
 		iLeft.
 		iFrame.
 		by iExists (x_tail :: xs_fromtail).
@@ -367,7 +370,7 @@ Proof.
 	(* Open in Static / Enqueue *)
 	iInv "Hqueue_inv" as "Hqueue_inv_open".
 	iPoseProof (queue_invariant_equiv_simple Ψ l_head l_tail Q_γ with "Hqueue_inv_open") as "Hqueue_inv_open".
-	iDestruct "Hqueue_inv_open" as "(%xs_v & %xs & %xs_queue & %xs_old & %x_head & %x_tail & >%Heq_xs & HisLL_xs & >%Hconc_abst_eq & HAll_xs & [ [Hl_head HToknD] | [Hl_head >HTokD'] ] & Htail)"; 
+	iDestruct "Hqueue_inv_open" as "(%xs_v & HAll_xs & %xs & %xs_queue & %xs_old & %x_head & %x_tail & >%Heq_xs & HisLL_xs & >%Hconc_abst_eq & [ [Hl_head HToknD] | [Hl_head >HTokD'] ] & Htail)"; 
 	last by iCombine "HTokD HTokD'" gives "%H". (* Impossible: TokD*)
 	wp_load.
 	iDestruct "Hl_head" as "[Hl_head1 Hl_head2]".
@@ -377,9 +380,10 @@ Proof.
 	iSplitL "Hl_head1 HTokD Htail HisLL_xs HAll_xs".
 	{
 		iNext. iApply queue_invariant_equiv_simple.
-		iExists xs_v, xs, xs_queue, xs_old, x_head, x_tail.
-		iFrame.
-		do 2 (iSplit; first done). by iRight.
+		iExists xs_v; iFrame.
+		iExists xs, xs_queue, xs_old, x_head, x_tail; iFrame.
+		do 2 (iSplit; first done).
+		by iRight.
 	}
 	subst.
 	iPoseProof (isLL_chain_node with "HisLL_chain_xs") as "Hx_head_in".
@@ -391,7 +395,7 @@ Proof.
 	(* Open in Dequeue / Both *)
 	iInv "Hqueue_inv" as "Hqueue_inv_open".
 	iPoseProof (queue_invariant_equiv_simple Ψ l_head l_tail Q_γ with "Hqueue_inv_open") as "Hqueue_inv_open".
-	iDestruct "Hqueue_inv_open" as "(%xs_v & %xs & %xs_queue & %xs_old & %x_head' & %x_tail & >%Heq_xs & HisLL_xs & >%Hconc_abst_eq & HAll_xs & [ [Hl_head >HToknD'] | [>Hl_head1 HTokD] ] & Htail)";
+	iDestruct "Hqueue_inv_open" as "(%xs_v & HAll_xs & %xs & %xs_queue & %xs_old & %x_head' & %x_tail & >%Heq_xs & HisLL_xs & >%Hconc_abst_eq & [ [Hl_head >HToknD'] | [>Hl_head1 HTokD] ] & Htail)";
 	first by iCombine "HToknD HToknD'" gives "%H". (* Impossible: ToknD*)
 	iPoseProof (isLL_and_chain with "HisLL_xs") as "[HisLL_xs #HisLL_chain_xs]".
 	iCombine "Hl_head1 Hl_head2" as "Hl_head" gives "[_ %Hhead_eq]".
@@ -412,8 +416,8 @@ Proof.
 	  iSplitL "Hl_head HToknD Htail Hx_head_out".
 	  {
 		iNext. iApply queue_invariant_equiv_simple.
-		iExists [], ([] ++ [x_head] ++ xs_old), [], xs_old, x_head, x_tail.
-		iFrame. do 3 (iSplit; first done). iLeft. iFrame.
+		iExists []; iSplit; first done.
+		iExists ([] ++ [x_head] ++ xs_old), [], xs_old, x_head, x_tail; iFrame. do 3 (iSplit; first done). iLeft. iFrame.
 		rewrite dfrac_op_own. rewrite Qp.half_half. done.
 	  }
 	  wp_let.
@@ -447,8 +451,10 @@ Proof.
 	  iSplitL "Hl_head1 HisLL_xs Htail HTokD HAll_xs".
 	  {
 		iNext. iApply queue_invariant_equiv_simple.
-		iExists xs_v, ((xs_rest ++ [x_head_next]) ++ [x_head] ++ xs_old), (xs_rest ++ [x_head_next]), xs_old, x_head, x_tail.
-		iFrame. iSplit; first done. iSplit; first done. by iRight.
+		iExists xs_v; iFrame.
+		iExists ((xs_rest ++ [x_head_next]) ++ [x_head] ++ xs_old), (xs_rest ++ [x_head_next]), xs_old, x_head, x_tail; iFrame.
+		do 2 (iSplit; first done).
+		by iRight.
 	  }
 	  iClear (Hconc_abst_eq xs_v xs_rest xs_old x_tail Hhead_eq) "HisLL_chain_xs".
 	  wp_let.
@@ -461,7 +467,7 @@ Proof.
 	  (* Open in Dequeue / Both *)
 	  iInv "Hqueue_inv" as "Hqueue_inv_open".
 	  iPoseProof (queue_invariant_equiv_simple Ψ l_head l_tail Q_γ with "Hqueue_inv_open") as "Hqueue_inv_open".
-	  iDestruct "Hqueue_inv_open" as "(%xs_v & %xs & %xs_queue & %xs_old & %x_head'' & %x_tail & >%Heq_xs & HisLL_xs & >%Hconc_abst_eq & HAll_xs & [ [Hl_head >HToknD'] | [>Hl_head1 HTokD] ] & Htail)";
+	  iDestruct "Hqueue_inv_open" as "(%xs_v & HAll_xs & %xs & %xs_queue & %xs_old & %x_head'' & %x_tail & >%Heq_xs & HisLL_xs & >%Hconc_abst_eq & [ [Hl_head >HToknD'] | [>Hl_head1 HTokD] ] & Htail)";
 	  first by iCombine "HToknD HToknD'" gives "%H". (* Impossible ToknD *)
 	  iCombine "Hl_head1 Hl_head2" as "Hl_head" gives "[_ %Hhead_eq]".
 	  rewrite dfrac_op_own.
@@ -482,7 +488,8 @@ Proof.
 		simplify_eq.
 	  }
 	  destruct (exists_first (x_tail' :: xs_queue')) as [x_head_next' [xs_rest Hxs_rest_eq]]; first done.
-	  rewrite Hxs_rest_eq.
+	  rewrite Hxs_rest_eq in Hconc_abst_eq *.
+	  iClear (x_tail' xs_queue' Hxs_rest_eq) "".
 	  rewrite <- app_assoc.
 	  iAssert (⌜x_head_next' = x_head_next⌝)%I as "->".
 	  {
@@ -491,25 +498,27 @@ Proof.
 		by iApply n_in_equal.
 	  }
 	  (* Sync up abstract state *)
-	  destruct xs_v as [|x_v xs_v'];
-	  	first inversion Hconc_abst_eq. (* Impossible case. xs_v must contain at least one element. *)
-	  destruct (exists_first (x_v :: xs_v')) as [x_head_next_val [xs_val_rest Hxs_val_rest_eq]]; first done.
-	  rewrite Hxs_val_rest_eq in Hconc_abst_eq *.
-	  rewrite Hxs_rest_eq in Hconc_abst_eq.
-	  iClear (x_tail' xs_queue' Hxs_rest_eq) "".
+	  destruct (exists_first xs_v) as [x_v [xs_v' Hxs_v_eq]].
+	  {
+		intros ->.
+		rewrite proj_val_split in Hconc_abst_eq.
+		simpl in Hconc_abst_eq.
+		by apply (app_cons_not_nil (proj_val xs_rest) [] (n_val x_head_next)).
+	  }
+	  rewrite Hxs_v_eq in Hconc_abst_eq *.
 	  rewrite (proj_val_split xs_rest [x_head_next]) in Hconc_abst_eq.
-	  rewrite (wrap_some_split xs_val_rest [x_head_next_val]) in Hconc_abst_eq.
+	  rewrite (wrap_some_split xs_v' [x_v]) in Hconc_abst_eq.
 	  simpl in Hconc_abst_eq.
-	  apply (list_last_eq (proj_val xs_rest) (wrap_some xs_val_rest) (n_val x_head_next) (InjRV x_head_next_val)) in Hconc_abst_eq as [Hxs_rest_val_eq Hx_head_next_eq].
+	  apply (list_last_eq (proj_val xs_rest) (wrap_some xs_v') (n_val x_head_next) (SOMEV x_v)) in Hconc_abst_eq as [Hxs_rest_val_eq Hx_head_next_eq].
 	  iPoseProof (All_split with "HAll_xs") as "[HAll_xs_val_rest [Hx_head_next_val_Ψ _]]".
 	  iModIntro.
 	  (* Close in Static / Enqueue *)
 	  iSplitL "Hl_head Htail HToknD HisLL_xs HAll_xs_val_rest".
 	  {
 		iNext. iApply queue_invariant_equiv_simple.
-		iExists xs_val_rest, (xs_rest ++ [x_head_next] ++ [x_head] ++ xs_old), xs_rest, ([x_head] ++ xs_old), x_head_next, x_tail.
-		iFrame. iSplit; first done.
-		iSplit; first done.
+		iExists xs_v'; iFrame.
+		iExists (xs_rest ++ [x_head_next] ++ [x_head] ++ xs_old), xs_rest, ([x_head] ++ xs_old), x_head_next, x_tail; iFrame.
+		do 2(iSplit; first done).
 		iLeft.
 		iFrame.
 	  }
@@ -522,7 +531,7 @@ Proof.
 	  iModIntro.
 	  iApply "HΦ".
 	  iRight.
-	  iExists x_head_next_val.
+	  iExists x_v.
 	  by iSplit.
 Qed.
 
