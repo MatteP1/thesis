@@ -89,6 +89,7 @@ Definition queue_invariant_simple (l_head l_tail : loc) (Q_γ : Qgnames) : iProp
 	∃ xs xs_queue xs_old (x_head x_tail: (loc * val * loc)), (* Concrete state *)
 	⌜xs = xs_queue ++ [x_head] ++ xs_old⌝ ∗
 	isLL xs ∗
+	(* Relation between concrete and abstract state *)
 	⌜proj_val xs_queue = wrap_some xs_v⌝ ∗
 	(
 		(
@@ -181,6 +182,7 @@ Proof.
 	iMod token_alloc as (γ_nD) "Hγ_nD".
 	iMod token_alloc as (γ_Before) "Hγ_Before".
 	iMod token_alloc as (γ_After) "Hγ_After".
+	(* CHANGE: START: γ_Abst *)
 	iMod (own_alloc (●F (to_agree []) ⋅ ◯F (to_agree []))) as (γ_Abst) "[Hγ_Abst_auth Hγ_Abst_frac]"; first by apply frac_auth_valid.
 	set (Queue_gnames := {| γ_Abst := γ_Abst;
 							γ_Hlock := γ_Hlock;
@@ -193,6 +195,7 @@ Proof.
 							γ_After := γ_After
 					|}).
 	iMod (inv_alloc N _ (queue_invariant l_head l_tail Queue_gnames) with "[Hγ_Abst_auth Hl_head Hl_tail Hl_1_in Hl_1_out Hγ_nE Hγ_nD Hγ_Before Hγ_After]") as "#HqueueInv".
+	(* CHANGE: END *)
 	{
 		(* CHANGE: START: framing instead of splitting *)
 		iNext. iExists []; iFrame.
@@ -584,6 +587,7 @@ Proof.
 	  simpl in Hconc_abst_eq.
 	  apply (list_last_eq (proj_val xs_rest) (wrap_some xs_v') (n_val x_head_next) (SOMEV x_v)) in Hconc_abst_eq as [Hxs_rest_val_eq Hx_head_next_eq].
 	  iModIntro.
+	  (* CHANGE: Removed splitting All *)
 	  (* Close in Static / Enqueue *)
 	  (* CHANGE: START: HAll -> HAbst_new *)
 	  iSplitL "Hl_head Htail HToknD HisLL_xs HAbst_new".
