@@ -43,11 +43,13 @@ Definition TokBefore (g : Qgnames) := token g.(γ_Before).
 Definition TokAfter (g : Qgnames) := token g.(γ_After).
 Definition TokUpdated (g : Qgnames) := ((TokBefore g) ∗ (TokAfter g))%I.
 
+(* TODO: consider putting auth fragment (here) and ALL xs_v (concurrent) in the same position *)
 Definition queue_invariant (l_head l_tail : loc) (Q_γ : Qgnames) : iProp Σ :=
 	∃ xs_v, own Q_γ.(γ_Abst) (●F (to_agree xs_v)) ∗ (* Abstract state *)
 	∃ xs xs_queue xs_old (x_head x_tail: (loc * val * loc)), (* Concrete state *)
 	⌜xs = xs_queue ++ [x_head] ++ xs_old⌝ ∗
 	isLL xs ∗
+	(* Relation between concrete and abstract state *)
 	⌜proj_val xs_queue = wrap_some xs_v⌝ ∗
 	(
 		(* Static *)
@@ -393,6 +395,221 @@ Lemma dequeue_spec v_q (Q_γ : Qgnames) (P : iProp Σ) (Q : val -> iProp Σ):
 		dequeue v_q
 	{{{ v, RET v; Q v }}}.
 Proof.
-	Admitted.
+	(* CHANGE: START *)
+	iIntros "#Hvs". 
+	(* NOTE: The proof below should work even if the viewshift isn't persistent, as it is only used once. TODO: REMOVE THIS COMMENT WHEN YOU KNOW IF VIEWSHIFT SHOULD BE IN PRECONDITION. *)
+	iIntros (Φ) "!> [(%l_queue & %l_head & %l_tail & %h_lock & %t_lock & -> &
+				 #Hl_queue & #Hqueue_inv & #Hh_lock & #Ht_lock) HP] HΦ".
+	(* CHANGE: END *)
+	wp_lam.
+	wp_load.
+	wp_pures.
+	wp_apply (acquire_spec with "Hh_lock").
+	iIntros "(Hlocked_γ_Hlock & HTokD)".
+	wp_seq.
+	wp_load.
+	wp_pures.
+	wp_bind (! #l_head)%E.
+	(* Open in Static / Enqueue *)
+	iInv "Hqueue_inv" as "Hqueue_inv_open".
+	(* CHANGE: START *)
+	iPoseProof (queue_invariant_equiv_simple l_head l_tail Q_γ with "Hqueue_inv_open") as "Hqueue_inv_open".
+	iDestruct "Hqueue_inv_open" as "(%xs_v & HAbst & %xs & %xs_queue & %xs_old & %x_head & %x_tail & >%Heq_xs & HisLL_xs & >%Hconc_abst_eq & [ [Hl_head HToknD] | [Hl_head >HTokD'] ] & Htail)"; 
+	last by iCombine "HTokD HTokD'" gives "%H". (* Impossible: TokD*)
+	(* CHANGE: END *)
+	wp_load.
+	iDestruct "Hl_head" as "[Hl_head1 Hl_head2]".
+	iPoseProof (isLL_and_chain with "HisLL_xs") as "[HisLL_xs #HisLL_chain_xs]".
+	iModIntro.
+	(* Close in Dequeue / Both *)
+	(* CHANGE: START *)
+	iSplitL "Hl_head1 HTokD Htail HisLL_xs HAbst".
+	(* CHANGE: END *)
+	{
+		iNext. iApply queue_invariant_equiv_simple.
+		(* CHANGE: START *)
+		iExists xs_v; iFrame; iExists xs, xs_queue, xs_old, x_head, x_tail.
+		(* CHANGE: END *)
+		iFrame.
+		do 2 (iSplit; first done). by iRight.
+	}
+	subst.
+	iPoseProof (isLL_chain_node with "HisLL_chain_xs") as "Hx_head_in".
+	iClear (Hconc_abst_eq xs_v xs_queue xs_old x_tail) "HisLL_chain_xs".
+	wp_let.
+	wp_load.
+	wp_pures.
+	wp_bind (! #(n_out x_head))%E.
+	(* Open in Dequeue / Both *)
+	iInv "Hqueue_inv" as "Hqueue_inv_open".
+	(* CHANGE: START *)
+	iPoseProof (queue_invariant_equiv_simple l_head l_tail Q_γ with "Hqueue_inv_open") as "Hqueue_inv_open".
+	iDestruct "Hqueue_inv_open" as "(%xs_v & HAbst & %xs & %xs_queue & %xs_old & %x_head' & %x_tail & >%Heq_xs & HisLL_xs & >%Hconc_abst_eq & [ [Hl_head >HToknD'] | [>Hl_head1 HTokD] ] & Htail)";
+	first by iCombine "HToknD HToknD'" gives "%H". (* Impossible: ToknD*)
+	(* CHANGE: END *)
+	iPoseProof (isLL_and_chain with "HisLL_xs") as "[HisLL_xs #HisLL_chain_xs]".
+	iCombine "Hl_head1 Hl_head2" as "Hl_head" gives "[_ %Hhead_eq]".
+	subst.
+	iAssert (▷⌜x_head' = x_head⌝)%I as ">->".
+	{
+		iNext.
+		iPoseProof (isLL_chain_node xs_queue x_head' xs_old with "[HisLL_chain_xs]") as "#Hx_head'"; first done.
+		by iApply n_in_equal.
+	}
+	(* Case analysis: Is queue empty? *)
+	destruct xs_queue as [| x_tail' xs_queue'].
+	- (* Queue is empty. *)
+	  iDestruct "HisLL_xs" as "[Hx_head_out _]".
+	  wp_load.
+	  (* CHANGE: START *)
+	  (* Update the abstract state using the viewshift *)
+	  iMod ("Hvs" $! xs_v with "[HAbst HP]") as "[(-> & HAbst_new & HQ) | (%x_v & %xs_v' & -> & HAbst_new & HQ) ]";
+	  	[ by iFrame | |
+		  (* The abstract state must be empty. Hence the second disjunct is impossible. *)
+		  rewrite wrap_some_split in Hconc_abst_eq;
+		  simpl in Hconc_abst_eq; 
+		  exfalso;
+		  by apply (app_cons_not_nil (wrap_some xs_v') [] (SOMEV x_v))
+		].
+	  (* CHANGE: END *)
+	  iModIntro.
+	  (* Close in Static / Enqueue *)
+	  (* CHANGE: START *)
+	  iSplitL "Hl_head HToknD Htail Hx_head_out HAbst_new".
+	  (* CHANGE: END *)
+	  {
+		iNext. iApply queue_invariant_equiv_simple.
+		(* CHANGE: START *)
+		iExists []; iFrame; iExists ([] ++ [x_head] ++ xs_old), [], xs_old, x_head, x_tail.
+		(* CHANGE: END *)
+		iFrame. do 3 (iSplit; first done). iLeft. iFrame.
+		rewrite dfrac_op_own. rewrite Qp.half_half. done.
+	  }
+	  wp_let.
+	  wp_pures.
+	  wp_load.
+	  wp_pures.
+	  wp_apply (release_spec with "[$Hh_lock $HTokD $Hlocked_γ_Hlock]").
+	  iIntros (_).
+	  wp_seq.
+	  iModIntro.
+	  (* CHANGE: START *)
+	  by iApply "HΦ".
+	  (* CHANGE: END *)
+	- (* Queue is non-empty*)
+	  destruct (exists_first (x_tail' :: xs_queue')) as [x_head_next [xs_rest Hxs_rest_eq]]; first done.
+	  rewrite Hxs_rest_eq in Hconc_abst_eq *.
+	  iClear (x_tail' xs_queue' Hxs_rest_eq) "".
+	  iAssert (▷(isLL_chain [x_head_next; x_head]))%I as "HisLL_chain_x_head_next".
+	  {
+		iNext. rewrite <- app_assoc.
+		iDestruct (isLL_chain_split with "HisLL_chain_xs") as "[_ H]".
+		iClear "HisLL_chain_xs".
+		rewrite -> app_assoc.
+		iDestruct (isLL_chain_split with "H") as "[H' _]".
+		done.
+	  }
+	  iDestruct "HisLL_chain_x_head_next" as "(Hx_head_next_in & Hx_head_out & _)".
+	  wp_load.
+	  iDestruct "Hl_head" as "[Hl_head1 Hl_head2]".
+	  iModIntro.
+	  (* Close in Dequeue / Both *)
+	  (* CHANGE: START *)
+	  iSplitL "Hl_head1 HisLL_xs Htail HTokD HAbst".
+	  (* CHANGE: END *)
+	  {
+		iNext. iApply queue_invariant_equiv_simple.
+		iExists xs_v; iFrame; iExists ((xs_rest ++ [x_head_next]) ++ [x_head] ++ xs_old), (xs_rest ++ [x_head_next]), xs_old, x_head, x_tail.
+		iFrame. iSplit; first done. iSplit; first done. by iRight.
+	  }
+	  iClear (Hconc_abst_eq xs_v xs_rest xs_old x_tail Hhead_eq) "HisLL_chain_xs".
+	  wp_let.
+	  wp_pures.
+	  wp_load.
+	  wp_pures.
+	  wp_load.
+	  wp_pures.
+	  wp_bind (#l_head <- #(n_in x_head_next))%E.
+	  (* Open in Dequeue / Both *)
+	  iInv "Hqueue_inv" as "Hqueue_inv_open".
+	  (* CHANGE: START *)
+	  iPoseProof (queue_invariant_equiv_simple l_head l_tail Q_γ with "Hqueue_inv_open") as "Hqueue_inv_open".
+	  iDestruct "Hqueue_inv_open" as "(%xs_v & HAbst & %xs & %xs_queue & %xs_old & %x_head'' & %x_tail & >%Heq_xs & HisLL_xs & >%Hconc_abst_eq & [ [Hl_head >HToknD'] | [>Hl_head1 HTokD] ] & Htail)";
+	  first by iCombine "HToknD HToknD'" gives "%H". (* Impossible ToknD *)
+	  (* CHANGE: END *)
+	  iCombine "Hl_head1 Hl_head2" as "Hl_head" gives "[_ %Hhead_eq]".
+	  rewrite dfrac_op_own.
+	  rewrite Qp.half_half.
+	  subst.
+	  wp_store.
+	  iPoseProof (isLL_and_chain with "HisLL_xs") as "[HisLL_xs #HisLL_chain_xs]".
+	  iAssert (⌜x_head'' = x_head⌝)%I as "->".
+	  {
+		iPoseProof (isLL_chain_node xs_queue x_head'' xs_old with "[HisLL_chain_xs]") as "#Hx_head''"; first done.
+		by iApply n_in_equal.
+	  }
+	  (* Sync up xs_queue *)
+	  destruct xs_queue as [|x_tail' xs_queue'].
+	  { (* Impossible case. xs_queue must contain at least one element. *)
+		iDestruct "HisLL_xs" as "[Hx_head_null _]".
+		iCombine "Hx_head_null Hx_head_out" gives "[_ %Hcontra]".
+		simplify_eq.
+	  }
+	  destruct (exists_first (x_tail' :: xs_queue')) as [x_head_next' [xs_rest Hxs_rest_eq]]; first done.
+	  (* CHANGE: START. MAKE CONSISTENT IN BOTH *)
+	  rewrite Hxs_rest_eq in Hconc_abst_eq *.
+	  iClear (x_tail' xs_queue' Hxs_rest_eq) "".
+	  (* CHANGE: END. MAKE CONSISTENT IN BOTH *)
+	  rewrite <- app_assoc.
+	  iAssert (⌜x_head_next' = x_head_next⌝)%I as "->".
+	  {
+		iPoseProof (isLL_chain_split xs_rest _ with "HisLL_chain_xs") as "(_ & Hx_head_next'_in & Hx_head_out' & _)".
+		iCombine "Hx_head_out Hx_head_out'" gives "[_ %Heq]".
+		by iApply n_in_equal.
+	  }
+	  (* CHANGE: START *)
+	  (* Update the abstract state using the viewshift *)
+	  iMod ("Hvs" $! xs_v with "[HAbst HP]") as "[(-> & HAbst_new & HQ) | (%x_v & %xs_v' & %Hxs_v_eq & HAbst_new & HQ) ]";
+	  	[ by iFrame |
+		  (* The abstract state cannot be empty. Hence the first disjunct is impossible *)
+		  rewrite proj_val_split in Hconc_abst_eq;
+		  simpl in Hconc_abst_eq;
+		  exfalso;
+		  by apply (app_cons_not_nil (proj_val xs_rest) [] (n_val x_head_next)) |
+		].
+	  (* CHANGE: END *)
+	  destruct (exists_first (x_v :: xs_v')) as [x_head_next_val [xs_val_rest Hxs_val_rest_eq]]; first done.
+	  rewrite Hxs_v_eq in Hconc_abst_eq *.
+	  rewrite (proj_val_split xs_rest [x_head_next]) in Hconc_abst_eq.
+	  rewrite (wrap_some_split xs_v' [x_v]) in Hconc_abst_eq.
+	  simpl in Hconc_abst_eq.
+	  apply (list_last_eq (proj_val xs_rest) (wrap_some xs_v') (n_val x_head_next) (SOMEV x_v)) in Hconc_abst_eq as [Hxs_rest_val_eq Hx_head_next_eq].
+	  iModIntro.
+	  (* Close in Static / Enqueue *)
+	  (* CHANGE: START *)
+	  iSplitL "Hl_head Htail HToknD HisLL_xs HAbst_new".
+	  (* CHANGE: END *)
+	  {
+		iNext. iApply queue_invariant_equiv_simple.
+		(* CHANGE: START *)
+		iExists xs_v'; iFrame; iExists (xs_rest ++ [x_head_next] ++ [x_head] ++ xs_old), xs_rest, ([x_head] ++ xs_old), x_head_next, x_tail.
+		(* CHANGE: END *)
+		iFrame. iSplit; first done.
+		iSplit; first done.
+		iLeft.
+		iFrame.
+	  }
+	  wp_seq.
+	  wp_load.
+	  wp_pures.
+	  wp_apply (release_spec with "[$Hh_lock $HTokD $Hlocked_γ_Hlock]").
+	  iIntros (_).
+	  wp_seq.
+	  iModIntro.
+	  iApply "HΦ".
+	  (* CHANGE: START *)
+	  by rewrite Hx_head_next_eq.
+	  (* CHANGE: END *)
+Qed.
 
 End proofs.

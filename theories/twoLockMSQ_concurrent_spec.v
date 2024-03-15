@@ -87,6 +87,7 @@ Definition queue_invariant_simple (Ψ : val -> iProp Σ) (l_head l_tail : loc) (
 	∃ xs xs_queue xs_old (x_head x_tail: (loc * val * loc)), (* Concrete state *)
 	⌜xs = xs_queue ++ [x_head] ++ xs_old⌝ ∗
 	isLL xs ∗
+	(* Relation between concrete and abstract state *)
 	⌜proj_val xs_queue = wrap_some xs_v⌝ ∗
 	All xs_v Ψ ∗
 	(
@@ -369,15 +370,16 @@ Proof.
 	iDestruct "Hqueue_inv_open" as "(%xs_v & %xs & %xs_queue & %xs_old & %x_head & %x_tail & >%Heq_xs & HisLL_xs & >%Hconc_abst_eq & HAll_xs & [ [Hl_head HToknD] | [Hl_head >HTokD'] ] & Htail)"; 
 	last by iCombine "HTokD HTokD'" gives "%H". (* Impossible: TokD*)
 	wp_load.
-	iModIntro.
 	iDestruct "Hl_head" as "[Hl_head1 Hl_head2]".
 	iPoseProof (isLL_and_chain with "HisLL_xs") as "[HisLL_xs #HisLL_chain_xs]".
+	iModIntro.
 	(* Close in Dequeue / Both *)
 	iSplitL "Hl_head1 HTokD Htail HisLL_xs HAll_xs".
 	{
 		iNext. iApply queue_invariant_equiv_simple.
-		iExists xs_v, xs, xs_queue, xs_old, x_head, x_tail. iFrame.
-		do 2 (iSplit; first done). iRight. done.
+		iExists xs_v, xs, xs_queue, xs_old, x_head, x_tail.
+		iFrame.
+		do 2 (iSplit; first done). by iRight.
 	}
 	subst.
 	iPoseProof (isLL_chain_node with "HisLL_chain_xs") as "Hx_head_in".
@@ -439,8 +441,8 @@ Proof.
 	  }
 	  iDestruct "HisLL_chain_x_head_next" as "(Hx_head_next_in & Hx_head_out & _)".
 	  wp_load.
-	  iModIntro.
 	  iDestruct "Hl_head" as "[Hl_head1 Hl_head2]".
+	  iModIntro.
 	  (* Close in Dequeue / Both *)
 	  iSplitL "Hl_head1 HisLL_xs Htail HTokD HAll_xs".
 	  {
@@ -466,7 +468,6 @@ Proof.
 	  rewrite Qp.half_half.
 	  subst.
 	  wp_store.
-	  iModIntro.
 	  iPoseProof (isLL_and_chain with "HisLL_xs") as "[HisLL_xs #HisLL_chain_xs]".
 	  iAssert (⌜x_head'' = x_head⌝)%I as "->".
 	  {
@@ -501,6 +502,7 @@ Proof.
 	  simpl in Hconc_abst_eq.
 	  apply (list_last_eq (proj_val xs_rest) (wrap_some xs_val_rest) (n_val x_head_next) (InjRV x_head_next_val)) in Hconc_abst_eq as [Hxs_rest_val_eq Hx_head_next_eq].
 	  iPoseProof (All_split with "HAll_xs") as "[HAll_xs_val_rest [Hx_head_next_val_Ψ _]]".
+	  iModIntro.
 	  (* Close in Static / Enqueue *)
 	  iSplitL "Hl_head Htail HToknD HisLL_xs HAll_xs_val_rest".
 	  {
