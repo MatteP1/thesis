@@ -58,3 +58,5 @@
   - [ ] Update spec to include the Ψ predicate
 
 - [ ] State and prove correctness of lock-free M&S Queue
+
+- [ ] Create a section/chapter explaining some of the basic rules (hoare-triples, weakest-precondition, inv-alloc, resource algebra), and also iris in general.
