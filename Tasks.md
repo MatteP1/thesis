@@ -65,3 +65,5 @@
 - [ ] State and prove correctness of lock-free M&S Queue
 
 - [ ] Create a section/chapter explaining some of the basic rules (hoare-triples, weakest-precondition, inv-alloc, resource algebra), and also iris in general.
+
+- [ ] If time permits, use hocap spec to prove a spec of a non-trivial client. Fx a client like the one in the java code
