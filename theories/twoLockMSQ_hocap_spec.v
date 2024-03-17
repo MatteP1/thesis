@@ -395,7 +395,7 @@ Lemma dequeue_spec v_q (Q_γ : Qgnames) (P : iProp Σ) (Q : val -> iProp Σ):
 			)
 	 )
 	-∗
-	{{{ is_queue v_q Q_γ ∗ P}}}
+	{{{ is_queue v_q Q_γ ∗ P }}}
 		dequeue v_q
 	{{{ v, RET v; Q v }}}.
 Proof.
