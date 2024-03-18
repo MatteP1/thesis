@@ -33,8 +33,6 @@ Record SeqQgnames := {γ_Hlock_seq 	: gname;
 
 Definition is_queue_seq (v_q : val) (xs_v: list val) (Q_γS: SeqQgnames) : iProp Σ :=
 	∃ Q_γH : Qgnames, 
-	⌜Q_γS.(γ_Hlock_seq) = Q_γH.(γ_Hlock)⌝ ∗
-	⌜Q_γS.(γ_Tlock_seq) = Q_γH.(γ_Tlock)⌝ ∗
 	is_queue v_q Q_γH ∗
 	Q_γH ⤇◯ xs_v.
 
@@ -59,7 +57,7 @@ Lemma enqueue_spec_seq v_q (v : val) (xs_v : list val) (Q_γ : SeqQgnames) :
 		enqueue v_q v 
 	{{{w, RET w; is_queue_seq v_q (v :: xs_v) Q_γ }}}.
 Proof.
-	iIntros (Φ) "(%Q_γH & %HeqHlock & %HeqTlock & #His_queue & Hfrag) HΦ".
+	iIntros (Φ) "(%Q_γH & #His_queue & Hfrag) HΦ".
 	set (P := (Q_γH ⤇◯ xs_v)%I).
 	set (Q := (Q_γH ⤇◯ (v :: xs_v))%I).
 	wp_apply (enqueue_spec v_q v Q_γH P Q with "[] [Hfrag]" ).
@@ -87,7 +85,7 @@ Lemma dequeue_spec_seq v_q (xs_v : list val) (Q_γ : SeqQgnames) :
 				  (∃x_v xs_v', ⌜xs_v = xs_v' ++ [x_v]⌝ ∗ 
 				  		⌜v = SOMEV x_v⌝ ∗ is_queue_seq v_q xs_v' Q_γ) }}}.
 Proof.
-	iIntros (Φ) "(%Q_γH & %HeqHlock & %HeqTlock & #His_queue & Hfrag) HΦ".
+	iIntros (Φ) "(%Q_γH & #His_queue & Hfrag) HΦ".
 	set (P := (Q_γH ⤇◯ xs_v)%I).
 	set (Q := λ v, ((⌜xs_v = []⌝ ∗ ⌜v = NONEV⌝ ∗ Q_γH ⤇◯ xs_v) ∨ 
 					(∃x_v xs_v', ⌜xs_v = xs_v' ++ [x_v]⌝ ∗ 
@@ -108,9 +106,9 @@ Proof.
 		  iLeft.
 		  by repeat iSplit.
 		- destruct (exists_first (x :: xs)) as [x_v [xs_v' Hxs_v_eq]]; first done.
+		  iMod (abstLL_update Q_γH _ _ (xs_v') with "Hauth Hfrag") as "[Hauth Hfrag]".
 		  iRight.
 		  iExists x_v, xs_v'.
-		  iMod (abstLL_update Q_γH _ _ (xs_v') with "Hauth Hfrag") as "[Hauth Hfrag]".
 		  iModIntro.
 		  iSplit; first done.
 		  iFrame.
@@ -180,16 +178,8 @@ Definition TokUpdated (g : ConcQgnames) := ((TokBefore g) ∗ (TokAfter g))%I.
 
 Definition is_queue_conc (Ψ : val -> iProp Σ) (v_q : val) (Q_γC: ConcQgnames) : iProp Σ :=
 	∃ Q_γH : Qgnames, 
-	⌜Q_γC.(γ_Hlock_conc) = Q_γH.(γ_Hlock)⌝ ∗
-	⌜Q_γC.(γ_Tlock_conc) = Q_γH.(γ_Tlock)⌝ ∗
-	⌜Q_γC.(γ_E_conc) = Q_γH.(γ_E)⌝ ∗
-	⌜Q_γC.(γ_nE_conc) = Q_γH.(γ_nE)⌝ ∗
-	⌜Q_γC.(γ_D_conc) = Q_γH.(γ_D)⌝ ∗
-	⌜Q_γC.(γ_nD_conc) = Q_γH.(γ_nD)⌝ ∗
-	⌜Q_γC.(γ_Before_conc) = Q_γH.(γ_Before)⌝ ∗
-	⌜Q_γC.(γ_After_conc) = Q_γH.(γ_After)⌝ ∗
 	is_queue v_q Q_γH ∗
-	inv NC (∃xs_v, Q_γH ⤇◯ xs_v ∗ True).
+	inv NC (∃xs_v, Q_γH ⤇◯ xs_v ∗ All xs_v Ψ).
 
 (* is_queue is persistent *)
 Global Instance is_queue_conc_persistent Ψ v_q Q_γ : Persistent (is_queue_conc Ψ v_q Q_γ).
@@ -200,20 +190,105 @@ Lemma initialize_spec (Ψ : val -> iProp Σ):
 		initialize #()
 	{{{ v_q Q_γ, RET v_q; is_queue_conc Ψ v_q Q_γ }}}.
 Proof.
-	Admitted.
+	iIntros (Φ _) "HΦ".
+	iApply wp_fupd.
+	wp_apply initialize_spec; first done.
+	iIntros (v_q Q_γH) "[His_queue Habst_frag]".
+	set (Q_γC := {| γ_Hlock_conc := Q_γH.(γ_Hlock);
+					γ_Tlock_conc := Q_γH.(γ_Tlock);
+					γ_E_conc := Q_γH.(γ_E);
+					γ_nE_conc := Q_γH.(γ_nE);
+					γ_D_conc := Q_γH.(γ_D);
+					γ_nD_conc := Q_γH.(γ_nD);
+					γ_Before_conc := Q_γH.(γ_Before);
+					γ_After_conc := Q_γH.(γ_After)
+				 |}).
+	iApply ("HΦ" $! v_q Q_γC).
+	iExists Q_γH.
+	iMod (inv_alloc NC _ (∃xs_v, Q_γH ⤇◯ xs_v ∗ All xs_v Ψ) with "[Habst_frag]") as "HInv"; first (iExists []; auto).
+	by iFrame.
+Qed.
 
 Lemma enqueue_spec v_q Ψ (v : val) (Q_γ : ConcQgnames) :
 	{{{ is_queue_conc Ψ v_q Q_γ ∗ Ψ v }}}
 		enqueue v_q v
 	{{{ w, RET w; True }}}.
 Proof.
-	Admitted.
+	iIntros (Φ) "[(%Q_γH & #His_queue & #HInv) HΨ] HΦ".
+	set (P := Ψ v).
+	set (Q := True%I).
+	wp_apply (enqueue_spec v_q v Q_γH P Q with "[] [HΨ]" ).
+	(* Proving viewshift *)
+	{
+		iIntros (xs_v') "!>".
+		rewrite /P /Q.
+		iIntros "[Hauth HΨ]".
+		iInv "HInv" as "(%xs_v & >Hfrag & HAll)".
+		iAssert (⌜xs_v = xs_v'⌝)%I with "[Hauth Hfrag]" as "<-"; first by
+			iApply (abstLL_auth_frag_agree Q_γH xs_v xs_v' 1 with "Hauth Hfrag").
+		iMod (abstLL_update Q_γH xs_v xs_v (v :: xs_v) with "Hauth Hfrag") as "[Hauth Hfrag]".
+		iModIntro.
+		iSplitL "Hfrag HAll HΨ".
+		- iNext.
+		  iExists (v :: xs_v).
+		  iFrame.
+		- by iFrame.
+	}
+	(* Proving pre-condition of hocap enqueue spec *)
+	{ by iFrame. }
+	iIntros (w) "HQ".
+	by iApply ("HΦ" $! w).
+Qed.
 
 Lemma dequeue_spec v_q Ψ (Q_γ : ConcQgnames) :
 	{{{ is_queue_conc Ψ v_q Q_γ }}}
 		dequeue v_q
 	{{{ v, RET v; ⌜v = NONEV⌝ ∨ (∃ x_v, ⌜v = SOMEV x_v⌝ ∗ Ψ x_v) }}}.
 Proof.
-	Admitted.
+	iIntros (Φ) "(%Q_γH & #His_queue & #HInv) HΦ".
+	(* TODO: There must exist some True in the context for it to work... *)
+	(* set (P := (True)%I). *)
+	set (Q := λ v, (⌜v = NONEV⌝ ∨ (∃x_v, ⌜v = SOMEV x_v⌝ ∗ Ψ x_v))%I).
+	wp_apply (dequeue_spec v_q Q_γH True%I Q).
+	(* Proving viewshift *)
+	{
+		iIntros (xs_v') "!>".
+		iIntros "[Hauth _]".
+		iInv "HInv" as "(%xs_v & >Hfrag & HAll)".
+		iAssert (⌜xs_v = xs_v'⌝)%I with "[Hauth Hfrag]" as "<-"; first by
+			iApply (abstLL_auth_frag_agree Q_γH xs_v xs_v' 1 with "Hauth Hfrag").
+		destruct xs_v as [| x xs ].
+		- iModIntro.
+		  (* Close Invariant NC *)
+		  iSplitL "Hfrag HAll"; first (iExists []; auto).
+		  iModIntro.
+		  iLeft.
+		  iFrame.
+		  iSplit; first done.
+		  rewrite /Q.
+		  by iLeft.
+		- destruct (exists_first (x :: xs)) as [x_v [xs_v' ->]]; first done.
+		  iMod (abstLL_update Q_γH _ _ (xs_v') with "Hauth Hfrag") as "[Hauth Hfrag]".
+		  iPoseProof (All_split with "HAll") as "[HAll_xs_v' [HΨ _]]".
+		  iModIntro.
+		  (* Close Invariant NC *)
+		  iSplitL "Hfrag HAll_xs_v'"; first (iExists xs_v'; iFrame).
+		  iModIntro.
+		  iRight.
+		  iExists x_v, xs_v'.
+		  iSplit; first done.
+		  iFrame.
+		  rewrite /Q.
+		  iRight.
+		  iExists x_v.
+		  iSplit; done.
+	}
+	(* Proving pre-condition of hocap enqueue spec *)
+	{ eauto. }
+	iIntros (w) "HQ".
+	iApply ("HΦ" $! w).
+	unfold Q.
+	done.
+Qed.
 
 End proofs.

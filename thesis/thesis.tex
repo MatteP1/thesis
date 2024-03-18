@@ -703,6 +703,8 @@ Had we not used an $xs_{old}$ and essentially just "forgotten" old nodes, we cou
 
 \section{Hocap-style Specification}
 
+Notes:\\
+The $\later$ in the viewshift signifies that the update in the abstract state is tied to a step in the code.
 
 \subsection{Proof outline}
 The proofs are largely similar to the concurrent spec. For initialise, we must additionally allocate the ghost resource \todo{auth}$([]) \cdot$\todo{frac}([]). We can only do this if the element is valid, but this follows by the definitions of the resource algebras. For enqueue and dequeue, the only real changes are the points in the proof, where the concrete state of the queue is updated. 

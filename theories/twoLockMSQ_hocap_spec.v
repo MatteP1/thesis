@@ -275,9 +275,7 @@ Proof.
 Qed.
 
 Lemma enqueue_spec v_q (v : val) (Q_γ : Qgnames) (P Q : iProp Σ) :
-	□(∀xs_v, (Q_γ ⤇● xs_v ∗ P
-				={⊤ ∖ ↑N}=∗ Q_γ ⤇● (v :: xs_v) ∗ Q))
-	-∗
+	□(∀xs_v, (Q_γ ⤇● xs_v ∗ P ={⊤ ∖ ↑N}=∗ ▷ (Q_γ ⤇● (v :: xs_v) ∗ Q))) -∗
 	{{{ is_queue v_q Q_γ ∗ P}}}
 		enqueue v_q v
 	{{{ w, RET w; Q }}}.
@@ -449,7 +447,7 @@ Qed.
 Lemma dequeue_spec v_q (Q_γ : Qgnames) (P : iProp Σ) (Q : val -> iProp Σ):
 	□(∀xs_v, (Q_γ ⤇● xs_v ∗ P
 				={⊤ ∖ ↑N}=∗
-		      	(( ⌜xs_v = []⌝ ∗ Q_γ ⤇● xs_v ∗ Q NONEV) ∨
+		      	▷ (( ⌜xs_v = []⌝ ∗ Q_γ ⤇● xs_v ∗ Q NONEV) ∨
 				(∃x_v xs_v', ⌜xs_v = xs_v' ++ [x_v]⌝ ∗ Q_γ ⤇● xs_v' ∗ Q (SOMEV x_v)))
 			)
 	 )
@@ -525,7 +523,7 @@ Proof.
 	  wp_load.
 	  (* CHANGE: START: viewshift *)
 	  (* Update the abstract state using the viewshift *)
-	  iMod ("Hvs" $! xs_v with "[HAbst HP]") as "[(-> & HAbst & HQ) | (%x_v & %xs_v' & -> & HAbst_new & HQ) ]";
+	  iMod ("Hvs" $! xs_v with "[HAbst HP]") as "[(>-> & HAbst & HQ) | (%x_v & %xs_v' & >-> & HAbst_new & HQ) ]";
 	  	[ by iFrame | |
 		  (* The abstract state must be empty. Hence the second disjunct is impossible. *)
 		  rewrite wrap_some_split in Hconc_abst_eq;
@@ -631,7 +629,7 @@ Proof.
 	  }
 	  (* CHANGE: START: destruct xs_v using viewshift *)
 	  (* Update the abstract state using the viewshift *)
-	  iMod ("Hvs" $! xs_v with "[HAbst HP]") as "[(-> & HAbst & HQ) | (%x_v & %xs_v' & %Hxs_v_eq & HAbst_new & HQ) ]";
+	  iMod ("Hvs" $! xs_v with "[HAbst HP]") as "[(>-> & HAbst & HQ) | (%x_v & %xs_v' & >%Hxs_v_eq & HAbst_new & HQ) ]";
 	  	[ by iFrame |
 		  (* The abstract state cannot be empty. Hence the first disjunct is impossible *)
 		  rewrite proj_val_split in Hconc_abst_eq;

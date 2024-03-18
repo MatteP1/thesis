@@ -13,6 +13,8 @@ UNANSWERED QUESTIONS
   What is ==∗ actually?
   Iris doesn't recognise it as persistent, so not viewshift.
 
+- For the derived specs, the SeqQgnames and ConcQgnames are not needed. Removing them changes the specs, however. I could also make them take a hocap Qgname as input, and not existentially quantify it.
+
 - When using hocap to derive sequential and concurrent specs, there are some name clashes: is_queue and Q_γ in particular. 
   Should I rename those in their own sections to avoid confusion?
   For example
@@ -41,3 +43,4 @@ UNANSWERED QUESTIONS
 
 - How to handle multiple invariant names in coq?
   Currently I have let N := ... and let NC := ...
+  let N := is defined in hocap, and not visible in derived.
