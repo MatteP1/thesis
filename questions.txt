@@ -20,10 +20,24 @@ UNANSWERED QUESTIONS
   is_queue_conc and Q_γC
   is_queue_hocap and Q_γH
 
+- Similarly to above: Record fields must be unique?
+  If I have two records with similar field names, then coq complains that they are not the same record, when i try to compare them. I.e.
+  Q_γS.(γ_Hlock) = Q_γH.(γ_Hlock)
+  (see twoLockMSQ_derived.v)
+  Should I give all the fields unique names? 
+    I.e. γ_Hlock_seq, γ_Hlock_conc, etc.
+
+- Notation in coq: does Q_γ ⤇● xs_v make sense?
+  Is there any way of importing this notation in other files (i.e. to TwoLockMSQ_derived.v) without just writing the notation again?
+
 - Should I use Namespaces everywhere instead of iname?
   Also on paper?
 
 - How to derive Sequential and Concurrent specs in Coq?
   Should I just copy/past the initialise/enqueue/dequeue specs with a different is_queue predicate?
 
-- Should derived specs be in hocap, their related specs, or their own separate file (i.e. TLMsqueueDerived.v)
+- Should derived specs be in hocap, their related specs, or their own separate file (i.e. TwoLockMSQ_derived.v)
+  TODO: if they should be in own file, then add this to coq_project.
+
+- How to handle multiple invariant names in coq?
+  Currently I have let N := ... and let NC := ...

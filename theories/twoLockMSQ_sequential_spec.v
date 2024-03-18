@@ -130,8 +130,8 @@ Lemma dequeue_spec_seq v_q (xs_v : list val) (Q_γ : SeqQgnames) :
 	{{{ is_queue_seq v_q xs_v Q_γ }}}
 		dequeue v_q
 	{{{ v, RET v; (⌜xs_v = []⌝ ∗ ⌜v = NONEV⌝ ∗ is_queue_seq v_q xs_v Q_γ) ∨
-				  (∃x_v xs'_v, ⌜xs_v = xs'_v ++ [x_v]⌝ ∗ 
-				  		⌜v = SOMEV x_v⌝ ∗ is_queue_seq v_q xs'_v Q_γ) }}}.
+				  (∃x_v xs_v', ⌜xs_v = xs_v' ++ [x_v]⌝ ∗ 
+				  		⌜v = SOMEV x_v⌝ ∗ is_queue_seq v_q xs_v' Q_γ) }}}.
 Proof.
 	iIntros (Φ) "(%l_queue & %l_head & %l_tail & %h_lock & %t_lock & -> &
 				 #Hl_queue & %xs_queue & %x_head & %x_tail & %Hproj & HisLL_xs &

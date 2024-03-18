@@ -43,8 +43,67 @@ Definition TokBefore (g : Qgnames) := token g.(γ_Before).
 Definition TokAfter (g : Qgnames) := token g.(γ_After).
 Definition TokUpdated (g : Qgnames) := ((TokBefore g) ∗ (TokAfter g))%I.
 
+(* TODO: decide on notation
+	Either the below or
+	γ ⤇● xs_v, so that one would write
+		Q_γ.(γ_Abst) ⤇● xs_v
+ *)
+Notation "Q_γ ⤇● xs_v" := (own Q_γ.(γ_Abst) (●F (to_agree xs_v)))
+	(at level 20, format "Q_γ ⤇● xs_v") : bi_scope.
+Notation "Q_γ ⤇◯ xs_v" := (own Q_γ.(γ_Abst) (◯F (to_agree xs_v)))
+	(at level 20, format "Q_γ ⤇◯ xs_v") : bi_scope.
+Notation "Q_γ ⤇[ q ] xs_v" := (own Q_γ.(γ_Abst) (◯F{ q } (to_agree xs_v)))
+	(at level 20, format "Q_γ ⤇[ q ] xs_v") : bi_scope.
+
+(* TODO: maybe better name for "abstLL". *)
+
+Lemma abstLL_frag_agree Q_γ xs_v xs_v' p q :
+	Q_γ ⤇[p] xs_v -∗ Q_γ ⤇[q] xs_v' -∗ ⌜xs_v = xs_v'⌝.
+Proof.
+	iIntros "Hp Hq".
+	iCombine "Hp Hq" as "Hpq" gives "%HValid".
+	iPureIntro.
+	rewrite <- frac_auth_frag_op in HValid.
+	rewrite frac_auth_frag_valid in HValid.
+	destruct HValid as [_ HAgree].
+	by apply to_agree_op_inv_L.
+Qed.
+
+Lemma abstLL_auth_frag_agree Q_γ xs_v xs_v' p :
+	Q_γ ⤇● xs_v' -∗ Q_γ ⤇[p] xs_v -∗ ⌜xs_v = xs_v'⌝.
+Proof.
+	iIntros "Hp Hq".
+	iCombine "Hp Hq" as "Hpq" gives "%HValid".
+	iPureIntro.
+	apply frac_auth_included_total in HValid.
+	by apply to_agree_included_L.
+Qed.
+
+Lemma abstLL_op Q_γ xs_v p q :
+	Q_γ ⤇[p] xs_v ∗ Q_γ ⤇[q] xs_v ∗-∗ Q_γ ⤇[p + q] xs_v.
+Proof.
+	iSplit.
+	- iIntros "[Hp Hq]".
+	  by iCombine "Hp Hq" as "Hpq".
+	- iIntros "Hpq".
+	  iApply own_op.
+	  rewrite <- frac_auth_frag_op.
+	  by rewrite agree_idemp.
+Qed.
+
+Lemma abstLL_update Q_γ xs_v xs_v' xs_v'' :
+	Q_γ ⤇● xs_v' -∗ Q_γ ⤇◯ xs_v ==∗ Q_γ ⤇● xs_v'' ∗ Q_γ ⤇◯ xs_v''.
+Proof.
+	iIntros "Hauth Hfrag".
+	iCombine "Hauth Hfrag" as "Hcombined".
+	rewrite <- own_op.
+	iApply (own_update with "Hcombined").
+	by apply frac_auth_update_1.
+Qed.
+
+
 Definition queue_invariant (l_head l_tail : loc) (Q_γ : Qgnames) : iProp Σ :=
-	∃ xs_v, own Q_γ.(γ_Abst) (●F (to_agree xs_v)) ∗ (* Abstract state *)
+	∃ xs_v, Q_γ ⤇● xs_v ∗ (* Abstract state *)
 	∃ xs xs_queue xs_old (x_head x_tail: (loc * val * loc)), (* Concrete state *)
 	⌜xs = xs_queue ++ [x_head] ++ xs_old⌝ ∗
 	isLL xs ∗
@@ -85,7 +144,7 @@ Definition queue_invariant (l_head l_tail : loc) (Q_γ : Qgnames) : iProp Σ :=
 	).
 
 Definition queue_invariant_simple (l_head l_tail : loc) (Q_γ : Qgnames) : iProp Σ :=
-	∃ xs_v, own Q_γ.(γ_Abst) (●F (to_agree xs_v)) ∗ (* Abstract state *)
+	∃ xs_v, Q_γ ⤇● xs_v ∗ (* Abstract state *)
 	∃ xs xs_queue xs_old (x_head x_tail: (loc * val * loc)), (* Concrete state *)
 	⌜xs = xs_queue ++ [x_head] ++ xs_old⌝ ∗
 	isLL xs ∗
@@ -158,7 +217,7 @@ Lemma initialize_spec:
 	{{{ True }}}
 		initialize #()
 	{{{ v_q Q_γ, RET v_q; is_queue v_q Q_γ ∗
-						  own Q_γ.(γ_Abst) (◯F (to_agree [])) }}}.
+						  Q_γ ⤇◯ [] }}}.
 Proof.
 	iIntros (Φ) "_ HΦ".
 	wp_lam.
@@ -216,8 +275,8 @@ Proof.
 Qed.
 
 Lemma enqueue_spec v_q (v : val) (Q_γ : Qgnames) (P Q : iProp Σ) :
-	□(∀xs_v, (own Q_γ.(γ_Abst) (●F (to_agree xs_v)) ∗ P
-				={⊤ ∖ ↑N}=∗ own Q_γ.(γ_Abst) (●F (to_agree (v :: xs_v))) ∗ Q))
+	□(∀xs_v, (Q_γ ⤇● xs_v ∗ P
+				={⊤ ∖ ↑N}=∗ Q_γ ⤇● (v :: xs_v) ∗ Q))
 	-∗
 	{{{ is_queue v_q Q_γ ∗ P}}}
 		enqueue v_q v
@@ -388,10 +447,10 @@ Proof.
 Qed.
 
 Lemma dequeue_spec v_q (Q_γ : Qgnames) (P : iProp Σ) (Q : val -> iProp Σ):
-	□(∀xs_v, (own Q_γ.(γ_Abst) (●F (to_agree xs_v)) ∗ P
+	□(∀xs_v, (Q_γ ⤇● xs_v ∗ P
 				={⊤ ∖ ↑N}=∗
-		      	(( ⌜xs_v = []⌝ ∗ own Q_γ.(γ_Abst) (●F (to_agree (xs_v))) ∗ Q NONEV) ∨
-				(∃x_v xs_v', ⌜xs_v = xs_v' ++ [x_v]⌝ ∗ own Q_γ.(γ_Abst) (●F (to_agree (xs_v'))) ∗ Q (SOMEV x_v)))
+		      	(( ⌜xs_v = []⌝ ∗ Q_γ ⤇● xs_v ∗ Q NONEV) ∨
+				(∃x_v xs_v', ⌜xs_v = xs_v' ++ [x_v]⌝ ∗ Q_γ ⤇● xs_v' ∗ Q (SOMEV x_v)))
 			)
 	 )
 	-∗
