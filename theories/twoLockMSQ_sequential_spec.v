@@ -15,12 +15,12 @@ Context `{!heapGS Σ}.
 Context `{!lockG Σ}.
 Context `{!inG Σ (exclR unitO)}.
 
-Let N := nroot .@ "twoLockMSQ".
+Notation N := (nroot .@ "twoLockMSQ_seq").
 
 (* ===== Sequential Specification for Two-lock M&S Queue ===== *)
 
-Record SeqQgnames := {γ_Hlock_seq 	: gname;
-					  γ_Tlock_seq 	: gname;
+Record SeqQgnames := {γ_Hlock 	: gname;
+					  γ_Tlock	: gname;
 					 }.
 
 Definition is_queue_seq (v_q : val) (xs_v: list val) (Q_γ: SeqQgnames) : iProp Σ :=
@@ -32,8 +32,8 @@ Definition is_queue_seq (v_q : val) (xs_v: list val) (Q_γ: SeqQgnames) : iProp 
 	isLL (xs_queue ++ [x_head]) ∗
 	l_head ↦ #(n_in x_head) ∗
 	l_tail ↦ #(n_in x_tail) ∗ ⌜isLast x_tail (xs_queue ++ [x_head])⌝ ∗
-	is_lock Q_γ.(γ_Hlock_seq) h_lock (True) ∗
-	is_lock Q_γ.(γ_Tlock_seq) t_lock (True).
+	is_lock Q_γ.(γ_Hlock) h_lock (True) ∗
+	is_lock Q_γ.(γ_Tlock) t_lock (True).
 
 Lemma initialize_spec_seq :
 	{{{ True }}} 
@@ -51,8 +51,8 @@ Proof.
 	wp_let.
 	wp_apply (newlock_spec True); first done.
 	iIntros (t_lock γ_Tlock) "Hγ_Tlock".
-	set (Queue_gnames := {| γ_Hlock_seq := γ_Hlock;
-							γ_Tlock_seq := γ_Tlock;
+	set (Queue_gnames := {| γ_Hlock := γ_Hlock;
+							γ_Tlock := γ_Tlock;
 					|}).
 	wp_let.
 	wp_alloc l_tail as "Hl_tail".

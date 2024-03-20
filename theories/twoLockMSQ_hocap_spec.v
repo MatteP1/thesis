@@ -16,7 +16,8 @@ Context `{!lockG Σ}.
 Context `{!tokenG Σ}.
 Context `{!inG Σ (frac_authR (agreeR (listO val)))}.
 
-Let N := nroot .@ "twoLockMSQ".
+Variable N : namespace.
+Notation Ni := (N .@ "internal").
 
 (* ===== Concurrent Specification for Two-lock M&S Queue ===== *)
 
@@ -43,11 +44,6 @@ Definition TokBefore (g : Qgnames) := token g.(γ_Before).
 Definition TokAfter (g : Qgnames) := token g.(γ_After).
 Definition TokUpdated (g : Qgnames) := ((TokBefore g) ∗ (TokAfter g))%I.
 
-(* TODO: decide on notation
-	Either the below or
-	γ ⤇● xs_v, so that one would write
-		Q_γ.(γ_Abst) ⤇● xs_v
- *)
 Notation "Q_γ ⤇● xs_v" := (own Q_γ.(γ_Abst) (●F (to_agree xs_v)))
 	(at level 20, format "Q_γ ⤇● xs_v") : bi_scope.
 Notation "Q_γ ⤇◯ xs_v" := (own Q_γ.(γ_Abst) (◯F (to_agree xs_v)))
@@ -55,9 +51,7 @@ Notation "Q_γ ⤇◯ xs_v" := (own Q_γ.(γ_Abst) (◯F (to_agree xs_v)))
 Notation "Q_γ ⤇[ q ] xs_v" := (own Q_γ.(γ_Abst) (◯F{ q } (to_agree xs_v)))
 	(at level 20, format "Q_γ ⤇[ q ] xs_v") : bi_scope.
 
-(* TODO: maybe better name for "abstLL". *)
-
-Lemma abstLL_frag_agree Q_γ xs_v xs_v' p q :
+Lemma queue_contents_frag_agree Q_γ xs_v xs_v' p q :
 	Q_γ ⤇[p] xs_v -∗ Q_γ ⤇[q] xs_v' -∗ ⌜xs_v = xs_v'⌝.
 Proof.
 	iIntros "Hp Hq".
@@ -69,7 +63,7 @@ Proof.
 	by apply to_agree_op_inv_L.
 Qed.
 
-Lemma abstLL_auth_frag_agree Q_γ xs_v xs_v' p :
+Lemma queue_contents_auth_frag_agree Q_γ xs_v xs_v' p :
 	Q_γ ⤇● xs_v' -∗ Q_γ ⤇[p] xs_v -∗ ⌜xs_v = xs_v'⌝.
 Proof.
 	iIntros "Hp Hq".
@@ -79,7 +73,7 @@ Proof.
 	by apply to_agree_included_L.
 Qed.
 
-Lemma abstLL_op Q_γ xs_v p q :
+Lemma queue_contents_op Q_γ xs_v p q :
 	Q_γ ⤇[p] xs_v ∗ Q_γ ⤇[q] xs_v ∗-∗ Q_γ ⤇[p + q] xs_v.
 Proof.
 	iSplit.
@@ -91,7 +85,7 @@ Proof.
 	  by rewrite agree_idemp.
 Qed.
 
-Lemma abstLL_update Q_γ xs_v xs_v' xs_v'' :
+Lemma queue_contents_update Q_γ xs_v xs_v' xs_v'' :
 	Q_γ ⤇● xs_v' -∗ Q_γ ⤇◯ xs_v ==∗ Q_γ ⤇● xs_v'' ∗ Q_γ ⤇◯ xs_v''.
 Proof.
 	iIntros "Hauth Hfrag".
@@ -205,7 +199,7 @@ Definition is_queue (v_q : val) (Q_γ: Qgnames) : iProp Σ :=
 	∃ l_queue l_head l_tail : loc, ∃ h_lock T_lock : val,
 	⌜v_q = #l_queue⌝ ∗
 	l_queue ↦□ ((#l_head, #l_tail), (h_lock, T_lock)) ∗
-	inv N (queue_invariant l_head l_tail Q_γ) ∗
+	inv Ni (queue_invariant l_head l_tail Q_γ) ∗
 	is_lock Q_γ.(γ_Hlock) h_lock (TokD Q_γ) ∗
 	is_lock Q_γ.(γ_Tlock) T_lock (TokE Q_γ).
 
@@ -253,7 +247,7 @@ Proof.
 							γ_Before := γ_Before;
 							γ_After := γ_After
 					|}).
-	iMod (inv_alloc N _ (queue_invariant l_head l_tail Queue_gnames) with "[Hγ_Abst_auth Hl_head Hl_tail Hl_1_in Hl_1_out Hγ_nE Hγ_nD Hγ_Before Hγ_After]") as "#HqueueInv".
+	iMod (inv_alloc Ni _ (queue_invariant l_head l_tail Queue_gnames) with "[Hγ_Abst_auth Hl_head Hl_tail Hl_1_in Hl_1_out Hγ_nE Hγ_nD Hγ_Before Hγ_After]") as "#HqueueInv".
 	(* CHANGE: END *)
 	{
 		(* CHANGE: START: framing instead of splitting *)
@@ -275,14 +269,13 @@ Proof.
 Qed.
 
 Lemma enqueue_spec v_q (v : val) (Q_γ : Qgnames) (P Q : iProp Σ) :
-	□(∀xs_v, (Q_γ ⤇● xs_v ∗ P ={⊤ ∖ ↑N}=∗ ▷ (Q_γ ⤇● (v :: xs_v) ∗ Q))) -∗
+	□(∀xs_v, (Q_γ ⤇● xs_v ∗ P ={⊤ ∖ ↑Ni}=∗ ▷ (Q_γ ⤇● (v :: xs_v) ∗ Q))) -∗
 	{{{ is_queue v_q Q_γ ∗ P}}}
 		enqueue v_q v
 	{{{ w, RET w; Q }}}.
 Proof.
 	(* CHANGE: START: intro viewshift *)
 	iIntros "#Hvs". 
-	(* NOTE: The proof below should work even if the viewshift isn't persistent, as it is only used once. TODO: REMOVE THIS COMMENT WHEN YOU KNOW IF VIEWSHIFT SHOULD BE IN PRECONDITION. *)
 	iIntros (Φ) "!> [(%l_queue & %l_head & %l_tail & %h_lock & %t_lock & -> &
 				 #Hl_queue & #Hqueue_inv & #Hh_lock & #Ht_lock) HP] HΦ".
 	(* CHANGE: END *)
@@ -446,7 +439,7 @@ Qed.
 
 Lemma dequeue_spec v_q (Q_γ : Qgnames) (P : iProp Σ) (Q : val -> iProp Σ):
 	□(∀xs_v, (Q_γ ⤇● xs_v ∗ P
-				={⊤ ∖ ↑N}=∗
+				={⊤ ∖ ↑Ni}=∗
 		      	▷ (( ⌜xs_v = []⌝ ∗ Q_γ ⤇● xs_v ∗ Q NONEV) ∨
 				(∃x_v xs_v', ⌜xs_v = xs_v' ++ [x_v]⌝ ∗ Q_γ ⤇● xs_v' ∗ Q (SOMEV x_v)))
 			)
@@ -458,7 +451,6 @@ Lemma dequeue_spec v_q (Q_γ : Qgnames) (P : iProp Σ) (Q : val -> iProp Σ):
 Proof.
 	(* CHANGE: START: intro viewshift *)
 	iIntros "#Hvs". 
-	(* NOTE: The proof below should work even if the viewshift isn't persistent, as it is only used once. TODO: REMOVE THIS COMMENT WHEN YOU KNOW IF VIEWSHIFT SHOULD BE IN PRECONDITION. *)
 	iIntros (Φ) "!> [(%l_queue & %l_head & %l_tail & %h_lock & %t_lock & -> &
 				 #Hl_queue & #Hqueue_inv & #Hh_lock & #Ht_lock) HP] HΦ".
 	(* CHANGE: END *)
@@ -671,3 +663,10 @@ Proof.
 Qed.
 
 End proofs.
+
+Notation "Q_γ ⤇● xs_v" := (own Q_γ.(γ_Abst) (●F (to_agree xs_v)))
+	(at level 20, format "Q_γ ⤇● xs_v") : bi_scope.
+Notation "Q_γ ⤇◯ xs_v" := (own Q_γ.(γ_Abst) (◯F (to_agree xs_v)))
+	(at level 20, format "Q_γ ⤇◯ xs_v") : bi_scope.
+Notation "Q_γ ⤇[ q ] xs_v" := (own Q_γ.(γ_Abst) (◯F{ q } (to_agree xs_v)))
+	(at level 20, format "Q_γ ⤇[ q ] xs_v") : bi_scope.

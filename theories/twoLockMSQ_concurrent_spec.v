@@ -15,7 +15,7 @@ Context `{!heapGS Σ}.
 Context `{!lockG Σ}.
 Context `{!tokenG Σ}.
 
-Let N := nroot .@ "twoLockMSQ".
+Notation N := (nroot .@ "twoLockMSQ_conc").
 
 (* ===== Concurrent Specification for Two-lock M&S Queue ===== *)
 

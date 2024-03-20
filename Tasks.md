@@ -38,17 +38,17 @@
   - [x] Prove consistency of is_queue
   - [x] Rename qg to Q_γ
 
-- [ ] State and prove Hocap style Spec of M&S queue with locks
+- [x] State and prove Hocap style Spec of M&S queue with locks
   - [x] Make Q a proposition in enqueue
-  - [ ] Define notation for the ownership of the contents of the queue. (e.g. queue_content_auth and queue_content_frac)
-  - [ ] ASK QUESTION ABOUT VIEW SHIFT BEING PERSISTENT FIRST. Put viewshift in pre-condition (both coq and paper)
-  - [x] Don't mention iname. Use namespaces. Say that there is some invariant namespace N(uparrow), and the viewshift can use anything N(uparrow), written Top\N(uparrow). The N is the prefix in the namespace N(uparrow)
+  - [x] Define notation for the ownership of the contents of the queue. (e.g. queue_content_auth and queue_content_frac)
+  - [ ] Don't mention iname. Use namespaces. Say that there is some invariant namespace N(uparrow), and the viewshift can use anything N(uparrow), written Top\N(uparrow). The N is the prefix in the namespace N(uparrow)
   - [x] Move auth and All into same position in queue invariant
 
 - [x] Clean up proof of concurrent spec for M&S queue with locks in Coq
   - [x] Clear unused variables and propositions
   - [x] Remove _2 and _3 from subsequent invariant accesses
 - [x] Clean up proof of Sequential spec for M&S queue with locks in Coq
+- [x] Change let N := ... into Notation (...) for namespaces.
 
 - [x] Write about the sequential spec for two-lock M&S queue in the report
   - [x] Mention how it can be used to track exact contents of queue
