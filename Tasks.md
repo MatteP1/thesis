@@ -49,6 +49,7 @@
   - [x] Remove _2 and _3 from subsequent invariant accesses
 - [x] Clean up proof of Sequential spec for M&S queue with locks in Coq
 - [x] Change let N := ... into Notation (...) for namespaces.
+- [ ] Consider removing some of the CHANGE comments in hocap.
 
 - [x] Write about the sequential spec for two-lock M&S queue in the report
   - [x] Mention how it can be used to track exact contents of queue
