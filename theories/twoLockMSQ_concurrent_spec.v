@@ -20,28 +20,28 @@ Notation N := (nroot .@ "twoLockMSQ_conc").
 (* ===== Concurrent Specification for Two-lock M&S Queue ===== *)
 
 (* Ghost variable names *)
-Record Qgnames := {γ_Hlock 	: gname;
-				   γ_Tlock 	: gname;
-				   γ_E 		: gname;
-				   γ_nE 	: gname;
-				   γ_D 		: gname;
-				   γ_nD 	: gname;
-				   γ_Before : gname;
-				   γ_After 	: gname;
-				  }.
+Record ConcQgnames := {γ_Hlock 	: gname;
+					   γ_Tlock 	: gname;
+					   γ_E 		: gname;
+					   γ_nE 	: gname;
+					   γ_D 		: gname;
+					   γ_nD 	: gname;
+					   γ_Before : gname;
+					   γ_After 	: gname;
+					  }.
 
 (* Tokens *)
-Definition TokHlock (g : Qgnames) := token g.(γ_Hlock).
-Definition TokTlock (g : Qgnames) := token g.(γ_Tlock).
-Definition TokE (g : Qgnames) := token g.(γ_E).
-Definition ToknE (g : Qgnames) := token g.(γ_nE).
-Definition TokD (g : Qgnames) := token g.(γ_D).
-Definition ToknD (g : Qgnames) := token g.(γ_nD).
-Definition TokBefore (g : Qgnames) := token g.(γ_Before).
-Definition TokAfter (g : Qgnames) := token g.(γ_After).
-Definition TokUpdated (g : Qgnames) := ((TokBefore g) ∗ (TokAfter g))%I.
+Definition TokHlock (g : ConcQgnames) := token g.(γ_Hlock).
+Definition TokTlock (g : ConcQgnames) := token g.(γ_Tlock).
+Definition TokE (g : ConcQgnames) := token g.(γ_E).
+Definition ToknE (g : ConcQgnames) := token g.(γ_nE).
+Definition TokD (g : ConcQgnames) := token g.(γ_D).
+Definition ToknD (g : ConcQgnames) := token g.(γ_nD).
+Definition TokBefore (g : ConcQgnames) := token g.(γ_Before).
+Definition TokAfter (g : ConcQgnames) := token g.(γ_After).
+Definition TokUpdated (g : ConcQgnames) := ((TokBefore g) ∗ (TokAfter g))%I.
 
-Definition queue_invariant (Ψ : val -> iProp Σ) (l_head l_tail : loc) (Q_γ : Qgnames) : iProp Σ :=
+Definition queue_invariant (Ψ : val -> iProp Σ) (l_head l_tail : loc) (Q_γ : ConcQgnames) : iProp Σ :=
 	∃ xs_v, All xs_v Ψ ∗ (* Abstract state *)
 	∃ xs xs_queue xs_old (x_head x_tail: (loc * val * loc)), (* Concrete state *)
 	⌜xs = xs_queue ++ [x_head] ++ xs_old⌝ ∗
@@ -82,7 +82,7 @@ Definition queue_invariant (Ψ : val -> iProp Σ) (l_head l_tail : loc) (Q_γ : 
 		)
 	).
 
-Definition queue_invariant_simple (Ψ : val -> iProp Σ) (l_head l_tail : loc) (Q_γ : Qgnames) : iProp Σ :=
+Definition queue_invariant_simple (Ψ : val -> iProp Σ) (l_head l_tail : loc) (Q_γ : ConcQgnames) : iProp Σ :=
 	∃ xs_v, All xs_v Ψ ∗ (* Abstract state *)
 	∃ xs xs_queue xs_old (x_head x_tail: (loc * val * loc)), (* Concrete state *)
 	⌜xs = xs_queue ++ [x_head] ++ xs_old⌝ ∗
@@ -140,7 +140,7 @@ Proof.
 	iExists xs_v; iFrame; iExists xs, xs_queue, xs_old, x_head, x_tail; eauto 10 with iFrame.
 Qed.
 
-Definition is_queue (Ψ : val -> iProp Σ) (v_q : val) (Q_γ: Qgnames) : iProp Σ :=
+Definition is_queue_conc (Ψ : val -> iProp Σ) (v_q : val) (Q_γ: ConcQgnames) : iProp Σ :=
 	∃ l_queue l_head l_tail : loc, ∃ h_lock t_lock : val,
 	⌜v_q = #l_queue⌝ ∗
 	l_queue ↦□ ((#l_head, #l_tail), (h_lock, t_lock)) ∗
@@ -148,14 +148,14 @@ Definition is_queue (Ψ : val -> iProp Σ) (v_q : val) (Q_γ: Qgnames) : iProp �
 	is_lock Q_γ.(γ_Hlock) h_lock (TokD Q_γ) ∗
 	is_lock Q_γ.(γ_Tlock) t_lock (TokE Q_γ).
 
-(* is_queue is persistent *)
-Global Instance is_queue_persistent Ψ v_q Q_γ : Persistent (is_queue Ψ v_q Q_γ).
+(* is_queue_conc is persistent *)
+Global Instance is_queue_conc_persistent Ψ v_q Q_γ : Persistent (is_queue_conc Ψ v_q Q_γ).
 Proof. apply _. Qed.
 
-Lemma initialize_spec (Ψ : val -> iProp Σ):
+Lemma initialize_spec_conc (Ψ : val -> iProp Σ):
 	{{{ True }}}
 		initialize #()
-	{{{ v_q Q_γ, RET v_q; is_queue Ψ v_q Q_γ }}}.
+	{{{ v_q Q_γ, RET v_q; is_queue_conc Ψ v_q Q_γ }}}.
 Proof.
 	iIntros (Φ) "_ HΦ".
 	wp_lam.
@@ -205,8 +205,8 @@ Proof.
 	by repeat iSplit.
 Qed.
 
-Lemma enqueue_spec v_q Ψ (v : val) (Q_γ : Qgnames) :
-	{{{ is_queue Ψ v_q Q_γ ∗ Ψ v }}}
+Lemma enqueue_spec_conc v_q Ψ (v : val) (Q_γ : ConcQgnames) :
+	{{{ is_queue_conc Ψ v_q Q_γ ∗ Ψ v }}}
 		enqueue v_q v
 	{{{ w, RET w; True }}}.
 Proof.
@@ -351,8 +351,8 @@ Proof.
 	done.
 Qed.
 
-Lemma dequeue_spec v_q Ψ (Q_γ : Qgnames) :
-	{{{ is_queue Ψ v_q Q_γ }}}
+Lemma dequeue_spec_conc v_q Ψ (Q_γ : ConcQgnames) :
+	{{{ is_queue_conc Ψ v_q Q_γ }}}
 		dequeue v_q
 	{{{ v, RET v; ⌜v = NONEV⌝ ∨ (∃ x_v, ⌜v = SOMEV x_v⌝ ∗ Ψ x_v) }}}.
 Proof.

@@ -178,7 +178,7 @@ Definition is_queue_conc (Ψ : val -> iProp Σ) (v_q : val) (Q_γC: ConcQgnames)
 Global Instance is_queue_conc_persistent Ψ v_q Q_γC : Persistent (is_queue_conc Ψ v_q Q_γC).
 Proof. apply _. Qed.
 
-Lemma initialize_spec (Ψ : val -> iProp Σ):
+Lemma initialize_spec_conc (Ψ : val -> iProp Σ):
 	{{{ True }}}
 		initialize #()
 	{{{ v_q Q_γC, RET v_q; is_queue_conc Ψ v_q Q_γC }}}.
@@ -194,7 +194,7 @@ Proof.
 	by iFrame.
 Qed.
 
-Lemma enqueue_spec v_q Ψ (v : val) (Q_γC : ConcQgnames) :
+Lemma enqueue_spec_conc v_q Ψ (v : val) (Q_γC : ConcQgnames) :
 	{{{ is_queue_conc Ψ v_q Q_γC ∗ Ψ v }}}
 		enqueue v_q v
 	{{{ w, RET w; True }}}.
@@ -225,7 +225,7 @@ Proof.
 	by iApply ("HΦ" $! w).
 Qed.
 
-Lemma dequeue_spec v_q Ψ (Q_γC : ConcQgnames) :
+Lemma dequeue_spec_conc v_q Ψ (Q_γC : ConcQgnames) :
 	{{{ is_queue_conc Ψ v_q Q_γC }}}
 		dequeue v_q
 	{{{ v, RET v; ⌜v = NONEV⌝ ∨ (∃ x_v, ⌜v = SOMEV x_v⌝ ∗ Ψ x_v) }}}.

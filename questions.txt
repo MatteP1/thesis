@@ -6,51 +6,8 @@ ANSWERED QUESTIONS
 - Why is the client not allowed to open the invariant associated with the Cnt/is_queue predicate?
   Answer: because I will have to use the view-shift while the invariant is open to prove the spec. This is only possible if the view-shift doesn't contain our invariant.
 
-- viewshift is defined as being persistent (ILN page 132). Isn't it then fine to have it outside the precondition?
-  What is ==∗ actually?
-  A: non-persistent vs
-  Iris doesn't recognise it as persistent, so not viewshift.
-
-A: it is fine to have it as a non-persistent viewshift with persistent around it.
-
-- For the derived specs, the SeqQgnames and ConcQgnames are not needed. Removing them changes the specs, however. I could also make them take a hocap Qgname as input, and not existentially quantify it.
-A: Have equalities, even though they are not needed.
-
-- When using hocap to derive sequential and concurrent specs, there are some name clashes: is_queue and Q_γ in particular. 
-  Should I rename those in their own sections to avoid confusion?
-  For example
-  is_queue_seq and Q_γS
-  is_queue_conc and Q_γC
-  is_queue_hocap and Q_γH
-A: up to you. (rename them everywhere)
-
-- Similarly to above: Record fields must be unique?
-  If I have two records with similar field names, then coq complains that they are not the same record, when i try to compare them. I.e.
-  Q_γS.(γ_Hlock) = Q_γH.(γ_Hlock)
-  (see twoLockMSQ_derived.v)
-  Should I give all the fields unique names? 
-    I.e. γ_Hlock_seq, γ_Hlock_conc, etc.
-A: They have to be unique. They don't have to be unique in their own files
-
-- Notation in coq: does Q_γ ⤇● xs_v make sense?
-  Is there any way of importing this notation in other files (i.e. to TwoLockMSQ_derived.v) without just writing the notation again?
-A: have one def inside and outside hocap.
-
 - Should I use Namespaces everywhere instead of iname?
   Also on paper?
   A: yes, also on paper
-
-- How to derive Sequential and Concurrent specs in Coq?
-  Should I just copy/past the initialise/enqueue/dequeue specs with a different is_queue predicate?
-  A: yes, this is fine
-
-- Should derived specs be in hocap, their related specs, or their own separate file (i.e. TwoLockMSQ_derived.v)
-  TODO: if they should be in own file, then add this to coq_project.
-    A: separate
-
-- How to handle multiple invariant names in coq?
-  Currently I have let N := ... and let NC := ...
-  let N := is defined in hocap, and not visible in derived.
-A: Variables and concatenation
 
 UNANSWERED QUESTIONS
