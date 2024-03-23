@@ -41,7 +41,7 @@
 - [x] State and prove Hocap style Spec of M&S queue with locks
   - [x] Make Q a proposition in enqueue
   - [x] Define notation for the ownership of the contents of the queue. (e.g. queue_content_auth and queue_content_frac)
-  - [ ] Don't mention iname. Use namespaces. Say that there is some invariant namespace N(uparrow), and the viewshift can use anything N(uparrow), written Top\N(uparrow). The N is the prefix in the namespace N(uparrow)
+  - [ ] Don't mention iname. Use namespaces
   - [x] Move auth and All into same position in queue invariant
 
 - [x] Clean up proof of concurrent spec for M&S queue with locks in Coq
@@ -58,9 +58,9 @@
   - [ ] Talk about adequacy as a reason for safety
   - [x] Update spec to include the Ψ predicate
 - [ ] Write about HOCAP spec for two-lock M&S queue in the report
-  - [ ] motivate it from sequential and concurrent
+  - [x] motivate it from sequential and concurrent
   - [ ] "Prove it" - mention differences from Concurrent
-  - [ ] Explain that it is more general that then previous two, and can in fact derive them (without referring to the implementation)
+  - [x] Explain that it is more general that then previous two, and can in fact derive them (without referring to the implementation)
   - [ ] Show how to derive concurrent and sequential specs from it
 
 - [ ] State and prove correctness of lock-free M&S Queue

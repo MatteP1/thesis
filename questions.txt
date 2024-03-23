@@ -1,11 +1,5 @@
 ANSWERED QUESTIONS
 
-- What is the notation for agreement?
-  ag (aginj in iris.sty)
-
-- Why is the client not allowed to open the invariant associated with the Cnt/is_queue predicate?
-  Answer: because I will have to use the view-shift while the invariant is open to prove the spec. This is only possible if the view-shift doesn't contain our invariant.
-
 - Should I use Namespaces everywhere instead of iname?
   Also on paper?
   A: yes, also on paper
