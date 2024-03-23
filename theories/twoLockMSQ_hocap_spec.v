@@ -450,7 +450,7 @@ Lemma dequeue_spec v_q (Q_γ : Qgnames) (P : iProp Σ) (Q : val -> iProp Σ):
 	{{{ v, RET v; Q v }}}.
 Proof.
 	(* CHANGE: START: intro viewshift *)
-	iIntros "#Hvs". 
+	iIntros "#Hvs".
 	iIntros (Φ) "!> [(%l_queue & %l_head & %l_tail & %h_lock & %t_lock & -> &
 				 #Hl_queue & #Hqueue_inv & #Hh_lock & #Ht_lock) HP] HΦ".
 	(* CHANGE: END *)
