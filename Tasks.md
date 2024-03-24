@@ -11,8 +11,8 @@
 - [x] Study the Agreement RA
 - [x] Read Contextual Refinement Paper
 - [ ] Reread about fancy updated and view-shift (sections in chapter 14 ILN)
-- [ ] Reread about invariant namespaces (chapter 14.5 ILN)
-- [ ] Read chapter 13 of Iris Lecture Notes (Hocap style Specs)
+- [x] Reread about invariant namespaces (chapter 14.5 ILN)
+- [x] Read chapter 13 of Iris Lecture Notes (Hocap style Specs)
 
 - [x] Create Thesis Report file
 - [x] Add bibliography (Iris-Lecture-Notes, Contextual Refinement Paper, Iris from Ground up, etc)
@@ -41,7 +41,7 @@
 - [x] State and prove Hocap style Spec of M&S queue with locks
   - [x] Make Q a proposition in enqueue
   - [x] Define notation for the ownership of the contents of the queue. (e.g. queue_content_auth and queue_content_frac)
-  - [ ] Don't mention iname. Use namespaces
+  - [x] Don't mention iname. Use namespaces
   - [x] Move auth and All into same position in queue invariant
 
 - [x] Clean up proof of concurrent spec for M&S queue with locks in Coq
@@ -59,9 +59,10 @@
   - [x] Update spec to include the Ψ predicate
 - [ ] Write about HOCAP spec for two-lock M&S queue in the report
   - [x] motivate it from sequential and concurrent
-  - [ ] "Prove it" - mention differences from Concurrent
+  - [x] "Prove it" - mention differences from Concurrent
   - [x] Explain that it is more general that then previous two, and can in fact derive them (without referring to the implementation)
-  - [ ] Show how to derive concurrent and sequential specs from it
+  - [x] Show how to derive concurrent and sequential specs from it
+- [x] Update notation for definitions to use triangleq instead of equality.
 
 - [ ] State and prove correctness of lock-free M&S Queue
 

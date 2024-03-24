@@ -1,7 +1,1 @@
-ANSWERED QUESTIONS
 
-- Should I use Namespaces everywhere instead of iname?
-  Also on paper?
-  A: yes, also on paper
-
-UNANSWERED QUESTIONS
