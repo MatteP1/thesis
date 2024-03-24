@@ -525,10 +525,10 @@ Since the queue uses two locks, we will get two ghost names; one for each lock. 
 
 The sequential specification we wish to prove is the following:
 \begin{align*}
-  &\exists \isqueueseq : \Val \to \List \ \Val \to SeqQgnames \to \Prop.\\
-  &\quad\quad\hoare{\TRUE}{\initialise \TT}{v_q . \exists Q_\gname, \isqueueseq\ v_q\ []\ Q_\gname}\\
-  &\land\quad\forall v_q, v, xs_v, Q_\gname. \hoare{\isqueueseq \; v_q \; xs_v \; Q_\gname}{\enqueue\ v_q\ v}{w . \isqueueseq\ v_q\ (v :: xs_v)\ Q_\gname}\\
-  &\land\quad\forall v_q, xs_v, Q_\gname. \hoareV[t]{\isqueueseq \; v_q \; xs_v \; Q_\gname}{\dequeue\ v_q}{v . \begin{array}{l}(xs_v = [] \ast v = \None \ast \isqueueseq\ v_q\ xs_v\ Q_\gname) \; \lor\\ (\exists x_v, xs_v' \ . \ xs_v = xs_v' \catenate [x_v] \ast v = \Some x_v \ast \isqueueseq\ v_q\ xs_v'\ Q_\gname) \end{array}}
+  &\Exists \isqueueseq : \Val \to \List \ \Val \to SeqQgnames \to \Prop.\\
+  &\quad\quad\hoare{\TRUE}{\initialise \TT}{v_q . \Exists Q_\gname. \isqueueseq\ v_q\ []\ Q_\gname}\\
+  &\land\quad\All v_q, v, xs_v, Q_\gname. \hoare{\isqueueseq \; v_q \; xs_v \; Q_\gname}{\enqueue\ v_q\ v}{w . \isqueueseq\ v_q\ (v :: xs_v)\ Q_\gname}\\
+  &\land\quad\All v_q, xs_v, Q_\gname. \hoareV[t]{\isqueueseq \; v_q \; xs_v \; Q_\gname}{\dequeue\ v_q}{v . \begin{array}{l}(xs_v = [] \ast v = \None \ast \isqueueseq\ v_q\ xs_v\ Q_\gname) \; \lor\\ (\Exists x_v, xs_v' . xs_v = xs_v' \catenate [x_v] \ast v = \Some x_v \ast \isqueueseq\ v_q\ xs_v'\ Q_\gname) \end{array}}
 \end{align*}
 
 The predicate $\isqueueseq \; v_q \; xs_v \; Q_\gname$ captures that the value $v_q$ is a queue, whose content matches that of our abstract representation $xs_v$, and the queue uses the ghost names described by $Q_\gname$. Note that the $\isqueueseq$ predicate is not required to be persistent, hence it cannot be duplicated and given to multiple threads. This is the sense in which this specification is sequential.
@@ -547,9 +547,9 @@ Observation \ref{MSQTL:insights:tail} captures the fact that, while enqueueing, 
 Insight \ref{MSQTL:insights:persistent} means that we can mark all pointers in the queue (except the pointer to the null node) as persistent. This is technically not needed in the sequential case, but we will incorporate it now, as we will need it in the concurrent setting.
 
 \begin{align*}
-  \isqueueseq \; v_q \; xs_v \; Q_\gname = &\exists \loc_{queue}, \loc_{head}, \loc_{tail} \in \Loc . \exists h_{lock}, t_{lock} \in \Val . \\
+  \isqueueseq \; v_q \; xs_v \; Q_\gname = &\Exists \loc_{queue}, \loc_{head}, \loc_{tail} \in \Loc . \Exists h_{lock}, t_{lock} \in \Val . \\
   &v_q = \loc_{queue} \ast \loc_{queue} \mapsto^{\persistently} ((\loc_{head}, \loc_{tail}), (h_{lock}, t_{lock})) \ast\\
-  &\exists xs_{queue} \in \List (\Loc \times \Val \times \Loc) . \exists x_{head}, x_{tail} \in (\Loc \times \Val \times \Loc) .\\
+  &\Exists xs_{queue} \in \List (\Loc \times \Val \times \Loc) . \Exists x_{head}, x_{tail} \in (\Loc \times \Val \times \Loc) .\\
 	&proj\_val \ xs_{queue} = wrap\_some \ xs_v \ast\\
 	&\isLL (xs_{queue} \catenate [x_{head}]) \ast\\
 	&\loc_{head} \mapsto (\nIn{x_{head}}) \ast\\
@@ -592,7 +592,7 @@ Note how this matches the structure of the linked list in figure \ref{MSQTL:impl
 \subsubsection{Initialise}
 Proving the initialise spec amounts to stepping through the code, giving us the required resources, and then using these to create an instance of $\isqueueseq$ with the obtained resources. To begin with, we step through the lines creating the first node $x_1$, giving us locations $\locin{1}$, $\locout{1}$ with $\locout{1} \mapsto \None$ and $\locin{1} \mapsto (\None, \locout{1})$. We can then update the latter points-to predicate to become persistent, giving us $\locin{1} \mapsto^{\persistently} (\None, \locout{1})$. We then step to the creation of the two locks, where we shall use the newlock specification asserting that the locks should protect $\TRUE$. This gives us two ghost names, $\gname_{Tlock}$, $\gname_{Tlock}$, which we will collect in a $SeqQgnames$ pair, $Q_\gname$.
 Next, we step through the allocations of the head, tail, and queue, which gives us locations $\loc_{head}$, $\loc_{tail}$, $\loc_{queue}$, such that both $\loc_{head}$ and $\loc_{tail}$ point to node $x_1$, and such that $\loc_{queue}$ points to the structure containing the head, tail, and two locks. This last points to predicate we update to become persistent.
-With this, we now have all the resources needed to prove the post-condition: $\exists Q_\gname . \isqueueseq \ \loc_{queue} \ Q_\gname$. Proving this follows by a sequence of framing away the resources we obtained and instantiating existentials with the values we got above. Most noteworthy, we pick the empty list for $xs_{queue}$, and node $x_1$ for $x_{head}$ and $x_{tail}$.
+With this, we now have all the resources needed to prove the post-condition: $\Exists Q_\gname . \isqueueseq \ \loc_{queue} \ Q_\gname$. Proving this follows by a sequence of framing away the resources we obtained and instantiating existentials with the values we got above. Most noteworthy, we pick the empty list for $xs_{queue}$, and node $x_1$ for $x_{head}$ and $x_{tail}$.
 
 
 \subsubsection{Enqueue}
@@ -625,12 +625,12 @@ Finally, we must prove $\isqueueseq\ v_q\ xs_v'\ Q_\gname$, where $xs_v'$ is $xs
 \section{Concurrent Specification}
 For the concurrent specification, we will need the predicate capturing the queue (here denoted $\isqueueconc$) to be duplicable. To achieve this, we shall initially give up on tracking the abstract state of the queue, and instead add a predicate $\Phi$, which we will ensure holds for all elements of the queue. In this way, when dequeueing, we at least know that if we get some value, then $\Phi$ holds of this value. The specification we wish to prove is as follows.
 \begin{align*}
-  &\exists \isqueueconc : (\Val \to \Prop) \to \Val \to ConcQgnames \to \Prop.\\
-  &\forall \Phi : \Val \to \Prop.\\
-  &\quad\quad \forall v_q, Q_\gname . \isqueueconc \ \Phi \ v_q \ Q_\gname \implies \persistently \isqueueconc \ \Phi \ v_q \ Q_\gname\\
-  &\land\quad\hoare{\TRUE}{\initialise \TT}{v_q . \exists Q_\gname, \isqueueconc\ \Phi \ v_q \ Q_\gname}\\
-  &\land\quad\forall v_q, v, Q_\gname. \hoare{\isqueueconc \ \Phi \ v_q \ Q_\gname \ast \Phi \ v}{\enqueue\ v_q\ v}{v . \TRUE}\\
-  &\land\quad\forall v_q, Q_\gname. \hoare{\isqueueconc \ \Phi \ v_q \ Q_\gname}{\dequeue\ v_q}{v . v = \None \lor (\exists x_v, v = \Some x_v \ast \Phi \ x_v)}
+  &\Exists \isqueueconc : (\Val \to \Prop) \to \Val \to ConcQgnames \to \Prop.\\
+  &\All \Phi : \Val \to \Prop.\\
+  &\quad\quad \All v_q, Q_\gname . \isqueueconc \ \Phi \ v_q \ Q_\gname \implies \persistently \isqueueconc \ \Phi \ v_q \ Q_\gname\\
+  &\land\quad\hoare{\TRUE}{\initialise \TT}{v_q . \Exists Q_\gname. \isqueueconc\ \Phi \ v_q \ Q_\gname}\\
+  &\land\quad\All v_q, v, Q_\gname. \hoare{\isqueueconc \ \Phi \ v_q \ Q_\gname \ast \Phi \ v}{\enqueue\ v_q\ v}{v . \TRUE}\\
+  &\land\quad\All v_q, Q_\gname. \hoare{\isqueueconc \ \Phi \ v_q \ Q_\gname}{\dequeue\ v_q}{v . v = \None \lor (\Exists x_v. v = \Some x_v \ast \Phi \ x_v)}
 \end{align*}
 Note that the type of the collection of ghost names here is $ConcQgnames$, as we will require more ghost names than before. The new ghost names are used for "tokens" which are introduced in the following section.
 
@@ -661,8 +661,8 @@ Since we want $\isqueueconc$ to be persistent, then we cannot directly state the
 \begin{definition}[Two-Lock M\&S-Queue Invariant]\label{MSQTL:spec:invariant}
   \begin{align*}
     &queue\_invariant \ \Phi \ \loc_{head} \ \loc_{tail} \ Q_\gname =\\
-    &\exists xs_v. All \ xs_v \ \Phi \ast &&\text{(abstract state)}\\
-    &\exists xs, xs_{queue}, xs_{old}, x_{head}, x_{tail} . &&\text{(concrete state)}\\
+    &\Exists xs_v. All \ xs_v \ \Phi \ast &&\text{(abstract state)}\\
+    &\Exists xs, xs_{queue}, xs_{old}, x_{head}, x_{tail} . &&\text{(concrete state)}\\
     &xs = xs_{queue} \catenate [x_{head}] \catenate xs_{old} \ast\\
     &\isLL \ xs \ast\\
     &proj\_val \ xs_{queue} = wrap\_some \ xs_v \ast\\
@@ -712,9 +712,9 @@ We will use several tokens, each of which is the valid element of their own inst
 
 With this, we can now give our definition of $\isqueueconc$.
 \begin{align*}
-  \isqueueconc \; v_q \; xs_v \; \Qg = &\exists \loc_{queue}, \loc_{head}, \loc_{tail} \in \Loc . \exists h_{lock}, t_{lock} \in \Val . \\
+  \isqueueconc \; \Psi \; v_q \; xs_v \; \Qg = &\Exists \loc_{queue}, \loc_{head}, \loc_{tail} \in \Loc . \Exists h_{lock}, t_{lock} \in \Val . \\
   &v_q = \loc_{queue} \ast \loc_{queue} \mapsto^{\persistently} ((\loc_{head}, \loc_{tail}), (h_{lock}, t_{lock})) \ast\\
-	&\exists \iname . \knowInv{\iname}{queue\_invariant \Phi \loc_{head} \loc_{tail} \Qg} \ast\\
+	&\Exists \iname . \knowInv{\iname}{queue\_invariant \Phi \loc_{head} \loc_{tail} \Qg} \ast\\
 	&isLock \ Q_\gname.\gname_{Hlock} \ h_{lock} \ (\TokDQg) \ast\\
 	&isLock \ Q_\gname.\gname_{Tlock} \ t_{lock} \ (\TokEQg).
 \end{align*}
@@ -764,25 +764,25 @@ For an abstract state $xs_v$ and a tuple $\Qg$ of type $Qgnames$, we shall use t
 
 With this, we now give the hocap-style spec, and explain it afterwards. 
 \begin{align*}
-  &\exists \isqueue : \Val \to Qgnames \to \Prop.\\
-  &\quad\quad \forall v_q, Q_\gname . \isqueue \ v_q \ Q_\gname \implies \persistently \isqueue \ v_q \ Q_\gname\\
-  &\land\quad\hoare{\TRUE}{\initialise \TT}{v_q . \exists Q_\gname, \isqueue\ v_q \ Q_\gname \ast \abstractstatefullfrag{\Qg}{[]} }\\
-  &\land\quad \forall v_q, v, Q_\gname, P, Q.
+  &\Exists \isqueue : \Val \to Qgnames \to \Prop.\\
+  &\quad\quad \All v_q, Q_\gname . \isqueue \ v_q \ Q_\gname \implies \persistently \isqueue \ v_q \ Q_\gname\\
+  &\land\quad\hoare{\TRUE}{\initialise \TT}{v_q . \Exists Q_\gname . \isqueue\ v_q \ Q_\gname \ast \abstractstatefullfrag{\Qg}{[]} }\\
+  &\land\quad \All v_q, v, Q_\gname, P, Q.
     \begin{array}[t]{l}
-    \left(\forall xs_v . \abstractstateauth{\Qg}{xs_v} \ast P \vs[\mask\setminus\Nl.i^\uparrow] \later \abstractstateauth{\Qg}{v :: xs_v} \ast Q \right)
+    \left(\All xs_v . \abstractstateauth{\Qg}{xs_v} \ast P \vs[\mask\setminus\Nl.i^\uparrow] \later \abstractstateauth{\Qg}{v :: xs_v} \ast Q \right)
     \wand\\
-    \hoare{\isqueue \ v_q \ Q_\gname \ast P}{\enqueue\ v_q\ v}{v . Q}
+    \hoare{\isqueue \ v_q \ Q_\gname \ast P}{\enqueue\ v_q\ v}{w . Q}
     \end{array}\\
-  &\land\quad \forall v_q, Q_\gname, P, Q.
+  &\land\quad \All v_q, Q_\gname, P, Q.
     \begin{array}[t]{l}
-    \left(\forall xs_v . \abstractstateauth{\Qg}{xs_v} \ast P \vs[\mask\setminus\Nl.i^\uparrow] \later 
+    \left(\All xs_v . \abstractstateauth{\Qg}{xs_v} \ast P \vs[\mask\setminus\Nl.i^\uparrow] \later 
       \left( 
         \begin{array}{l}
           (xs_v = [] \ast \abstractstateauth{\Qg}{xs_v} \ast Q \ \None)\\
           \lor
           \left(
             \begin{array}{l}
-              \exists x_v, xs_v' . xs_v = xs_v' \catenate [x_v] \ast\\
+              \Exists x_v, xs_v' . xs_v = xs_v' \catenate [x_v] \ast\\
               \abstractstateauth{\Qg}{xs_v'} \ast Q \ (\Some{x_v})
             \end{array}
             \right)
@@ -816,17 +816,65 @@ For enqueue and dequeue, the only real changes are the points in the proof, wher
 
 In the case that the queue is empty, then the abstract state of the queue will not change. We thus apply the viewshift (we have $P$ from the precondition and $\abstractstateauth{\Qg}{xs_v}$ from the invariant), which gives us the disjunct. The right disjunct states that the abstract state $xs_v$ is non-empty, but since the abstract state is reflected in $xs_{queue}$, which \emph{is} empty, then we know that the right disjunct is impossible. Hence we may assume the left disjunct. I.e. $xs_v = [] \ast \abstractstateauth{\Qg}{xs_v} \ast Q \ \None$. We now proceed as before, this time giving up $\abstractstateauth{\Qg}{xs_v}$ to close the invariant. After stepping through the code, we are left with proving the postcondition: $Q \ \None$, which we got from the viewshift.
 
-If the queue is not empty, then we do not apply the viewshift (as the abstract state doesn't change within this invariant opening), and simply continue as we did previously. The next time we open the invariant is around the expression that writes the new head to $\loc_{head}$. It is this store that updates the abstract state of the queue, so it is within this invariant opening that we apply the viewshift (again, we have $P$ from the precondition and $\abstractstateauth{\Qg}{xs_v}$ from the invariant). This time, we know that $xs_{queue}$ is non-empty, and since $xs_v$ is reflected in $xs_{queue}$, then we can conclude that the first disjunct is impossible, so the viewshift gives us $\exists x_v, xs_v' . xs_v = xs_v' \catenate [x_v] \ast \abstractstateauth{\Qg}{xs_v'} \ast Q \ (\Some{x_v})$. As before, we conclude that $\Some{x_v}$ is the return value (through the reflection between $xs_{queue}$ and $xs_v$), and proceed to close the invariant, this time giving up $\abstractstateauth{\Qg}{xs_v'}$. Stepping through the code, we end up having to prove the post-condition $Q \ (\Some{x_v})$, which we got from the viewshift.
+If the queue is not empty, then we do not apply the viewshift (as the abstract state doesn't change within this invariant opening), and simply continue as we did previously. The next time we open the invariant is around the expression that writes the new head to $\loc_{head}$. It is this store that updates the abstract state of the queue, so it is within this invariant opening that we apply the viewshift (again, we have $P$ from the precondition and $\abstractstateauth{\Qg}{xs_v}$ from the invariant). This time, we know that $xs_{queue}$ is non-empty, and since $xs_v$ is reflected in $xs_{queue}$, then we can conclude that the first disjunct is impossible, so the viewshift gives us $\Exists x_v, xs_v' . xs_v = xs_v' \catenate [x_v] \ast \abstractstateauth{\Qg}{xs_v'} \ast Q \ (\Some{x_v})$. As before, we conclude that $\Some{x_v}$ is the return value (through the reflection between $xs_{queue}$ and $xs_v$), and proceed to close the invariant, this time giving up $\abstractstateauth{\Qg}{xs_v'}$. Stepping through the code, we end up having to prove the post-condition $Q \ (\Some{x_v})$, which we got from the viewshift.
 
 
 \section{Deriving Sequential and Concurrent specs from Hocap}\label{section:two_lock:deriving_seq_and_conc}
-\todo{text. also write about the two lemmas on the abstract state that we rely on.}
+In this section we show that we can derive the sequential and concurrent specifications for the two-lock Michael Scott queue from the Hocap-style specification. The derivations will need to show how to update the abstract state of the queue. To help with this, we use the following helper lemmas, both of which follow from the definitions of the involved resource algebras. The first shows the authoritative and fragmental views of the abstract state agree.
+\begin{lemma}[Abstract state agree]\label{MSQTL:hocap:abst:agree}
+  $\All xs_v, xs_v' .\\
+  \abstractstateauth{Q_{\gname H}}{xs_v} \ast \abstractstatefullfrag{Q_{\gname H}}{xs_v'} \proves xs_v = xs_v'$
+\end{lemma}
+The second shows that, if we own both the authoritative and fragmental views, we are allowed to updated the abstract state to whatever we like.
+\begin{lemma}[Abstract state update]\label{MSQTL:hocap:abst:update}
+  $\All xs_v, xs_v', xs_v'' .\\
+  \abstractstateauth{Q_{\gname H}}{xs_v} \ast \abstractstatefullfrag{Q_{\gname H}}{xs_v'} \proves \abstractstateauth{Q_{\gname H}}{xs_v''} \ast \abstractstatefullfrag{Q_{\gname H}}{xs_v''}$
+\end{lemma}
 
 \subsection{Deriving Sequential spec}
-\todo{text}
+We define the $\isqueueseq$ predicate as follows
+\begin{align*}
+  \isqueueseq \; v_q \; xs_v \; Q_{\gname S} =
+    &\Exists Q_{\gname H} \in Qgnames .\\
+    &proj\_Qgnames\_seq \ Q_{\gname H} = Q_{\gname S} \ast\\
+    &\isqueue \ v_q \ Q_{\gname H} \ast\\
+    &\abstractstatefullfrag{Q_{\gname H}}{xs_v}
+\end{align*}
+
+Here, $proj\_Qgnames\_seq \ Q_{\gname H}$ simply creates an element of $SeqQgnames$, with ghost names matching those of $Q_{\gname H}$.
+$\isqueue$ is the predicate from the hocap-style spec, hence we know that it is duplicable.
+
+The \textbf{sequential initialise spec} follows almost directly from hocap-style initialise spec. They only differ in the post-condition. The post-condition in the hocap-style spec states $\Exists Q_{\gname H} . \isqueue\ v_q \ Q_{\gname H} \ast \abstractstatefullfrag{Q_{\gname H}}{[]}$, whereas we have to prove $\Exists Q_{\gname S}. \isqueueseq\ v_q\ []\ Q_{\gname S}$. If we choose $proj\_Qgnames\_seq \ Q_{\gname H}$ for $Q_{\gname S}$, then the equality in $\isqueueseq$ becomes trivially true, and the postcondition we must prove follows from the hocap-style postcondition.
+
+To prove the \textbf{sequential enqueue spec}, assume some $v_q$, $v$, $xs_v$, and $Q_{\gname S}$. We must the show the hoare-triple concerning $\enqueue\ v_q\ v$.
+To do this, we shall use the hocap-style spec for enqueue. This requires us to pick $P$ and $Q$, and prove the resulting viewshift.
+We choose $P \triangleq \abstractstatefullfrag{Q_{\gname H}}{xs_v}$ and $Q \triangleq \abstractstatefullfrag{Q_{\gname H}}{(v :: xs_v)}$. Note that with this choice, the hoare triple we get after proving the viewshift almost matches the hoare triple we have to prove. The main thing we need is $\isqueue\ v_q \ Q_{\gname H}$ in the postcondition. However, since $\isqueue$ is persistent, and it is present in the precondition, we may assume it in the postcondition. Hence, all we have to prove is the viewshift: 
+\begin{equation*}
+  \All xs_v' . \abstractstateauth{\Qg}{xs_v'} \ast \abstractstatefullfrag{Q_{\gname H}}{xs_v} \vs[\mask\setminus\Nl.i^\uparrow] \later \abstractstateauth{\Qg}{v :: xs_v'} \ast \abstractstatefullfrag{Q_{\gname H}}{(v :: xs_v)}
+\end{equation*}
+So assume some $xs_v'$, $\abstractstateauth{\Qg}{xs_v'}$ and $\abstractstatefullfrag{Q_{\gname H}}{xs_v}$. We must then prove $\pvs[\mask\setminus\Nl.i^\uparrow] \later \abstractstateauth{\Qg}{(v :: xs_v')} \ast \abstractstatefullfrag{Q_{\gname H}}{(v :: xs_v)}$
+By property \ref{MSQTL:hocap:abst:agree}, $xs_v = xs_v'$, hence, we can apply property \ref{MSQTL:hocap:abst:update} to update the authoritative and fragmental views to $(v :: xs_v)$, which is what we wanted.
+
+We use a similar approach to above to prove the \textbf{sequential dequeue spec}. So we assume some $v_q$, $xs_v$, and $Q_{\gname S}$, and must then prove the hoare-triple concerning $\dequeue\ v_q$. This time, we use the hocap-style dequeue spec, with the following choices: $P \triangleq \abstractstatefullfrag{Q_{\gname H}}{xs_v}$, and $Q \ v \triangleq (xs_v = [] \ast v = \None \ast \abstractstatefullfrag{Q_{\gname H}}{xs_v}) \lor (\Exists x_v, xs_v'. xs_v = xs_v' \catenate [x_v] \ast v = \Some{x_v} \ast \abstractstatefullfrag{Q_{\gname H}}{xs_v'})$.
+In the same way as above, the hoare triple we get essentially matches the one we have to prove. So we only have to prove the viewshift. First we conclude that the abstract states in the authoritative and fragmental views are equal. Then we do a case analysis on the abstract state, $xs_v$. If $xs_v$ is empty, then we prove the left disjunct in the consequent of the viewshift, \emph{without} updating the authoritative and fragmental views. If $xs_v$ is non-empty (i.e. $xs_v = xs_v' \catenate [x_v]$ for some $xs_v'$ and $x_v$), then we prove the right-side of the consequent in the viewshift, using property \ref{MSQTL:hocap:abst:update} to update the authoritative and fragmental views to the new abstract state ($xs_v'$).
 
 \subsection{Deriving Concurrent spec}
-\todo{text}
+Remember that we need the $\isqueueconc$ predicate to be persistent, hence we cannot simply assert $\abstractstatefullfrag{Q_{\gname H}}{xs_v}$ as we did for $\isqueueseq$. Instead we will put it into an invariant. The predicate we will use looks as follows.
+\begin{align*}
+  \isqueueconc \; v_q \; xs_v \; Q_{\gname C} = 
+  &\Exists Q_{\gname H} \in Qgnames .\\
+  &proj\_Qgnames\_conc \ Q_{\gname H} = Q_{\gname C} \ast\\
+  &\isqueue \ v_q \ Q_{\gname H} \ast\\
+  &\knowInv{\Nl.c}{\Exists xs_v. \abstractstatefullfrag{Q_{\gname H}}{xs_v} \ast All\ xs_v\ \Psi}
+\end{align*}
+Persistency of $\isqueueconc$ follows by the persistency of $\isqueue$ and the fact that invariants and equalities are persistent.
+
+The concurrent initialise spec follows from the hocap-style initialise spec,after allocating the invariant in the post-condition. We achieve this by applying the rules Ht-csq-vs and inv-alloc, to put $\abstractstatefullfrag{Q_{\gname H}}{xs_v}$ and $All\ [] \Psi$ (which is trivially true) in the postcondition of the hocap style spec into an invariant.
+
+Next, to prove the enqueue spec, we assume some $v_q$, $v$, and $Q_{\gname C}$, and must then prove the hoare triple concerning the expression $\enqueue\ v_q\ v$. We specialise the hocap-style enqueue spec with $P \triangleq \Psi \ v$ and $Q \triangleq \TRUE$. The hoare triple we get after proving the viewshift matches the hoare triple we must prove, except that its precondition is weaker: it doesn't mention the invariant or the equality. Hence, the hoare triple we have to prove simply follows by the rule of consequence.
+To prove the viewshift, we must supply the full fragmental view. When deriving the sequential spec, we had this available through $P$. But this time we shall get it by opening the invariant in $\isqueueconc$. Proving the viewshift is then similar to what we did for the sequential spec.
+
+To derive the dequeue spec, we pick $P \triangleq \TRUE$ and $Q \ v \triangleq v = \None \lor (\Exists x_v . v = \Some{x_v} \ast \Psi \ x_v)$. Again, the hoare triple we get after proving the viewshift is exactly the hoare triple we must prove, except that its precondition is weaker. Hence, we only have to prove the viewshift. This is done analogously to the sequential case (i.e. case distinction on $xs_v$), except this time we get $\abstractstatefullfrag{Q_{\gname H}}{xs_v}$ through the invariant, and in the case where $xs_v$ is not empty, i.e. $xs_v = xs_v' \catenate [x_v]$ for some $xs_v'$ and $x_v$, we extract $\Psi \ x_v$ from $All\ xs_v \ \Psi$, and use this to prove the right disjunct in $Q$.
 
 
 \chapter{The Lock-Free Michael Scott Queue}

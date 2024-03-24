@@ -268,7 +268,7 @@ Proof.
 		  iSplit; done.
 	}
 	(* Proving pre-condition of hocap enqueue spec *)
-	{ eauto. }
+	{ auto. }
 	iIntros (w) "HQ".
 	iApply ("HΦ" $! w).
 	unfold Q.
