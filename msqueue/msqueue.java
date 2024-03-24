@@ -27,7 +27,7 @@ class Node {
     }
 }
 
-// Pointer class not needed s AtomicReference compares using == (i.e. object references)
+// Pointer class not needed as AtomicReference compares using == (i.e. object references)
 
 class Queue {
     AtomicReference<Node> Head;
