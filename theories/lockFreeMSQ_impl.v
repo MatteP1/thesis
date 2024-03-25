@@ -14,9 +14,9 @@ Definition enqueue : val :=
 	rec: "enqueue" "Q" "value" :=
 		let: "node" := ref (SOME "value", ref(NONE)) in
 		(rec: "loop" "_" := 
-			let: "tail" := ! (Snd !"Q") in
-			let: "next" := ! (Snd !"tail") in
-			if: "tail" = ! (Snd !"Q") then
+			let: "tail" := !(Snd !"Q") in
+			let: "next" := !(Snd !"tail") in
+			if: "tail" = !(Snd !"Q") then
 				if: "next" = NONE then
 					if: CAS (Snd !"tail") "next" "node" then
 						CAS (Snd !"Q") "tail" "node"
@@ -27,7 +27,23 @@ Definition enqueue : val :=
 
 Definition dequeue : val :=
 	rec: "dequeue" "Q" :=
-		#1.
+		(rec: "loop" "_" :=
+			let: "head" := !(Fst !"Q") in
+			let: "tail" := !(Snd !"Q") in
+			let: "next" := !(Snd !"head") in
+			if: "head" = !(Fst !"Q") then
+				if: "head" = "tail" then
+					if: "next" = NONE then
+						NONEV
+					else
+						CAS (Snd !"Q") "tail" "next";; "loop" #()
+				else
+					let: "value" := Fst (!"next") in
+					if: CAS (Fst !"Q") "head" "next" then
+						"value"
+					else "loop" #()
+			else "loop" #()
+		) #().
 
 Section tests.
 
@@ -68,6 +84,6 @@ Definition test_dequeue_empty2 : expr :=
 	let: "v3" := dequeue "Q" in
 	("v1", "v2", "v3").
 
-Compute (exec 200 test_enqueue).
+Compute (exec 200 test_dequeue_empty2).
 
 End tests.
