@@ -36,8 +36,8 @@ Definition is_queue_seq (v_q : val) (xs_v: list val) (Q_γ: SeqQgnames) : iProp 
 	is_lock Q_γ.(γ_Tlock) t_lock (True).
 
 Lemma initialize_spec_seq :
-	{{{ True }}} 
-		initialize #() 
+	{{{ True }}}
+		initialize #()
 	{{{ v_q Q_γ, RET v_q; is_queue_seq v_q [] Q_γ }}}.
 Proof.
 	iIntros (Φ _) "HΦ".
@@ -73,7 +73,7 @@ Qed.
 
 Lemma enqueue_spec_seq v_q (v : val) (xs_v : list val) (Q_γ : SeqQgnames) :
 	{{{ is_queue_seq v_q xs_v Q_γ }}}
-		enqueue v_q v 
+		enqueue v_q v
 	{{{w, RET w; is_queue_seq v_q (v :: xs_v) Q_γ }}}.
 Proof.
 	iIntros (Φ) "(%l_queue & %l_head & %l_tail & %h_lock & %t_lock & -> &
@@ -126,11 +126,11 @@ Proof.
 	by iSplit.
 Qed.
 
-Lemma dequeue_spec_seq v_q (xs_v : list val) (Q_γ : SeqQgnames) : 
+Lemma dequeue_spec_seq v_q (xs_v : list val) (Q_γ : SeqQgnames) :
 	{{{ is_queue_seq v_q xs_v Q_γ }}}
 		dequeue v_q
 	{{{ v, RET v; (⌜xs_v = []⌝ ∗ ⌜v = NONEV⌝ ∗ is_queue_seq v_q xs_v Q_γ) ∨
-				  (∃x_v xs_v', ⌜xs_v = xs_v' ++ [x_v]⌝ ∗ 
+				  (∃x_v xs_v', ⌜xs_v = xs_v' ++ [x_v]⌝ ∗
 				  		⌜v = SOMEV x_v⌝ ∗ is_queue_seq v_q xs_v' Q_γ) }}}.
 Proof.
 	iIntros (Φ) "(%l_queue & %l_head & %l_tail & %h_lock & %t_lock & -> &

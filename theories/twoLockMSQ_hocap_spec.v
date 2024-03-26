@@ -146,7 +146,7 @@ Definition queue_invariant_simple (l_head l_tail : loc) (Q_γ : Qgnames) : iProp
 	⌜proj_val xs_queue = wrap_some xs_v⌝ ∗
 	(
 		(
-			(l_head ↦ #(n_in x_head) ∗ ToknD Q_γ) ∨ 
+			(l_head ↦ #(n_in x_head) ∗ ToknD Q_γ) ∨
 			(l_head ↦{#1/2} #(n_in x_head) ∗ TokD Q_γ)
 		) ∗
 		(
@@ -167,7 +167,7 @@ Lemma queue_invariant_equiv_simple : forall l_head l_tail Q_γ,
 Proof.
 	iIntros (l_head l_tail Q_γ).
 	iSplit.
-	- iIntros "(%xs_v & HAbst & %xs & %xs_queue & %xs_old & %x_head & %x_tail & Hxs_split & HisLL_xs & %Hconc_abst_eq & [HStatic | [HEnqueue | [HDequeue | HBoth]]])"; 
+	- iIntros "(%xs_v & HAbst & %xs & %xs_queue & %xs_old & %x_head & %x_tail & Hxs_split & HisLL_xs & %Hconc_abst_eq & [HStatic | [HEnqueue | [HDequeue | HBoth]]])";
 	iExists xs_v; iFrame; iExists xs, xs_queue, xs_old, x_head, x_tail; iFrame.
 	  + iDestruct "HStatic" as "(Hl_head & Hl_tail & HisLast & HTokne & HToknD & HTokUpdated)".
 	  	iSplit; first done.
@@ -175,10 +175,10 @@ Proof.
 		iLeft. iFrame.
 	  + iDestruct "HEnqueue" as "(Hl_head & Hl_tail & [[HisLast HTokAfter] | [HisSndLast HAfter]] & HToke & HToknD)".
 	    * iSplit; first done.
-		  iSplitL "Hl_head HToknD"; first (iLeft; iFrame). 
+		  iSplitL "Hl_head HToknD"; first (iLeft; iFrame).
 		  iRight. iFrame. iLeft. iFrame.
 		* iSplit; first done.
-		  iSplitL "Hl_head HToknD"; first (iLeft; iFrame). 
+		  iSplitL "Hl_head HToknD"; first (iLeft; iFrame).
 		  iRight. iFrame. iRight. iFrame.
 	  + iDestruct "HDequeue" as "(Hl_head & Hl_tail & HisLast & HTokne & HTokD & HTokUpdated)".
 	    iSplit; first done.
@@ -186,10 +186,10 @@ Proof.
 		iLeft. iFrame.
 	  + iDestruct "HBoth" as "(Hl_head & Hl_tail & [[HisLast HTokAfter] | [HisSndLast HAfter]] & HToke & HTokD)".
 	    * iSplit; first done.
-		  iSplitL "Hl_head HTokD"; first (iRight; iFrame). 
+		  iSplitL "Hl_head HTokD"; first (iRight; iFrame).
 		  iRight. iFrame. iLeft. iFrame.
 		* iSplit; first done.
-		  iSplitL "Hl_head HTokD"; first (iRight; iFrame). 
+		  iSplitL "Hl_head HTokD"; first (iRight; iFrame).
 		  iRight. iFrame. iRight. iFrame.
 	- iIntros "(%xs_v & HAbst & %xs & %xs_queue & %xs_old & %x_head & %x_tail & Hxs_split & HisLL_xs & %Hconc_abst_eq & [[Hl_head HToknD] | [Hl_head HTokD]] & [(Hl_tail & HisLast & HToknE & HTokUpdated) | (Hl_tail & HTokE & [[HisLast HTokBefore] | [HisSndLast HTokAfter]])])";
 	iExists xs_v; iFrame; iExists xs, xs_queue, xs_old, x_head, x_tail; eauto 10 with iFrame.
@@ -275,7 +275,7 @@ Lemma enqueue_spec v_q (v : val) (Q_γ : Qgnames) (P Q : iProp Σ) :
 	{{{ w, RET w; Q }}}.
 Proof.
 	(* CHANGE: START: intro viewshift *)
-	iIntros "#Hvs". 
+	iIntros "#Hvs".
 	iIntros (Φ) "!> [(%l_queue & %l_head & %l_tail & %h_lock & %t_lock & -> &
 				 #Hl_queue & #Hqueue_inv & #Hh_lock & #Ht_lock) HP] HΦ".
 	(* CHANGE: END *)
@@ -333,7 +333,7 @@ Proof.
 	iInv "Hqueue_inv" as "Hqueue_inv_open".
 	(* CHANGE: START: remove Ψ, HAll -> HAbst *)
 	iPoseProof (queue_invariant_equiv_simple l_head l_tail Q_γ with "Hqueue_inv_open") as "Hqueue_inv_open".
-	iDestruct "Hqueue_inv_open" as "(%xs_v & HAbst & %xs & %xs_queue & %xs_old & %x_head & %x_tail' & >%Heq_xs & HisLL_xs & >%Hconc_abst_eq & Hhead & [ ( _ & _ & >HToknE' & _ ) | (>Hl_tail1 & HTokE & [[>[%xs_fromtail %HisLast] HTokBefore] | [_ >HTokAfter']]) ])"; 
+	iDestruct "Hqueue_inv_open" as "(%xs_v & HAbst & %xs & %xs_queue & %xs_old & %x_head & %x_tail' & >%Heq_xs & HisLL_xs & >%Hconc_abst_eq & Hhead & [ ( _ & _ & >HToknE' & _ ) | (>Hl_tail1 & HTokE & [[>[%xs_fromtail %HisLast] HTokBefore] | [_ >HTokAfter']]) ])";
 	[ by iCombine "HToknE HToknE'" gives "%H" | | (* Impossible: ToknE *)
 	  by iCombine "HTokAfter HTokAfter'" gives "%H" ]. (* Impossible: TokAfter *)
 	(* CHANGE: END *)
@@ -377,7 +377,7 @@ Proof.
 		iFrame.
 		iRight.
 		iFrame.
-		iExists x_new, xs_fromtail. 
+		iExists x_new, xs_fromtail.
 		unfold xs_new.
 		by rewrite HisLast.
 	}
@@ -390,7 +390,7 @@ Proof.
 	iInv "Hqueue_inv" as "Hqueue_inv_open".
 	(* CHANGE: START: remove Ψ, HAll -> HAbst *)
 	iPoseProof (queue_invariant_equiv_simple l_head l_tail Q_γ with "Hqueue_inv_open") as "Hqueue_inv_open".
-	iDestruct "Hqueue_inv_open" as "(%xs_v & HAbst & %xs & %xs_queue & %xs_old & %x_head & %x_tail'' & >%Heq_xs & HisLL_xs & >%Hconc_abst_eq & Hhead & [ ( _ & _ & >HToknE' & _ ) | (>Hl_tail1 & HTokE & [[_ >HTokBefore'] | [>(%x_new' & %xs_fromtail & %HisSndLast) HTokAfter]])])"; 
+	iDestruct "Hqueue_inv_open" as "(%xs_v & HAbst & %xs & %xs_queue & %xs_old & %x_head & %x_tail'' & >%Heq_xs & HisLL_xs & >%Hconc_abst_eq & Hhead & [ ( _ & _ & >HToknE' & _ ) | (>Hl_tail1 & HTokE & [[_ >HTokBefore'] | [>(%x_new' & %xs_fromtail & %HisSndLast) HTokAfter]])])";
 	[ by iCombine "HToknE HToknE'" gives "%H" | (* Impossible: ToknE *)
 	  by iCombine "HTokBefore HTokBefore'" gives "%H" | ]. (* Impossible: TokBefore *)
 	(* CHANGE: END *)
@@ -440,7 +440,7 @@ Qed.
 Lemma dequeue_spec v_q (Q_γ : Qgnames) (P : iProp Σ) (Q : val -> iProp Σ):
 	□(∀xs_v, (Q_γ ⤇● xs_v ∗ P
 				={⊤ ∖ ↑Ni}=∗
-		      	▷ (( ⌜xs_v = []⌝ ∗ Q_γ ⤇● xs_v ∗ Q NONEV) ∨
+				▷ (( ⌜xs_v = []⌝ ∗ Q_γ ⤇● xs_v ∗ Q NONEV) ∨
 				(∃x_v xs_v', ⌜xs_v = xs_v' ++ [x_v]⌝ ∗ Q_γ ⤇● xs_v' ∗ Q (SOMEV x_v)))
 			)
 	 )
@@ -467,7 +467,7 @@ Proof.
 	iInv "Hqueue_inv" as "Hqueue_inv_open".
 	(* CHANGE: START: remove Ψ, HAll -> HAbst *)
 	iPoseProof (queue_invariant_equiv_simple l_head l_tail Q_γ with "Hqueue_inv_open") as "Hqueue_inv_open".
-	iDestruct "Hqueue_inv_open" as "(%xs_v & HAbst & %xs & %xs_queue & %xs_old & %x_head & %x_tail & >%Heq_xs & HisLL_xs & >%Hconc_abst_eq & [ [Hl_head HToknD] | [Hl_head >HTokD'] ] & Htail)"; 
+	iDestruct "Hqueue_inv_open" as "(%xs_v & HAbst & %xs & %xs_queue & %xs_old & %x_head & %x_tail & >%Heq_xs & HisLL_xs & >%Hconc_abst_eq & [ [Hl_head HToknD] | [Hl_head >HTokD'] ] & Htail)";
 	last by iCombine "HTokD HTokD'" gives "%H". (* Impossible: TokD*)
 	(* CHANGE: END *)
 	wp_load.
@@ -519,7 +519,7 @@ Proof.
 	  	[ by iFrame | |
 		  (* The abstract state must be empty. Hence the second disjunct is impossible. *)
 		  rewrite wrap_some_split in Hconc_abst_eq;
-		  simpl in Hconc_abst_eq; 
+		  simpl in Hconc_abst_eq;
 		  exfalso;
 		  by apply (app_cons_not_nil (wrap_some xs_v') [] (SOMEV x_v))
 		].

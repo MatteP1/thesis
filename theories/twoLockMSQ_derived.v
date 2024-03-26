@@ -76,17 +76,17 @@ Proof.
 	by repeat iSplit.
 Qed.
 
-Lemma dequeue_spec_seq v_q (xs_v : list val) (Q_γS : SeqQgnames) : 
+Lemma dequeue_spec_seq v_q (xs_v : list val) (Q_γS : SeqQgnames) :
 	{{{ is_queue_seq v_q xs_v Q_γS }}}
 		dequeue v_q
 	{{{ v, RET v; (⌜xs_v = []⌝ ∗ ⌜v = NONEV⌝ ∗ is_queue_seq v_q xs_v Q_γS) ∨
-				  (∃x_v xs_v', ⌜xs_v = xs_v' ++ [x_v]⌝ ∗ 
+				  (∃x_v xs_v', ⌜xs_v = xs_v' ++ [x_v]⌝ ∗
 				  		⌜v = SOMEV x_v⌝ ∗ is_queue_seq v_q xs_v' Q_γS) }}}.
 Proof.
 	iIntros (Φ) "(%Q_γH & %Heq & #His_queue & Hfrag) HΦ".
 	set (P := (Q_γH ⤇◯ xs_v)%I).
-	set (Q := λ v, ((⌜xs_v = []⌝ ∗ ⌜v = NONEV⌝ ∗ Q_γH ⤇◯ xs_v) ∨ 
-					(∃x_v xs_v', ⌜xs_v = xs_v' ++ [x_v]⌝ ∗ 
+	set (Q := λ v, ((⌜xs_v = []⌝ ∗ ⌜v = NONEV⌝ ∗ Q_γH ⤇◯ xs_v) ∨
+					(∃x_v xs_v', ⌜xs_v = xs_v' ++ [x_v]⌝ ∗
 						⌜v = SOMEV x_v⌝ ∗ Q_γH ⤇◯ xs_v'))%I).
 	wp_apply (dequeue_spec N v_q Q_γH P Q with "[] [Hfrag]" ).
 	(* Proving viewshift *)
@@ -120,7 +120,7 @@ Proof.
 	iApply ("HΦ" $! w).
 	unfold Q.
 	iDestruct "HQ" as "[(-> & %Hres & Hfrag) | (%x_v & %xs_v' & %Hxs_v_eq & %Hres & Hfrag)]".
-	- iLeft. 
+	- iLeft.
 	  repeat iSplit; try done.
 	  iExists Q_γH.
 	  by repeat iSplit.

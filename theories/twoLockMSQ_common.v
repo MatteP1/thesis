@@ -106,16 +106,16 @@ Section isLL.
 
 Context `{!heapGS Σ}.
 
-(* 
+(*
 	isLL is short for: 'is Linked List'.
-	isLL_chain states that every node x in xs satisfies 
+	isLL_chain states that every node x in xs satisfies
 		n_in x ↦□ (n_val x, #(n_out x)).
    	Further, all adjacent pairs, [x ; x'], are connected by x' pointing to x.
 	Example:
 	The list
-	[(l_3_in, v_3, l_3_out); 
-	 (l_2_in, v_2, l_2_out); 
-	 (l_1_in, v_1, l_1_out)] 
+	[(l_3_in, v_3, l_3_out);
+	 (l_2_in, v_2, l_2_out);
+	 (l_1_in, v_1, l_1_out)]
 	generates:
 	(v_3, l_3_out) <- l_3_in 	∗	l_3_in <- l_2_out	∗
 	(v_2, l_2_out) <- l_2_in 	∗	l_2_in <- l_1_out	∗
@@ -186,7 +186,7 @@ Proof.
 	- destruct xs_2.
 	  + done.
 	  + by iDestruct "HisLL_chain" as "(Hx & _ & _)".
-	- iApply "IH". 
+	- iApply "IH".
 	  destruct xs'_1 as [| y' xs''_1];
 	  iDestruct "HisLL_chain" as "(_ & _ & H)"; done.
 Qed.
