@@ -1,5 +1,5 @@
 From stdpp Require Import countable.
-From iris.algebra Require Import excl list agree lib.frac_auth.
+From iris.algebra Require Import excl list agree gmap lib.frac_auth.
 From iris.bi Require Import derived_laws.
 From iris.heap_lang Require Import lang proofmode notation.
 From iris.base_logic.lib Require Import invariants.
@@ -9,7 +9,18 @@ From MSQueue Require Import twoLockMSQ_common.
 
 Section proofs.
 
+Definition linkedListUR : ucmra :=
+	gmapUR nat (agreeR (prodO (prodO locO valO) locO)).
+
+Fixpoint to_ll_go (i : nat) (xs : list (loc * val * loc)) : linkedListUR :=
+  match xs with
+  | [] => ∅
+  | x :: xs' => <[i:=to_agree x]>(to_ll_go (S i) xs')
+  end.
+Definition to_ll : list (loc * val * loc) → linkedListUR := to_ll_go 0.
+
 Context `{!heapGS Σ}.
+Context `{!inG Σ (authR linkedListUR)}.
 Context `{!inG Σ (frac_authR (agreeR (listO val)))}.
 
 Variable N : namespace.
@@ -73,9 +84,31 @@ Proof.
 	by apply frac_auth_update_1.
 Qed.
 
+Notation current Q_γ xs := (own Q_γ.(γ_Snap) (● (to_ll (reverse xs)))).
+Notation snapshot Q_γ xs := (own Q_γ.(γ_Snap) (◯ (to_ll (reverse xs)))).
+
+Lemma get_snapshot : ∀ Q_γ xs,
+	current Q_γ xs -∗
+	current Q_γ xs ∗ snapshot Q_γ xs.
+Proof.
+	Admitted.
+
+Lemma current_and_snapshot : ∀ Q_γ xs xs',
+	current Q_γ xs -∗
+	snapshot Q_γ xs' -∗
+	∃xs'', ⌜xs = xs'' ++ xs'⌝.
+Proof.
+	Admitted.
+
+Lemma current_update : ∀ Q_γ xs x,
+	current Q_γ xs ==∗ current Q_γ (x :: xs).
+Proof.
+	Admitted.
+
 Definition queue_invariant (l_head l_tail : loc) (Q_γ : Qgnames) : iProp Σ :=
 	∃ xs_v, Q_γ ⤇● xs_v ∗ (* Abstract state *)
 	∃ xs xs_queue xs_old (x_head x_tail: (loc * val * loc)), (* Concrete state *)
+	current Q_γ xs ∗
 	⌜xs = xs_queue ++ [x_head] ++ xs_old⌝ ∗
 	isLL xs ∗
 	(* Relation between concrete and abstract state *)
@@ -85,7 +118,7 @@ Definition queue_invariant (l_head l_tail : loc) (Q_γ : Qgnames) : iProp Σ :=
 	(⌜isLast x_tail xs⌝ ∨ ⌜isSndLast x_tail xs⌝).
 
 Definition is_queue (v_q : val) (Q_γ: Qgnames) : iProp Σ :=
-	∃ l_queue l_head l_tail : loc, ∃ h_lock T_lock : val,
+	∃ l_queue l_head l_tail : loc,
 	⌜v_q = #l_queue⌝ ∗
 	l_queue ↦□ (#l_head, #l_tail) ∗
 	inv Ni (queue_invariant l_head l_tail Q_γ).
@@ -100,7 +133,43 @@ Lemma initialize_spec:
 	{{{ v_q Q_γ, RET v_q; is_queue v_q Q_γ ∗
 						  Q_γ ⤇◯ [] }}}.
 Proof.
-	Admitted.
+	iIntros (Φ) "_ HΦ".
+	wp_lam.
+	wp_pures.
+	wp_alloc l_1_out as "Hl_1_out".
+	wp_alloc l_1_in as "Hl_1_in".
+	wp_pures.
+	iMod (pointsto_persist with "Hl_1_in") as "#Hl_1_in".
+	wp_alloc l_tail as "Hl_tail".
+	wp_alloc l_head as "Hl_head".
+	iMod (own_alloc (●F (to_agree []) ⋅ ◯F (to_agree []))) as (γ_Abst) "[Hγ_Abst_auth Hγ_Abst_frac]"; first by apply frac_auth_valid.
+	iMod (own_alloc (● (to_ll [(l_1_in, NONEV, l_1_out)]))) as (γ_Snap) "Hγ_Snap_curr".
+	{
+		apply auth_auth_valid.
+		apply singleton_valid.
+		rewrite <- agree_idemp.
+		by apply to_agree_op_valid_L.
+	}
+	set (Queue_gnames := {| γ_Abst := γ_Abst;
+							γ_Snap := γ_Snap
+					|}).
+	iMod (inv_alloc Ni _ (queue_invariant l_head l_tail Queue_gnames) with "[Hγ_Abst_auth Hγ_Snap_curr Hl_head Hl_tail Hl_1_in Hl_1_out]") as "#HqueueInv".
+	{
+		iNext. iExists []; iFrame.
+		iExists [(l_1_in, NONEV, l_1_out)], [], [], (l_1_in, NONEV, l_1_out), (l_1_in, NONEV, l_1_out); iFrame.
+		do 3 (iSplit; first done).
+		iLeft.
+		iFrame.
+		by iExists [].
+	}
+	wp_alloc l_queue as "Hl_queue".
+	iMod (pointsto_persist with "Hl_queue") as "#Hl_queue".
+	iApply ("HΦ" $! #l_queue Queue_gnames).
+	iModIntro.
+	iFrame.
+	iExists l_queue, l_head, l_tail.
+	by repeat iSplit.
+Qed.
 
 Lemma enqueue_spec v_q (v : val) (Q_γ : Qgnames) (P Q : iProp Σ) :
 	□(∀xs_v, (Q_γ ⤇● xs_v ∗ P ={⊤ ∖ ↑Ni}=∗ ▷ (Q_γ ⤇● (v :: xs_v) ∗ Q))) -∗
