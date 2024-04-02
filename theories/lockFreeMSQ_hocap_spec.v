@@ -115,7 +115,7 @@ Definition queue_invariant (l_head l_tail : loc) (Q_γ : Qgnames) : iProp Σ :=
 	⌜proj_val xs_queue = wrap_some xs_v⌝ ∗
 	l_head ↦ #(n_in x_head) ∗
 	l_tail ↦ #(n_in x_tail) ∗
-	(⌜isLast x_tail xs⌝ ∨ ⌜isSndLast x_tail xs⌝).
+	⌜In x_tail xs⌝.
 
 Definition is_queue (v_q : val) (Q_γ: Qgnames) : iProp Σ :=
 	∃ l_queue l_head l_tail : loc,
@@ -159,8 +159,7 @@ Proof.
 		iExists [(l_1_in, NONEV, l_1_out)], [], [], (l_1_in, NONEV, l_1_out), (l_1_in, NONEV, l_1_out); iFrame.
 		do 3 (iSplit; first done).
 		iLeft.
-		iFrame.
-		by iExists [].
+		done.
 	}
 	wp_alloc l_queue as "Hl_queue".
 	iMod (pointsto_persist with "Hl_queue") as "#Hl_queue".
@@ -296,8 +295,29 @@ Proof.
 		wp_pures.
 		wp_bind (CmpXchg _ _ _).
 		iInv "Hqueue_inv" as "(%xs_v & HAbst & %xs4 & %xs4_queue & %xs4_old & %x_head & %x_tail''' & >Hcurr & >%Heq_xs4 & HisLL_xs4 & >%Hconc_abst_eq & Hhead & Htail & >%HisLastOrSndLast4)".
-		admit.
-		(* wp_cmpxchg as H1 | H2.
+		iAssert (∃xs_diff', ⌜xs4 = xs_diff' ++ xs1⌝)%I with "[Hcurr Hsnap1]" as "(%xs_diff' & %Hxs4xs1_eq)"; first by (iApply (current_and_snapshot Q_γ xs4 xs1 with "Hcurr Hsnap1")).
+		assert (Hxs4tail: isLast x_tail xs4 \/ ∃xs x_next xs', xs4 = xs ++ x_next :: x_tail :: xs').
+		{
+			destruct xs_diff' as [ | x_last xs_diff''].
+			- simpl in Hxs4xs1_eq.
+			rewrite Hxs4xs1_eq in HisLastOrSndLast1 *.
+			destruct HisLastOrSndLast1 as [Hlast | Hsndlast].
+			+ by left.
+			+ right.
+				exists []. apply Hsndlast.
+			- right. 
+			destruct HisLastOrSndLast1 as [[xs_fromtail' ->] | [x_first [xs_fromtail' HisSndLast]]].
+			+ destruct (exists_first (x_last :: xs_diff'')) as [x_first [x_diff'' Hx_first]]; first done. 
+			exists x_diff'', x_first, xs_fromtail'.
+			rewrite Hxs4xs1_eq. rewrite Hx_first.
+			by rewrite <- app_assoc.
+			+  exists (x_last :: xs_diff''), x_first, xs_fromtail'.
+			rewrite Hxs4xs1_eq. 
+			by rewrite HisSndLast.
+		}
+		destruct Hxs4tail as [HisLast_xs4 |Hxs4eq].
+		* 
+		wp_cmpxchg as H1 | H2.
 		* iModIntro.
 		  iAssert (⌜x_tail''' = x_tail⌝)%I as "->".
 			{
@@ -341,7 +361,7 @@ Proof.
 			}
 		  wp_pures.
 		  wp_lam.
-		  iApply ("IH" with "HP HΦ Hl_new_out").  *)
+		  iApply ("IH" with "HP HΦ Hl_new_out"). 
 	+ (* Inconsistent*)
 		wp_lam.
 		iApply ("IH" with "HP HΦ Hl_new_out").
