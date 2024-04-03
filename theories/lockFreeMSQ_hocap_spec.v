@@ -1,7 +1,7 @@
 From stdpp Require Import countable.
 From iris.algebra Require Import excl list agree gmap lib.frac_auth.
 From iris.bi Require Import derived_laws.
-From iris.heap_lang Require Import lang proofmode notation.
+From iris.heap_lang Require Import lang proofmode notation primitive_laws.
 From iris.base_logic.lib Require Import invariants.
 From MSQueue Require Import lockFreeMSQ_impl.
 From MSQueue Require Import twoLockMSQ_common.
@@ -197,14 +197,13 @@ Proof.
 	wp_pures.
 	wp_bind (! #l_tail)%E.
 	(* First Invariant Opening *)
-	iInv "Hqueue_inv" as "(%xs_v & HAbst & %xs1 & %xs1_queue & %xs1_old & %x_head & %x_tail & >Hcurr & >%Heq_xs1 & HisLL_xs1 & >%Hconc_abst_eq & Hhead & Htail & >%HisLastOrSndLast1)".
+	iInv "Hqueue_inv" as "(%xs_v & HAbst & %xs1 & %xs1_queue & %xs1_old & %x_head & %x_tail & >Hcurr & >%Heq_xs1 & HisLL_xs1 & >%Hconc_abst_eq & Hhead & Htail & >%Hx_tail_in_xs1)".
 	wp_load.
 	iPoseProof (isLL_and_chain with "HisLL_xs1") as "[HisLL_xs1 #HisLL_chain_xs1]".
 	iAssert ((n_in x_tail ↦□ (n_val x_tail, #(n_out x_tail)))%I) as "#Hx_tail".
 	{
-		destruct HisLastOrSndLast1 as [[xs_fromtail HisLast] | [x_first [xs_fromtail HisSndLast]]].
-		- iPoseProof (isLL_chain_node [] x_tail xs_fromtail with "[HisLL_chain_xs1]") as "#Hx_tail"; by rewrite HisLast.
-		- iPoseProof (isLL_chain_node [x_first] x_tail xs_fromtail with "[HisLL_chain_xs1]") as "#Hx_tail"; by rewrite HisSndLast.
+		destruct (In_split x_tail xs1 Hx_tail_in_xs1) as [xs1' [xs1'' Heq]].
+		iPoseProof (isLL_chain_node xs1' x_tail xs1'' with "[HisLL_chain_xs1]") as "#Hx_tail"; by rewrite Heq.
 	}
 	iPoseProof (get_snapshot with "Hcurr") as "[Hcurr Hsnap1]".
 	iModIntro.
@@ -223,27 +222,37 @@ Proof.
 	wp_pures.
 	wp_bind (! #(n_out x_tail))%E.
 	(* Second Invariant Opening *)
-	iInv "Hqueue_inv" as "(%xs_v & HAbst & %xs2 & %xs2_queue & %xs2_old & %x_head & %x_tail' & >Hcurr & >%Heq_xs2 & HisLL_xs2 & >%Hconc_abst_eq & Hhead & Htail & >%HisLastOrSndLast2)".
+	iInv "Hqueue_inv" as "(%xs_v & HAbst & %xs2 & %xs2_queue & %xs2_old & %x_head & %x_tail' & >Hcurr & >%Heq_xs2 & HisLL_xs2 & >%Hconc_abst_eq & Hhead & Htail & >%Hx_tail'_in_xs2)".
 	iAssert (∃xs_diff, ⌜xs2 = xs_diff ++ xs1⌝)%I with "[Hcurr Hsnap1]" as "(%xs_diff & %Hxs2xs1_eq)"; first by (iApply (current_and_snapshot Q_γ xs2 xs1 with "Hcurr Hsnap1")).
 	(* CASE ANALYSIS: Is x_tail last? *)
 	assert (Hxs2tail: isLast x_tail xs2 \/ ∃xs x_next xs', xs2 = xs ++ x_next :: x_tail :: xs').
 	{
 		destruct xs_diff as [ | x_last xs_diff'].
 		- simpl in Hxs2xs1_eq.
-		  rewrite Hxs2xs1_eq in HisLastOrSndLast1 *.
-		  destruct HisLastOrSndLast1 as [Hlast | Hsndlast].
-		  + by left.
+		  rewrite Hxs2xs1_eq in Hx_tail_in_xs1 *.
+		  destruct (In_split x_tail xs1 Hx_tail_in_xs1) as [xs1' [xs1'' Heq]].
+		  destruct xs1' as [| x' xs1'2].
+		  + left. rewrite Heq. by exists xs1''.
 		  + right.
-		  	exists []. apply Hsndlast.
+		  	destruct (exists_first (x' :: xs1'2)) as [x_first [xs1'2_rest Hx_first]]; first done. 
+		  	exists xs1'2_rest, x_first, xs1''. rewrite Hx_first in Heq.
+			rewrite Heq. by rewrite <- app_assoc.
 		- right. 
-		  destruct HisLastOrSndLast1 as [[xs_fromtail ->] | [x_first [xs_fromtail HisSndLast]]].
-		  + destruct (exists_first (x_last :: xs_diff')) as [x_first [x_diff'' Hx_first]]; first done. 
-		  exists x_diff'', x_first, xs_fromtail.
+		  destruct (In_split x_tail xs1 Hx_tail_in_xs1) as [xs1' [xs1'' Heq]].
+		  destruct xs1' as [| x' xs1'2].
+		  + destruct (exists_first (x_last :: xs_diff')) as [x_first [xs_diff'' Hx_first]]; first done. 
+		  exists xs_diff'', x_first, xs1''.
 		  rewrite Hxs2xs1_eq. rewrite Hx_first.
-		  by rewrite <- app_assoc.
-		  +  exists (x_last :: xs_diff'), x_first, xs_fromtail.
+		  rewrite <- app_assoc.
+		  by rewrite Heq.
+		  + destruct (exists_first (x' :: xs1'2)) as [x_first [xs1'2_rest Hx_first]]; first done. 
+		  exists (x_last :: xs_diff' ++ xs1'2_rest), x_first, xs1''.
 		  rewrite Hxs2xs1_eq. 
-		  by rewrite HisSndLast.
+		  rewrite Heq.
+		  rewrite Hx_first.
+		  rewrite <- (app_assoc (x_last :: xs_diff') xs1'2_rest _) .
+		  f_equal.
+		  rewrite <- app_assoc. auto.
 	}
 	destruct Hxs2tail as [HisLast_xs2 |Hxs2eq].
 	- destruct HisLast_xs2 as [xs_fromtail Hxs2eq].
@@ -273,7 +282,7 @@ Proof.
 	  wp_pures.
 	  (* Third Invariant Opening *)
 	  wp_bind (! #l_tail)%E.
-	  iInv "Hqueue_inv" as "(%xs_v & HAbst & %xs3 & %xs3_queue & %xs3_old & %x_head & %x_tail'' & >Hcurr & >%Heq_xs3 & HisLL_xs3 & >%Hconc_abst_eq & Hhead & Htail & >%HisLastOrSndLast3)".
+	  iInv "Hqueue_inv" as "(%xs_v & HAbst & %xs3 & %xs3_queue & %xs3_old & %x_head & %x_tail'' & >Hcurr & >%Heq_xs3 & HisLL_xs3 & >%Hconc_abst_eq & Hhead & Htail & >%Hx_tail''_in_xs3)".
 	  wp_load.
 	  iModIntro.
 	  iSplitL "Hhead Htail HisLL_xs3 Hcurr HAbst".
@@ -294,75 +303,54 @@ Proof.
 		wp_load.
 		wp_pures.
 		wp_bind (CmpXchg _ _ _).
-		iInv "Hqueue_inv" as "(%xs_v & HAbst & %xs4 & %xs4_queue & %xs4_old & %x_head & %x_tail''' & >Hcurr & >%Heq_xs4 & HisLL_xs4 & >%Hconc_abst_eq & Hhead & Htail & >%HisLastOrSndLast4)".
+		iInv "Hqueue_inv" as "(%xs_v & HAbst & %xs4 & %xs4_queue & %xs4_old & %x_head & %x_tail''' & >Hcurr & >%Heq_xs4 & HisLL_xs4 & >%Hconc_abst_eq & Hhead & Htail & >%Hx_tail'''_in_xs4)".
 		iAssert (∃xs_diff', ⌜xs4 = xs_diff' ++ xs1⌝)%I with "[Hcurr Hsnap1]" as "(%xs_diff' & %Hxs4xs1_eq)"; first by (iApply (current_and_snapshot Q_γ xs4 xs1 with "Hcurr Hsnap1")).
 		assert (Hxs4tail: isLast x_tail xs4 \/ ∃xs x_next xs', xs4 = xs ++ x_next :: x_tail :: xs').
 		{
 			destruct xs_diff' as [ | x_last xs_diff''].
 			- simpl in Hxs4xs1_eq.
-			rewrite Hxs4xs1_eq in HisLastOrSndLast1 *.
-			destruct HisLastOrSndLast1 as [Hlast | Hsndlast].
-			+ by left.
+			rewrite Hxs4xs1_eq in Hx_tail_in_xs1 *.
+			destruct (In_split x_tail xs1 Hx_tail_in_xs1) as [xs1' [xs1'' Heq]].
+			destruct xs1' as [| x' xs1'2].
+			+ left. rewrite Heq. by exists xs1''.
 			+ right.
-				exists []. apply Hsndlast.
+				destruct (exists_first (x' :: xs1'2)) as [x_first [xs1'2_rest Hx_first]]; first done. 
+				exists xs1'2_rest, x_first, xs1''. rewrite Hx_first in Heq.
+				rewrite Heq. by rewrite <- app_assoc.
 			- right. 
-			destruct HisLastOrSndLast1 as [[xs_fromtail' ->] | [x_first [xs_fromtail' HisSndLast]]].
-			+ destruct (exists_first (x_last :: xs_diff'')) as [x_first [x_diff'' Hx_first]]; first done. 
-			exists x_diff'', x_first, xs_fromtail'.
+			destruct (In_split x_tail xs1 Hx_tail_in_xs1) as [xs1' [xs1'' Heq]].
+			destruct xs1' as [| x' xs1'2].
+			+ destruct (exists_first (x_last :: xs_diff'')) as [x_first [xs_diff''' Hx_first]]; first done. 
+			exists xs_diff''', x_first, xs1''.
 			rewrite Hxs4xs1_eq. rewrite Hx_first.
-			by rewrite <- app_assoc.
-			+  exists (x_last :: xs_diff''), x_first, xs_fromtail'.
+			rewrite <- app_assoc.
+			by rewrite Heq.
+			+ destruct (exists_first (x' :: xs1'2)) as [x_first [xs1'2_rest Hx_first]]; first done. 
+			exists (x_last :: xs_diff'' ++ xs1'2_rest), x_first, xs1''.
 			rewrite Hxs4xs1_eq. 
-			by rewrite HisSndLast.
+			rewrite Heq.
+			rewrite Hx_first.
+			rewrite <- (app_assoc (x_last :: xs_diff'') xs1'2_rest _) .
+			f_equal.
+			rewrite <- app_assoc. auto.
 		}
-		destruct Hxs4tail as [HisLast_xs4 |Hxs4eq].
-		* 
-		wp_cmpxchg as H1 | H2.
-		* iModIntro.
-		  iAssert (⌜x_tail''' = x_tail⌝)%I as "->".
-			{
-				iPoseProof (isLL_and_chain with "HisLL_xs4") as "[HisLL_xs4 #HisLL_chain_xs4]".
-				iApply n_in_equal; auto.
-				destruct HisLastOrSndLast4 as [[xs_fromtail HisLast] | [x_first [xs_fromtail HisSndLast]]].
-				- iPoseProof (isLL_chain_node [] x_tail''' xs_fromtail with "[HisLL_chain_xs4]") as "#Hx_tail'''"; by rewrite HisLast.
-				- iPoseProof (isLL_chain_node [x_first] x_tail''' xs_fromtail with "[HisLL_chain_xs4]") as "#Hx_tail'''"; by rewrite HisSndLast.
-			}
-		  iAssert (⌜xs4 = x_next :: x_tail :: xs'⌝)%I as "%Hxs4eq".
+		destruct Hxs4tail as [HisLast_xs4 | Hxs4eq].
+		* admit.
+		  (* TODO: prove. Note: Very confident this branch is provable. *)
+		* destruct Hxs4eq as (xs4' & x_next & xs4'' & Heq).
+		  iPoseProof (isLL_and_chain with "HisLL_xs4") as "[HisLL_xs4 #HisLL_chain_xs4]".
+		  iAssert (▷(isLL_chain [x_next; x_tail]))%I as "HisLLchain_x_next_x_tail".
 		  {
-			iDestruct (current_and_snapshot Q_γ xs4 xs2 with "Hcurr Hsnap2") as "(%xs'' & %Hxs4xs2eq)".
-			rewrite Heq in Hxs4xs2eq.
-			destruct xs'', xs; first done.
-			all: simpl in *; rewrite Hxs4xs2eq in HisLastOrSndLast4;
-			destruct HisLastOrSndLast4; admit.
+			iNext. rewrite Heq.
+			iDestruct (isLL_chain_split with "HisLL_chain_xs4") as "[_ Hchain]".
+			iDestruct (isLL_chain_split [x_next; x_tail] xs4'' with "Hchain") as "[Hchain' _]". done.
 		  }
-		  iSplitL "Hhead Htail HisLL_xs4 Hcurr HAbst".
-		  	{
-				iNext.
-				iExists xs_v; iFrame.
-				iExists xs4, xs4_queue, xs4_old, x_head, x_next; iFrame.
-				iSplit; first done.
-				iSplit; first done.
-				iLeft.
-				rewrite Hxs4eq.
-				by iExists (x_tail :: xs').
-			}
-		  wp_pures.
-		  wp_lam.
-		  iApply ("IH" with "HP HΦ Hl_new_out"). 
-		* iModIntro.
-		  iSplitL "Hhead Htail HisLL_xs4 Hcurr HAbst".
-			{
-				iNext.
-				iExists xs_v; iFrame.
-				iExists xs4, xs4_queue, xs4_old, x_head, x_tail'''; iFrame.
-				iSplit; first done.
-				iSplit; first done.
-				done.
-			}
-		  wp_pures.
-		  wp_lam.
-		  iApply ("IH" with "HP HΦ Hl_new_out"). 
-	+ (* Inconsistent*)
+		  iDestruct "HisLLchain_x_next_x_tail" as "(_ & Hx_tail_out & _)".
+		  (* TODO: wp_cmpxchg_fail doesn't see the persistent points-to predicate... *)
+		  (* wp_cmpxchg_fail. *)
+		  (* TODO: prove. Note: Very confident this branch is provable if the above can work. *)
+		  admit.
+	  + (* Inconsistent*)
 		wp_lam.
 		iApply ("IH" with "HP HΦ Hl_new_out").
 	- destruct Hxs2eq as [xs [x_next [xs' Heq]]].
@@ -387,7 +375,7 @@ Proof.
 		iFrame.
 		iSplit; first done.
 		iSplit; first done.
-		rewrite Heq_xs2 in HisLastOrSndLast2.
+		rewrite Heq_xs2 in Hx_tail'_in_xs2.
 		done.
 	}
 	(* TODO: possibly add more *)
@@ -398,7 +386,7 @@ Proof.
 	wp_pures.
 	(* Third Invariant Opening *)
 	wp_bind (! #l_tail)%E.
-	iInv "Hqueue_inv" as "(%xs_v & HAbst & %xs3 & %xs3_queue & %xs3_old & %x_head & %x_tail'' & >Hcurr & >%Heq_xs3 & HisLL_xs3 & >%Hconc_abst_eq & Hhead & Htail & >%HisLastOrSndLast3)".
+	iInv "Hqueue_inv" as "(%xs_v & HAbst & %xs3 & %xs3_queue & %xs3_old & %x_head & %x_tail'' & >Hcurr & >%Heq_xs3 & HisLL_xs3 & >%Hconc_abst_eq & Hhead & Htail & >%Hx_tail''_in_xs3)".
 	wp_load.
 	iModIntro.
 	iSplitL "Hhead Htail HisLL_xs3 Hcurr HAbst".
@@ -419,36 +407,34 @@ Proof.
 		wp_load.
 		wp_pures.
 		wp_bind (CmpXchg _ _ _).
-		iInv "Hqueue_inv" as "(%xs_v & HAbst & %xs4 & %xs4_queue & %xs4_old & %x_head & %x_tail''' & >Hcurr & >%Heq_xs4 & HisLL_xs4 & >%Hconc_abst_eq & Hhead & Htail & >%HisLastOrSndLast4)".
+		iInv "Hqueue_inv" as "(%xs_v & HAbst & %xs4 & %xs4_queue & %xs4_old & %x_head & %x_tail''' & >Hcurr & >%Heq_xs4 & HisLL_xs4 & >%Hconc_abst_eq & Hhead & Htail & >%Hx_tail'''_in_xs4)".
 		wp_cmpxchg as H1 | H2.
 		* iModIntro.
 		  iAssert (⌜x_tail''' = x_tail⌝)%I as "->".
-			{
-				iPoseProof (isLL_and_chain with "HisLL_xs4") as "[HisLL_xs4 #HisLL_chain_xs4]".
-				iApply n_in_equal; auto.
-				destruct HisLastOrSndLast4 as [[xs_fromtail HisLast] | [x_first [xs_fromtail HisSndLast]]].
-				- iPoseProof (isLL_chain_node [] x_tail''' xs_fromtail with "[HisLL_chain_xs4]") as "#Hx_tail'''"; by rewrite HisLast.
-				- iPoseProof (isLL_chain_node [x_first] x_tail''' xs_fromtail with "[HisLL_chain_xs4]") as "#Hx_tail'''"; by rewrite HisSndLast.
-			}
-		  iAssert (⌜xs4 = x_next :: x_tail :: xs'⌝)%I as "%Hxs4eq".
 		  {
-			iDestruct (current_and_snapshot Q_γ xs4 xs2 with "Hcurr Hsnap2") as "(%xs'' & %Hxs4xs2eq)".
-			rewrite Heq in Hxs4xs2eq.
-			destruct xs'', xs; first done.
-			all: simpl in *; rewrite Hxs4xs2eq in HisLastOrSndLast4;
-			destruct HisLastOrSndLast4; admit.
+			iPoseProof (isLL_and_chain with "HisLL_xs4") as "[HisLL_xs4 #HisLL_chain_xs4]".
+			iApply n_in_equal; auto.
+			destruct (In_split x_tail''' xs4 Hx_tail'''_in_xs4) as [xs4' [xs4'' Heq4]].
+			rewrite Heq4.
+			by iApply (isLL_chain_node xs4' x_tail''' xs4'' with "[HisLL_chain_xs4]").
 		  }
+		  iDestruct (current_and_snapshot Q_γ xs4 xs2 with "Hcurr Hsnap2") as "(%xs4_diff & %Hxs4xs2_eq)".
 		  iSplitL "Hhead Htail HisLL_xs4 Hcurr HAbst".
-		  	{
-				iNext.
-				iExists xs_v; iFrame.
-				iExists xs4, xs4_queue, xs4_old, x_head, x_next; iFrame.
-				iSplit; first done.
-				iSplit; first done.
-				iLeft.
-				rewrite Hxs4eq.
-				by iExists (x_tail :: xs').
-			}
+		  {
+			iNext.
+			iExists xs_v; iFrame.
+			iExists xs4, xs4_queue, xs4_old, x_head, x_next; iFrame.
+			iSplit; first done.
+			iSplit; first done.
+			rewrite Hxs4xs2_eq.
+			rewrite Heq.
+			iPureIntro.
+			apply in_or_app.
+			right.
+			apply in_or_app.
+			right.
+			apply in_eq.
+		  }
 		  wp_pures.
 		  wp_lam.
 		  iApply ("IH" with "HP HΦ Hl_new_out"). 

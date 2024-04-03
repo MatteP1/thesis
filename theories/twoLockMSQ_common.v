@@ -254,26 +254,4 @@ Proof.
 	- iApply (isLL_chain_agree_next x' y z ys (xs' ++ [x] ++ ys') zs ((xs' ++ [x] ++ zs'))); done.
 Qed.
 
-
-(* TODO: prove or maybe delete *)
-Lemma inequal_lists {A} : forall (xs1 xs2 : list A) a b,
-	a :: xs1 ≠ b :: xs2 ->
-	∃xs xs1' xs2' x y,
-	a :: xs1 = xs1' ++ x :: xs /\ b :: xs2 = xs2' ++ y :: xs /\ x ≠ y.
-Proof.
-	Admitted.
-
-(* TODO: prove or maybe delete *)
-Lemma isLL_no_duplicates : forall xs1 xs2 xs3 x y,
-	isLL (xs1 ++ x :: xs2 ++ y :: xs3) -∗
-	⌜x ≠ y⌝.
-Proof.
-	iIntros (xs1 xs2 xs3 x y) "HisLL".
-	iIntros (<-).
-	destruct (bool_decide_reflect (xs1 = xs2)) as [Heq|].
-	- rewrite <- Heq.
-	  destruct xs1; admit.
-	- destruct xs1, xs2; auto; admit.
-Admitted.
-
 End isLL.
