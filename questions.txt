@@ -1,9 +1,13 @@
 - wp_cmpxchg_fail can't find persistent points-to predicates. What to do?
+	Make it find it explicitly in the persistent context until bug has been fixed.
 
 - I changed queue invariant to only require that the tail be somewhere in xs. Not necessarily the last or second last. This seems to make it a whole lot easier. Also seems to work (not completely done yet). The other way of doing it lead to an impossible to prove case:
 	When opening the invariant around:
 		CAS (Snd !"tail") "next" "node"
 	we get that l_tail points to some x_tail', and x_tail' is either last or second last of xs'. But I have no way of arguing that x_tail' is the same x_tail from earlier (the one being considered in the expression). I know that either x_tail is the last or non-last of the current concrete state xs'. If it isn't the last, the compare and swap will fail. If it is the last, the compare and swap will not fail, which adds the new node to he linked list. But l_tail still points to x_tail', which now may be the third last! Hence I cannot close the invariant. I would be able to close it if I could argue that x_tail = x_tail'. But it seems that I must make my queue invariant stronger to do this.
 Any thoughts?
+
+	Should be fine if it can work.
+
 
 - How to prove snapshot helper lemmas?

@@ -211,7 +211,7 @@ Proof.
 	iSplitL "Hhead Htail HisLL_xs1 HAbst Hcurr".
 	{
 		iNext.
-		iExists xs_v; iFrame.
+		iExists xs_v; iFrame "HAbst".
 		iExists xs1, xs1_queue, xs1_old, x_head, x_tail; iFrame.
 		done.
 	}
@@ -263,7 +263,7 @@ Proof.
 	  iSplitL "Hhead Htail Htailout Hcurr HAbst".
 	  {
 		iNext.
-		iExists xs_v; iFrame.
+		iExists xs_v; iFrame "HAbst".
 		rewrite <- Hxs2eq.
 		iExists xs2, xs2_queue, xs2_old, x_head, x_tail'; iFrame.
 		iSplit; first done.
@@ -288,7 +288,7 @@ Proof.
 	  iSplitL "Hhead Htail HisLL_xs3 Hcurr HAbst".
 	  {
 		iNext.
-		iExists xs_v; iFrame.
+		iExists xs_v; iFrame "HAbst".
 		iExists xs3, xs3_queue, xs3_old, x_head, x_tail''; iFrame.
 		iSplit; first done.
 		iSplit; first done.
@@ -346,10 +346,24 @@ Proof.
 			iDestruct (isLL_chain_split [x_next; x_tail] xs4'' with "Hchain") as "[Hchain' _]". done.
 		  }
 		  iDestruct "HisLLchain_x_next_x_tail" as "(_ & Hx_tail_out & _)".
-		  (* TODO: wp_cmpxchg_fail doesn't see the persistent points-to predicate... *)
-		  (* wp_cmpxchg_fail. *)
-		  (* TODO: prove. Note: Very confident this branch is provable if the above can work. *)
-		  admit.
+		  (* NOTE: Have to do this to make wp_cmpxchg_fail find the pointsto predicate due to a bug *)
+		  wp_apply wp_cmpxchg_fail; [ | | iFrame "#" | ].
+		  done.
+		  solve_vals_compare_safe.
+		  iIntros "_".
+		  iModIntro.
+		  iSplitL "Hhead Htail HisLL_xs4 Hcurr HAbst".
+		  {
+			iNext.
+			iExists xs_v; iFrame "HAbst".
+			iExists xs4, xs4_queue, xs4_old, x_head, x_tail'''; iFrame.
+			iSplit; first done.
+			iSplit; first done.
+			done.
+		  }
+		  wp_pures.
+		  wp_lam.
+		  iApply ("IH" with "HP HΦ Hl_new_out").
 	  + (* Inconsistent*)
 		wp_lam.
 		iApply ("IH" with "HP HΦ Hl_new_out").
@@ -369,7 +383,7 @@ Proof.
 	  iSplitL "Hhead Htail HisLL_xs2 Hcurr HAbst".
 	{
 		iNext.
-		iExists xs_v; iFrame.
+		iExists xs_v; iFrame "HAbst".
 		iExists (xs2_queue ++ [x_head] ++ xs2_old), xs2_queue, xs2_old, x_head, x_tail'; iFrame.
 		rewrite Heq_xs2.
 		iFrame.
@@ -392,7 +406,7 @@ Proof.
 	iSplitL "Hhead Htail HisLL_xs3 Hcurr HAbst".
 	{
 		iNext.
-		iExists xs_v; iFrame.
+		iExists xs_v; iFrame "HAbst".
 		iExists xs3, xs3_queue, xs3_old, x_head, x_tail''; iFrame.
 		iSplit; first done.
 		iSplit; first done.
@@ -422,7 +436,7 @@ Proof.
 		  iSplitL "Hhead Htail HisLL_xs4 Hcurr HAbst".
 		  {
 			iNext.
-			iExists xs_v; iFrame.
+			iExists xs_v; iFrame "HAbst".
 			iExists xs4, xs4_queue, xs4_old, x_head, x_next; iFrame.
 			iSplit; first done.
 			iSplit; first done.
@@ -442,7 +456,7 @@ Proof.
 		  iSplitL "Hhead Htail HisLL_xs4 Hcurr HAbst".
 			{
 				iNext.
-				iExists xs_v; iFrame.
+				iExists xs_v; iFrame "HAbst".
 				iExists xs4, xs4_queue, xs4_old, x_head, x_tail'''; iFrame.
 				iSplit; first done.
 				iSplit; first done.

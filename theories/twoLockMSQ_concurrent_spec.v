@@ -113,7 +113,7 @@ Proof.
 	iIntros (Ψ l_head l_tail Q_γ).
 	iSplit.
 	- iIntros "(%xs_v & HAll & %xs & %xs_queue & %xs_old & %x_head & %x_tail & Hxs_split & HisLL_xs & %Hconc_abst_eq & [HStatic | [HEnqueue | [HDequeue | HBoth]]])";
-	iExists xs_v; iFrame; iExists xs, xs_queue, xs_old, x_head, x_tail; iFrame.
+	iExists xs_v; iFrame "HAll"; iExists xs, xs_queue, xs_old, x_head, x_tail; iFrame.
 	  + iDestruct "HStatic" as "(Hl_head & Hl_tail & HisLast & HTokne & HToknD & HTokUpdated)".
 	  	iSplit; first done.
 		iSplitL "Hl_head HToknD"; first (iLeft; iFrame).
@@ -137,7 +137,7 @@ Proof.
 		  iSplitL "Hl_head HTokD"; first (iRight; iFrame).
 		  iRight. iFrame. iRight. iFrame.
 	- iIntros "(%xs_v & HAll & %xs & %xs_queue & %xs_old & %x_head & %x_tail & Hxs_split & HisLL_xs & %Hconc_abst_eq & [[Hl_head HToknD] | [Hl_head HTokD]] & [(Hl_tail & HisLast & HToknE & HTokUpdated) | (Hl_tail & HTokE & [[HisLast HTokBefore] | [HisSndLast HTokAfter]])])";
-	iExists xs_v; iFrame; iExists xs, xs_queue, xs_old, x_head, x_tail; eauto 10 with iFrame.
+	iExists xs_v; iFrame "HAll"; iExists xs, xs_queue, xs_old, x_head, x_tail; eauto 10 with iFrame.
 Qed.
 
 Definition is_queue_conc (Ψ : val -> iProp Σ) (v_q : val) (Q_γ: ConcQgnames) : iProp Σ :=
@@ -245,7 +245,7 @@ Proof.
 	{
 		iNext.
 		iApply queue_invariant_equiv_simple.
-		iExists xs_v; iFrame.
+		iExists xs_v; iFrame "HAll_xs".
 		iExists xs, xs_queue, xs_old, x_head, x_tail; iFrame.
 		do 2 (iSplit; first done).
 		iRight.
@@ -289,7 +289,7 @@ Proof.
 	{
 		iNext.
 		iApply queue_invariant_equiv_simple.
-		iExists (v :: xs_v); iFrame.
+		iExists (v :: xs_v); iFrame "HAll_xs HΨ_v".
 		iExists xs_new, (x_new :: xs_queue), xs_old, x_head, x_tail.
 		iSplit. { iPureIntro. unfold xs_new. cbn. rewrite Heq_xs. auto. }
 		iFrame.
@@ -337,7 +337,7 @@ Proof.
 	{
 		iNext.
 		iApply queue_invariant_equiv_simple.
-		iExists xs_v; iFrame.
+		iExists xs_v; iFrame "HAll_xs".
 		iExists xs, xs_queue, xs_old, x_head, x_new; iFrame.
 		do 2 (iSplit; first done).
 		iLeft.
@@ -380,7 +380,7 @@ Proof.
 	iSplitL "Hl_head1 HTokD Htail HisLL_xs HAll_xs".
 	{
 		iNext. iApply queue_invariant_equiv_simple.
-		iExists xs_v; iFrame.
+		iExists xs_v; iFrame "HAll_xs".
 		iExists xs, xs_queue, xs_old, x_head, x_tail; iFrame.
 		do 2 (iSplit; first done).
 		by iRight.
@@ -451,7 +451,7 @@ Proof.
 	  iSplitL "Hl_head1 HisLL_xs Htail HTokD HAll_xs".
 	  {
 		iNext. iApply queue_invariant_equiv_simple.
-		iExists xs_v; iFrame.
+		iExists xs_v; iFrame "HAll_xs".
 		iExists ((xs_rest ++ [x_head_next]) ++ [x_head] ++ xs_old), (xs_rest ++ [x_head_next]), xs_old, x_head, x_tail; iFrame.
 		do 2 (iSplit; first done).
 		by iRight.
@@ -516,7 +516,7 @@ Proof.
 	  iSplitL "Hl_head Htail HToknD HisLL_xs HAll_xs_val_rest".
 	  {
 		iNext. iApply queue_invariant_equiv_simple.
-		iExists xs_v'; iFrame.
+		iExists xs_v'; iFrame "HAll_xs_val_rest".
 		iExists (xs_rest ++ [x_head_next] ++ [x_head] ++ xs_old), xs_rest, ([x_head] ++ xs_old), x_head_next, x_tail; iFrame.
 		do 2(iSplit; first done).
 		iLeft.

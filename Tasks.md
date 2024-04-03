@@ -65,6 +65,11 @@
 - [x] Update notation for definitions to use triangleq instead of equality.
 
 - [ ] State and prove correctness of lock-free M&S Queue
+  - [ ] Read about Prophecies (either the original paper: The future is now or contextual refinement paper)
+  - [ ] Add prophesies to dequeue (linearisation point could be early if the queue is empty)
+  - [ ] prove enqueue spec
+  - [ ] prove dequeue spec
+  - [ ] prove the snapshot helper lemmas.
 
 - [ ] Create a section/chapter explaining some of the basic rules (hoare-triples, weakest-precondition, inv-alloc, resource algebra), and also iris in general.
 
