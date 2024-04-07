@@ -30,8 +30,9 @@ Definition dequeue : val :=
 		(rec: "loop" "_" :=
 			let: "head" := !(Fst !"Q") in
 			let: "tail" := !(Snd !"Q") in
+			let: "p" := NewProph in
 			let: "next" := !(Snd !"head") in
-			if: "head" = !(Fst !"Q") then
+			if: "head" = Resolve (!(Fst !"Q")) "p" #() then
 				if: "head" = "tail" then
 					if: "next" = NONE then
 						NONEV
@@ -84,6 +85,7 @@ Definition test_dequeue_empty2 : expr :=
 	let: "v3" := dequeue "Q" in
 	("v1", "v2", "v3").
 
+(* Note: tests only work without the prophecy variable. *)
 Compute (exec 200 test_dequeue_empty2).
 
 End tests.

@@ -115,7 +115,7 @@ Definition queue_invariant (l_head l_tail : loc) (Q_γ : Qgnames) : iProp Σ :=
 	⌜proj_val xs_queue = wrap_some xs_v⌝ ∗
 	l_head ↦ #(n_in x_head) ∗
 	l_tail ↦ #(n_in x_tail) ∗
-	⌜In x_tail xs⌝.
+	⌜In x_tail (xs_queue ++ [x_head])⌝.
 
 Definition is_queue (v_q : val) (Q_γ: Qgnames) : iProp Σ :=
 	∃ l_queue l_head l_tail : loc,
@@ -176,6 +176,7 @@ Lemma enqueue_spec v_q (v : val) (Q_γ : Qgnames) (P Q : iProp Σ) :
 		enqueue v_q v
 	{{{ w, RET w; Q }}}.
 Proof.
+	(* TODO: fix proof. *)
 	iIntros "#Hvs".
 	iIntros (Φ) "!> [(%l_queue & %l_head & %l_tail & -> &
 				 #Hl_queue & #Hqueue_inv) HP] HΦ".
