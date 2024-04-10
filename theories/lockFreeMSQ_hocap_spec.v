@@ -1,5 +1,5 @@
 From stdpp Require Import countable.
-From iris.algebra Require Import excl list agree gmap lib.frac_auth.
+From iris.algebra Require Import excl list agree gset lib.frac_auth.
 From iris.bi Require Import fixpoint big_op.
 From iris.bi Require Import derived_laws.
 From iris.heap_lang Require Import lang proofmode notation primitive_laws.
@@ -10,26 +10,17 @@ From MSQueue Require Import twoLockMSQ_common.
 
 Section proofs.
 
-(* Todo: remove below if not needed. *)
-Definition linkedListUR : ucmra :=
-	gmapUR nat (agreeR (prodO (prodO locO valO) locO)).
-
-Fixpoint to_ll_go (i : nat) (xs : list (loc * val * loc)) : linkedListUR :=
-  match xs with
-  | [] => ∅
-  | x :: xs' => <[i:=to_agree x]>(to_ll_go (S i) xs')
-  end.
-Definition to_ll : list (loc * val * loc) → linkedListUR := to_ll_go 0.
-(* Todo: remove above if not needed. *)
+Definition node : Type := loc * val * loc.
+Definition nodeO : Type := prodO (prodO locO valO) locO.
 
 Context `{!heapGS Σ}.
-Context `{!inG Σ (authR linkedListUR)}.
+(* TODO: ask if below is correct *)
+Context `{!inG Σ (authR (gsetO nodeO))}.
 Context `{!inG Σ (frac_authR (agreeR (listO val)))}.
 
 Variable N : namespace.
 Notation Ni := (N .@ "internal").
 
-Definition node : Type := loc * val * loc.
 (* Todo: maybe renaming. *)
 Definition Reach (Φ : node -> node -> iProp Σ) (x_n x_m : node) : iProp Σ:= 
 	n_in x_n ↦□ (n_val x_n, #(n_out x_n)) ∗
@@ -49,6 +40,9 @@ Definition Reach' : ((node * node) -> iProp Σ) -> (node * node) -> iProp Σ :=
 	uncurry ∘ Reach ∘ curry.
 
 Definition reach x_n x_m := bi_least_fixpoint Reach' (x_n, x_m).
+
+Notation "x_n ⤳ x_m" := (reach x_n x_m)
+	(at level 20, format "x_n ⤳ x_m") : bi_scope.
 
 Instance bimonopred_reach : BiMonoPred Reach'.
 Proof.
@@ -76,17 +70,21 @@ Lemma reach_trans : ∀ x_n x_m x_o,
 	reach x_m x_o -∗
 	reach x_n x_o.
 Proof.
-	iIntros (x_n x_m x_o) "Hreach_n_m Hreach_m_o".
+	iIntros (x_n x_m x_o).
 	unfold reach.
+	iRevert (x_n x_m).
+	(* cannot apply: lemma requires for there only to be one variable forall quantified. *)
+	Fail iApply (least_fixpoint_iter).
+	(* TODO: prove transitivity *)
 Admitted.
-(* TODO: prove transitivity *)
-
 
 (* ===== Concurrent Specification for Two-lock M&S Queue ===== *)
 
 (* Ghost variable names *)
 Record Qgnames := {γ_Abst 	: gname;
-				   γ_Snap 	: gname;
+				   γ_Head 	: gname;
+				   γ_Tail 	: gname;
+				   γ_Last 	: gname;
 				  }.
 
 Notation "Q_γ ⤇● xs_v" := (own Q_γ.(γ_Abst) (●F (to_agree xs_v)))
@@ -140,38 +138,56 @@ Proof.
 	by apply frac_auth_update_1.
 Qed.
 
-Notation current Q_γ xs := (own Q_γ.(γ_Snap) (● (to_ll (reverse xs)))).
-Notation snapshot Q_γ xs := (own Q_γ.(γ_Snap) (◯ (to_ll (reverse xs)))).
+Notation "x ⤏ γ" := (own γ (◯ {[x]}))
+	(at level 20, format "x ⤏ γ") : bi_scope.
 
-Lemma get_snapshot : ∀ Q_γ xs,
-	current Q_γ xs -∗
-	current Q_γ xs ∗ snapshot Q_γ xs.
+Notation "γ ↣ x" := (∃s, own γ (● s) ∗ [∗ set] x_m ∈ s, reach x_m x)%I
+	(at level 20, format "γ ↣ x") : bi_scope.
+
+Lemma Abs_Reach_Alloc: forall x,
+	x ⤳ x ==∗ ∃ γ, γ ↣ x ∗ x ⤏ γ.
 Proof.
+	(* TODO: prove *)
 	Admitted.
 
-Lemma current_and_snapshot : ∀ Q_γ xs xs',
-	current Q_γ xs -∗
-	snapshot Q_γ xs' -∗
-	∃xs'', ⌜xs = xs'' ++ xs'⌝.
+Lemma Abs_Reach_Concr: forall x_n x_m γ_m,
+	x_n ⤏ γ_m -∗
+	γ_m ↣ x_m -∗
+	x_n ⤳ x_m.
 Proof.
+	(* TODO: prove *)
 	Admitted.
 
-Lemma current_update : ∀ Q_γ xs x,
-	current Q_γ xs ==∗ current Q_γ (x :: xs).
+Lemma Abs_Reach_Abs: forall x_n x_m γ_m,
+	x_n ⤳ x_m -∗
+	γ_m ↣ x_m ==∗
+	x_n ⤏ γ_m.
 Proof.
+	(* TODO: prove *)
 	Admitted.
+
+Lemma Abs_Reach_Advance: forall x_m γ_m x_o,
+	γ_m ↣ x_m -∗
+	x_m ⤳ x_o ==∗
+	γ_m ↣ x_o ∗ x_o ⤏ γ_m.
+Proof.
+	(* TODO: prove *)
+	Admitted.
+
 
 Definition queue_invariant (l_head l_tail : loc) (Q_γ : Qgnames) : iProp Σ :=
 	∃ xs_v, Q_γ ⤇● xs_v ∗ (* Abstract state *)
-	∃ xs xs_queue xs_old (x_head x_tail: (loc * val * loc)), (* Concrete state *)
-	current Q_γ xs ∗
-	⌜xs = xs_queue ++ [x_head] ++ xs_old⌝ ∗
+	∃ xs xs_queue (x_head x_tail x_last: (loc * val * loc)), (* Concrete state *)
+	⌜xs = xs_queue ++ [x_head]⌝ ∗
 	isLL xs ∗
+	⌜isLast x_last xs⌝ ∗
 	(* Relation between concrete and abstract state *)
 	⌜proj_val xs_queue = wrap_some xs_v⌝ ∗
 	l_head ↦ #(n_in x_head) ∗
 	l_tail ↦ #(n_in x_tail) ∗
-	⌜In x_tail (xs_queue ++ [x_head])⌝.
+	Q_γ.(γ_Head) ↣ x_head ∗ x_head ⤏ Q_γ.(γ_Tail) ∗
+	Q_γ.(γ_Tail) ↣ x_tail ∗ x_tail ⤏ Q_γ.(γ_Last) ∗
+	Q_γ.(γ_Last) ↣ x_last.
 
 Definition is_queue (v_q : val) (Q_γ: Qgnames) : iProp Σ :=
 	∃ l_queue l_head l_tail : loc,
@@ -199,23 +215,23 @@ Proof.
 	wp_alloc l_tail as "Hl_tail".
 	wp_alloc l_head as "Hl_head".
 	iMod (own_alloc (●F (to_agree []) ⋅ ◯F (to_agree []))) as (γ_Abst) "[Hγ_Abst_auth Hγ_Abst_frac]"; first by apply frac_auth_valid.
-	iMod (own_alloc (● (to_ll [(l_1_in, NONEV, l_1_out)]))) as (γ_Snap) "Hγ_Snap_curr".
-	{
-		apply auth_auth_valid.
-		apply singleton_valid.
-		rewrite <- agree_idemp.
-		by apply to_agree_op_valid_L.
-	}
+	iAssert ((l_1_in, NONEV, l_1_out) ⤳ (l_1_in, NONEV, l_1_out))%I as "Hreach"; first by iApply reach_refl.
+	iMod (Abs_Reach_Alloc (l_1_in, InjLV #(), l_1_out) with "Hreach") as (γ_Head) "[Hγ_Head _]".
+	iMod (Abs_Reach_Alloc (l_1_in, InjLV #(), l_1_out) with "Hreach") as (γ_Tail) "[Hγ_Tail #HAbstReach_γ_Tail]".
+	iMod (Abs_Reach_Alloc (l_1_in, InjLV #(), l_1_out) with "Hreach") as (γ_Last) "[Hγ_Last #HAbstReachγ_Last]".
 	set (Queue_gnames := {| γ_Abst := γ_Abst;
-							γ_Snap := γ_Snap
+							γ_Head := γ_Head;
+							γ_Tail := γ_Tail;
+							γ_Last := γ_Last;
 					|}).
-	iMod (inv_alloc Ni _ (queue_invariant l_head l_tail Queue_gnames) with "[Hγ_Abst_auth Hγ_Snap_curr Hl_head Hl_tail Hl_1_in Hl_1_out]") as "#HqueueInv".
+	iMod (inv_alloc Ni _ (queue_invariant l_head l_tail Queue_gnames) with "[Hγ_Abst_auth Hl_head Hl_tail Hl_1_in Hl_1_out Hγ_Head Hγ_Tail Hγ_Last]") as "#HqueueInv".
 	{
-		iNext. iExists []; iFrame.
-		iExists [(l_1_in, NONEV, l_1_out)], [], [], (l_1_in, NONEV, l_1_out), (l_1_in, NONEV, l_1_out); iFrame.
-		do 3 (iSplit; first done).
-		iLeft.
-		done.
+		iNext. iExists []; iFrame; simpl.
+		iExists [(l_1_in, NONEV, l_1_out)], [], (l_1_in, NONEV, l_1_out), (l_1_in, NONEV, l_1_out), (l_1_in, NONEV, l_1_out); iFrame.
+		do 2 (iSplit; first done).
+		iSplit; first by iExists [].
+		iSplit; first done.
+		iFrame "HAbstReach_γ_Tail HAbstReachγ_Last".
 	}
 	wp_alloc l_queue as "Hl_queue".
 	iMod (pointsto_persist with "Hl_queue") as "#Hl_queue".
