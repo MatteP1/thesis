@@ -1,5 +1,6 @@
 From stdpp Require Import countable.
 From iris.algebra Require Import excl list agree gmap lib.frac_auth.
+From iris.bi Require Import fixpoint big_op.
 From iris.bi Require Import derived_laws.
 From iris.heap_lang Require Import lang proofmode notation primitive_laws.
 From iris.base_logic.lib Require Import invariants.
@@ -9,6 +10,7 @@ From MSQueue Require Import twoLockMSQ_common.
 
 Section proofs.
 
+(* Todo: remove below if not needed. *)
 Definition linkedListUR : ucmra :=
 	gmapUR nat (agreeR (prodO (prodO locO valO) locO)).
 
@@ -18,6 +20,7 @@ Fixpoint to_ll_go (i : nat) (xs : list (loc * val * loc)) : linkedListUR :=
   | x :: xs' => <[i:=to_agree x]>(to_ll_go (S i) xs')
   end.
 Definition to_ll : list (loc * val * loc) → linkedListUR := to_ll_go 0.
+(* Todo: remove above if not needed. *)
 
 Context `{!heapGS Σ}.
 Context `{!inG Σ (authR linkedListUR)}.
@@ -25,6 +28,59 @@ Context `{!inG Σ (frac_authR (agreeR (listO val)))}.
 
 Variable N : namespace.
 Notation Ni := (N .@ "internal").
+
+Definition node : Type := loc * val * loc.
+(* Todo: maybe renaming. *)
+Definition Reach (Φ : node -> node -> iProp Σ) (x_n x_m : node) : iProp Σ:= 
+	n_in x_n ↦□ (n_val x_n, #(n_out x_n)) ∗
+	(⌜x_n = x_m⌝ ∨ ∃x_p : node, n_out x_n ↦□ #(n_in x_p) ∗ Φ x_p x_m).
+
+Lemma Reach_mono : forall Φ Ψ,
+	□ (∀ x_n x_m, Φ x_n x_m -∗ Ψ x_n x_m) -∗ ∀ x_n x_m, Reach Φ x_n x_m -∗ Reach Ψ x_n x_m.
+Proof.
+	iIntros (Φ Ψ) "HΦΨ".
+	iIntros (x_n x_m) "HReach".
+	iDestruct "HReach" as "[Hx_n [-> | (%x_p & Hx_n_out & HΦ)]]".
+	- iFrame. by iLeft.
+	- iFrame. iRight. iExists x_p. iFrame. by iApply "HΦΨ".
+Qed.
+
+Definition Reach' : ((node * node) -> iProp Σ) -> (node * node) -> iProp Σ :=
+	uncurry ∘ Reach ∘ curry.
+
+Definition reach x_n x_m := bi_least_fixpoint Reach' (x_n, x_m).
+
+Instance bimonopred_reach : BiMonoPred Reach'.
+Proof.
+	split; simpl.
+	- iIntros (Φ Ψ HNEΦ HNEΨ) "#HΦΨ".
+	  iIntros ([x_n x_m]) "HReach". iApply Reach_mono; last done.
+	  iModIntro.
+	  iIntros (x_n' x_m') "HΦ". by iApply "HΦΨ".
+	- solve_proper.
+Qed.
+
+Lemma reach_refl : ∀ x_n,
+	reach x_n x_n ∗-∗ n_in x_n ↦□ (n_val x_n, #(n_out x_n)).
+Proof.
+	iIntros (x_n).
+	iSplit.
+	- iIntros "Hreach". unfold reach. rewrite least_fixpoint_unfold.
+	  by iDestruct "Hreach" as "[H _]".
+	- iIntros "Hx_n". unfold reach. rewrite least_fixpoint_unfold.
+	  iFrame. by iLeft.
+Qed.
+
+Lemma reach_trans : ∀ x_n x_m x_o,
+	reach x_n x_m -∗
+	reach x_m x_o -∗
+	reach x_n x_o.
+Proof.
+	iIntros (x_n x_m x_o) "Hreach_n_m Hreach_m_o".
+	unfold reach.
+Admitted.
+(* TODO: prove transitivity *)
+
 
 (* ===== Concurrent Specification for Two-lock M&S Queue ===== *)
 

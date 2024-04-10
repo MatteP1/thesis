@@ -5,6 +5,8 @@
   In refinement paper, they achieve this using abstract reachability.
   I will have to do something similar...
   Any thoughts?
+Take approach as they do in refinement paper.
 
 
 - If I take their approach, how to define RA in coq (product of loc val loc) and big-star (*)?
+  big-star is big_sepS
