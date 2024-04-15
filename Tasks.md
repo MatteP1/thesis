@@ -62,15 +62,16 @@
   - [x] "Prove it" - mention differences from Concurrent
   - [x] Explain that it is more general that then previous two, and can in fact derive them (without referring to the implementation)
   - [x] Show how to derive concurrent and sequential specs from it
-- [x] Update notation for definitions to use triangleq instead of equality.
+- [x] Update notation for definitions to use triangleq instead of equality
 
 - [ ] State and prove correctness of lock-free M&S Queue
   - [ ] Read about Prophecies (either the original paper: The future is now or contextual refinement paper)
-  - [ ] Add prophesies to dequeue (linearisation point could be early if the queue is empty)
+  - [x] Add prophesies to dequeue (linearisation point could be early if the queue is empty)
   - [ ] prove enqueue spec
   - [ ] prove dequeue spec
-  - [ ] prove the snapshot helper lemmas.
 
 - [ ] Create a section/chapter explaining some of the basic rules (hoare-triples, weakest-precondition, inv-alloc, resource algebra), and also iris in general.
+
+- [ ] Introduce the notion of linearisation points (possibly in hocap for two-lock MSQ) and point out their locations in the proof outlines
 
 - [ ] If time permits, use hocap spec to prove a spec of a non-trivial client. Fx a client like the one in the java code
