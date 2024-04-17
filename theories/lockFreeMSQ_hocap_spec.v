@@ -1,4 +1,4 @@
-From stdpp Require Import countable.
+From stdpp Require Import sets countable.
 From iris.algebra Require Import excl list agree gset lib.frac_auth.
 From iris.bi Require Import fixpoint big_op.
 From iris.bi Require Import derived_laws.
@@ -53,6 +53,12 @@ Proof.
 	  iIntros (x_n' x_m') "HΦ". by iApply "HΦΨ".
 	- solve_proper.
 Qed.
+
+(* reach is persistent *)
+Global Instance reach_persistent x y : Persistent (x ⤳ y).
+Proof.
+	(* TODO: Proof. *)
+	Admitted.
 
 Lemma reach_refl : ∀ x_n,
 	reach x_n x_n ∗-∗ n_in x_n ↦□ (n_val x_n, #(n_out x_n)).
@@ -147,16 +153,31 @@ Notation "γ ↣ x" := (∃s, own γ (● s) ∗ [∗ set] x_m ∈ s, reach x_m 
 Lemma Abs_Reach_Alloc: forall x,
 	x ⤳ x ==∗ ∃ γ, γ ↣ x ∗ x ⤏ γ.
 Proof.
-	(* TODO: prove *)
-	Admitted.
+	iIntros (x) "#HxRx".
+	iMod (own_alloc (● ({[x]}) ⋅ ◯ ({[x]}))) as (γ_reach) "[Hγ_Reach_auth Hγ_Reach_frac]"; first by apply auth_both_valid_discrete.
+	iModIntro.
+	iExists γ_reach.
+	iFrame.
+	iExists {[x]}.
+	iFrame.
+	by rewrite big_opS_singleton.
+Qed.
 
 Lemma Abs_Reach_Concr: forall x_n x_m γ_m,
 	x_n ⤏ γ_m -∗
 	γ_m ↣ x_m -∗
 	x_n ⤳ x_m.
 Proof.
-	(* TODO: prove *)
-	Admitted.
+	iIntros (x_n x_m γ_m) "#Har Hap".
+	iDestruct "Hap" as "(%s & Hauth & HB_reach)".
+	iCombine "Hauth" "Har" gives "%Hincluded".
+	rewrite auth_both_valid_discrete in Hincluded.
+	destruct Hincluded as [Hincluded _].
+	rewrite (big_opS_delete _ s x_n).
+	- by iDestruct "HB_reach" as "[Hreach _]".
+	- rewrite gset_included in Hincluded.
+	  by apply singleton_subseteq_l.
+Qed.
 
 Lemma Abs_Reach_Abs: forall x_n x_m γ_m,
 	x_n ⤳ x_m -∗

@@ -50,6 +50,7 @@
 - [x] Clean up proof of Sequential spec for M&S queue with locks in Coq
 - [x] Change let N := ... into Notation (...) for namespaces.
 - [ ] Consider removing some of the CHANGE comments in hocap.
+- [ ] Consider changing indentation from 4 to 2.
 
 - [x] Write about the sequential spec for two-lock M&S queue in the report
   - [x] Mention how it can be used to track exact contents of queue
