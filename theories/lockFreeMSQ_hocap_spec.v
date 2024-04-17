@@ -15,7 +15,7 @@ Definition nodeO : Type := prodO (prodO locO valO) locO.
 
 Context `{!heapGS Σ}.
 (* TODO: ask if below is correct *)
-Context `{!inG Σ (authR (gsetO nodeO))}.
+Context `{!inG Σ (authR (gsetUR nodeO))}.
 Context `{!inG Σ (frac_authR (agreeR (listO val)))}.
 
 Variable N : namespace.
@@ -54,11 +54,29 @@ Proof.
 	- solve_proper.
 Qed.
 
+Definition Phi_pers (p : prodO nodeO nodeO) : iProp Σ :=
+	<pers> bi_least_fixpoint Reach' p.
+
+Local Instance Phi_pers_ne : NonExpansive Phi_pers.
+Proof. solve_proper. Qed.
+
+
+(* TODO: cleanup *)
 (* reach is persistent *)
 Global Instance reach_persistent x y : Persistent (x ⤳ y).
 Proof.
-	(* TODO: Proof. *)
-	Admitted.
+	unfold Persistent.
+	iIntros "H".
+	iPoseProof (least_fixpoint_iter _ Phi_pers with "[] H") as "H"; last by iApply "H".
+	iModIntro.
+	iIntros ([y1 y2]) "HReach'".
+	rewrite /Reach' /Reach /Phi_pers /=.
+	iDestruct "HReach'" as "[#Hpt [-> | (%x_p & #Hpt_out & #Htransx_p)]]".
+	- rewrite least_fixpoint_unfold.
+	  iModIntro. rewrite /Reach' /Reach /=. iFrame "#". by iLeft.
+	- rewrite (least_fixpoint_unfold Reach' (y1, y2)).
+	  iModIntro. rewrite {3}/Reach' /Reach /=. iFrame "#".
+Qed.
 
 Lemma reach_refl : ∀ x_n,
 	reach x_n x_n ∗-∗ n_in x_n ↦□ (n_val x_n, #(n_out x_n)).
@@ -71,6 +89,14 @@ Proof.
 	  iFrame. by iLeft.
 Qed.
 
+Definition Phi_trans (p : prodO nodeO nodeO) : iProp Σ := ∀ x_o,
+	bi_least_fixpoint Reach' (p.2, x_o) -∗ bi_least_fixpoint Reach' (p.1, x_o).
+
+Local Instance Phi_trans_ne : NonExpansive Phi_trans.
+Proof. solve_proper. Qed.
+
+(* todo: rewrite with ssreflect: rewrite /Reach /=.*)
+(* TODO: cleanup *)
 Lemma reach_trans : ∀ x_n x_m x_o,
 	reach x_n x_m -∗
 	reach x_m x_o -∗
@@ -78,11 +104,25 @@ Lemma reach_trans : ∀ x_n x_m x_o,
 Proof.
 	iIntros (x_n x_m x_o).
 	unfold reach.
-	iRevert (x_n x_m).
-	(* cannot apply: lemma requires for there only to be one variable forall quantified. *)
-	Fail iApply (least_fixpoint_iter).
-	(* TODO: prove transitivity *)
-Admitted.
+	iIntros "Hreachnm".
+	iPoseProof (least_fixpoint_iter _ Phi_trans with "[] Hreachnm") as "H"; last by iApply "H".
+	iModIntro.
+	iIntros ([y1 y2]) "Htransy".
+	unfold Reach'.
+	unfold Reach.
+	simpl.
+	iDestruct "Htransy" as "[#Hpt [-> | (%x_p & #Hpt_out & Htransx_p)]]".
+	- unfold Phi_trans.
+	  iIntros (x_o') "H". simpl. done.
+	- unfold Phi_trans. simpl.
+	  iIntros (x_o') "H". unfold curry. simpl.
+	  rewrite (least_fixpoint_unfold Reach' (y1, x_o')).
+	  simpl.
+	  rewrite /Reach.
+	  iFrame "#".
+	  iRight.
+	  by iApply "Htransx_p".
+Qed.
 
 (* ===== Concurrent Specification for Two-lock M&S Queue ===== *)
 
@@ -157,7 +197,7 @@ Proof.
 	iMod (own_alloc (● ({[x]}) ⋅ ◯ ({[x]}))) as (γ_reach) "[Hγ_Reach_auth Hγ_Reach_frac]"; first by apply auth_both_valid_discrete.
 	iModIntro.
 	iExists γ_reach.
-	iFrame.
+	iFrame "Hγ_Reach_frac".
 	iExists {[x]}.
 	iFrame.
 	by rewrite big_opS_singleton.
