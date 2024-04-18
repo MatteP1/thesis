@@ -458,9 +458,148 @@ Proof.
 	iInv "Hqueue_inv" as "(%xs_v & HAbst & %xs & %xs_queue & %x_head & %x_tail' & %x_last & >%Hxs_eq & HisLL_xs & >%HisLast_xlast & >%Hconc_abst_eq & >Hl_head & >Hl_tail & HγHead_pt_xhead & >#Hxhead_ar_γTail & HγTail_pt_xtail' & >#Hxtail'_ar_γLast & HγLast_pt_xlast)".
 	iPoseProof (Abs_Reach_Concr x_tail x_last (Q_γ.(γ_Last)) with "Hxtail_ar_γLast HγLast_pt_xlast") as "[#Hxtail_reach_xlast HγLast_pt_xlast]".
 	(* CASE ANALYSIS: Is x_tail last? *)
-	iDestruct (reach_case with "Hxtail_reach_xlast") as "[>%Htail_last_eq | (%x_m & Hxtail_out & Hxm_reach_xlast)]".
+	iDestruct (reach_case with "Hxtail_reach_xlast") as "[><- | (%x_m & Hxtail_out & Hxm_reach_xlast)]".
 	- (* x_tail is last. i.e. x_tail = x_last *)
-	  admit.
+	  iPoseProof (isLL_and_chain with "HisLL_xs") as "[HisLL_xs #HisLLchain_xs]".
+	  iAssert (▷n_out x_tail ↦ NONEV)%I with "[HisLL_xs]" as "Hxtail_out".
+	  {
+		iNext.
+		destruct HisLast_xlast as [xs_rest ->].
+		by iDestruct "HisLL_xs" as "[Hx_tail_out _]".
+	  }
+	  wp_load.
+	  iModIntro.
+	  iSplitL "Hl_head Hl_tail Hxtail_out HAbst HγHead_pt_xhead HγTail_pt_xtail' HγLast_pt_xlast".
+	  {
+		iNext.
+		iExists xs_v; iFrame "HAbst".
+		iExists xs, xs_queue, x_head, x_tail', x_tail; iFrame.
+		iFrame "%#".
+		destruct HisLast_xlast as [xs_rest ->].
+		by iFrame "#".
+	  }
+	  iClear (Hconc_abst_eq xs_v Hxs_eq x_head HisLast_xlast xs xs_queue x_tail') "Hxhead_ar_γTail Hxtail_reach_xlast HisLLchain_xs Hxtail'_ar_γLast".
+	  wp_let.
+	  (* Consistency check *)
+	  wp_load.
+	  wp_pures.
+	  wp_bind (! #l_tail)%E.
+	  iInv "Hqueue_inv" as "(%xs_v & HAbst & %xs & %xs_queue & %x_head & %x_tail' & %x_last & >%Hxs_eq & HisLL_xs & >%HisLast_xlast & >%Hconc_abst_eq & >Hl_head & >Hl_tail & HγHead_pt_xhead & >#Hxhead_ar_γTail & HγTail_pt_xtail' & >#Hxtail'_ar_γLast & HγLast_pt_xlast)".
+	  wp_load.
+	  iModIntro.
+	  iSplitL "Hl_head Hl_tail HisLL_xs HAbst HγHead_pt_xhead HγTail_pt_xtail' HγLast_pt_xlast".
+	  {
+		iNext.
+		iExists xs_v; iFrame "HAbst".
+		iExists xs, xs_queue, x_head, x_tail', x_last; iFrame.
+		iFrame "%#".
+	  }
+	  iClear (Hconc_abst_eq xs_v Hxs_eq x_head HisLast_xlast x_last xs xs_queue) "Hxhead_ar_γTail Hxtail'_ar_γLast".
+	  wp_pures.
+	  case_bool_decide; wp_if; last first.
+	  (* TODO: Consider using + indentation *)
+	  { (* Inconsistent*)
+		wp_lam.
+		iApply ("IH" with "HP HΦ Hl_new_out").
+	  }
+	  (* Consistent*)
+	  clear x_tail' H.
+	  wp_pures.
+	  wp_load.
+	  wp_pures.
+	  (* Attempt to add x_new to linked list *)
+	  wp_bind (CmpXchg _ _ _).
+	  iInv "Hqueue_inv" as "(%xs_v & HAbst & %xs & %xs_queue & %x_head & %x_tail' & %x_last & >%Hxs_eq & HisLL_xs & >%HisLast_xlast & >%Hconc_abst_eq & >Hl_head & >Hl_tail & HγHead_pt_xhead & >#Hxhead_ar_γTail & HγTail_pt_xtail' & >#Hxtail'_ar_γLast & HγLast_pt_xlast)".
+	  iPoseProof (Abs_Reach_Concr x_tail x_last (Q_γ.(γ_Last)) with "Hxtail_ar_γLast HγLast_pt_xlast") as "[#Hxtail_reach_xlast HγLast_pt_xlast]".
+	  (* CASE ANALYSIS: Is tail still last? *)
+	  iDestruct (reach_case with "Hxtail_reach_xlast") as "[><- | (%x_m & Hxtail_out & Hxm_reach_xlast)]"; last first.
+	  (* TODO: Consider using + indentation *)
+	  { (* x_tail is no longer last. CAS fails *)
+	  	(* Note: Have to apply wp_cmpxchg_fail manually due to bug. *)
+		wp_apply wp_cmpxchg_fail; [ | | iFrame "#" | ]; first done; first solve_vals_compare_safe; iIntros "_".
+		iModIntro.
+		iSplitL "Hl_head Hl_tail HisLL_xs HAbst HγHead_pt_xhead HγTail_pt_xtail' HγLast_pt_xlast".
+		{
+		  iNext.
+		  iExists xs_v; iFrame "HAbst".
+		  iExists xs, xs_queue, x_head, x_tail', x_last; iFrame.
+		  iFrame "%#".
+		}
+		wp_pures.
+		wp_lam.
+		iApply ("IH" with "HP HΦ Hl_new_out").
+	  }
+	  (* x_tail is still last. CAS succeeds *)
+	  iPoseProof (isLL_and_chain with "HisLL_xs") as "[HisLL_xs #HisLLchain_xs]".
+	  iAssert (▷n_out x_tail ↦ NONEV)%I with "[HisLL_xs]" as "Hxtail_out".
+	  {
+		iNext.
+		destruct HisLast_xlast as [xs_rest ->].
+		by iDestruct "HisLL_xs" as "[Hx_tail_out _]".
+	  }
+	  wp_cmpxchg_suc.
+	  iMod (pointsto_persist with "Hxtail_out") as "#Hxtail_out".
+	  iMod ("Hvs" $! xs_v with "[HAbst HP]") as "[HAbst_new HQ]"; first by iFrame.
+	  (* TODO: maybe make into lemma? *)
+	  iAssert (x_tail ⤳ x_new)%I as "Hxtail_reach_xnew".
+	  {
+		rewrite {2}/reach least_fixpoint_unfold {1}/Reach' /Reach /=.
+		iFrame "#". iRight. iExists x_new. iFrame "#".
+		rewrite /curry.
+		by iApply reach_refl.
+	  }
+	  iMod (Abs_Reach_Advance with "HγLast_pt_xlast Hxtail_reach_xnew") as "[HγLast_pt_xnew #Hxnew_ar_γLast]".
+	  iModIntro.
+	  iSplitL "Hl_head Hl_tail Hl_new_out HAbst_new HγHead_pt_xhead HγTail_pt_xtail' HγLast_pt_xnew".
+	  {
+		iNext.
+		iExists (v :: xs_v); iFrame "HAbst_new".
+		iExists (x_new :: xs), (x_new :: xs_queue), x_head, x_tail', x_new; iFrame.
+		iFrame "%#".
+		repeat iSplit.
+		- by rewrite Hxs_eq.
+		- destruct HisLast_xlast as [xs_rest ->]. iFrame "#".
+		- by iExists xs.
+		- iPureIntro. simpl. by f_equal.
+	  }
+	  iClear (Hconc_abst_eq xs_v Hxs_eq x_head HisLast_xlast x_tail' xs xs_queue) "HisLLchain_xs Hxhead_ar_γTail Hxtail'_ar_γLast".
+	  wp_pures.
+	  wp_load.
+	  wp_pures.
+	  (* Swing Tail pointer *)
+	  (* TODO: consider making into lemma *)
+	  wp_bind (CmpXchg _ _ _).
+	  iInv "Hqueue_inv" as "(%xs_v & HAbst & %xs & %xs_queue & %x_head & %x_tail' & %x_last & >%Hxs_eq & HisLL_xs & >%HisLast_xlast & >%Hconc_abst_eq & >Hl_head & >Hl_tail & HγHead_pt_xhead & >#Hxhead_ar_γTail & HγTail_pt_xtail' & >#Hxtail'_ar_γLast & HγLast_pt_xlast)".
+	  wp_cmpxchg as Hxtail_eq | Hxtail_neq.
+	  + (* CAS succeeded *)
+	  	iAssert (⌜x_tail' = x_tail⌝)%I as "->".
+		{
+			iApply (n_in_equal with "[] [HγTail_pt_xtail']"); try done.
+			iApply (reach_to_is_node x_head).
+			by iDestruct (Abs_Reach_Concr with "Hxhead_ar_γTail HγTail_pt_xtail'") as "[Hxhead_reach_xtail' _]".
+		}
+		iMod (Abs_Reach_Advance with "HγTail_pt_xtail' Hxtail_reach_xnew") as "[HγTail_pt_xnew #Hxnew_ar_γTail]".
+		iModIntro.
+		iSplitL "Hl_head Hl_tail HisLL_xs HAbst HγHead_pt_xhead HγTail_pt_xnew HγLast_pt_xlast".
+		{
+		  iNext.
+		  iExists xs_v; iFrame "HAbst".
+		  iExists xs, xs_queue, x_head, x_new, x_last; iFrame.
+		  iFrame "%#".
+		}
+		wp_pures.
+		by iApply "HΦ".
+	  + (* CAS failed *)
+	  	iModIntro.
+	  	iSplitL "Hl_head Hl_tail HisLL_xs HAbst HγHead_pt_xhead HγTail_pt_xtail' HγLast_pt_xlast".
+		{
+		  iNext.
+		  iExists xs_v; iFrame "HAbst".
+		  iExists xs, xs_queue, x_head, x_tail', x_last; iFrame.
+		  iFrame "%#".
+		}
+		wp_pures.
+		by iApply "HΦ".
 	- (* x_tail is not last *)
 	  wp_load.
 	  iPoseProof (reach_from_is_node with "Hxm_reach_xlast") as "Hxm_node".
@@ -502,6 +641,8 @@ Proof.
 	  wp_pures.
 	  wp_load.
 	  wp_pures.
+	  (* Swing Tail pointer *)
+	  (* TODO: consider making into lemma *)
 	  wp_bind (CmpXchg _ _ _).
 	  iInv "Hqueue_inv" as "(%xs_v & HAbst & %xs & %xs_queue & %x_head & %x_tail' & %x_last & >%Hxs_eq & HisLL_xs & >%HisLast_xlast & >%Hconc_abst_eq & >Hl_head & >Hl_tail & HγHead_pt_xhead & >#Hxhead_ar_γTail & HγTail_pt_xtail' & >#Hxtail'_ar_γLast & HγLast_pt_xlast)".
 	  wp_cmpxchg as Hxtail_eq | Hxtail_neq.
@@ -512,6 +653,7 @@ Proof.
 			iApply (reach_to_is_node x_head).
 			by iDestruct (Abs_Reach_Concr with "Hxhead_ar_γTail HγTail_pt_xtail'") as "[Hxhead_reach_xtail' _]".
 		}
+		(* TODO: maybe make into lemma? *)
 		iAssert (x_tail ⤳ x_m)%I as "Hxtail_reach_xm".
 		{
 			rewrite /reach least_fixpoint_unfold {1}/Reach' /Reach /=.
@@ -541,287 +683,6 @@ Proof.
 		  iFrame "%#".
 		}
 		wp_pures.
-		wp_lam.
-		iApply ("IH" with "HP HΦ Hl_new_out").
-	(* BELOW IS OLD *)
-	destruct Hxs2tail as [HisLast_xs2 |Hxs2eq].
-	- destruct HisLast_xs2 as [xs_fromtail Hxs2eq].
-	  rewrite Hxs2eq.
-	  iDestruct "HisLL_xs2" as "[Hl_tailout #HisLL_chain_xs2]".
-	  wp_load.
-	  iModIntro.
-	  iSplitL "Hl_head Hl_tail Hl_tailout Hcurr HAbst".
-	  {
-		iNext.
-		iExists xs_v; iFrame "HAbst".
-		rewrite <- Hxs2eq.
-		iExists xs2, xs2_queue, xs2_old, x_head, x_tail'; iFrame.
-		iSplit; first done.
-		rewrite Hxs2eq.
-		iFrame.
-		iSplit; first done.
-		iSplit; first done.
-		rewrite <- Hxs2eq.
-		done.
-	  }
-	  (* TODO: possibly add more *)
-	  iClear (Hconc_abst_eq xs_v Heq_xs2 x_head) "".
-	  wp_let.
-	  (* consistency check *)
-	  wp_load.
-	  wp_pures.
-	  (* Third Invariant Opening *)
-	  wp_bind (! #l_tail)%E.
-	  iInv "Hqueue_inv" as "(%xs_v & HAbst & %xs3 & %xs3_queue & %xs3_old & %x_head & %x_tail'' & >Hcurr & >%Heq_xs3 & HisLL_xs3 & >%Hconc_abst_eq & Hl_head & Hl_tail & >%Hx_tail''_in_xs3)".
-	  wp_load.
-	  iModIntro.
-	  iSplitL "Hl_head Hl_tail HisLL_xs3 Hcurr HAbst".
-	  {
-		iNext.
-		iExists xs_v; iFrame "HAbst".
-		iExists xs3, xs3_queue, xs3_old, x_head, x_tail''; iFrame.
-		iSplit; first done.
-		iSplit; first done.
-		done.
-	  }
-	  (* TODO: possibly add more *)
-	  iClear (Hconc_abst_eq xs_v Heq_xs3 x_head) "".
-	  wp_pures.
-	  case_bool_decide; wp_if.
-	  + (* Consistent*)
-		wp_pures.
-		wp_load.
-		wp_pures.
-		wp_bind (CmpXchg _ _ _).
-		iInv "Hqueue_inv" as "(%xs_v & HAbst & %xs4 & %xs4_queue & %xs4_old & %x_head & %x_tail''' & >Hcurr & >%Heq_xs4 & HisLL_xs4 & >%Hconc_abst_eq & Hl_head & Hl_tail & >%Hx_tail'''_in_xs4)".
-		iAssert (∃xs_diff', ⌜xs4 = xs_diff' ++ xs1⌝)%I with "[Hcurr Hsnap1]" as "(%xs_diff' & %Hxs4xs1_eq)"; first by (iApply (current_and_snapshot Q_γ xs4 xs1 with "Hcurr Hsnap1")).
-		assert (Hxs4tail: isLast x_tail xs4 \/ ∃xs x_next xs', xs4 = xs ++ x_next :: x_tail :: xs').
-		{
-			destruct xs_diff' as [ | x_last xs_diff''].
-			- simpl in Hxs4xs1_eq.
-			rewrite Hxs4xs1_eq in Hx_tail_in_xs1 *.
-			destruct (In_split x_tail xs1 Hx_tail_in_xs1) as [xs1' [xs1'' Heq]].
-			destruct xs1' as [| x' xs1'2].
-			+ left. rewrite Heq. by exists xs1''.
-			+ right.
-				destruct (exists_first (x' :: xs1'2)) as [x_first [xs1'2_rest Hx_first]]; first done. 
-				exists xs1'2_rest, x_first, xs1''. rewrite Hx_first in Heq.
-				rewrite Heq. by rewrite <- app_assoc.
-			- right. 
-			destruct (In_split x_tail xs1 Hx_tail_in_xs1) as [xs1' [xs1'' Heq]].
-			destruct xs1' as [| x' xs1'2].
-			+ destruct (exists_first (x_last :: xs_diff'')) as [x_first [xs_diff''' Hx_first]]; first done. 
-			exists xs_diff''', x_first, xs1''.
-			rewrite Hxs4xs1_eq. rewrite Hx_first.
-			rewrite <- app_assoc.
-			by rewrite Heq.
-			+ destruct (exists_first (x' :: xs1'2)) as [x_first [xs1'2_rest Hx_first]]; first done. 
-			exists (x_last :: xs_diff'' ++ xs1'2_rest), x_first, xs1''.
-			rewrite Hxs4xs1_eq. 
-			rewrite Heq.
-			rewrite Hx_first.
-			rewrite <- (app_assoc (x_last :: xs_diff'') xs1'2_rest _) .
-			f_equal.
-			rewrite <- app_assoc. auto.
-		}
-		destruct Hxs4tail as [HisLast_xs4 | Hxs4eq].
-		* destruct HisLast_xs4 as [xs_fromtail' Hx_tail_last].
-		  rewrite Hx_tail_last.
-		  iDestruct "HisLL_xs4" as "[Hx_tail_out #HisLL_chain_xs4]".
-		  wp_cmpxchg_suc.
-		  iMod (pointsto_persist with "Hx_tail_out") as "#Hx_tail_out".
-		  set xs_new := x_new :: xs4.
-		  iAssert (isLL xs_new) with "[Hl_new_out HisLL_chain_xs4]" as "HisLL_xs_new".
-		  {
-			unfold xs_new, isLL. iFrame. rewrite Hx_tail_last. unfold isLL_chain; auto.
-		  }
-		  iMod ("Hvs" $! xs_v with "[HAbst HP]") as "[HAbst_new HQ]"; first by iFrame.
-		  iMod (current_update Q_γ xs4 x_new with "[Hcurr]") as "Hcurr_upd"; first by rewrite Hx_tail_last.
-		  fold xs_new.
-		  iPoseProof (get_snapshot with "Hcurr_upd") as "[Hcurr_upd Hsnapnew]".
-		  iModIntro.
-		  iSplitL "Hl_head Hl_tail HisLL_xs_new HAbst_new Hcurr_upd".
-		  {
-			iNext.
-			iExists (v :: xs_v); iFrame "HAbst_new".
-			iExists xs_new, (x_new :: xs4_queue), xs4_old, x_head, x_tail'''.
-			iFrame "Hcurr_upd".
-			iSplit. { iPureIntro. unfold xs_new. cbn. rewrite Heq_xs4. auto. }
-			iFrame.
-			iSplit. { iPureIntro. simpl. f_equal. done. }
-			unfold xs_new.
-			simpl.
-			by iRight.
-		  }
-		  (* TODO: possibly add more *)
-	  	  iClear (Hconc_abst_eq xs_v Heq_xs4 x_head) "".
-		  wp_pures.
-		  wp_load.
-		  wp_pures.
-		  wp_bind (CmpXchg _ _ _).
-		  iInv "Hqueue_inv" as "(%xs_v & HAbst & %xs5 & %xs5_queue & %xs5_old & %x_head & %x_tail'''' & >Hcurr & >%Heq_xs5 & HisLL_xs5 & >%Hconc_abst_eq & Hl_head & Hl_tail & >%Hx_tail''''_in_xs5)".
-		  wp_cmpxchg as H1 | H2.
-		  ** iModIntro.
-		  	 iDestruct (current_and_snapshot Q_γ xs5 xs_new with "Hcurr Hsnapnew") as "(%xs5_diff & %Hxs5xsnew_eq)".
-			 iSplitL "Hl_head Hl_tail HisLL_xs5 HAbst Hcurr".
-			{
-				iNext.
-				iExists xs_v; iFrame "HAbst".
-				iExists xs5, xs5_queue, xs5_old, x_head, x_new; iFrame.
-				iSplit; first done.
-				iSplit; first done.
-				rewrite Hxs5xsnew_eq.
-				iPureIntro.
-				apply in_or_app.
-				right.
-				unfold xs_new.
-				by left.
-			}
-			wp_pures.
-			by iApply "HΦ".
-		  ** iModIntro.
-		  	 iDestruct (current_and_snapshot Q_γ xs5 xs_new with "Hcurr Hsnapnew") as "(%xs5_diff & %Hxs5xsnew_eq)".
-			 iSplitL "Hl_head Hl_tail HisLL_xs5 HAbst Hcurr".
-			{
-				iNext.
-				iExists xs_v; iFrame "HAbst".
-				iExists xs5, xs5_queue, xs5_old, x_head, x_tail''''; iFrame.
-				iSplit; first done.
-				iSplit; first done.
-				done.
-			}
-			wp_pures.
-			by iApply "HΦ".
-		  (* TODO: prove. Note: Very confident this branch is provable. *)
-		* destruct Hxs4eq as (xs4' & x_next & xs4'' & Heq).
-		  iPoseProof (isLL_and_chain with "HisLL_xs4") as "[HisLL_xs4 #HisLL_chain_xs4]".
-		  iAssert (▷(isLL_chain [x_next; x_tail]))%I as "HisLLchain_x_next_x_tail".
-		  {
-			iNext. rewrite Heq.
-			iDestruct (isLL_chain_split with "HisLL_chain_xs4") as "[_ Hchain]".
-			iDestruct (isLL_chain_split [x_next; x_tail] xs4'' with "Hchain") as "[Hchain' _]". done.
-		  }
-		  iDestruct "HisLLchain_x_next_x_tail" as "(_ & Hx_tail_out & _)".
-		  (* NOTE: Have to do this to make wp_cmpxchg_fail find the pointsto predicate due to a bug *)
-		  wp_apply wp_cmpxchg_fail; [ | | iFrame "#" | ].
-		  done.
-		  solve_vals_compare_safe.
-		  iIntros "_".
-		  iModIntro.
-		  iSplitL "Hl_head Hl_tail HisLL_xs4 Hcurr HAbst".
-		  {
-			iNext.
-			iExists xs_v; iFrame "HAbst".
-			iExists xs4, xs4_queue, xs4_old, x_head, x_tail'''; iFrame.
-			iSplit; first done.
-			iSplit; first done.
-			done.
-		  }
-		  wp_pures.
-		  wp_lam.
-		  iApply ("IH" with "HP HΦ Hl_new_out").
-	  + (* Inconsistent*)
-		wp_lam.
-		iApply ("IH" with "HP HΦ Hl_new_out").
-	- destruct Hxs2eq as [xs [x_next [xs' Heq]]].
-	  iPoseProof (isLL_and_chain with "HisLL_xs2") as "[HisLL_xs2 #HisLL_chain_xs2]".
-	  iAssert (▷(isLL_chain [x_next; x_tail]))%I as "Hchain".
-	  {
-		iNext. rewrite Heq.
-		iDestruct (isLL_chain_split xs (x_next :: x_tail :: xs') with "HisLL_chain_xs2") as "[_ Hchain]".
-		iDestruct (isLL_chain_split [x_next; x_tail] xs' with "Hchain") as "[Hchain' _]".
-		done. 
-	  }
-	  iDestruct "Hchain" as "(Hx_next & Hx_tail_x_next & _)".
-	  wp_load.
-	  iPoseProof (get_snapshot with "Hcurr") as "[Hcurr Hsnap2]".
-	  iModIntro.
-	  iSplitL "Hl_head Hl_tail HisLL_xs2 Hcurr HAbst".
-	{
-		iNext.
-		iExists xs_v; iFrame "HAbst".
-		iExists (xs2_queue ++ [x_head] ++ xs2_old), xs2_queue, xs2_old, x_head, x_tail'; iFrame.
-		rewrite Heq_xs2.
-		iFrame.
-		iSplit; first done.
-		iSplit; first done.
-		rewrite Heq_xs2 in Hx_tail'_in_xs2.
-		done.
-	}
-	(* TODO: possibly add more *)
-	iClear (Hconc_abst_eq xs_v Heq_xs2 x_head) "".
-	wp_let.
-	(* consistency check *)
-	wp_load.
-	wp_pures.
-	(* Third Invariant Opening *)
-	wp_bind (! #l_tail)%E.
-	iInv "Hqueue_inv" as "(%xs_v & HAbst & %xs3 & %xs3_queue & %xs3_old & %x_head & %x_tail'' & >Hcurr & >%Heq_xs3 & HisLL_xs3 & >%Hconc_abst_eq & Hl_head & Hl_tail & >%Hx_tail''_in_xs3)".
-	wp_load.
-	iModIntro.
-	iSplitL "Hl_head Hl_tail HisLL_xs3 Hcurr HAbst".
-	{
-		iNext.
-		iExists xs_v; iFrame "HAbst".
-		iExists xs3, xs3_queue, xs3_old, x_head, x_tail''; iFrame.
-		iSplit; first done.
-		iSplit; first done.
-		done.
-	}
-	(* TODO: possibly add more *)
-	iClear (Hconc_abst_eq xs_v Heq_xs3 x_head) "".
-	wp_pures.
-	case_bool_decide; wp_if.
-	+ (* Consistent*)
-		wp_pures.
-		wp_load.
-		wp_pures.
-		wp_bind (CmpXchg _ _ _).
-		iInv "Hqueue_inv" as "(%xs_v & HAbst & %xs4 & %xs4_queue & %xs4_old & %x_head & %x_tail''' & >Hcurr & >%Heq_xs4 & HisLL_xs4 & >%Hconc_abst_eq & Hl_head & Hl_tail & >%Hx_tail'''_in_xs4)".
-		wp_cmpxchg as H1 | H2.
-		* iModIntro.
-		  iAssert (⌜x_tail''' = x_tail⌝)%I as "->".
-		  {
-			iPoseProof (isLL_and_chain with "HisLL_xs4") as "[HisLL_xs4 #HisLL_chain_xs4]".
-			iApply n_in_equal; auto.
-			destruct (In_split x_tail''' xs4 Hx_tail'''_in_xs4) as [xs4' [xs4'' Heq4]].
-			rewrite Heq4.
-			by iApply (isLL_chain_node xs4' x_tail''' xs4'' with "[HisLL_chain_xs4]").
-		  }
-		  iDestruct (current_and_snapshot Q_γ xs4 xs2 with "Hcurr Hsnap2") as "(%xs4_diff & %Hxs4xs2_eq)".
-		  iSplitL "Hl_head Hl_tail HisLL_xs4 Hcurr HAbst".
-		  {
-			iNext.
-			iExists xs_v; iFrame "HAbst".
-			iExists xs4, xs4_queue, xs4_old, x_head, x_next; iFrame.
-			iSplit; first done.
-			iSplit; first done.
-			rewrite Hxs4xs2_eq.
-			rewrite Heq.
-			iPureIntro.
-			apply in_or_app.
-			right.
-			apply in_or_app.
-			right.
-			apply in_eq.
-		  }
-		  wp_pures.
-		  wp_lam.
-		  iApply ("IH" with "HP HΦ Hl_new_out"). 
-		* iModIntro.
-		  iSplitL "Hl_head Hl_tail HisLL_xs4 Hcurr HAbst".
-			{
-				iNext.
-				iExists xs_v; iFrame "HAbst".
-				iExists xs4, xs4_queue, xs4_old, x_head, x_tail'''; iFrame.
-				iSplit; first done.
-				iSplit; first done.
-				done.
-			}
-		  wp_pures.
-		  wp_lam.
-		  iApply ("IH" with "HP HΦ Hl_new_out"). 
-	+ (* Inconsistent*)
 		wp_lam.
 		iApply ("IH" with "HP HΦ Hl_new_out").
 Qed.
