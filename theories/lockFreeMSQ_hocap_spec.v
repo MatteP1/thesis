@@ -14,7 +14,6 @@ Definition node : Type := loc * val * loc.
 Definition nodeO : Type := prodO (prodO locO valO) locO.
 
 Context `{!heapGS Σ}.
-(* TODO: ask if below is correct *)
 Context `{!inG Σ (authR (gsetUR nodeO))}.
 Context `{!inG Σ (frac_authR (agreeR (listO val)))}.
 
@@ -76,6 +75,7 @@ Proof.
 	  iModIntro. rewrite /Reach' /Reach /=. iFrame "#". by iLeft.
 	- rewrite (least_fixpoint_unfold Reach' (y1, y2)).
 	  iModIntro. rewrite {3}/Reach' /Reach /=. iFrame "#".
+	  iRight. iExists x_p. iFrame "#".
 Qed.
 
 Lemma reach_refl : ∀ x_n,
@@ -102,9 +102,8 @@ Lemma reach_trans : ∀ x_n x_m x_o,
 	reach x_m x_o -∗
 	reach x_n x_o.
 Proof.
-	iIntros (x_n x_m x_o).
+	iIntros (x_n x_m x_o) "Hreachnm".
 	unfold reach.
-	iIntros "Hreachnm".
 	iPoseProof (least_fixpoint_iter _ Phi_trans with "[] Hreachnm") as "H"; last by iApply "H".
 	iModIntro.
 	iIntros ([y1 y2]) "Htransy".
@@ -121,7 +120,30 @@ Proof.
 	  rewrite /Reach.
 	  iFrame "#".
 	  iRight.
+	  iExists x_p.
+	  iFrame "#".
 	  by iApply "Htransx_p".
+Qed.
+
+Definition Phi_node (p : prodO nodeO nodeO) : iProp Σ :=
+	n_in p.2 ↦□ (n_val p.2, #(n_out p.2)).
+
+Local Instance Phi_node_ne : NonExpansive Phi_node.
+Proof. solve_proper. Qed.
+
+(* TODO: cleanup *)
+Lemma reach_node : ∀ x_n x_m,
+	reach x_n x_m -∗ n_in x_m ↦□ (n_val x_m, #(n_out x_m)).
+Proof.
+	iIntros (x_n x_m) "Hreachnm".
+	unfold reach.
+	iPoseProof (least_fixpoint_iter _ Phi_node with "[] Hreachnm") as "H"; last by iApply "H".
+	iModIntro.
+	iIntros ([y1 y2]) "HReach'".
+	rewrite /Reach' /Reach /Phi_node /=.
+	iDestruct "HReach'" as "[#Hpt [-> | (%x_p & #Hpt_out & #Hnodex_p)]]".
+	- done.
+	- rewrite /curry /=. done.
 Qed.
 
 (* ===== Concurrent Specification for Two-lock M&S Queue ===== *)
@@ -190,6 +212,7 @@ Notation "x ⤏ γ" := (own γ (◯ {[x]}))
 Notation "γ ↣ x" := (∃s, own γ (● s) ∗ [∗ set] x_m ∈ s, reach x_m x)%I
 	(at level 20, format "γ ↣ x") : bi_scope.
 
+(* TODO: cleanup *)
 Lemma Abs_Reach_Alloc: forall x,
 	x ⤳ x ==∗ ∃ γ, γ ↣ x ∗ x ⤏ γ.
 Proof.
@@ -203,6 +226,7 @@ Proof.
 	by rewrite big_opS_singleton.
 Qed.
 
+(* TODO: cleanup *)
 Lemma Abs_Reach_Concr: forall x_n x_m γ_m,
 	x_n ⤏ γ_m -∗
 	γ_m ↣ x_m -∗
@@ -219,22 +243,71 @@ Proof.
 	  by apply singleton_subseteq_l.
 Qed.
 
+(* TODO: cleanup *)
 Lemma Abs_Reach_Abs: forall x_n x_m γ_m,
 	x_n ⤳ x_m -∗
 	γ_m ↣ x_m ==∗
-	x_n ⤏ γ_m.
+	x_n ⤏ γ_m ∗ γ_m ↣ x_m.
 Proof.
-	(* TODO: prove *)
-	Admitted.
+	iIntros (x_n x_m γ_m) "#Hconcr Hap".
+	iDestruct "Hap" as "(%s & Hauth & #HB_reach)".
+	(* Is x_n in s? *)
+	destruct (decide (x_n ∈ s)) as [ Hin | Hnotin ].
+	(* Case: x_n ∈ s. It then follows by auth_update_dfrac_alloc *)
+	- iMod (own_update _ _ (● s ⋅ ◯ {[x_n]}) with "Hauth") as "[Hauth Hfrag]".
+	  + apply (auth_update_dfrac_alloc _ s {[x_n]}).
+		rewrite gset_included.
+	  	by apply singleton_subseteq_l.
+	  + iFrame "Hfrag". iExists s. by iFrame "#".
+	(* Case: x_n ∉ s. We update ● s to ● ({[x_n]} ∪ s) ⋅ ◯ ({[x_n]} ∪ s) *)
+	- iMod (own_update _ _ (● ({[x_n]} ∪ s) ⋅ ◯ ({[x_n]} ∪ s)) with "Hauth") as "(Hauth & Hfrag)".
+	  + apply auth_update_alloc.
+	    apply gset_local_update.
+		set_solver.
+	  + rewrite auth_frag_op.
+	  	iDestruct "Hfrag" as "[Hfrag _]".
+		iFrame "Hfrag".
+		iExists ({[x_n]} ∪ s).
+		iFrame "Hauth".
+		iApply big_opS_insert; first done.
+		by iFrame "#".
+Qed.
 
+(* TODO: cleanup *)
 Lemma Abs_Reach_Advance: forall x_m γ_m x_o,
 	γ_m ↣ x_m -∗
 	x_m ⤳ x_o ==∗
 	γ_m ↣ x_o ∗ x_o ⤏ γ_m.
 Proof.
-	(* TODO: prove *)
-	Admitted.
-
+	iIntros (x_m γ_m x_o) "Hap #Hxm_to_xo".
+	iDestruct "Hap" as "(%s & Hauth & #HB_reach)".
+	iMod (own_update _ _ (● ({[x_o]} ∪ s) ⋅ ◯ ({[x_o]} ∪ s)) with "Hauth") as "(Hauth & Hfrag)".
+	- apply auth_update_alloc.
+	  apply gset_local_update.
+	  set_solver.
+	- rewrite auth_frag_op.
+	  iDestruct "Hfrag" as "[Hfrag _]".
+	  iFrame "Hfrag".
+	  iExists ({[x_o]} ∪ s).
+	  iFrame "Hauth".
+	  destruct (decide (x_o ∈ s)) as [ Hin | Hnotin ].
+	  + assert (Heq: {[x_o]} ∪ s = s); first set_solver.
+	    rewrite Heq.
+		iApply (big_sepS_impl with "HB_reach").
+		do 2 iModIntro.
+		iIntros (x) "%Hxin #Hx_to_xm".
+		by iApply reach_trans.
+	  + iApply (big_opS_union _ {[x_o]} s); first set_solver.
+	  	iModIntro.
+		iSplit.
+		* rewrite big_opS_singleton.
+		  iApply reach_refl.
+		  by iApply reach_node.
+		* iApply (big_sepS_impl with "HB_reach").
+		  iModIntro.
+		  iIntros (x) "%Hxin #Hx_to_xm".
+		  by iApply reach_trans.
+Qed.
 
 Definition queue_invariant (l_head l_tail : loc) (Q_γ : Qgnames) : iProp Σ :=
 	∃ xs_v, Q_γ ⤇● xs_v ∗ (* Abstract state *)

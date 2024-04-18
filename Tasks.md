@@ -75,4 +75,6 @@
 
 - [ ] Introduce the notion of linearisation points (possibly in hocap for two-lock MSQ) and point out their locations in the proof outlines
 
+- [ ] Mention coq and iris version that the code works with.
+
 - [ ] If time permits, use hocap spec to prove a spec of a non-trivial client. Fx a client like the one in the java code
