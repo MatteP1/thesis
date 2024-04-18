@@ -1,10 +1,4 @@
 - wp_cmpxchg_fail can't find persistent points-to predicates. What to do?
 	Make it find it explicitly in the persistent context until bug has been fixed.
 
-- How to prove reach persistent?
-  induction
-
-
-- Is gsetO correct (RA for reachability)?
-  does it correspond to powerset (Auth (P node))?
-  Use gsetUR
+- Is there a nicer Induction hypothesis for enqueue (Löb)?

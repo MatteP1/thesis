@@ -79,7 +79,7 @@ Proof.
 Qed.
 
 Lemma reach_refl : ∀ x_n,
-	reach x_n x_n ∗-∗ n_in x_n ↦□ (n_val x_n, #(n_out x_n)).
+	x_n ⤳ x_n ∗-∗ n_in x_n ↦□ (n_val x_n, #(n_out x_n)).
 Proof.
 	iIntros (x_n).
 	iSplit.
@@ -98,9 +98,9 @@ Proof. solve_proper. Qed.
 (* todo: rewrite with ssreflect: rewrite /Reach /=.*)
 (* TODO: cleanup *)
 Lemma reach_trans : ∀ x_n x_m x_o,
-	reach x_n x_m -∗
-	reach x_m x_o -∗
-	reach x_n x_o.
+	x_n ⤳ x_m -∗
+	x_m ⤳ x_o -∗
+	x_n ⤳ x_o.
 Proof.
 	iIntros (x_n x_m x_o) "Hreachnm".
 	unfold reach.
@@ -133,7 +133,7 @@ Proof. solve_proper. Qed.
 
 (* TODO: cleanup *)
 Lemma reach_node : ∀ x_n x_m,
-	reach x_n x_m -∗ n_in x_m ↦□ (n_val x_m, #(n_out x_m)).
+	x_n ⤳ x_m -∗ n_in x_m ↦□ (n_val x_m, #(n_out x_m)).
 Proof.
 	iIntros (x_n x_m) "Hreachnm".
 	unfold reach.
@@ -144,6 +144,19 @@ Proof.
 	iDestruct "HReach'" as "[#Hpt [-> | (%x_p & #Hpt_out & #Hnodex_p)]]".
 	- done.
 	- rewrite /curry /=. done.
+Qed.
+
+Lemma reach_case : ∀ x_n x_m,
+	x_n ⤳ x_m -∗
+	(⌜x_n = x_m⌝ ∨ ∃x_p : node, n_out x_n ↦□ #(n_in x_p) ∗ x_p ⤳ x_m).
+Proof.
+	iIntros (x_n x_m) "Hreach".
+	unfold reach.
+	rewrite {1}least_fixpoint_unfold.
+	rewrite {1}/Reach' /Reach /=.
+	iDestruct "Hreach" as "[#Hpt [-> | (%x_p & #Hpt_out & #Hnodex_p)]]".
+	- by iLeft.
+	- iRight. iExists x_p. iFrame "#".
 Qed.
 
 (* ===== Concurrent Specification for Two-lock M&S Queue ===== *)
@@ -230,17 +243,23 @@ Qed.
 Lemma Abs_Reach_Concr: forall x_n x_m γ_m,
 	x_n ⤏ γ_m -∗
 	γ_m ↣ x_m -∗
-	x_n ⤳ x_m.
+	x_n ⤳ x_m ∗ γ_m ↣ x_m.
 Proof.
 	iIntros (x_n x_m γ_m) "#Har Hap".
-	iDestruct "Hap" as "(%s & Hauth & HB_reach)".
+	iDestruct "Hap" as "(%s & Hauth & #HB_reach)".
 	iCombine "Hauth" "Har" gives "%Hincluded".
 	rewrite auth_both_valid_discrete in Hincluded.
 	destruct Hincluded as [Hincluded _].
-	rewrite (big_opS_delete _ s x_n).
-	- by iDestruct "HB_reach" as "[Hreach _]".
-	- rewrite gset_included in Hincluded.
-	  by apply singleton_subseteq_l.
+	iAssert (x_n ⤳ x_m)%I as "Hxn_reach_xm".
+	{
+		rewrite (big_opS_delete _ s x_n).
+		- by iDestruct "HB_reach" as "[Hreach _]".
+		- rewrite gset_included in Hincluded.
+		  by apply singleton_subseteq_l.
+	}
+	iFrame "Hxn_reach_xm".
+	iExists s.
+	by iFrame.
 Qed.
 
 (* TODO: cleanup *)
@@ -382,7 +401,6 @@ Lemma enqueue_spec v_q (v : val) (Q_γ : Qgnames) (P Q : iProp Σ) :
 		enqueue v_q v
 	{{{ w, RET w; Q }}}.
 Proof.
-	(* TODO: fix proof. *)
 	iIntros "#Hvs".
 	iIntros (Φ) "!> [(%l_queue & %l_head & %l_tail & -> &
 				 #Hl_queue & #Hqueue_inv) HP] HΦ".
@@ -404,63 +422,39 @@ Proof.
 	wp_pures.
 	wp_bind (! #l_tail)%E.
 	(* First Invariant Opening *)
-	iInv "Hqueue_inv" as "(%xs_v & HAbst & %xs1 & %xs1_queue & %xs1_old & %x_head & %x_tail & >Hcurr & >%Heq_xs1 & HisLL_xs1 & >%Hconc_abst_eq & Hl_head & Hl_tail & >%Hx_tail_in_xs1)".
+	iInv "Hqueue_inv" as "(%xs_v & HAbst & %xs & %xs_queue & %x_head & %x_tail & %x_last & >%Hxs_eq & HisLL_xs & >%HisLast_xlast & >%Hconc_abst_eq & >Hl_head & >Hl_tail & HγHead_pt_xhead & >#Hxhead_ar_γTail & HγTail_pt_xtail & >#Hxtail_ar_γLast & HγLast_pt_xlast)".
 	wp_load.
-	iPoseProof (isLL_and_chain with "HisLL_xs1") as "[HisLL_xs1 #HisLL_chain_xs1]".
-	iAssert ((n_in x_tail ↦□ (n_val x_tail, #(n_out x_tail)))%I) as "#Hx_tail".
+	(* iPoseProof (isLL_and_chain with "HisLL_xs1") as "[HisLL_xs1 #HisLL_chain_xs1]". *)
+	iAssert ((n_in x_tail ↦□ (n_val x_tail, #(n_out x_tail)))%I) as "#Hxtail_node".
 	{
-		destruct (In_split x_tail xs1 Hx_tail_in_xs1) as [xs1' [xs1'' Heq]].
-		iPoseProof (isLL_chain_node xs1' x_tail xs1'' with "[HisLL_chain_xs1]") as "#Hx_tail"; by rewrite Heq.
+		iApply (reach_node x_head).
+		by iDestruct (Abs_Reach_Concr with "Hxhead_ar_γTail HγTail_pt_xtail") as "[Hxhead_reach_xtail _]".
 	}
-	iPoseProof (get_snapshot with "Hcurr") as "[Hcurr Hsnap1]".
 	iModIntro.
 	(* Close invariant*)
-	iSplitL "Hl_head Hl_tail HisLL_xs1 HAbst Hcurr".
+	iSplitL "Hl_head Hl_tail HisLL_xs HAbst HγHead_pt_xhead HγTail_pt_xtail HγLast_pt_xlast".
 	{
 		iNext.
 		iExists xs_v; iFrame "HAbst".
-		iExists xs1, xs1_queue, xs1_old, x_head, x_tail; iFrame.
-		done.
+		iExists xs, xs_queue, x_head, x_tail, x_last; iFrame.
+		iFrame "%#".
 	}
 	(* TODO: possibly add more *)
-	iClear (Hconc_abst_eq xs_v Heq_xs1 x_head) "".
+	iClear (Hconc_abst_eq xs_v Hxs_eq x_head HisLast_xlast x_last xs xs_queue) "Hxhead_ar_γTail".
 	wp_let.
 	wp_load.
 	wp_pures.
 	wp_bind (! #(n_out x_tail))%E.
 	(* Second Invariant Opening *)
-	iInv "Hqueue_inv" as "(%xs_v & HAbst & %xs2 & %xs2_queue & %xs2_old & %x_head & %x_tail' & >Hcurr & >%Heq_xs2 & HisLL_xs2 & >%Hconc_abst_eq & Hl_head & Hl_tail & >%Hx_tail'_in_xs2)".
-	iAssert (∃xs_diff, ⌜xs2 = xs_diff ++ xs1⌝)%I with "[Hcurr Hsnap1]" as "(%xs_diff & %Hxs2xs1_eq)"; first by (iApply (current_and_snapshot Q_γ xs2 xs1 with "Hcurr Hsnap1")).
+	iInv "Hqueue_inv" as "(%xs_v & HAbst & %xs & %xs_queue & %x_head & %x_tail' & %x_last & >%Hxs_eq & HisLL_xs & >%HisLast_xlast & >%Hconc_abst_eq & >Hl_head & >Hl_tail & HγHead_pt_xhead & >#Hxhead_ar_γTail & HγTail_pt_xtail & >#Hxtail'_ar_γLast & HγLast_pt_xlast)".
+	iPoseProof (Abs_Reach_Concr x_tail x_last (Q_γ.(γ_Last)) with "Hxtail_ar_γLast HγLast_pt_xlast") as "[#Hxtail_reach_xlast HγLast_pt_xlast]".
 	(* CASE ANALYSIS: Is x_tail last? *)
-	assert (Hxs2tail: isLast x_tail xs2 \/ ∃xs x_next xs', xs2 = xs ++ x_next :: x_tail :: xs').
-	{
-		destruct xs_diff as [ | x_last xs_diff'].
-		- simpl in Hxs2xs1_eq.
-		  rewrite Hxs2xs1_eq in Hx_tail_in_xs1 *.
-		  destruct (In_split x_tail xs1 Hx_tail_in_xs1) as [xs1' [xs1'' Heq]].
-		  destruct xs1' as [| x' xs1'2].
-		  + left. rewrite Heq. by exists xs1''.
-		  + right.
-		  	destruct (exists_first (x' :: xs1'2)) as [x_first [xs1'2_rest Hx_first]]; first done. 
-		  	exists xs1'2_rest, x_first, xs1''. rewrite Hx_first in Heq.
-			rewrite Heq. by rewrite <- app_assoc.
-		- right. 
-		  destruct (In_split x_tail xs1 Hx_tail_in_xs1) as [xs1' [xs1'' Heq]].
-		  destruct xs1' as [| x' xs1'2].
-		  + destruct (exists_first (x_last :: xs_diff')) as [x_first [xs_diff'' Hx_first]]; first done. 
-		  exists xs_diff'', x_first, xs1''.
-		  rewrite Hxs2xs1_eq. rewrite Hx_first.
-		  rewrite <- app_assoc.
-		  by rewrite Heq.
-		  + destruct (exists_first (x' :: xs1'2)) as [x_first [xs1'2_rest Hx_first]]; first done. 
-		  exists (x_last :: xs_diff' ++ xs1'2_rest), x_first, xs1''.
-		  rewrite Hxs2xs1_eq. 
-		  rewrite Heq.
-		  rewrite Hx_first.
-		  rewrite <- (app_assoc (x_last :: xs_diff') xs1'2_rest _) .
-		  f_equal.
-		  rewrite <- app_assoc. auto.
-	}
+	iDestruct (reach_case with "Hxtail_reach_xlast") as "[>%Htail_last_eq | (%x_m & Hxtail_out & Hxm_reach_xlast)]".
+	- (* x_tail is last. i.e. x_tail = x_last *)
+	  admit.
+	- (* x_tail is not last *)
+	  admit.
+	(* BELOW IS OLD *)
 	destruct Hxs2tail as [HisLast_xs2 |Hxs2eq].
 	- destruct HisLast_xs2 as [xs_fromtail Hxs2eq].
 	  rewrite Hxs2eq.
