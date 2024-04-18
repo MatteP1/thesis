@@ -70,6 +70,7 @@
   - [x] Add prophesies to dequeue (linearisation point could be early if the queue is empty)
   - [ ] prove enqueue spec
   - [ ] prove dequeue spec
+  - [ ] Might be possible to remove isLL xs
 
 - [ ] Create a section/chapter explaining some of the basic rules (hoare-triples, weakest-precondition, inv-alloc, resource algebra), and also iris in general.
 
