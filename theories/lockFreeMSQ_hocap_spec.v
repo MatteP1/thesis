@@ -168,6 +168,17 @@ Proof.
 	- iRight. iExists x_p. iFrame "#".
 Qed.
 
+Lemma reach_end_eq : ∀ x_n x_m,
+	x_n ⤳ x_m -∗
+	n_out x_n ↦ NONEV -∗
+	⌜x_n = x_m⌝ ∗ n_out x_n ↦ NONEV.
+Proof.
+	iIntros (x_n x_m) "Hreach Hxn_out".
+	iDestruct (reach_case with "Hreach") as "[Heq | (%x_o & Hxn_out' & Hxo_reach_xm)]"; first by iFrame. 
+	iCombine "Hxn_out Hxn_out'" gives "[_ %Hcontra]".
+	simplify_eq.
+Qed.
+
 (* ===== Concurrent Specification for Two-lock M&S Queue ===== *)
 
 (* Ghost variable names *)
@@ -794,9 +805,82 @@ Proof.
 	  (* TODO: possibly find out more information here *)
 	  (* CASE ANALYSIS: Is x_head the last element in the linked list? *)
 	  iDestruct (reach_case with "Hxhead_reach_xlast") as "[><- | (%x_m & Hxhead_out & Hxm_reach_xlast)]".
-	  + (* x_head is the last element: x_head = x_last*)
-	  	admit.
+	  + (* x_head is the last element: x_head = x_last *)
+	  	destruct HisLast_xlast as [xs_rest ->].
+		iDestruct "HisLL_xs" as "[Hxhead_out HisLL_chain_xs]".
+		wp_load.
+		(* x_head ⤳ x_head' *)
+		iPoseProof (Abs_Reach_Concr with "Hxhead_ar_γHead HγHead_pt_xhead") as "[Hxhead_reach_xhead' HγHead_pt_xhead]".
+		(* x_head ⤳ x_tail' *)
+		iPoseProof (Abs_Reach_Concr with "Hxhead_ar_γTail HγTail_pt_xtail") as "[Hxhead_reach_xtail' HγTail_pt_xtail]".
+		(* x_head = x_head' *)
+		iPoseProof (reach_end_eq with "Hxhead_reach_xhead' Hxhead_out") as "[<- Hxhead_out]".
+		(* x_head = x_tail' *)
+		iPoseProof (reach_end_eq with "Hxhead_reach_xtail' Hxhead_out") as "[<- Hxhead_out]".
+		(* x_head = x_tail *)
+		iPoseProof (reach_end_eq with "Hxhead_reach_xtail Hxhead_out") as "[<- Hxhead_out]".
+		iAssert (⌜xs_queue = []⌝)%I as "->".
+		{
+			rewrite Hxs_eq. 
+			destruct xs_queue as [|x xs_queue_rest]; first done.
+			destruct (exists_first (x :: xs_queue_rest)) as [x_head_next [xs_queue_rest' ->]]; first done.
+			rewrite <- app_assoc.
+			iPoseProof (isLL_chain_split with "HisLL_chain_xs") as "(_ & _ & Hxhead_out' & _)".
+			iCombine "Hxhead_out Hxhead_out'" gives "[_ %Hcontra]".
+			simplify_eq.
+		}
+		iAssert (⌜xs_v = []⌝)%I as "->".
+		{ by destruct xs_v. }
+		iMod ("Hvs" $! [] with "[HAbst HP]") as "[(_ & HAbst & HQ) | (%x_v & %xs_v' & >%Hcontra & HAbst_new & HQ) ]";
+	  	[ by iFrame | |
+		  (* The abstract state must be empty. Hence the second disjunct is impossible. *)
+		  exfalso;
+		  by apply (app_cons_not_nil xs_v' [] x_v)
+		  (* destruct (exists_last (xs_v' ++ [x_v])) *)
+		].
+		iModIntro.
+		(* Close Invariant: 3 *)
+		iSplitL "Hl_head Hl_tail Hxhead_out HAbst HγHead_pt_xhead HγTail_pt_xtail HγLast_pt_xlast".
+		{
+			iNext.
+			iExists []; iFrame "HAbst".
+			iExists [x_head], [], x_head, x_head, x_head; iFrame.
+			iFrame "%#".
+			iSplit; first done.
+			by iExists [].
+		}
+		iClear (Hconc_abst_eq xs_rest Hxs_eq) "Hxhead'_ar_γTail Hxtail'_ar_γLast Hxhead_reach_xlast HisLL_chain_xs".
+		wp_let.
+		wp_bind ((Fst ! #l_queue))%E.
+		wp_load.
+		wp_pures.
+		wp_bind (Resolve ! #l_head #p #()).
+		wp_apply (wp_resolve with "Hproph_p"); first done.
+		(* Invariant Opening: 4 *)
+		iInv "Hqueue_inv" as "(%xs_v & HAbst & %xs & %xs_queue & %x_head' & %x_tail' & %x_last & >%Hxs_eq & HisLL_xs & >%HisLast_xlast & >%Hconc_abst_eq & >Hl_head & >Hl_tail & HγHead_pt_xhead & >#Hxhead'_ar_γTail & HγTail_pt_xtail & >#Hxtail'_ar_γLast & HγLast_pt_xlast)".
+		wp_load.
+		iModIntro.
+		(* Close Invariant: 4 *)
+		iSplitL "Hl_head Hl_tail HisLL_xs HAbst HγHead_pt_xhead HγTail_pt_xtail HγLast_pt_xlast".
+		{
+			iNext.
+			iExists xs_v; iFrame "HAbst".
+			iExists xs, xs_queue, x_head', x_tail', x_last; iFrame.
+			iFrame "%#".
+		}
+		iIntros (pvs') "-> _".
+		simpl in e.
+		wp_pures.
+		case_bool_decide; last contradiction.
+		wp_if_true.
+		wp_pures.
+		case_bool_decide; last contradiction.
+		wp_if_true.
+		wp_pures.
+		iModIntro.
+		by iApply "HΦ".
 	  + (* x_head is not the last element *)
+	  	(* TODO: finish case *)
 	  	admit.
 	- (* Inconsistent *)
 	  wp_bind (! #(n_out x_head))%E.

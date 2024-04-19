@@ -13,6 +13,7 @@
 - [ ] Reread about fancy updated and view-shift (sections in chapter 14 ILN)
 - [x] Reread about invariant namespaces (chapter 14.5 ILN)
 - [x] Read chapter 13 of Iris Lecture Notes (Hocap style Specs)
+- [ ] Read paper: The Future is Ours: Prophecy Variables in Separation Logic
 
 - [x] Create Thesis Report file
 - [x] Add bibliography (Iris-Lecture-Notes, Contextual Refinement Paper, Iris from Ground up, etc)
@@ -66,7 +67,6 @@
 - [x] Update notation for definitions to use triangleq instead of equality
 
 - [ ] State and prove correctness of lock-free M&S Queue
-  - [ ] Read about Prophecies (either the original paper: The future is now or contextual refinement paper)
   - [x] Add prophesies to dequeue (linearisation point could be early if the queue is empty)
   - [ ] prove enqueue spec
   - [ ] prove dequeue spec
