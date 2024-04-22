@@ -13,6 +13,22 @@ Definition isFirst {A} (x : A) xs := ∃ xs_rest, xs = xs_rest ++ [x].
 Definition isLast {A} (x : A) xs := ∃ xs_rest, xs = x :: xs_rest.
 Definition isSndLast {A} (x : A) xs := ∃ x_first xs_rest, xs = x_first :: x :: xs_rest.
 
+Lemma isLast_remove {A} : forall (x y : A) (xs ys : list A),
+	isLast x (xs ++ [y] ++ ys) <->
+	isLast x (xs ++ [y]).
+Proof.
+	intros x y xs ys.
+	split.
+	- intros [xs' HisLast]. 
+	  destruct xs as [|x' xs''].
+	  + exists []. simpl. by inversion HisLast.
+	  + inversion HisLast; subst. by exists (xs'' ++ [y]).
+	- intros [xs' HisLast].
+	  exists (xs' ++ ys).
+	  rewrite app_assoc.
+	  by rewrite HisLast.
+Qed.
+
 Lemma exists_first {A} : forall (xs : list A),
 	~(xs = nil) ->
 	∃x_first, isFirst x_first xs.
@@ -252,6 +268,19 @@ Proof.
 	destruct xs as [| x' xs'].
 	- iApply (isLL_chain_agree_next x y z ys ys' zs zs'); done.
 	- iApply (isLL_chain_agree_next x' y z ys (xs' ++ [x] ++ ys') zs ((xs' ++ [x] ++ zs'))); done.
+Qed.
+
+Lemma isLL_split : forall xs ys,
+	isLL (xs ++ ys) -∗
+	isLL xs ∗ isLL_chain ys.
+Proof.
+	iIntros (xs ys) "HisLL_xs_ys".
+	iPoseProof (isLL_and_chain with "HisLL_xs_ys") as "[HisLL_xs_ys #HisLL_chain_xs_ys]".
+	iPoseProof (isLL_chain_split with "HisLL_chain_xs_ys") as "[HisLL_chain_xs HisLL_chain_ys]".
+	iFrame "HisLL_chain_ys".
+	destruct xs as [| x xs']; first done.
+	iDestruct "HisLL_xs_ys" as "[Hxout_none _]".
+	by iFrame.
 Qed.
 
 End isLL.

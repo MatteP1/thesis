@@ -645,7 +645,7 @@ Proof.
 		iNext. iApply queue_invariant_equiv_simple.
 		iExists xs_v'; iFrame "HAbst_new".
 		iExists (xs_rest ++ [x_head_next] ++ [x_head] ++ xs_old), xs_rest, ([x_head] ++ xs_old), x_head_next, x_tail; iFrame.
-		do 2(iSplit; first done).
+		do 2 (iSplit; first done).
 		iLeft.
 		iFrame.
 	  }

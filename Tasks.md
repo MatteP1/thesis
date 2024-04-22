@@ -59,7 +59,7 @@
 - [x] Write about the concurrent spec for two-lock M&S queue in the report
   - [ ] Talk about adequacy as a reason for safety
   - [x] Update spec to include the Ψ predicate
-- [ ] Write about HOCAP spec for two-lock M&S queue in the report
+- [x] Write about HOCAP spec for two-lock M&S queue in the report
   - [x] motivate it from sequential and concurrent
   - [x] "Prove it" - mention differences from Concurrent
   - [x] Explain that it is more general that then previous two, and can in fact derive them (without referring to the implementation)
@@ -68,9 +68,11 @@
 
 - [ ] State and prove correctness of lock-free M&S Queue
   - [x] Add prophesies to dequeue (linearisation point could be early if the queue is empty)
-  - [ ] prove enqueue spec
-  - [ ] prove dequeue spec
+  - [x] prove enqueue spec
+  - [x] prove dequeue spec
   - [ ] Might be possible to remove isLL xs
+  - [ ] Make variable names consistent
+  - [ ] Fix all todos in code
 
 - [ ] Create a section/chapter explaining some of the basic rules (hoare-triples, weakest-precondition, inv-alloc, resource algebra), and also iris in general.
 
