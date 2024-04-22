@@ -804,7 +804,7 @@ Proof.
 	  iPoseProof (Abs_Reach_Concr with  "Hxhead_ar_γLast HγLast_pt_xlast") as "[#Hxhead_reach_xlast HγLast_pt_xlast]".
 	  (* TODO: possibly find out more information here *)
 	  (* CASE ANALYSIS: Is x_head the last element in the linked list? *)
-	  iDestruct (reach_case with "Hxhead_reach_xlast") as "[><- | (%x_m & Hxhead_out & Hxm_reach_xlast)]".
+	  iDestruct (reach_case with "Hxhead_reach_xlast") as "[><- | (%x_n & Hxhead_out & Hxn_reach_xlast)]".
 	  + (* x_head is the last element: x_head = x_last *)
 	  	destruct HisLast_xlast as [xs_rest ->].
 		iDestruct "HisLL_xs" as "[Hxhead_out HisLL_chain_xs]".
@@ -836,7 +836,6 @@ Proof.
 		  (* The abstract state must be empty. Hence the second disjunct is impossible. *)
 		  exfalso;
 		  by apply (app_cons_not_nil xs_v' [] x_v)
-		  (* destruct (exists_last (xs_v' ++ [x_v])) *)
 		].
 		iModIntro.
 		(* Close Invariant: 3 *)
@@ -881,7 +880,45 @@ Proof.
 		by iApply "HΦ".
 	  + (* x_head is not the last element *)
 	  	(* TODO: finish case *)
-	  	admit.
+	  	wp_load.
+		iModIntro.
+		(* Close Invariant: 3 *)
+		iSplitL "Hl_head Hl_tail HisLL_xs HAbst HγHead_pt_xhead HγTail_pt_xtail HγLast_pt_xlast".
+		{
+			iNext.
+			iExists xs_v; iFrame "HAbst".
+			iExists xs, xs_queue, x_head', x_tail', x_last; iFrame.
+			iFrame "%#".
+		}
+		iClear (Hconc_abst_eq xs_v Hxs_eq HisLast_xlast x_head' x_tail' xs_queue xs x_last) "Hxhead'_ar_γTail Hxtail'_ar_γLast Hxhead_reach_xlast Hxn_reach_xlast".
+		wp_let.
+		wp_load.
+		wp_pures.
+		wp_bind (Resolve ! #l_head #p #()).
+		wp_apply (wp_resolve with "Hproph_p"); first done.
+		(* Invariant Opening: 4 *)
+		iInv "Hqueue_inv" as "(%xs_v & HAbst & %xs & %xs_queue & %x_head' & %x_tail' & %x_last & >%Hxs_eq & HisLL_xs & >%HisLast_xlast & >%Hconc_abst_eq & >Hl_head & >Hl_tail & HγHead_pt_xhead & >#Hxhead'_ar_γTail & HγTail_pt_xtail & >#Hxtail'_ar_γLast & HγLast_pt_xlast)".
+		wp_load.
+		iModIntro.
+		(* Close Invariant: 4 *)
+		iSplitL "Hl_head Hl_tail HisLL_xs HAbst HγHead_pt_xhead HγTail_pt_xtail HγLast_pt_xlast".
+		{
+			iNext.
+			iExists xs_v; iFrame "HAbst".
+			iExists xs, xs_queue, x_head', x_tail', x_last; iFrame.
+			iFrame "%#".
+		}
+		iIntros (pvs') "-> _".
+		simpl in e.
+		wp_pures.
+		case_bool_decide; last contradiction.
+		wp_if_true.
+		wp_pures.
+		destruct (decide (#(n_in x_head) = #(n_in x_tail))) as [Hxhead_x_tail_eq | Hxhead_xtail_neq].
+		* (* x_head = x_tail. I.e. x_tail is lagging behind. Swing it to next *)
+		  admit.
+		* (* x_tail is not lagging behind. Attempt to swing head pointer *)
+		  admit.
 	- (* Inconsistent *)
 	  wp_bind (! #(n_out x_head))%E.
 	  (* Invariant Opening: 3 *)
