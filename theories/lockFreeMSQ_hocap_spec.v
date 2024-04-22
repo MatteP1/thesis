@@ -879,8 +879,9 @@ Proof.
 		iModIntro.
 		by iApply "HΦ".
 	  + (* x_head is not the last element *)
-	  	(* TODO: finish case *)
 	  	wp_load.
+		iPoseProof (reach_from_is_node with "Hxn_reach_xlast") as "Hxn_node".
+		iMod (Abs_Reach_Abs with "Hxn_reach_xlast HγLast_pt_xlast") as "[#Hxn_ar_γLast HγLast_pt_xlast]".
 		iModIntro.
 		(* Close Invariant: 3 *)
 		iSplitL "Hl_head Hl_tail HisLL_xs HAbst HγHead_pt_xhead HγTail_pt_xtail HγLast_pt_xlast".
@@ -908,17 +909,93 @@ Proof.
 			iExists xs, xs_queue, x_head', x_tail', x_last; iFrame.
 			iFrame "%#".
 		}
+		iClear (Hconc_abst_eq xs_v Hxs_eq HisLast_xlast x_tail' xs_queue xs x_last) "Hxhead'_ar_γTail Hxtail'_ar_γLast".
 		iIntros (pvs') "-> _".
 		simpl in e.
 		wp_pures.
 		case_bool_decide; last contradiction.
+		clear e H x_head'.
 		wp_if_true.
 		wp_pures.
-		destruct (decide (#(n_in x_head) = #(n_in x_tail))) as [Hxhead_x_tail_eq | Hxhead_xtail_neq].
-		* (* x_head = x_tail. I.e. x_tail is lagging behind. Swing it to next *)
-		  admit.
+		case_bool_decide as His_xhead_xtail_eq.
+		* (* n_in x_head = n_in x_tail. I.e. x_tail is lagging behind. Swing it to next *)
+		  iAssert (⌜x_head = x_tail⌝)%I as "->"; first (iApply n_in_equal; done).
+		  wp_if_true.
+		  wp_pures.
+		  wp_load.
+		  wp_pures.
+		  (* Swing Tail pointer *)
+		  (* TODO: consider making into lemma *)
+		  wp_bind (CmpXchg _ _ _).
+		  (* Invariant Opening: 5 *)
+		  iInv "Hqueue_inv" as "(%xs_v & HAbst & %xs & %xs_queue & %x_head' & %x_tail' & %x_last & >%Hxs_eq & HisLL_xs & >%HisLast_xlast & >%Hconc_abst_eq & >Hl_head & >Hl_tail & HγHead_pt_xhead & >#Hxhead'_ar_γTail & HγTail_pt_xtail' & >#Hxtail'_ar_γLast & HγLast_pt_xlast)".
+		  wp_cmpxchg as Hxtail_eq | Hxtail_neq.
+		  ** (* CAS succeeded *)
+			iAssert (⌜x_tail' = x_tail⌝)%I as "->".
+			{
+				iApply (n_in_equal with "[] [HγTail_pt_xtail']"); try done.
+				iApply (reach_to_is_node x_tail).
+				by iDestruct (Abs_Reach_Concr with "Hxhead_ar_γTail HγTail_pt_xtail'") as "[Hxhead_reach_xtail' _]".
+			}
+			(* TODO: maybe make into lemma? *)
+			iAssert (x_tail ⤳ x_n)%I as "Hxtail_reach_xn".
+			{
+				rewrite {2}/reach least_fixpoint_unfold {1}/Reach' /Reach /=.
+				iFrame "#". iRight. iExists x_n. iFrame "#".
+				rewrite /curry.
+				by iApply reach_refl.
+			}
+			iMod (Abs_Reach_Advance with "HγTail_pt_xtail' Hxtail_reach_xn") as "[HγTail_pt_xn #Hxn_ar_γTail]".
+			iModIntro.
+			(* Close Invariant: 5 *)
+			iSplitL "Hl_head Hl_tail HisLL_xs HAbst HγHead_pt_xhead HγTail_pt_xn HγLast_pt_xlast".
+			{
+			  iNext.
+			  iExists xs_v; iFrame "HAbst".
+			  iExists xs, xs_queue, x_head', x_n, x_last; iFrame.
+			  iFrame "%#".
+			}
+			wp_pures.
+			wp_lam.
+			iApply ("IH" with "HP HΦ").
+		  ** (* CAS failed *)
+			iModIntro.
+			(* Close Invariant: 5 *)
+			iSplitL "Hl_head Hl_tail HisLL_xs HAbst HγHead_pt_xhead HγTail_pt_xtail' HγLast_pt_xlast".
+			{
+			  iNext.
+			  iExists xs_v; iFrame "HAbst".
+			  iExists xs, xs_queue, x_head', x_tail', x_last; iFrame.
+			  iFrame "%#".
+			}
+			wp_pures.
+			wp_lam.
+			iApply ("IH" with "HP HΦ").
 		* (* x_tail is not lagging behind. Attempt to swing head pointer *)
-		  admit.
+		  wp_if_false.
+		  wp_load.
+		  wp_pures.
+		  wp_load.
+		  wp_pures.
+		  wp_bind (CmpXchg _ _ _).
+		  (* Invariant Opening: 5 *)
+		  iInv "Hqueue_inv" as "(%xs_v & HAbst & %xs & %xs_queue & %x_head' & %x_tail' & %x_last & >%Hxs_eq & HisLL_xs & >%HisLast_xlast & >%Hconc_abst_eq & >Hl_head & >Hl_tail & HγHead_pt_xhead & >#Hxhead'_ar_γTail & HγTail_pt_xtail' & >#Hxtail'_ar_γLast & HγLast_pt_xlast)".
+		  wp_cmpxchg as Hxhead_eq | Hxhead_neq.
+		  ** (* CAS succeeded. Head pointer swung to x_n *)
+			admit.
+		  ** (* CAS failed *)
+			iModIntro.
+			(* Close Invariant: 5 *)
+			iSplitL "Hl_head Hl_tail HisLL_xs HAbst HγHead_pt_xhead HγTail_pt_xtail' HγLast_pt_xlast".
+			{
+			  iNext.
+			  iExists xs_v; iFrame "HAbst".
+			  iExists xs, xs_queue, x_head', x_tail', x_last; iFrame.
+			  iFrame "%#".
+			}
+			wp_pures.
+			wp_lam.
+			iApply ("IH" with "HP HΦ").
 	- (* Inconsistent *)
 	  wp_bind (! #(n_out x_head))%E.
 	  (* Invariant Opening: 3 *)
