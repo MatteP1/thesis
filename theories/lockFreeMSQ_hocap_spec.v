@@ -178,6 +178,19 @@ Proof.
 	simplify_eq.
 Qed.
 
+Lemma reach_one_step : ∀ (x_n x_m : nodeO),
+	n_in x_n ↦□ (n_val x_n, #(n_out x_n)) -∗
+	n_in x_m ↦□ (n_val x_m, #(n_out x_m)) -∗
+	n_out x_n ↦□ #(n_in x_m) -∗
+	x_n ⤳ x_m.
+Proof.
+	iIntros (x_n x_m) "#Hxn_node #Hxm_node #Hxn_out".
+	rewrite /reach least_fixpoint_unfold {1}/Reach' /Reach /=.
+	iFrame "#". iRight. iExists x_m. iFrame "#".
+	rewrite /curry.
+	by iApply reach_refl.
+Qed.
+
 (* ===== Concurrent Specification for Two-lock M&S Queue ===== *)
 
 (* Ghost variable names *)
@@ -554,14 +567,7 @@ Proof.
 	  wp_cmpxchg_suc.
 	  iMod (pointsto_persist with "Hxtail_out") as "#Hxtail_out".
 	  iMod ("Hvs" $! xs_v with "[HAbst HP]") as "[HAbst_new HQ]"; first by iFrame.
-	  (* TODO: maybe make into lemma? *)
-	  iAssert (x_tail ⤳ x_new)%I as "Hxtail_reach_xnew".
-	  {
-		rewrite {2}/reach least_fixpoint_unfold {1}/Reach' /Reach /=.
-		iFrame "#". iRight. iExists x_new. iFrame "#".
-		rewrite /curry.
-		by iApply reach_refl.
-	  }
+	  iPoseProof (reach_one_step x_tail x_new with "[] [] []") as "Hxtail_reach_xnew"; try done.
 	  iMod (Abs_Reach_Advance with "HγLast_pt_xlast Hxtail_reach_xnew") as "[HγLast_pt_xnew #Hxnew_ar_γLast]".
 	  iModIntro.
 	  (* Close Invariant: 4 *)
@@ -675,14 +681,7 @@ Proof.
 			iApply (reach_to_is_node x_head).
 			by iDestruct (Abs_Reach_Concr with "Hxhead_ar_γTail HγTail_pt_xtail'") as "[Hxhead_reach_xtail' _]".
 		}
-		(* TODO: maybe make into lemma? *)
-		iAssert (x_tail ⤳ x_m)%I as "Hxtail_reach_xm".
-		{
-			rewrite /reach least_fixpoint_unfold {1}/Reach' /Reach /=.
-			iFrame "#". iRight. iExists x_m. iFrame "#".
-			rewrite /curry.
-			by iApply reach_refl.
-		}
+		iPoseProof (reach_one_step x_tail x_m with "[] [] []") as "Hxtail_reach_xm"; try done.
 		iMod (Abs_Reach_Advance with "HγTail_pt_xtail' Hxtail_reach_xm") as "[HγTail_pt_xm #Hxm_ar_γTail]".
 		iModIntro.
 		(* Close Invariant: 4 *)
@@ -803,7 +802,6 @@ Proof.
 	  (* Invariant Opening: 3 *)
 	  iInv "Hqueue_inv" as "(%xs_v & HAbst & %xs & %xs_queue & %x_head' & %x_tail' & %x_last & >%Hxs_eq & HisLL_xs & >%HisLast_xlast & >%Hconc_abst_eq & >Hl_head & >Hl_tail & HγHead_pt_xhead & >#Hxhead'_ar_γTail & HγTail_pt_xtail & >#Hxtail'_ar_γLast & HγLast_pt_xlast)".
 	  iPoseProof (Abs_Reach_Concr with  "Hxhead_ar_γLast HγLast_pt_xlast") as "[#Hxhead_reach_xlast HγLast_pt_xlast]".
-	  (* TODO: possibly find out more information here *)
 	  (* CASE ANALYSIS: Is x_head the last element in the linked list? *)
 	  iDestruct (reach_case with "Hxhead_reach_xlast") as "[><- | (%x_n & Hxhead_out & Hxn_reach_xlast)]".
 	  + (* x_head is the last element: x_head = x_last *)
@@ -938,14 +936,7 @@ Proof.
 				iApply (reach_to_is_node x_tail).
 				by iDestruct (Abs_Reach_Concr with "Hxhead_ar_γTail HγTail_pt_xtail'") as "[Hxhead_reach_xtail' _]".
 			}
-			(* TODO: maybe make into lemma? *)
-			iAssert (x_tail ⤳ x_n)%I as "Hxtail_reach_xn".
-			{
-				rewrite {2}/reach least_fixpoint_unfold {1}/Reach' /Reach /=.
-				iFrame "#". iRight. iExists x_n. iFrame "#".
-				rewrite /curry.
-				by iApply reach_refl.
-			}
+			iPoseProof (reach_one_step x_tail x_n with "[] [] []") as "Hxtail_reach_xn"; try done.
 			iMod (Abs_Reach_Advance with "HγTail_pt_xtail' Hxtail_reach_xn") as "[HγTail_pt_xn #Hxn_ar_γTail]".
 			iModIntro.
 			(* Close Invariant: 5 *)
@@ -1022,14 +1013,7 @@ Proof.
 			apply list_last_eq in Hconc_abst_eq as [Hconc_abst_eq Hxn_xv_eq].
 			rewrite Hxs_eq.
 			iDestruct (isLL_split with "HisLL_xs") as "[HisLL_new _]".
-			(* TODO: maybe make into lemma? *)
-			iAssert (x_head ⤳ x_n)%I as "Hxhead_reach_xn".
-			{
-				rewrite {2}/reach least_fixpoint_unfold {1}/Reach' /Reach /=.
-				iFrame "#". iRight. iExists x_n. iFrame "#".
-				rewrite /curry.
-				by iApply reach_refl.
-			}
+			iPoseProof (reach_one_step x_head x_n with "[] [] []") as "Hxhead_reach_xn"; try done.
 			iMod (Abs_Reach_Advance with "HγHead_pt_xhead' Hxhead_reach_xn") as "[HγHead_pt_xn #Hxn_ar_γHead]".
 			iDestruct (reach_case with "Hxhead_reach_xtail") as "[-> | (%x_n' & Hxhead_out' & Hxn_reach_xtail) ]"; first contradiction.
 			iAssert (⌜x_n' = x_n⌝)%I as "->".
