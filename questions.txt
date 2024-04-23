@@ -2,3 +2,19 @@
 	Make it find it explicitly in the persistent context until bug has been fixed.
 
 - Is there a nicer Induction hypothesis for enqueue (Löb)?
+
+- I use the same resource algebra for the abstract state in two-lock and lock-free (queue_contents). Is there a way to handle them as one, or should I just define the RA twice?
+
+- How to get spaces in notation. I.e. 
+	Q_γ ⤇● xs_v instead of Q_γ⤇●xs_v.
+	x ⤏ γ instead of x⤏γ
+	x ⤳ y instead of x⤳y
+	γ ↣ x instead of γ↣x
+
+- Notation handles projections weirdly: γ_Tail Q_γ ↣ x_head instead of Q_γ.γ_Tail ↣ x_head instead of 
+
+- Is it a fine way I handle the prophecy?
+
+- How to make wp_pures not unfold n_in x_new (and similarly for n_out and n_val)?
+
+- In dequeue, is there a way to handle both cases in unison, when we are in the inconsistent case? Both require reading head's next. One argues that head points persistently to a node, and the other non-persistently to None.
