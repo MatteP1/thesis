@@ -5,7 +5,7 @@ From iris.heap_lang Require Import lang proofmode notation.
 From iris.heap_lang.lib Require Import lock spin_lock.
 From iris.base_logic.lib Require Import invariants token.
 From MSQueue Require Import twoLockMSQ_impl.
-From MSQueue Require Import twoLockMSQ_common.
+From MSQueue Require Import MSQ_common.
 From MSQueue Require Import twoLockMSQ_hocap_spec.
 
 Local Existing Instance spin_lock.

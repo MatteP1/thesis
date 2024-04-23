@@ -5,8 +5,7 @@ From iris.bi Require Import derived_laws.
 From iris.heap_lang Require Import lang proofmode notation primitive_laws.
 From iris.base_logic.lib Require Import invariants.
 From MSQueue Require Import lockFreeMSQ_impl.
-From MSQueue Require Import twoLockMSQ_common.
-(* TODO: consider changing twolockMSQ_common to common. *)
+From MSQueue Require Import MSQ_common.
 
 Section proofs.
 
