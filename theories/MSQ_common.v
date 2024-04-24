@@ -1,12 +1,16 @@
 From iris.heap_lang Require Import lang proofmode notation.
 
-(* ===== Linked Lists ===== *)
+(* ===== Common defintions and Lemmas ===== *)
+
+(* ----- Linked Lists ----- *)
+
+(* A node consists of an 'in'-location, a value, and an 'out'-location *)
+Definition node : Type := loc * val * loc.
 
 (* Notation for nodes *)
 Definition n_in {A B C} (x : A * B * C ) := (let '(a, b, c) := x in a).
 Definition n_val {A B C} (x : A * B * C ) := (let '(a, b, c) := x in b).
 Definition n_out {A B C} (x : A * B * C ) := (let '(a, b, c) := x in c).
-
 
 (* Fist and Last of lists *)
 Definition isFirst {A} (x : A) xs := ∃ xs_rest, xs = xs_rest ++ [x].
@@ -65,14 +69,14 @@ Proof.
 		* by eapply IH.
 Qed.
 
-
-Fixpoint proj_val (xs: list (loc * val * loc)) :=
+(* ------ Projecting out the value (second element of triple) ------ *)
+Fixpoint proj_val {A B C} (xs: list (A * B * C)) :=
 match xs with
 | [] => []
 | x :: xs' => n_val x :: proj_val xs'
 end.
 
-Lemma proj_val_split: forall xs_1 xs_2,
+Lemma proj_val_split {A B C}: forall (xs_1 xs_2 : list (A * B * C)),
 	proj_val (xs_1 ++ xs_2) = proj_val xs_1 ++ proj_val xs_2.
 Proof.
 	induction xs_1 as [| x xs'_1 IH]; intros xs_2.
@@ -94,6 +98,17 @@ Proof.
 	- simpl. f_equal. apply IH.
 Qed.
 
+(* ------ Miscelanious ------ *)
+
+(* Used for Prophecies *)
+Definition val_of_list (vs : list (val * val)) : val :=
+  match vs with
+  | []          => #()
+  | (v, _) :: _ => v
+  end.
+
+
+(* ------ Defining the 'All' Preidcate ------ *)
 Section All.
 
 Context `{!heapGS Σ}.
@@ -118,6 +133,7 @@ Qed.
 End All.
 
 
+(* ------ Defining the 'is Linked List' predicate ------ *)
 Section isLL.
 
 Context `{!heapGS Σ}.
@@ -138,7 +154,7 @@ Context `{!heapGS Σ}.
 	(x_1, l_1_out) <- l_1_in
 *)
 
-Fixpoint isLL_chain (xs : list (loc * val * loc) ) : iProp Σ :=
+Fixpoint isLL_chain (xs : list node ) : iProp Σ :=
 	match xs with
 	| [] => True
 	| [x] => n_in x ↦□ (n_val x, #(n_out x))
@@ -155,7 +171,7 @@ Proof.
 Qed.
 
 (* xs defines a linked list, when the tail (the first element of the list) points to NONEV, and all the nodes form a linked list chain. *)
-Definition isLL (xs : list (loc * val * loc) ) : iProp Σ :=
+Definition isLL (xs : list node) : iProp Σ :=
 	match xs with
 	| [] => True
 	| x :: xs' => (n_out x) ↦ NONEV ∗ isLL_chain xs
@@ -167,15 +183,15 @@ Lemma isLL_and_chain : forall xs,
 	isLL xs ∗ isLL_chain xs.
 Proof.
 	iIntros (xs) "HisLLxs".
-	destruct xs as [| x' xs']; first done.
+	destruct xs as [| x xs']; first done.
 	unfold isLL.
-	iPoseProof "HisLLxs" as "[Hx'_out #HisLLxs]".
+	iPoseProof "HisLLxs" as "[Hx_to_none #HisLLxs]".
 	iFrame.
 	by iSplit.
 Qed.
 
 (* if two nodes have the same 'in' location, then it is the same node. *)
-Lemma n_in_equal (x y : (loc * val * loc)) :
+Lemma n_in_equal (x y : node) :
 	⌜#(n_in x) = #(n_in y)⌝ -∗
 	n_in x ↦□ (n_val x, #(n_out x)) -∗
 	n_in y ↦□ (n_val y, #(n_out y)) -∗
@@ -212,20 +228,21 @@ Lemma isLL_chain_split : forall xs ys,
 	isLL_chain xs ∗ isLL_chain ys.
 Proof.
 	iIntros (xs ys) "#HisLL_chain_xs_ys".
-	iInduction xs as [|x' xs'] "IH".
+	iInduction xs as [|x xs'] "IH".
 	- by iSplit.
-	- destruct xs' as [| x'' xs''].
-	  + destruct ys as [| y' ys'].
+	- destruct xs' as [| x' xs''].
+	  + destruct ys as [| y ys'].
 		* by iSplit.
-		* iDestruct "HisLL_chain_xs_ys" as "(Hx' & Hy'_out & HIsLL_chain_ys')".
-		  fold isLL_chain. iSplit; done.
-	  + iAssert (isLL_chain (x'' :: xs'') ∗ isLL_chain ys)%I as "[IHxs' IHys]".
+		* iSimpl in "HisLL_chain_xs_ys".
+		  iDestruct "HisLL_chain_xs_ys" as "(Hx_node & Hy_to_x & HIsLL_chain_ys')".
+		  iFrame "#".
+	  + iAssert (isLL_chain (x' :: xs'') ∗ isLL_chain ys)%I as "[HisLL_chain_xs' HisLL_chain_ys]".
 	  	{
-			iApply "IH". iDestruct "HisLL_chain_xs_ys" as "(_ & _ & Hchain)"; done.
+			iApply "IH".
+			by iDestruct "HisLL_chain_xs_ys" as "(_ & _ & Hchain)".
 		}
-		iSplit; try done.
-		iDestruct "HisLL_chain_xs_ys" as "(Hx'_in & Hx''_out & _)".
-		unfold isLL_chain; auto.
+		iDestruct "HisLL_chain_xs_ys" as "(Hx_node & Hx'_to_x & _)".
+		iFrame "#".
 Qed.
 
 Lemma isLL_chain_agree : forall x y xs xs' ys ys',
@@ -252,11 +269,11 @@ Proof.
 	iPoseProof (isLL_chain_split zs ([z ; x] ++ zs') with "HisLL_chainzs") as "[_ HisLL_chain_zxzs']".
 	iPoseProof (isLL_chain_split [z ; x] zs' with "HisLL_chain_zxzs'") as "[HisLL_chain_zx _]".
 	iClear "HisLL_chainys HisLL_chainzs HisLL_chain_yxys' HisLL_chain_zxzs'".
-	iDestruct "HisLL_chain_yx" as "(#Hy_in_2 & #Hy_out_1 & Hy_in_1)".
-	iDestruct "HisLL_chain_zx" as "(#Hz_in_2 & #Hz_out_1 & Hz_in_1)".
-	iCombine "Hy_out_1 Hz_out_1" gives "[_ %Heq_in]".
+	iDestruct "HisLL_chain_yx" as "(#Hy_node & #Hx_to_y & Hx_node)".
+	iDestruct "HisLL_chain_zx" as "(#Hz_node & #Hx_to_z & _)".
+	iCombine "Hx_to_y Hx_to_z" gives "[_ %Hy_z_in_eq]".
 	simplify_eq.
-	iApply n_in_equal; try done. by rewrite Heq_in.
+	iApply n_in_equal; try done. by rewrite Hy_z_in_eq.
 Qed.
 
 Lemma isLL_chain_agree_further : forall x y z ys ys' zs zs' xs,
@@ -264,7 +281,7 @@ Lemma isLL_chain_agree_further : forall x y z ys ys' zs zs' xs,
 	isLL_chain (zs ++ [z] ++ xs ++ [x] ++ zs') -∗
 	⌜y = z⌝.
 Proof.
-	iIntros (x y z ys ys' zs zs' xs) "#HisLL_chainys #HisLL_chainzs".
+	iIntros (x y z ys ys' zs zs' xs) "#HisLL_chain_ys #HisLL_chain_zs".
 	destruct xs as [| x' xs'].
 	- iApply (isLL_chain_agree_next x y z ys ys' zs zs'); done.
 	- iApply (isLL_chain_agree_next x' y z ys (xs' ++ [x] ++ ys') zs ((xs' ++ [x] ++ zs'))); done.
@@ -279,7 +296,7 @@ Proof.
 	iPoseProof (isLL_chain_split with "HisLL_chain_xs_ys") as "[HisLL_chain_xs HisLL_chain_ys]".
 	iFrame "HisLL_chain_ys".
 	destruct xs as [| x xs']; first done.
-	iDestruct "HisLL_xs_ys" as "[Hxout_none _]".
+	iDestruct "HisLL_xs_ys" as "[Hx_to_none _]".
 	by iFrame.
 Qed.
 

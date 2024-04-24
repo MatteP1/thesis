@@ -71,8 +71,18 @@
   - [x] prove enqueue spec
   - [x] prove dequeue spec
   - [ ] Might be possible to remove isLL xs
-  - [ ] Make variable names consistent
+
+- [ ] Clean up proofs and make consistent
+  - [ ] Make variable names consistent (x_n vs x_head_new)
   - [ ] Fix all todos in code
+  - [x] create a name for first node, and the enqueued node
+  - [x] _null -> to_none
+  - [x] out -> to_xm
+  - [x] in -> node
+  - [x] x_n -> xn_
+  - [x] remove redundant '
+  - [ ] rewrite with ssreflect (in most places). I.e. rewrite /Reach /=.
+  - [ ] create queue_case lemma
 
 - [ ] Create a section/chapter explaining some of the basic rules (hoare-triples, weakest-precondition, inv-alloc, resource algebra), and also iris in general.
 
@@ -80,4 +90,4 @@
 
 - [ ] Mention coq and iris version that the code works with.
 
-- [ ] If time permits, use hocap spec to prove a spec of a non-trivial client. Fx a client like the one in the java code
+- [x] If time permits, use hocap spec to prove a spec of a non-trivial client. Fx a client like the one in the java code. (No Time)
