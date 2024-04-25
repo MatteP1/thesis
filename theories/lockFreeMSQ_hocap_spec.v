@@ -29,11 +29,11 @@ Record Qgnames := {γ_Abst 	: gname;
 
 (* ------ Abstract State of Queue ------ *)
 Notation "Q_γ ⤇● xs_v" := (own Q_γ.(γ_Abst) (●F (to_agree xs_v)))
-	(at level 20, format "Q_γ ⤇● xs_v") : bi_scope.
+	(at level 20, format "Q_γ  ⤇●  xs_v") : bi_scope.
 Notation "Q_γ ⤇◯ xs_v" := (own Q_γ.(γ_Abst) (◯F (to_agree xs_v)))
-	(at level 20, format "Q_γ ⤇◯ xs_v") : bi_scope.
+	(at level 20, format "Q_γ  ⤇◯  xs_v") : bi_scope.
 Notation "Q_γ ⤇[ q ] xs_v" := (own Q_γ.(γ_Abst) (◯F{ q } (to_agree xs_v)))
-	(at level 20, format "Q_γ ⤇[ q ] xs_v") : bi_scope.
+	(at level 20, format "Q_γ  ⤇[ q ]  xs_v") : bi_scope.
 
 Lemma queue_contents_frag_agree Q_γ xs_v xs_v' p q :
 	Q_γ ⤇[p] xs_v -∗ Q_γ ⤇[q] xs_v' -∗ ⌜xs_v = xs_v'⌝.
@@ -100,7 +100,7 @@ Definition Reach' : ((node * node) -> iProp Σ) -> (node * node) -> iProp Σ :=
 Definition reach x_n x_m := bi_least_fixpoint Reach' (x_n, x_m).
 
 Notation "x_n ⤳ x_m" := (reach x_n x_m)
-	(at level 20, format "x_n ⤳ x_m") : bi_scope.
+	(at level 20, format "x_n  ⤳  x_m") : bi_scope.
 
 Instance bimonopred_reach : BiMonoPred Reach'.
 Proof.
@@ -252,10 +252,10 @@ Qed.
 
 (* ----- Abstract Reachability ------ *)
 Notation "x ⤏ γ" := (own γ (◯ {[x]}))
-	(at level 20, format "x ⤏ γ") : bi_scope.
+	(at level 20, format "x  ⤏  γ") : bi_scope.
 
 Notation "γ ↣ x" := (∃s, own γ (● s) ∗ [∗ set] x_m ∈ s, reach x_m x)%I
-	(at level 20, format "γ ↣ x") : bi_scope.
+	(at level 20, format "γ  ↣  x") : bi_scope.
 
 Lemma Abs_Reach_Alloc: forall x,
 	x ⤳ x ==∗ ∃ γ, γ ↣ x ∗ x ⤏ γ.
@@ -491,11 +491,16 @@ Proof.
 	change l_new_in with (n_in x_new).
 	change l_new_out with (n_out x_new).
 	change (SOMEV v) with (n_val x_new).
+	pose proof (eq_refl : n_val x_new = SOMEV v) as Hxnew_val.
+	clearbody x_new.
 	iMod (pointsto_persist with "Hxnew_node") as "#Hxnew_node".
 	wp_let.
-	wp_pures.
-	set loop := (rec: "loop" "_" := let: "tail" := ! (Snd ! #l_queue) in let: "next" := ! (Snd ! "tail") in if: "tail" = ! (Snd ! #l_queue) then if: "next" = InjL #() then if: Snd (CmpXchg (Snd ! "tail") "next" #l_new_in) then Snd (CmpXchg (Snd ! #l_queue) "tail" #l_new_in) else "loop" #() else Snd (CmpXchg (Snd ! #l_queue) "tail" "next");; "loop" #() else "loop" #())%V.
+	wp_closure.
+	remember (rec: "loop" "_" := let: "tail" := ! (Snd ! #l_queue) in let: "next" := ! (Snd ! "tail") in if: "tail" = ! (Snd ! #l_queue) then if: "next" = InjL #() then if: Snd (CmpXchg (Snd ! "tail") "next" #(n_in x_new)) then Snd (CmpXchg (Snd ! #l_queue) "tail" #(n_in x_new)) else "loop" #() else Snd (CmpXchg (Snd ! #l_queue) "tail" "next");; "loop" #() else "loop" #())%V as loop.
 	iLöb as "IH".
+	rewrite Heqloop.
+	wp_pures.
+	rewrite <- Heqloop.
 	wp_load.
 	wp_pures.
 	wp_bind (! #l_tail)%E.
@@ -569,7 +574,6 @@ Proof.
 	  case_bool_decide; wp_if; last first.
 	  (* TODO: Consider using + indentation *)
 	  { (* Inconsistent*)
-		wp_lam.
 		iApply ("IH" with "HP HΦ Hxnew_to_none").
 	  }
 	  (* Consistent*)
@@ -598,7 +602,6 @@ Proof.
 		  iFrame "%#".
 		}
 		wp_pures.
-		wp_lam.
 		iApply ("IH" with "HP HΦ Hxnew_to_none").
 	  }
 	  (* x_tail is still last. CAS succeeds *)
@@ -673,7 +676,6 @@ Proof.
 	  case_bool_decide; wp_if; last first.
 	  (* TODO: Consider using + indentation *)
 	  { (* Inconsistent*)
-		wp_lam.
 		iApply ("IH" with "HP HΦ Hxnew_to_none").
 	  }
 	  (* Consistent*)
@@ -686,7 +688,6 @@ Proof.
 	  wp_apply (swing_tail with "[Hqueue_inv Hxtail_reach_xm Hxm_ar_γLast]"); first iFrame "#".
 	  iIntros (v') "_".
 	  wp_pures.
-	  wp_lam.
 	  iApply ("IH" with "HP HΦ Hxnew_to_none").
 Qed.
 
@@ -708,9 +709,12 @@ Proof.
 	iIntros (Φ) "!> [(%l_queue & %l_head & %l_tail & -> &
 				 #Hl_queue & #Hqueue_inv) HP] HΦ".
 	wp_lam.
-	wp_pures.
-	set loop := (rec: "loop" "_" := let: "head" := ! (Fst ! #l_queue) in let: "tail" := ! (Snd ! #l_queue) in let: "p" := NewProph in let: "next" := ! (Snd ! "head") in if: "head" = Resolve ! (Fst ! #l_queue) "p" #() then if: "head" = "tail" then if: "next" = InjL #() then InjLV #() else Snd (CmpXchg (Snd ! #l_queue) "tail" "next");; "loop" #() else let: "value" := Fst ! "next" in if: Snd (CmpXchg (Fst ! #l_queue) "head" "next") then "value" else "loop" #() else "loop" #())%V.
+	wp_closure.
+	remember (rec: "loop" "_" := let: "head" := ! (Fst ! #l_queue) in let: "tail" := ! (Snd ! #l_queue) in let: "p" := NewProph in let: "next" := ! (Snd ! "head") in if: "head" = Resolve ! (Fst ! #l_queue) "p" #() then if: "head" = "tail" then if: "next" = InjL #() then InjLV #() else Snd (CmpXchg (Snd ! #l_queue) "tail" "next");; "loop" #() else let: "value" := Fst ! "next" in if: Snd (CmpXchg (Fst ! #l_queue) "head" "next") then "value" else "loop" #() else "loop" #())%V as loop.
 	iLöb as "IH".
+	rewrite Heqloop.
+	wp_pures.
+	rewrite <- Heqloop.
 	wp_load.
 	wp_pures.
 	wp_bind (! #l_head)%E.
@@ -903,7 +907,6 @@ Proof.
 		  wp_apply (swing_tail with "[Hqueue_inv Hxtail_reach_xn Hxn_ar_γLast]"); first iFrame "#".
 		  iIntros (v') "_".
 		  wp_pures.
-		  wp_lam.
 		  iApply ("IH" with "HP HΦ").
 		* (* x_tail is not lagging behind. Attempt to swing head pointer *)
 		  wp_if_false.
@@ -998,29 +1001,32 @@ Proof.
 			  iFrame "%#".
 			}
 			wp_pures.
-			wp_lam.
 			iApply ("IH" with "HP HΦ").
 	- (* Inconsistent *)
 	  wp_bind (! #(n_out x_head))%E.
 	  (* Invariant Opening: 3 *)
 	  iInv "Hqueue_inv" as "(%xs_v & HAbst & %xs & %xs_queue & %x_head' & %x_tail' & %x_last & >%Hxs_eq & HisLL_xs & >%HisLast_xlast & >%Hconc_abst_eq & >Hl_head & >Hl_tail & HγHead_pt_xhead & >#Hxhead'_ar_γTail & HγTail_pt_xtail & >#Hxtail'_ar_γLast & HγLast_pt_xlast)".
 	  iPoseProof (Abs_Reach_Concr with  "Hxhead_ar_γLast HγLast_pt_xlast") as "[#Hxhead_reach_xlast HγLast_pt_xlast]". 
-	  (* TODO: find out how to handle both cases in unison *)
-	  iDestruct (reach_case with "Hxhead_reach_xlast") as "[><- | (%x_m & Hxhead_to_xm & Hxm_reach_xlast)]".
-	  + destruct HisLast_xlast as [xs_rest ->].
-	  	iDestruct "HisLL_xs" as "[Hxhead_to_none HisLL_chain_xs]".
-		wp_load.
-		iModIntro.
+	  iApply (wp_wand _ _ _ (λ v, isLL xs) with "[HisLL_xs]").
+	  {
+		iDestruct (reach_case with "Hxhead_reach_xlast") as "[><- | (%x_m & Hxhead_to_xm & Hxm_reach_xlast)]".
+		- destruct HisLast_xlast as [xs_rest ->].
+	  	  iDestruct "HisLL_xs" as "[Hxhead_to_none HisLL_chain_xs]".
+		  wp_load.
+		  by iFrame.
+		- by wp_load.
+	  }
+	  iIntros (v_next) "HisLL_xs".
+	  iModIntro.
 		(* Close Invariant: 3 *)
-		iSplitL "Hl_head Hl_tail Hxhead_to_none HisLL_chain_xs HAbst HγHead_pt_xhead HγTail_pt_xtail HγLast_pt_xlast".
+		iSplitL "Hl_head Hl_tail HisLL_xs HAbst HγHead_pt_xhead HγTail_pt_xtail HγLast_pt_xlast".
 		{
 			iNext.
 			iExists xs_v; iFrame "HAbst".
-			iExists (x_head :: xs_rest), xs_queue, x_head', x_tail', x_head; iFrame.
+			iExists xs, xs_queue, x_head', x_tail', x_last; iFrame.
 			iFrame "%#".
-			by iExists xs_rest.
 		}
-		iClear (Hconc_abst_eq xs_v Hxs_eq x_head' x_tail' xs_queue) "Hxhead'_ar_γTail Hxtail'_ar_γLast Hxhead_reach_xlast".
+		iClear (Hconc_abst_eq xs_v Hxs_eq x_head' HisLast_xlast x_tail' x_last xs xs_queue) "Hxhead'_ar_γTail Hxhead_reach_xlast Hxtail'_ar_γLast".
 		wp_let.
 		wp_bind ((Fst ! #l_queue))%E.
 		wp_load.
@@ -1044,43 +1050,6 @@ Proof.
 		wp_pures.
 		case_bool_decide; first contradiction.
 		wp_if_false.
-		wp_lam.
-		iApply ("IH" with "HP HΦ").
-	  + wp_load.
-		iModIntro.
-		(* Close Invariant: 3 *)
-		iSplitL "Hl_head Hl_tail HisLL_xs HAbst HγHead_pt_xhead HγTail_pt_xtail HγLast_pt_xlast".
-		{
-			iNext.
-			iExists xs_v; iFrame "HAbst".
-			iExists xs, xs_queue, x_head', x_tail', x_last; iFrame.
-			iFrame "%#".
-		}
-		iClear (Hconc_abst_eq xs_v Hxs_eq x_head' HisLast_xlast x_tail' x_last xs xs_queue) "Hxhead'_ar_γTail Hxm_reach_xlast Hxhead_reach_xlast Hxtail'_ar_γLast".
-		wp_let.
-		wp_bind ((Fst ! #l_queue))%E.
-		wp_load.
-		wp_pures.
-		wp_bind (Resolve ! #l_head #p #()).
-		wp_apply (wp_resolve with "Hproph_p"); first done.
-		(* Invariant Opening: 4 *)
-		iInv "Hqueue_inv" as "(%xs_v & HAbst & %xs & %xs_queue & %x_head' & %x_tail' & %x_last & >%Hxs_eq & HisLL_xs & >%HisLast_xlast & >%Hconc_abst_eq & >Hl_head & >Hl_tail & HγHead_pt_xhead & >#Hxhead'_ar_γTail & HγTail_pt_xtail & >#Hxtail'_ar_γLast & HγLast_pt_xlast)".
-		wp_load.
-		iModIntro.
-		(* Close Invariant: 4 *)
-		iSplitL "Hl_head Hl_tail HisLL_xs HAbst HγHead_pt_xhead HγTail_pt_xtail HγLast_pt_xlast".
-		{
-			iNext.
-			iExists xs_v; iFrame "HAbst".
-			iExists xs, xs_queue, x_head', x_tail', x_last; iFrame.
-			iFrame "%#".
-		}
-		iIntros (pvs') "-> _".
-		simpl in H_xhead_neq.
-		wp_pures.
-		case_bool_decide; first contradiction.
-		wp_if_false.
-		wp_lam.
 		iApply ("IH" with "HP HΦ").
 Qed.
 
