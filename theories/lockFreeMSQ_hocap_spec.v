@@ -257,106 +257,96 @@ Notation "x ⤏ γ" := (own γ (◯ {[x]}))
 Notation "γ ↣ x" := (∃s, own γ (● s) ∗ [∗ set] x_m ∈ s, reach x_m x)%I
 	(at level 20, format "γ ↣ x") : bi_scope.
 
-(* TODO: cleanup *)
 Lemma Abs_Reach_Alloc: forall x,
 	x ⤳ x ==∗ ∃ γ, γ ↣ x ∗ x ⤏ γ.
 Proof.
-	iIntros (x) "#HxRx".
-	iMod (own_alloc (● ({[x]}) ⋅ ◯ ({[x]}))) as (γ_reach) "[Hγ_Reach_auth Hγ_Reach_frac]"; first by apply auth_both_valid_discrete.
+	iIntros (x) "#Hx_reach_x".
+	iMod (own_alloc (● ({[x]}) ⋅ ◯ ({[x]}))) as (γ) "[Hγ_auth Hγ_ar_x]"; first by apply auth_both_valid_discrete.
 	iModIntro.
-	iExists γ_reach.
-	iFrame "Hγ_Reach_frac".
+	iExists γ.
+	iFrame "Hγ_ar_x".
 	iExists {[x]}.
 	iFrame.
 	by rewrite big_opS_singleton.
 Qed.
 
-(* TODO: cleanup *)
 Lemma Abs_Reach_Concr: forall x_n x_m γ_m,
 	x_n ⤏ γ_m -∗
 	γ_m ↣ x_m -∗
 	x_n ⤳ x_m ∗ γ_m ↣ x_m.
 Proof.
-	iIntros (x_n x_m γ_m) "#Har Hap".
-	iDestruct "Hap" as "(%s & Hauth & #HB_reach)".
-	iCombine "Hauth" "Har" gives "%Hincluded".
+	iIntros (x_n x_m γ_m) "#Hxn_ar_γm Hγm_pt_xm".
+	iDestruct "Hγm_pt_xm" as "(%s & Hγm_auth & #H_reach_xm)".
+	iCombine "Hγm_auth" "Hxn_ar_γm" gives "%Hincluded".
+	iSplitR "Hγm_auth"; last by iExists s; iFrame.
 	rewrite auth_both_valid_discrete in Hincluded.
 	destruct Hincluded as [Hincluded _].
-	iAssert (x_n ⤳ x_m)%I as "Hxn_reach_xm".
-	{
-		rewrite (big_opS_delete _ s x_n).
-		- by iDestruct "HB_reach" as "[Hreach _]".
-		- rewrite gset_included in Hincluded.
-		  by apply singleton_subseteq_l.
-	}
-	iFrame "Hxn_reach_xm".
-	iExists s.
-	by iFrame.
+	rewrite gset_included singleton_subseteq_l in Hincluded.
+	rewrite (big_opS_delete _ s x_n); last done.
+	by iDestruct "H_reach_xm" as "[Hxn_reach_xm _]".
 Qed.
 
-(* TODO: cleanup *)
 Lemma Abs_Reach_Abs: forall x_n x_m γ_m,
 	x_n ⤳ x_m -∗
 	γ_m ↣ x_m ==∗
 	x_n ⤏ γ_m ∗ γ_m ↣ x_m.
 Proof.
-	iIntros (x_n x_m γ_m) "#Hconcr Hap".
-	iDestruct "Hap" as "(%s & Hauth & #HB_reach)".
+	iIntros (x_n x_m γ_m) "#xn_reach_xm Hγm_pt_xm".
+	iDestruct "Hγm_pt_xm" as "(%s & Hγm_auth & #H_reach_xm)".
 	(* Is x_n in s? *)
-	destruct (decide (x_n ∈ s)) as [ Hin | Hnotin ].
+	destruct (decide (x_n ∈ s)) as [ Hxn_in_s | Hxn_notin_s ].
 	(* Case: x_n ∈ s. It then follows by auth_update_dfrac_alloc *)
-	- iMod (own_update _ _ (● s ⋅ ◯ {[x_n]}) with "Hauth") as "[Hauth Hfrag]".
+	- iMod (own_update _ _ (● s ⋅ ◯ {[x_n]}) with "Hγm_auth") as "[Hγm_auth #Hxn_ar_γm]".
 	  + apply (auth_update_dfrac_alloc _ s {[x_n]}).
 		rewrite gset_included.
 	  	by apply singleton_subseteq_l.
-	  + iFrame "Hfrag". iExists s. by iFrame "#".
+	  + iFrame "Hxn_ar_γm". iExists s. by iFrame.
 	(* Case: x_n ∉ s. We update ● s to ● ({[x_n]} ∪ s) ⋅ ◯ ({[x_n]} ∪ s) *)
-	- iMod (own_update _ _ (● ({[x_n]} ∪ s) ⋅ ◯ ({[x_n]} ∪ s)) with "Hauth") as "(Hauth & Hfrag)".
+	- iMod (own_update _ _ (● ({[x_n]} ∪ s) ⋅ ◯ ({[x_n]} ∪ s)) with "Hγm_auth") as "(Hγm_auth & #Hγm_frag)".
 	  + apply auth_update_alloc.
 	    apply gset_local_update.
 		set_solver.
 	  + rewrite auth_frag_op.
-	  	iDestruct "Hfrag" as "[Hfrag _]".
-		iFrame "Hfrag".
+	  	iDestruct "Hγm_frag" as "[Hxn_ar_γm _]".
+		iFrame "Hxn_ar_γm".
 		iExists ({[x_n]} ∪ s).
-		iFrame "Hauth".
+		iFrame "Hγm_auth".
 		iApply big_opS_insert; first done.
 		by iFrame "#".
 Qed.
 
-(* TODO: cleanup *)
 Lemma Abs_Reach_Advance: forall x_m γ_m x_o,
 	γ_m ↣ x_m -∗
 	x_m ⤳ x_o ==∗
 	γ_m ↣ x_o ∗ x_o ⤏ γ_m.
 Proof.
-	iIntros (x_m γ_m x_o) "Hap #Hxm_to_xo".
-	iDestruct "Hap" as "(%s & Hauth & #HB_reach)".
-	iMod (own_update _ _ (● ({[x_o]} ∪ s) ⋅ ◯ ({[x_o]} ∪ s)) with "Hauth") as "(Hauth & Hfrag)".
+	iIntros (x_m γ_m x_o) "Hγm_pt_xm #Hxm_reach_xo".
+	iDestruct "Hγm_pt_xm" as "(%s & Hγm_auth & #H_reach_xm)".
+	iMod (own_update _ _ (● ({[x_o]} ∪ s) ⋅ ◯ ({[x_o]} ∪ s)) with "Hγm_auth") as "(Hγm_auth & Hγm_frag)".
 	- apply auth_update_alloc.
 	  apply gset_local_update.
 	  set_solver.
-	- rewrite auth_frag_op.
-	  iDestruct "Hfrag" as "[Hfrag _]".
-	  iFrame "Hfrag".
+	- iModIntro.
+	  rewrite auth_frag_op.
+	  iDestruct "Hγm_frag" as "[Hxo_ar_γm _]".
+	  iFrame "Hxo_ar_γm".
 	  iExists ({[x_o]} ∪ s).
-	  iFrame "Hauth".
-	  destruct (decide (x_o ∈ s)) as [ Hin | Hnotin ].
+	  iFrame "Hγm_auth".
+	  destruct (decide (x_o ∈ s)) as [ Hxo_in_s | Hxo_notin_s ].
 	  + assert (Heq: {[x_o]} ∪ s = s); first set_solver.
 	    rewrite Heq.
-		iApply (big_sepS_impl with "HB_reach").
-		do 2 iModIntro.
-		iIntros (x) "%Hxin #Hx_to_xm".
+		iApply (big_sepS_impl with "H_reach_xm").
+		iModIntro.
+		iIntros (x) "%Hx_in_s #Hx_reach_xm".
 		by iApply reach_trans.
 	  + iApply (big_opS_union _ {[x_o]} s); first set_solver.
-	  	iModIntro.
 		iSplit.
 		* rewrite big_opS_singleton.
 		  iApply reach_refl.
 		  by iApply reach_to_is_node.
-		* iApply (big_sepS_impl with "HB_reach").
+		* iApply (big_sepS_impl with "H_reach_xm").
 		  iModIntro.
-		  iIntros (x) "%Hxin #Hx_to_xm".
+		  iIntros (x) "%Hx_in_s #Hx_reach_xm".
 		  by iApply reach_trans.
 Qed.
 
