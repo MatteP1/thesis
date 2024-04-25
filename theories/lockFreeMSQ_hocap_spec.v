@@ -133,9 +133,9 @@ Proof.
 	iIntros ([x y]) "HpersIH".
 	rewrite /Reach' /Reach /Phi_pers (least_fixpoint_unfold Reach' (x, y)) 
 			{2}/Reach' /Reach /curry /=.
-	iDestruct "HpersIH" as "[#Hy1_node [-> | (%x_p & #Hx_to_xp & #HpersIH)]]".
-	- iModIntro. iFrame "#". by iLeft.
-	- iModIntro. iFrame "#". iRight. iExists x_p. iFrame "#".
+	iDestruct "HpersIH" as "[#Hx_node [-> | (%x_p & #Hx_to_xp & #HpersIH)]]".
+	- iModIntro. iFrame "Hx_node". by iLeft.
+	- iModIntro. iFrame "Hx_node". iRight. iExists x_p. iFrame "#".
 Qed.
 
 (* Reflexivity of reach *)
@@ -169,7 +169,7 @@ Proof.
 	iModIntro.
 	iIntros ([x_n x_m]) "HtransIH".
 	rewrite /Reach' /reach /Phi_trans /curry /Reach /=.
-	iDestruct "HtransIH" as "[#Hxm_node [-> | (%x_p & #Hxn_to_xp & HtransIH)]]".
+	iDestruct "HtransIH" as "[#Hxn_node [-> | (%x_p & #Hxn_to_xp & HtransIH)]]".
 	- (* Base case: x_n = x_m *)
 	  iIntros (x_o) "Hxm_reach_xo". done.
 	- (* Inductive case: x_n ↦□ x_p, and x_p satisfies transitivity (with x_m) *)
@@ -177,7 +177,7 @@ Proof.
 	  (* We know x_n steps to x_p, so it suffices to show that x_p ⤳ x_o: *)
 	  rewrite (least_fixpoint_unfold Reach' (x_n, x_o)) {4}/Reach' 
 	  		  /Reach /curry /=.
-	  iFrame "#".
+	  iFrame "Hxn_node".
 	  iRight.
 	  iExists x_p.
 	  iFrame "#".
@@ -247,7 +247,7 @@ Lemma reach_one_step : ∀ (x_n x_m : nodeO),
 Proof.
 	iIntros (x_n x_m) "#Hxn_node #Hxm_node #Hxn_to_xm".
 	rewrite /reach least_fixpoint_unfold {1}/Reach' /Reach /curry /=.
-	iFrame "#". iRight. iExists x_m. iFrame "#". by iApply reach_refl.
+	iFrame "Hxn_node". iRight. iExists x_m. iFrame "#". by iApply reach_refl.
 Qed.
 
 (* ----- Abstract Reachability ------ *)
@@ -419,7 +419,7 @@ Proof.
 					|}).
 	iMod (inv_alloc Ni _ (queue_invariant l_head l_tail Queue_gnames) with "[Hγ_Abst_auth Hl_head Hl_tail Hx1_to_none HγHead_pt_x1 HγTail_pt_x1 HγLast_pt_x1]") as "#HqueueInv".
 	{
-		iNext. iExists []; iFrame; simpl.
+		iNext. iExists []; iFrame "Hγ_Abst_auth"; simpl.
 		iExists [x_1], [], x_1, x_1, x_1; iFrame.
 		repeat iSplit; try done.
 		by iExists [].

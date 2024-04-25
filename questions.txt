@@ -18,3 +18,5 @@
 - How to make wp_pures not unfold n_in x_new (and similarly for n_out and n_val)?
 
 - In dequeue, is there a way to handle both cases in unison, when we are in the inconsistent case? Both require reading head's next. One argues that head points persistently to a node, and the other non-persistently to None.
+
+- Can you iFrame from every context with the same invocation? iFrame "%#" only takes pure + persistent.

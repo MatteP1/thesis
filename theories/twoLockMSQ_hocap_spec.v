@@ -259,7 +259,7 @@ Proof.
 	(* CHANGE: END *)
 	{
 		(* CHANGE: START: framing instead of splitting *)
-		iNext. iExists []; iFrame.
+		iNext. iExists []; iFrame "Hγ_Abst_auth".
 		(* CHANGE: END *)
 		iExists [x_1], [], [], x_1, x_1; iFrame.
 		do 3 (iSplit; first done).
