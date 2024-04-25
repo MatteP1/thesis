@@ -65,8 +65,8 @@ Proof.
 		rewrite /P /Q.
 		iIntros "[Hauth Hfrag]".
 		iAssert (⌜xs_v = xs_v'⌝)%I with "[Hauth Hfrag]" as "<-"; first by
-			iApply (queue_contents_auth_frag_agree Q_γH xs_v xs_v' 1 with "Hauth Hfrag").
-		by iMod (queue_contents_update Q_γH xs_v xs_v (v :: xs_v) with "Hauth Hfrag").
+			iApply (queue_contents_auth_frag_agree _ xs_v xs_v' 1 with "Hauth Hfrag").
+		by iMod (queue_contents_update _ xs_v xs_v (v :: xs_v) with "Hauth Hfrag").
 	}
 	(* Proving pre-condition of hocap enqueue spec *)
 	{ by iFrame. }
@@ -94,7 +94,7 @@ Proof.
 		iIntros (xs_v') "!>".
 		iIntros "[Hauth Hfrag]".
 		iAssert (⌜xs_v = xs_v'⌝)%I with "[Hauth Hfrag]" as "<-"; first by
-			iApply (queue_contents_auth_frag_agree Q_γH xs_v xs_v' 1 with "Hauth Hfrag").
+			iApply (queue_contents_auth_frag_agree _ xs_v xs_v' 1 with "Hauth Hfrag").
 		destruct xs_v as [| x xs ].
 		- iLeft.
 		  iModIntro.
@@ -104,7 +104,7 @@ Proof.
 		  iLeft.
 		  by repeat iSplit.
 		- destruct (exists_first (x :: xs)) as [x_v [xs_v' Hxs_v_eq]]; first done.
-		  iMod (queue_contents_update Q_γH _ _ (xs_v') with "Hauth Hfrag") as "[Hauth Hfrag]".
+		  iMod (queue_contents_update _ _ _ (xs_v') with "Hauth Hfrag") as "[Hauth Hfrag]".
 		  iRight.
 		  iExists x_v, xs_v'.
 		  iModIntro.
@@ -210,8 +210,8 @@ Proof.
 		iIntros "[Hauth HΨ]".
 		iInv "HInv" as "(%xs_v & >Hfrag & HAll)".
 		iAssert (⌜xs_v = xs_v'⌝)%I with "[Hauth Hfrag]" as "<-"; first by
-			iApply (queue_contents_auth_frag_agree Q_γH xs_v xs_v' 1 with "Hauth Hfrag").
-		iMod (queue_contents_update Q_γH xs_v xs_v (v :: xs_v) with "Hauth Hfrag") as "[Hauth Hfrag]".
+			iApply (queue_contents_auth_frag_agree _ xs_v xs_v' 1 with "Hauth Hfrag").
+		iMod (queue_contents_update _ xs_v xs_v (v :: xs_v) with "Hauth Hfrag") as "[Hauth Hfrag]".
 		iModIntro.
 		iSplitL "Hfrag HAll HΨ".
 		- iNext.
@@ -240,7 +240,7 @@ Proof.
 		iIntros "[Hauth _]".
 		iInv "HInv" as "(%xs_v & >Hfrag & HAll)".
 		iAssert (⌜xs_v = xs_v'⌝)%I with "[Hauth Hfrag]" as "<-"; first by
-			iApply (queue_contents_auth_frag_agree Q_γH xs_v xs_v' 1 with "Hauth Hfrag").
+			iApply (queue_contents_auth_frag_agree _ xs_v xs_v' 1 with "Hauth Hfrag").
 		destruct xs_v as [| x xs ].
 		- iModIntro.
 		  (* Close Invariant NC *)
@@ -252,7 +252,7 @@ Proof.
 		  rewrite /Q.
 		  by iLeft.
 		- destruct (exists_first (x :: xs)) as [x_v [xs_v' ->]]; first done.
-		  iMod (queue_contents_update Q_γH _ _ (xs_v') with "Hauth Hfrag") as "[Hauth Hfrag]".
+		  iMod (queue_contents_update _ _ _ (xs_v') with "Hauth Hfrag") as "[Hauth Hfrag]".
 		  iPoseProof (All_split with "HAll") as "[HAll_xs_v' [HΨ _]]".
 		  iModIntro.
 		  (* Close Invariant NC *)

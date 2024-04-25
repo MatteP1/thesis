@@ -1,5 +1,5 @@
 From stdpp Require Import sets countable.
-From iris.algebra Require Import excl list agree gset lib.frac_auth.
+From iris.algebra Require Import list agree gset lib.frac_auth.
 From iris.bi Require Import fixpoint big_op.
 From iris.bi Require Import derived_laws.
 From iris.heap_lang Require Import lang proofmode notation primitive_laws.
@@ -27,57 +27,13 @@ Record Qgnames := {γ_Abst 	: gname;
 				   γ_Last 	: gname;
 				  }.
 
-(* ------ Abstract State of Queue ------ *)
+(* ------ Notation for Abstract State of Queue ------ *)
 Notation "Q_γ ⤇● xs_v" := (own Q_γ.(γ_Abst) (●F (to_agree xs_v)))
 	(at level 20, format "Q_γ  ⤇●  xs_v") : bi_scope.
 Notation "Q_γ ⤇◯ xs_v" := (own Q_γ.(γ_Abst) (◯F (to_agree xs_v)))
 	(at level 20, format "Q_γ  ⤇◯  xs_v") : bi_scope.
 Notation "Q_γ ⤇[ q ] xs_v" := (own Q_γ.(γ_Abst) (◯F{ q } (to_agree xs_v)))
 	(at level 20, format "Q_γ  ⤇[ q ]  xs_v") : bi_scope.
-
-Lemma queue_contents_frag_agree Q_γ xs_v xs_v' p q :
-	Q_γ ⤇[p] xs_v -∗ Q_γ ⤇[q] xs_v' -∗ ⌜xs_v = xs_v'⌝.
-Proof.
-	iIntros "Hp Hq".
-	iCombine "Hp Hq" as "Hpq" gives "%HValid".
-	iPureIntro.
-	rewrite <- frac_auth_frag_op in HValid.
-	rewrite frac_auth_frag_valid in HValid.
-	destruct HValid as [_ HAgree].
-	by apply to_agree_op_inv_L.
-Qed.
-
-Lemma queue_contents_auth_frag_agree Q_γ xs_v xs_v' p :
-	Q_γ ⤇● xs_v' -∗ Q_γ ⤇[p] xs_v -∗ ⌜xs_v = xs_v'⌝.
-Proof.
-	iIntros "Hp Hq".
-	iCombine "Hp Hq" as "Hpq" gives "%HValid".
-	iPureIntro.
-	apply frac_auth_included_total in HValid.
-	by apply to_agree_included_L.
-Qed.
-
-Lemma queue_contents_op Q_γ xs_v p q :
-	Q_γ ⤇[p] xs_v ∗ Q_γ ⤇[q] xs_v ∗-∗ Q_γ ⤇[p + q] xs_v.
-Proof.
-	iSplit.
-	- iIntros "[Hp Hq]".
-	  by iCombine "Hp Hq" as "Hpq".
-	- iIntros "Hpq".
-	  iApply own_op.
-	  rewrite <- frac_auth_frag_op.
-	  by rewrite agree_idemp.
-Qed.
-
-Lemma queue_contents_update Q_γ xs_v xs_v' xs_v'' :
-	Q_γ ⤇● xs_v' -∗ Q_γ ⤇◯ xs_v ==∗ Q_γ ⤇● xs_v'' ∗ Q_γ ⤇◯ xs_v''.
-Proof.
-	iIntros "Hauth Hfrag".
-	iCombine "Hauth Hfrag" as "Hcombined".
-	rewrite <- own_op.
-	iApply (own_update with "Hcombined").
-	by apply frac_auth_update_1.
-Qed.
 
 (* ------ Concrete Reachability ------ *)
 Definition Reach (Φ : node -> node -> iProp Σ) (x_n x_m : node) : iProp Σ:= 
@@ -393,7 +349,9 @@ Proof.
 	set x_1 := (l_1_in, NONEV, l_1_out).
 	change l_1_in with (n_in x_1).
 	change l_1_out with (n_out x_1).
-	change NONEV with (n_val x_1).
+	pose proof (eq_refl : NONEV = n_val x_1) as Hx1_val.
+	rewrite {2}Hx1_val.
+	clearbody x_1.
 	iMod (pointsto_persist with "Hx1_node") as "#Hx1_node".
 	wp_alloc l_tail as "Hl_tail".
 	wp_alloc l_head as "Hl_head".
@@ -491,7 +449,7 @@ Proof.
 	change l_new_in with (n_in x_new).
 	change l_new_out with (n_out x_new).
 	change (SOMEV v) with (n_val x_new).
-	pose proof (eq_refl : n_val x_new = SOMEV v) as Hxnew_val.
+	pose proof (eq_refl : SOMEV v = n_val x_new) as Hxnew_val.
 	clearbody x_new.
 	iMod (pointsto_persist with "Hxnew_node") as "#Hxnew_node".
 	wp_let.
@@ -1006,9 +964,11 @@ Proof.
 	  wp_bind (! #(n_out x_head))%E.
 	  (* Invariant Opening: 3 *)
 	  iInv "Hqueue_inv" as "(%xs_v & HAbst & %xs & %xs_queue & %x_head' & %x_tail' & %x_last & >%Hxs_eq & HisLL_xs & >%HisLast_xlast & >%Hconc_abst_eq & >Hl_head & >Hl_tail & HγHead_pt_xhead & >#Hxhead'_ar_γTail & HγTail_pt_xtail & >#Hxtail'_ar_γLast & HγLast_pt_xlast)".
-	  iPoseProof (Abs_Reach_Concr with  "Hxhead_ar_γLast HγLast_pt_xlast") as "[#Hxhead_reach_xlast HγLast_pt_xlast]". 
+	  iPoseProof (Abs_Reach_Concr with  "Hxhead_ar_γLast HγLast_pt_xlast") as "[#Hxhead_reach_xlast HγLast_pt_xlast]".
+	  (* The result of the load is unimportant as the consistency check will fail. Thus, we just prove that the load is safe *)
 	  iApply (wp_wand _ _ _ (λ v, isLL xs) with "[HisLL_xs]").
 	  {
+		(* x_head either points to None or another node: *)
 		iDestruct (reach_case with "Hxhead_reach_xlast") as "[><- | (%x_m & Hxhead_to_xm & Hxm_reach_xlast)]".
 		- destruct HisLast_xlast as [xs_rest ->].
 	  	  iDestruct "HisLL_xs" as "[Hxhead_to_none HisLL_chain_xs]".
@@ -1018,46 +978,46 @@ Proof.
 	  }
 	  iIntros (v_next) "HisLL_xs".
 	  iModIntro.
-		(* Close Invariant: 3 *)
-		iSplitL "Hl_head Hl_tail HisLL_xs HAbst HγHead_pt_xhead HγTail_pt_xtail HγLast_pt_xlast".
-		{
-			iNext.
-			iExists xs_v; iFrame "HAbst".
-			iExists xs, xs_queue, x_head', x_tail', x_last; iFrame.
-			iFrame "%#".
-		}
-		iClear (Hconc_abst_eq xs_v Hxs_eq x_head' HisLast_xlast x_tail' x_last xs xs_queue) "Hxhead'_ar_γTail Hxhead_reach_xlast Hxtail'_ar_γLast".
-		wp_let.
-		wp_bind ((Fst ! #l_queue))%E.
-		wp_load.
-		wp_pures.
-		wp_bind (Resolve ! #l_head #p #()).
-		wp_apply (wp_resolve with "Hproph_p"); first done.
-		(* Invariant Opening: 4 *)
-		iInv "Hqueue_inv" as "(%xs_v & HAbst & %xs & %xs_queue & %x_head' & %x_tail' & %x_last & >%Hxs_eq & HisLL_xs & >%HisLast_xlast & >%Hconc_abst_eq & >Hl_head & >Hl_tail & HγHead_pt_xhead & >#Hxhead'_ar_γTail & HγTail_pt_xtail & >#Hxtail'_ar_γLast & HγLast_pt_xlast)".
-		wp_load.
-		iModIntro.
-		(* Close Invariant: 4 *)
-		iSplitL "Hl_head Hl_tail HisLL_xs HAbst HγHead_pt_xhead HγTail_pt_xtail HγLast_pt_xlast".
-		{
-			iNext.
-			iExists xs_v; iFrame "HAbst".
-			iExists xs, xs_queue, x_head', x_tail', x_last; iFrame.
-			iFrame "%#".
-		}
-		iIntros (pvs') "-> _".
-		simpl in H_xhead_neq.
-		wp_pures.
-		case_bool_decide; first contradiction.
-		wp_if_false.
-		iApply ("IH" with "HP HΦ").
+	  (* Close Invariant: 3 *)
+	  iSplitL "Hl_head Hl_tail HisLL_xs HAbst HγHead_pt_xhead HγTail_pt_xtail HγLast_pt_xlast".
+	  {
+		iNext.
+		iExists xs_v; iFrame "HAbst".
+		iExists xs, xs_queue, x_head', x_tail', x_last; iFrame.
+		iFrame "%#".
+	  }
+	  iClear (Hconc_abst_eq xs_v Hxs_eq x_head' HisLast_xlast x_tail' x_last xs xs_queue) "Hxhead'_ar_γTail Hxhead_reach_xlast Hxtail'_ar_γLast".
+	  wp_let.
+	  wp_bind ((Fst ! #l_queue))%E.
+	  wp_load.
+	  wp_pures.
+	  wp_bind (Resolve ! #l_head #p #()).
+	  wp_apply (wp_resolve with "Hproph_p"); first done.
+	  (* Invariant Opening: 4 *)
+	  iInv "Hqueue_inv" as "(%xs_v & HAbst & %xs & %xs_queue & %x_head' & %x_tail' & %x_last & >%Hxs_eq & HisLL_xs & >%HisLast_xlast & >%Hconc_abst_eq & >Hl_head & >Hl_tail & HγHead_pt_xhead & >#Hxhead'_ar_γTail & HγTail_pt_xtail & >#Hxtail'_ar_γLast & HγLast_pt_xlast)".
+	  wp_load.
+	  iModIntro.
+	  (* Close Invariant: 4 *)
+	  iSplitL "Hl_head Hl_tail HisLL_xs HAbst HγHead_pt_xhead HγTail_pt_xtail HγLast_pt_xlast".
+	  {
+		iNext.
+		iExists xs_v; iFrame "HAbst".
+		iExists xs, xs_queue, x_head', x_tail', x_last; iFrame.
+		iFrame "%#".
+	  }
+	  iIntros (pvs') "-> _".
+	  simpl in H_xhead_neq.
+	  wp_pures.
+	  case_bool_decide; first contradiction.
+	  wp_if_false.
+	  iApply ("IH" with "HP HΦ").
 Qed.
 
 End proofs.
 
 Notation "Q_γ ⤇● xs_v" := (own Q_γ.(γ_Abst) (●F (to_agree xs_v)))
-	(at level 20, format "Q_γ ⤇● xs_v") : bi_scope.
+	(at level 20, format "Q_γ  ⤇●  xs_v") : bi_scope.
 Notation "Q_γ ⤇◯ xs_v" := (own Q_γ.(γ_Abst) (◯F (to_agree xs_v)))
-	(at level 20, format "Q_γ ⤇◯ xs_v") : bi_scope.
+	(at level 20, format "Q_γ  ⤇◯  xs_v") : bi_scope.
 Notation "Q_γ ⤇[ q ] xs_v" := (own Q_γ.(γ_Abst) (◯F{ q } (to_agree xs_v)))
-	(at level 20, format "Q_γ ⤇[ q ] xs_v") : bi_scope.
+	(at level 20, format "Q_γ  ⤇[ q ]  xs_v") : bi_scope.

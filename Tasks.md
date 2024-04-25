@@ -71,6 +71,7 @@
   - [x] prove enqueue spec
   - [x] prove dequeue spec
   - [ ] Might be possible to remove isLL xs
+  - [ ] Show the two derived specifications (similar to two-lock versions)
 
 - [ ] Clean up proofs and make consistent
   - [ ] Make variable names consistent (x_n vs x_head_new)

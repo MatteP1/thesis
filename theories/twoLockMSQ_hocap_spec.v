@@ -1,5 +1,5 @@
 From stdpp Require Import countable.
-From iris.algebra Require Import excl list agree lib.frac_auth.
+From iris.algebra Require Import list agree lib.frac_auth.
 From iris.bi Require Import derived_laws.
 From iris.heap_lang Require Import lang proofmode notation.
 From iris.heap_lang.lib Require Import lock spin_lock.
@@ -44,57 +44,13 @@ Definition TokBefore (g : Qgnames) := token g.(γ_Before).
 Definition TokAfter (g : Qgnames) := token g.(γ_After).
 Definition TokUpdated (g : Qgnames) := ((TokBefore g) ∗ (TokAfter g))%I.
 
-(* ------ Abstract State of Queue ------ *)
+(* ------ Notation for Abstract State of Queue ------ *)
 Notation "Q_γ ⤇● xs_v" := (own Q_γ.(γ_Abst) (●F (to_agree xs_v)))
-	(at level 20, format "Q_γ ⤇● xs_v") : bi_scope.
+	(at level 20, format "Q_γ  ⤇●  xs_v") : bi_scope.
 Notation "Q_γ ⤇◯ xs_v" := (own Q_γ.(γ_Abst) (◯F (to_agree xs_v)))
-	(at level 20, format "Q_γ ⤇◯ xs_v") : bi_scope.
+	(at level 20, format "Q_γ  ⤇◯  xs_v") : bi_scope.
 Notation "Q_γ ⤇[ q ] xs_v" := (own Q_γ.(γ_Abst) (◯F{ q } (to_agree xs_v)))
-	(at level 20, format "Q_γ ⤇[ q ] xs_v") : bi_scope.
-
-Lemma queue_contents_frag_agree Q_γ xs_v xs_v' p q :
-	Q_γ ⤇[p] xs_v -∗ Q_γ ⤇[q] xs_v' -∗ ⌜xs_v = xs_v'⌝.
-Proof.
-	iIntros "Hp Hq".
-	iCombine "Hp Hq" as "Hpq" gives "%HValid".
-	iPureIntro.
-	rewrite <- frac_auth_frag_op in HValid.
-	rewrite frac_auth_frag_valid in HValid.
-	destruct HValid as [_ HAgree].
-	by apply to_agree_op_inv_L.
-Qed.
-
-Lemma queue_contents_auth_frag_agree Q_γ xs_v xs_v' p :
-	Q_γ ⤇● xs_v' -∗ Q_γ ⤇[p] xs_v -∗ ⌜xs_v = xs_v'⌝.
-Proof.
-	iIntros "Hp Hq".
-	iCombine "Hp Hq" as "Hpq" gives "%HValid".
-	iPureIntro.
-	apply frac_auth_included_total in HValid.
-	by apply to_agree_included_L.
-Qed.
-
-Lemma queue_contents_op Q_γ xs_v p q :
-	Q_γ ⤇[p] xs_v ∗ Q_γ ⤇[q] xs_v ∗-∗ Q_γ ⤇[p + q] xs_v.
-Proof.
-	iSplit.
-	- iIntros "[Hp Hq]".
-	  by iCombine "Hp Hq" as "Hpq".
-	- iIntros "Hpq".
-	  iApply own_op.
-	  rewrite <- frac_auth_frag_op.
-	  by rewrite agree_idemp.
-Qed.
-
-Lemma queue_contents_update Q_γ xs_v xs_v' xs_v'' :
-	Q_γ ⤇● xs_v' -∗ Q_γ ⤇◯ xs_v ==∗ Q_γ ⤇● xs_v'' ∗ Q_γ ⤇◯ xs_v''.
-Proof.
-	iIntros "Hauth Hfrag".
-	iCombine "Hauth Hfrag" as "Hcombined".
-	rewrite <- own_op.
-	iApply (own_update with "Hcombined").
-	by apply frac_auth_update_1.
-Qed.
+	(at level 20, format "Q_γ  ⤇[ q ]  xs_v") : bi_scope.
 
 (* ----- Queue Invariants ------ *)
 Definition queue_invariant (l_head l_tail : loc) (Q_γ : Qgnames) : iProp Σ :=
@@ -226,7 +182,9 @@ Proof.
 	set x_1 := (l_1_in, NONEV, l_1_out).
 	change l_1_in with (n_in x_1).
 	change l_1_out with (n_out x_1).
-	change NONEV with (n_val x_1).
+	pose proof (eq_refl : NONEV = n_val x_1) as Hx1_val.
+	rewrite {2}Hx1_val.
+	clearbody x_1.
 	iMod (pointsto_persist with "Hx1_node") as "#Hx1_node".
 	wp_pures.
 	iMod token_alloc as (γ_D) "Hγ_D".
@@ -297,6 +255,8 @@ Proof.
 	change l_new_in with (n_in x_new).
 	change l_new_out with (n_out x_new).
 	change (SOMEV v) with (n_val x_new).
+	pose proof (eq_refl : SOMEV v = n_val x_new) as Hxnew_val.
+	clearbody x_new.
 	iMod (pointsto_persist with "Hxnew_node") as "#Hxnew_node".
 	wp_let.
 	wp_load.
@@ -337,7 +297,7 @@ Proof.
 	iClear (HisLast xs_fromtail Hconc_abst_eq xs_v Heq_xs xs xs_queue x_head xs_old) "HisLL_chain_xs".
 	wp_load.
 	wp_pures.
-	wp_bind (#(n_out x_tail) <- #l_new_in)%E.
+	wp_bind (#(n_out x_tail) <- #(n_in x_new))%E.
 	(* Open in Enqueue / Both : Before *)
 	iInv "Hqueue_inv" as "Hqueue_inv_open".
 	(* CHANGE: START: remove Ψ, HAll -> HAbst *)
@@ -381,7 +341,7 @@ Proof.
 		iExists xs_new, (x_new :: xs_queue), xs_old, x_head, x_tail.
 		iSplit. { iPureIntro. unfold xs_new. cbn. rewrite Heq_xs. auto. }
 		iFrame.
-		iSplit. { iPureIntro. simpl. f_equal. done. }
+		iSplit. { iPureIntro. simpl. f_equal; done. }
 		iRight.
 		iFrame.
 		iRight.
@@ -394,7 +354,7 @@ Proof.
 	wp_seq.
 	wp_load.
 	wp_pures.
-	wp_bind (#l_tail <- #l_new_in)%E.
+	wp_bind (#l_tail <- #(n_in x_new))%E.
 	(* Open in Enqueue / Both : After *)
 	iInv "Hqueue_inv" as "Hqueue_inv_open".
 	(* CHANGE: START: remove Ψ, HAll -> HAbst *)
@@ -675,8 +635,8 @@ Qed.
 End proofs.
 
 Notation "Q_γ ⤇● xs_v" := (own Q_γ.(γ_Abst) (●F (to_agree xs_v)))
-	(at level 20, format "Q_γ ⤇● xs_v") : bi_scope.
+	(at level 20, format "Q_γ  ⤇●  xs_v") : bi_scope.
 Notation "Q_γ ⤇◯ xs_v" := (own Q_γ.(γ_Abst) (◯F (to_agree xs_v)))
-	(at level 20, format "Q_γ ⤇◯ xs_v") : bi_scope.
+	(at level 20, format "Q_γ  ⤇◯  xs_v") : bi_scope.
 Notation "Q_γ ⤇[ q ] xs_v" := (own Q_γ.(γ_Abst) (◯F{ q } (to_agree xs_v)))
-	(at level 20, format "Q_γ ⤇[ q ] xs_v") : bi_scope.
+	(at level 20, format "Q_γ  ⤇[ q ]  xs_v") : bi_scope.

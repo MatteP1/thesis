@@ -170,7 +170,9 @@ Proof.
 	set x_1 := (l_1_in, NONEV, l_1_out).
 	change l_1_in with (n_in x_1).
 	change l_1_out with (n_out x_1).
-	change NONEV with (n_val x_1).
+	pose proof (eq_refl : NONEV = n_val x_1) as Hx1_val.
+	rewrite {2}Hx1_val.
+	clearbody x_1.
 	iMod (pointsto_persist with "Hx1_node") as "#Hx1_node".
 	wp_pures.
 	iMod token_alloc as (γ_D) "Hγ_D".
@@ -230,6 +232,8 @@ Proof.
 	change l_new_in with (n_in x_new).
 	change l_new_out with (n_out x_new).
 	change (SOMEV v) with (n_val x_new).
+	pose proof (eq_refl : SOMEV v = n_val x_new) as Hxnew_val.
+	clearbody x_new.
 	iMod (pointsto_persist with "Hxnew_node") as "#Hxnew_node".
 	wp_let.
 	wp_load.
@@ -266,7 +270,7 @@ Proof.
 	iClear (HisLast xs_fromtail Hconc_abst_eq xs_v Heq_xs xs xs_queue x_head xs_old) "HisLL_chain_xs".
 	wp_load.
 	wp_pures.
-	wp_bind (#(n_out x_tail) <- #l_new_in)%E.
+	wp_bind (#(n_out x_tail) <- #(n_in x_new))%E.
 	(* Open in Enqueue / Both : Before *)
 	iInv "Hqueue_inv" as "Hqueue_inv_open".
 	iPoseProof (queue_invariant_equiv_simple Ψ l_head l_tail Q_γ with "Hqueue_inv_open") as "Hqueue_inv_open".
@@ -302,7 +306,7 @@ Proof.
 		iExists xs_new, (x_new :: xs_queue), xs_old, x_head, x_tail.
 		iSplit. { iPureIntro. unfold xs_new. cbn. rewrite Heq_xs. auto. }
 		iFrame.
-		iSplit. { iPureIntro. simpl. f_equal. done. }
+		iSplit. { iPureIntro. simpl. f_equal; done. }
 		iRight.
 		iFrame.
 		iRight.
@@ -315,7 +319,7 @@ Proof.
 	wp_seq.
 	wp_load.
 	wp_pures.
-	wp_bind (#l_tail <- #l_new_in)%E.
+	wp_bind (#l_tail <- #(n_in x_new))%E.
 	(* Open in Enqueue / Both : After *)
 	iInv "Hqueue_inv" as "Hqueue_inv_open".
 	iPoseProof (queue_invariant_equiv_simple Ψ l_head l_tail Q_γ with "Hqueue_inv_open") as "Hqueue_inv_open".

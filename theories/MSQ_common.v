@@ -1,6 +1,7 @@
+From iris.algebra Require Import list agree lib.frac_auth.
 From iris.heap_lang Require Import lang proofmode notation.
 
-(* ===== Common defintions and Lemmas ===== *)
+(* ===== Common Defintions and Lemmas ===== *)
 
 (* ----- Linked Lists ----- *)
 
@@ -69,6 +70,7 @@ Proof.
 		* by eapply IH.
 Qed.
 
+
 (* ------ Projecting out the value (second element of triple) ------ *)
 Fixpoint proj_val {A B C} (xs: list (A * B * C)) :=
 match xs with
@@ -97,15 +99,6 @@ Proof.
 	- done.
 	- simpl. f_equal. apply IH.
 Qed.
-
-(* ------ Miscelanious ------ *)
-
-(* Used for Prophecies *)
-Definition val_of_list (vs : list (val * val)) : val :=
-  match vs with
-  | []          => #()
-  | (v, _) :: _ => v
-  end.
 
 
 (* ------ Defining the 'All' Preidcate ------ *)
@@ -301,3 +294,73 @@ Proof.
 Qed.
 
 End isLL.
+
+
+(* ------ Defining the RA for the Abstract State of the Queue ------ *)
+Section queue_contents.
+
+Context `{!inG Σ (frac_authR (agreeR (listO val)))}.
+
+(* ------ Abstract State of Queue ------ *)
+Notation "γ ⤇● xs_v" := (own γ (●F (to_agree xs_v)))
+	(at level 20, format "γ  ⤇●  xs_v") : bi_scope.
+Notation "γ ⤇◯ xs_v" := (own γ (◯F (to_agree xs_v)))
+	(at level 20, format "γ  ⤇◯  xs_v") : bi_scope.
+Notation "γ ⤇[ q ] xs_v" := (own γ (◯F{ q } (to_agree xs_v)))
+	(at level 20, format "γ  ⤇[ q ]  xs_v") : bi_scope.
+
+Lemma queue_contents_frag_agree γ xs_v xs_v' p q :
+	γ ⤇[p] xs_v -∗ γ ⤇[q] xs_v' -∗ ⌜xs_v = xs_v'⌝.
+Proof.
+	iIntros "Hp Hq".
+	iCombine "Hp Hq" as "Hpq" gives "%HValid".
+	iPureIntro.
+	rewrite <- frac_auth_frag_op in HValid.
+	rewrite frac_auth_frag_valid in HValid.
+	destruct HValid as [_ HAgree].
+	by apply to_agree_op_inv_L.
+Qed.
+
+Lemma queue_contents_auth_frag_agree γ xs_v xs_v' p :
+	γ ⤇● xs_v' -∗ γ ⤇[p] xs_v -∗ ⌜xs_v = xs_v'⌝.
+Proof.
+	iIntros "Hp Hq".
+	iCombine "Hp Hq" as "Hpq" gives "%HValid".
+	iPureIntro.
+	apply frac_auth_included_total in HValid.
+	by apply to_agree_included_L.
+Qed.
+
+Lemma queue_contents_op γ xs_v p q :
+	γ ⤇[p] xs_v ∗ γ ⤇[q] xs_v ∗-∗ γ ⤇[p + q] xs_v.
+Proof.
+	iSplit.
+	- iIntros "[Hp Hq]".
+	  by iCombine "Hp Hq" as "Hpq".
+	- iIntros "Hpq".
+	  iApply own_op.
+	  rewrite <- frac_auth_frag_op.
+	  by rewrite agree_idemp.
+Qed.
+
+Lemma queue_contents_update γ xs_v xs_v' xs_v'' :
+	γ ⤇● xs_v' -∗ γ ⤇◯ xs_v ==∗ γ ⤇● xs_v'' ∗ γ ⤇◯ xs_v''.
+Proof.
+	iIntros "Hauth Hfrag".
+	iCombine "Hauth Hfrag" as "Hcombined".
+	rewrite <- own_op.
+	iApply (own_update with "Hcombined").
+	by apply frac_auth_update_1.
+Qed.
+
+End queue_contents.
+
+
+(* ------ Miscellaneous ------ *)
+
+(* Used for Prophecies *)
+Definition val_of_list (vs : list (val * val)) : val :=
+  match vs with
+  | []          => #()
+  | (v, _) :: _ => v
+  end.

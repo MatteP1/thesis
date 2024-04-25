@@ -52,7 +52,9 @@ Proof.
 	set x_1 := (l_1_in, NONEV, l_1_out).
 	change l_1_in with (n_in x_1).
 	change l_1_out with (n_out x_1).
-	change NONEV with (n_val x_1).
+	pose proof (eq_refl : NONEV = n_val x_1) as Hx1_val.
+	rewrite {2}Hx1_val.
+	clearbody x_1.
 	iMod (pointsto_persist with "Hx1_node") as "#Hx1_node".
 	wp_apply (newlock_spec True); first done.
 	iIntros (h_lock γ_Hlock) "Hγ_Hlock".
@@ -70,12 +72,10 @@ Proof.
 	iApply ("HΦ" $! #l_queue Queue_gnames).
 	iModIntro.
 	iExists l_queue, l_head, l_tail, h_lock, t_lock.
-	do 2(iSplit; first done).
+	repeat iSplit; try done.
+	iExists [], x_1, x_1.
 	iFrame.
-	iExists [].
-	do 2 iExists x_1.
-	iFrame.
-	do 2 (iSplit; first done).
+	repeat iSplit; try done.
 	by iExists [].
 Qed.
 
@@ -101,6 +101,8 @@ Proof.
 	change l_new_in with (n_in x_new).
 	change l_new_out with (n_out x_new).
 	change (SOMEV v) with (n_val x_new).
+	pose proof (eq_refl : SOMEV v = n_val x_new) as Hxnew_val.
+	clearbody x_new.
 	iMod (pointsto_persist with "Hxnew_node") as "#Hxnew_node".
 	wp_let.
 	wp_load.
@@ -127,7 +129,7 @@ Proof.
 	iExists l_queue, l_head, l_tail, h_lock, t_lock.
 	do 2 (iSplit; first done).
 	iExists (x_new :: xs_queue), x_head, x_new.
-	iSplit. { iPureIntro. simpl. f_equal. done. }
+	iSplit. { iPureIntro. simpl. f_equal; done. }
 	iFrame.
 	iSplit.
 	{
