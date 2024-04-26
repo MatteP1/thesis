@@ -30,7 +30,7 @@ Definition is_queue_seq (v_q : val) (xs_v: list val) (Q_γH: Qgnames) : iProp Σ
 Lemma initialize_spec_seq :
 	{{{ True }}}
 		initialize #()
-	{{{ v_q Q_γS, RET v_q; is_queue_seq v_q [] Q_γS }}}.
+	{{{ v_q Q_γH, RET v_q; is_queue_seq v_q [] Q_γH }}}.
 Proof.
 	iIntros (Φ _) "HΦ".
 	wp_apply (initialize_spec N); first done.
@@ -133,13 +133,13 @@ Definition is_queue_conc (Ψ : val -> iProp Σ) (v_q : val) (Q_γH: Qgnames) : i
 	inv NC (∃xs_v, Q_γH ⤇◯ xs_v ∗ All xs_v Ψ).
 
 (* is_queue_conc is persistent *)
-Global Instance is_queue_conc_persistent Ψ v_q Q_γC : Persistent (is_queue_conc Ψ v_q Q_γC).
+Global Instance is_queue_conc_persistent Ψ v_q Q_γH : Persistent (is_queue_conc Ψ v_q Q_γH).
 Proof. apply _. Qed.
 
 Lemma initialize_spec_conc (Ψ : val -> iProp Σ):
 	{{{ True }}}
 		initialize #()
-	{{{ v_q Q_γC, RET v_q; is_queue_conc Ψ v_q Q_γC }}}.
+	{{{ v_q Q_γH, RET v_q; is_queue_conc Ψ v_q Q_γH }}}.
 Proof.
 	iIntros (Φ _) "HΦ".
 	iApply wp_fupd.
