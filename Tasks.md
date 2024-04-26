@@ -71,7 +71,7 @@
   - [x] prove enqueue spec
   - [x] prove dequeue spec
   - [ ] Might be possible to remove isLL xs
-  - [ ] Show the two derived specifications (similar to two-lock versions)
+  - [x] Show the two derived specifications (similar to two-lock versions)
   - [ ] Try to remove consistency check and see if spec is still provable
 
 - [x] Clean up proofs and make consistent

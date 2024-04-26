@@ -1,38 +1,29 @@
-From stdpp Require Import countable.
-From iris.algebra Require Import excl list agree lib.frac_auth.
+From stdpp Require Import sets countable.
+From iris.algebra Require Import list agree gset lib.frac_auth.
+From iris.bi Require Import fixpoint big_op.
 From iris.bi Require Import derived_laws.
-From iris.heap_lang Require Import lang proofmode notation.
-From iris.heap_lang.lib Require Import lock spin_lock.
-From iris.base_logic.lib Require Import invariants token.
-From MSQueue Require Import twoLockMSQ_impl.
+From iris.heap_lang Require Import lang proofmode notation primitive_laws.
+From iris.base_logic.lib Require Import invariants.
+From MSQueue Require Import lockFreeMSQ_impl.
 From MSQueue Require Import MSQ_common.
-From MSQueue Require Import twoLockMSQ_hocap_spec.
+From MSQueue Require Import lockFreeMSQ_hocap_spec.
 
-Local Existing Instance spin_lock.
+(* NOTE: This file is very similar to twoLockMSQ_derived. They differ in the following ways:
+	- This file imports the lock-free implementations
+	- The resource algebras used are different
+	- This file uses the Qgnames of the lock-free hocap spec directly. *)
 
 Section sequential_proofs.
 
 Context `{!heapGS Σ}.
-Context `{!lockG Σ}.
-Context `{!tokenG Σ}.
+Context `{!inG Σ (authR (gsetUR nodeO))}.
 Context `{!inG Σ (frac_authR (agreeR (listO val)))}.
 
 Variable N : namespace.
 
-(* ===== Sequential Specification for Two-lock M&S Queue ===== *)
+(* ===== Sequential Specification for Lock-Free M&S Queue ===== *)
 
-Record SeqQgnames := {γ_Hlock_seq 	: gname;
-					  γ_Tlock_seq 	: gname;
-					 }.
-
-Definition proj_Qgnames_seq (Q_γH : Qgnames) : SeqQgnames :=
-	{| γ_Hlock_seq := Q_γH.(γ_Hlock);
-	   γ_Tlock_seq := Q_γH.(γ_Tlock);
-	|}.
-
-Definition is_queue_seq (v_q : val) (xs_v: list val) (Q_γS: SeqQgnames) : iProp Σ :=
-	∃ Q_γH : Qgnames,
-	⌜proj_Qgnames_seq Q_γH = Q_γS⌝ ∗
+Definition is_queue_seq (v_q : val) (xs_v: list val) (Q_γH: Qgnames) : iProp Σ :=
 	is_queue N v_q Q_γH ∗
 	Q_γH ⤇◯ xs_v.
 
@@ -44,18 +35,16 @@ Proof.
 	iIntros (Φ _) "HΦ".
 	wp_apply (initialize_spec N); first done.
 	iIntros (v_q Q_γH) "[His_queue Habst_frag]".
-	set (Q_γS := proj_Qgnames_seq Q_γH).
-	iApply ("HΦ" $! v_q Q_γS).
-	iExists Q_γH.
+	iApply ("HΦ" $! v_q Q_γH).
 	by iFrame.
 Qed.
 
-Lemma enqueue_spec_seq v_q (v : val) (xs_v : list val) (Q_γS : SeqQgnames) :
-	{{{ is_queue_seq v_q xs_v Q_γS }}}
+Lemma enqueue_spec_seq v_q (v : val) (xs_v : list val) (Q_γH : Qgnames) :
+	{{{ is_queue_seq v_q xs_v Q_γH }}}
 		enqueue v_q v
-	{{{w, RET w; is_queue_seq v_q (v :: xs_v) Q_γS }}}.
+	{{{w, RET w; is_queue_seq v_q (v :: xs_v) Q_γH }}}.
 Proof.
-	iIntros (Φ) "(%Q_γH & %Heq & #His_queue & Hfrag) HΦ".
+	iIntros (Φ) "(#His_queue & Hfrag) HΦ".
 	set (P := (Q_γH ⤇◯ xs_v)%I).
 	set (Q := (Q_γH ⤇◯ (v :: xs_v))%I).
 	wp_apply (enqueue_spec N v_q v Q_γH P Q with "[] [Hfrag]").
@@ -72,18 +61,17 @@ Proof.
 	{ by iFrame. }
 	iIntros (w) "HQ".
 	iApply ("HΦ" $! w).
-	iExists Q_γH.
 	by repeat iSplit.
 Qed.
 
-Lemma dequeue_spec_seq v_q (xs_v : list val) (Q_γS : SeqQgnames) :
-	{{{ is_queue_seq v_q xs_v Q_γS }}}
+Lemma dequeue_spec_seq v_q (xs_v : list val) (Q_γH : Qgnames) :
+	{{{ is_queue_seq v_q xs_v Q_γH }}}
 		dequeue v_q
-	{{{ v, RET v; (⌜xs_v = []⌝ ∗ ⌜v = NONEV⌝ ∗ is_queue_seq v_q xs_v Q_γS) ∨
+	{{{ v, RET v; (⌜xs_v = []⌝ ∗ ⌜v = NONEV⌝ ∗ is_queue_seq v_q xs_v Q_γH) ∨
 				  (∃x_v xs_v', ⌜xs_v = xs_v' ++ [x_v]⌝ ∗
-				  		⌜v = SOMEV x_v⌝ ∗ is_queue_seq v_q xs_v' Q_γS) }}}.
+				  		⌜v = SOMEV x_v⌝ ∗ is_queue_seq v_q xs_v' Q_γH) }}}.
 Proof.
-	iIntros (Φ) "(%Q_γH & %Heq & #His_queue & Hfrag) HΦ".
+	iIntros (Φ) "(#His_queue & Hfrag) HΦ".
 	set (P := (Q_γH ⤇◯ xs_v)%I).
 	set (Q := λ v, ((⌜xs_v = []⌝ ∗ ⌜v = NONEV⌝ ∗ Q_γH ⤇◯ xs_v) ∨
 					(∃x_v xs_v', ⌜xs_v = xs_v' ++ [x_v]⌝ ∗
@@ -120,13 +108,9 @@ Proof.
 	unfold Q.
 	iDestruct "HQ" as "[(-> & %Hres & Hfrag) | (%x_v & %xs_v' & %Hxs_v_eq & %Hres & Hfrag)]".
 	- iLeft.
-	  repeat iSplit; try done.
-	  iExists Q_γH.
 	  by repeat iSplit.
 	- iRight.
 	  iExists x_v, xs_v'.
-	  repeat iSplit; try done.
-	  iExists Q_γH.
 	  by repeat iSplit.
 Qed.
 
@@ -136,40 +120,15 @@ End sequential_proofs.
 Section concurrent_proofs.
 
 Context `{!heapGS Σ}.
-Context `{!lockG Σ}.
-Context `{!tokenG Σ}.
+Context `{!inG Σ (authR (gsetUR nodeO))}.
 Context `{!inG Σ (frac_authR (agreeR (listO val)))}.
 
 Variable N : namespace.
 Notation NC := (N .@ "concurrent").
 
-(* ===== Concurrent Specification for Two-lock M&S Queue ===== *)
+(* ===== Concurrent Specification for Lock-Free M&S Queue ===== *)
 
-(* Ghost variable names *)
-Record ConcQgnames := {γ_Hlock_conc 	: gname;
-					   γ_Tlock_conc 	: gname;
-					   γ_E_conc 		: gname;
-					   γ_nE_conc 		: gname;
-					   γ_D_conc 		: gname;
-					   γ_nD_conc 		: gname;
-					   γ_Before_conc 	: gname;
-					   γ_After_conc 	: gname;
-					}.
-
-Definition proj_Qgnames_conc (Q_γH : Qgnames) : ConcQgnames :=
-	{| γ_Hlock_conc := Q_γH.(γ_Hlock);
-	   γ_Tlock_conc := Q_γH.(γ_Tlock);
-	   γ_E_conc := Q_γH.(γ_E);
-	   γ_nE_conc := Q_γH.(γ_nE);
-	   γ_D_conc := Q_γH.(γ_D);
-	   γ_nD_conc := Q_γH.(γ_nD);
-	   γ_Before_conc := Q_γH.(γ_Before);
-	   γ_After_conc := Q_γH.(γ_After)
-	|}.
-
-Definition is_queue_conc (Ψ : val -> iProp Σ) (v_q : val) (Q_γC: ConcQgnames) : iProp Σ :=
-	∃ Q_γH : Qgnames,
-	⌜proj_Qgnames_conc Q_γH = Q_γC⌝ ∗
+Definition is_queue_conc (Ψ : val -> iProp Σ) (v_q : val) (Q_γH: Qgnames) : iProp Σ :=
 	is_queue N v_q Q_γH ∗
 	inv NC (∃xs_v, Q_γH ⤇◯ xs_v ∗ All xs_v Ψ).
 
@@ -186,19 +145,17 @@ Proof.
 	iApply wp_fupd.
 	wp_apply (initialize_spec N); first done.
 	iIntros (v_q Q_γH) "[His_queue Habst_frag]".
-	set (Q_γC := proj_Qgnames_conc Q_γH).
-	iApply ("HΦ" $! v_q Q_γC).
-	iExists Q_γH.
+	iApply ("HΦ" $! v_q Q_γH).
 	iMod (inv_alloc NC _ (∃xs_v, Q_γH ⤇◯ xs_v ∗ All xs_v Ψ) with "[Habst_frag]") as "HInv"; first (iExists []; auto).
 	by iFrame.
 Qed.
 
-Lemma enqueue_spec_conc v_q Ψ (v : val) (Q_γC : ConcQgnames) :
-	{{{ is_queue_conc Ψ v_q Q_γC ∗ Ψ v }}}
+Lemma enqueue_spec_conc v_q Ψ (v : val) (Q_γH : Qgnames) :
+	{{{ is_queue_conc Ψ v_q Q_γH ∗ Ψ v }}}
 		enqueue v_q v
 	{{{ w, RET w; True }}}.
 Proof.
-	iIntros (Φ) "[(%Q_γH & %Heq & #His_queue & #HInv) HΨ] HΦ".
+	iIntros (Φ) "[(#His_queue & #HInv) HΨ] HΦ".
 	set (P := Ψ v).
 	set (Q := True%I).
 	wp_apply (enqueue_spec N v_q v Q_γH P Q with "[] [HΨ]").
@@ -224,12 +181,12 @@ Proof.
 	by iApply ("HΦ" $! w).
 Qed.
 
-Lemma dequeue_spec_conc v_q Ψ (Q_γC : ConcQgnames) :
-	{{{ is_queue_conc Ψ v_q Q_γC }}}
+Lemma dequeue_spec_conc v_q Ψ (Q_γH : Qgnames) :
+	{{{ is_queue_conc Ψ v_q Q_γH }}}
 		dequeue v_q
 	{{{ v, RET v; ⌜v = NONEV⌝ ∨ (∃ x_v, ⌜v = SOMEV x_v⌝ ∗ Ψ x_v) }}}.
 Proof.
-	iIntros (Φ) "(%Q_γH & %Heq & #His_queue & #HInv) HΦ".
+	iIntros (Φ) "(#His_queue & #HInv) HΦ".
 	set (P := True%I : iProp Σ).
 	set (Q := λ v, (⌜v = NONEV⌝ ∨ (∃x_v, ⌜v = SOMEV x_v⌝ ∗ Ψ x_v))%I).
 	wp_apply (dequeue_spec N v_q Q_γH P Q).

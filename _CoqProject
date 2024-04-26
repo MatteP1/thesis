@@ -8,3 +8,4 @@ theories/twoLockMSQ_hocap_spec.v
 theories/twoLockMSQ_derived.v
 theories/lockFreeMSQ_impl.v
 theories/lockFreeMSQ_hocap_spec.v
+theories/lockFreeMSQ_derived.v
