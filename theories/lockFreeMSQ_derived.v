@@ -53,8 +53,7 @@ Proof.
 		iIntros (xs_v') "!>".
 		unfold P, Q.
 		iIntros "[Hauth Hfrag]".
-		iAssert (⌜xs_v = xs_v'⌝)%I with "[Hauth Hfrag]" as "<-"; first by
-			iApply (queue_contents_auth_frag_agree _ xs_v xs_v' 1 with "Hauth Hfrag").
+		iAssert (⌜xs_v = xs_v'⌝)%I with "[Hauth Hfrag]" as "<-"; first by iApply (queue_contents_auth_frag_agree _ xs_v xs_v' 1 with "Hauth Hfrag").
 		by iMod (queue_contents_update _ xs_v xs_v (v :: xs_v) with "Hauth Hfrag").
 	}
 	(* Proving pre-condition of hocap enqueue spec *)
@@ -68,21 +67,20 @@ Lemma dequeue_spec_seq v_q (xs_v : list val) (Q_γH : Qgnames) :
 	{{{ is_queue_seq v_q xs_v Q_γH }}}
 		dequeue v_q
 	{{{ v, RET v; (⌜xs_v = []⌝ ∗ ⌜v = NONEV⌝ ∗ is_queue_seq v_q xs_v Q_γH) ∨
-				  (∃x_v xs_v', ⌜xs_v = xs_v' ++ [x_v]⌝ ∗
-				  		⌜v = SOMEV x_v⌝ ∗ is_queue_seq v_q xs_v' Q_γH) }}}.
+								(∃x_v xs_v', ⌜xs_v = xs_v' ++ [x_v]⌝ ∗
+										⌜v = SOMEV x_v⌝ ∗ is_queue_seq v_q xs_v' Q_γH) }}}.
 Proof.
 	iIntros (Φ) "(#His_queue & Hfrag) HΦ".
 	set (P := (Q_γH ⤇◯ xs_v)%I).
 	set (Q := λ v, ((⌜xs_v = []⌝ ∗ ⌜v = NONEV⌝ ∗ Q_γH ⤇◯ xs_v) ∨
-					(∃x_v xs_v', ⌜xs_v = xs_v' ++ [x_v]⌝ ∗
-						⌜v = SOMEV x_v⌝ ∗ Q_γH ⤇◯ xs_v'))%I).
+									(∃x_v xs_v', ⌜xs_v = xs_v' ++ [x_v]⌝ ∗
+										⌜v = SOMEV x_v⌝ ∗ Q_γH ⤇◯ xs_v'))%I).
 	wp_apply (dequeue_spec N v_q Q_γH P Q with "[] [Hfrag]" ).
 	(* Proving viewshift *)
 	{
 		iIntros (xs_v') "!>".
 		iIntros "[Hauth Hfrag]".
-		iAssert (⌜xs_v = xs_v'⌝)%I with "[Hauth Hfrag]" as "<-"; first by
-			iApply (queue_contents_auth_frag_agree _ xs_v xs_v' 1 with "Hauth Hfrag").
+		iAssert (⌜xs_v = xs_v'⌝)%I with "[Hauth Hfrag]" as "<-"; first by iApply (queue_contents_auth_frag_agree _ xs_v xs_v' 1 with "Hauth Hfrag").
 		destruct (ll_case_first xs_v) as [->|[x_v [xs_v' ->]]].
 		- iLeft.
 		  iModIntro.
@@ -165,8 +163,7 @@ Proof.
 		unfold P, Q.
 		iIntros "[Hauth HΨ]".
 		iInv "HInv" as "(%xs_v & >Hfrag & HAll)".
-		iAssert (⌜xs_v = xs_v'⌝)%I with "[Hauth Hfrag]" as "<-"; first by
-			iApply (queue_contents_auth_frag_agree _ xs_v xs_v' 1 with "Hauth Hfrag").
+		iAssert (⌜xs_v = xs_v'⌝)%I with "[Hauth Hfrag]" as "<-"; first by iApply (queue_contents_auth_frag_agree _ xs_v xs_v' 1 with "Hauth Hfrag").
 		iMod (queue_contents_update _ xs_v xs_v (v :: xs_v) with "Hauth Hfrag") as "[Hauth Hfrag]".
 		iModIntro.
 		iSplitL "Hfrag HAll HΨ".
@@ -195,8 +192,7 @@ Proof.
 		iIntros (xs_v') "!>".
 		iIntros "[Hauth _]".
 		iInv "HInv" as "(%xs_v & >Hfrag & HAll)".
-		iAssert (⌜xs_v = xs_v'⌝)%I with "[Hauth Hfrag]" as "<-"; first by
-			iApply (queue_contents_auth_frag_agree _ xs_v xs_v' 1 with "Hauth Hfrag").
+		iAssert (⌜xs_v = xs_v'⌝)%I with "[Hauth Hfrag]" as "<-"; first by iApply (queue_contents_auth_frag_agree _ xs_v xs_v' 1 with "Hauth Hfrag").
 		destruct (ll_case_first xs_v) as [->|[x_v [xs_v' ->]]].
 		- iModIntro.
 		  (* Close Invariant NC *)

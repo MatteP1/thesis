@@ -20,9 +20,9 @@ Notation N := (nroot .@ "twoLockMSQ_seq").
 (* ===== Sequential Specification for Two-lock M&S Queue ===== *)
 
 (* ----- Ghost variable names ----- *)
-Record SeqQgnames := {γ_Hlock 	: gname;
-					  γ_Tlock	: gname;
-					 }.
+Record SeqQgnames := { γ_Hlock 	: gname;
+											 γ_Tlock	: gname;
+										 }.
 
 (* ----- The 'is_queue' Predicate for Sequential Spec ------ *)
 Definition is_queue_seq (v_q : val) (xs_v: list val) (Q_γ: SeqQgnames) : iProp Σ :=
@@ -62,8 +62,8 @@ Proof.
 	wp_apply (newlock_spec True); first done.
 	iIntros (t_lock γ_Tlock) "Hγ_Tlock".
 	set (Queue_gnames := {| γ_Hlock := γ_Hlock;
-							γ_Tlock := γ_Tlock;
-					|}).
+													γ_Tlock := γ_Tlock;
+											 |}).
 	wp_let.
 	wp_alloc l_tail as "Hl_tail".
 	wp_alloc l_head as "Hl_head".
@@ -85,10 +85,7 @@ Lemma enqueue_spec_seq v_q (v : val) (xs_v : list val) (Q_γ : SeqQgnames) :
 		enqueue v_q v
 	{{{w, RET w; is_queue_seq v_q (v :: xs_v) Q_γ }}}.
 Proof.
-	iIntros (Φ) "(%l_queue & %l_head & %l_tail & %h_lock & %t_lock & -> &
-				  #Hl_queue & %xs_queue & %x_head & %x_tail & %Hconc_abst_eq &
-				  HisLL_xs & Hl_head & Hl_tail & %HisLast_xtail & #Hh_lock &
-				  #Ht_lock) HΦ".
+	iIntros (Φ) "(%l_queue & %l_head & %l_tail & %h_lock & %t_lock & -> & #Hl_queue & %xs_queue & %x_head & %x_tail & %Hconc_abst_eq & HisLL_xs & Hl_head & Hl_tail & %HisLast_xtail & #Hh_lock & #Ht_lock) HΦ".
 	destruct HisLast_xtail as [xs_rest Hxs_eq].
 	rewrite Hxs_eq.
 	iDestruct "HisLL_xs" as "[Hxtail_to_none #HisLL_chain_xs]".
@@ -141,13 +138,10 @@ Lemma dequeue_spec_seq v_q (xs_v : list val) (Q_γ : SeqQgnames) :
 	{{{ is_queue_seq v_q xs_v Q_γ }}}
 		dequeue v_q
 	{{{ v, RET v; (⌜xs_v = []⌝ ∗ ⌜v = NONEV⌝ ∗ is_queue_seq v_q xs_v Q_γ) ∨
-				  (∃x_v xs_v', ⌜xs_v = xs_v' ++ [x_v]⌝ ∗
-				  		⌜v = SOMEV x_v⌝ ∗ is_queue_seq v_q xs_v' Q_γ) }}}.
+								(∃x_v xs_v', ⌜xs_v = xs_v' ++ [x_v]⌝ ∗
+										⌜v = SOMEV x_v⌝ ∗ is_queue_seq v_q xs_v' Q_γ) }}}.
 Proof.
-	iIntros (Φ) "(%l_queue & %l_head & %l_tail & %h_lock & %t_lock & -> &
-				  #Hl_queue & %xs_queue & %x_head & %x_tail & %Hconc_abst_eq &
-				  HisLL_xs & Hl_head & Hl_tail & %HisLast_xtail & #Hh_lock &
-				  #Ht_lock) HΦ".
+	iIntros (Φ) "(%l_queue & %l_head & %l_tail & %h_lock & %t_lock & -> & #Hl_queue & %xs_queue & %x_head & %x_tail & %Hconc_abst_eq & HisLL_xs & Hl_head & Hl_tail & %HisLast_xtail & #Hh_lock & #Ht_lock) HΦ".
 	iPoseProof (isLL_and_chain with "HisLL_xs") as "[HisLL_xs #HisLL_chain_xs]".
 	wp_lam.
 	wp_load.
@@ -205,9 +199,9 @@ Proof.
 	  iRight.
 	  destruct (ll_case_first xs_v) as [->|[x_head_next_val [xs_val_rest ->]]].
 	  {
-		rewrite proj_val_split in Hconc_abst_eq.
-		exfalso.
-		by apply (app_cons_not_nil (proj_val xs_queue') [] (n_val x_head_next)).
+			rewrite proj_val_split in Hconc_abst_eq.
+			exfalso.
+			by apply (app_cons_not_nil (proj_val xs_queue') [] (n_val x_head_next)).
 	  }
 	  iExists x_head_next_val, xs_val_rest.
 	  rewrite proj_val_split wrap_some_split /= in Hconc_abst_eq.

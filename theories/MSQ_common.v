@@ -67,7 +67,7 @@ Proof.
 	  + inversion Heq. destruct xs'_1; discriminate.
 	  + simplify_eq. split.
 	  	* f_equal. by eapply IH.
-		* by eapply IH.
+			* by eapply IH.
 Qed.
 
 (* Lemmas for nicer destruction of linked lists *)
@@ -241,17 +241,17 @@ Proof.
 	- by iSplit.
 	- destruct xs' as [| x' xs''].
 	  + destruct ys as [| y ys'].
-		* by iSplit.
-		* iSimpl in "HisLL_chain_xs_ys".
-		  iDestruct "HisLL_chain_xs_ys" as "(Hx_node & Hy_to_x & HIsLL_chain_ys')".
-		  iFrame "#".
+			* by iSplit.
+			* iSimpl in "HisLL_chain_xs_ys".
+				iDestruct "HisLL_chain_xs_ys" as "(Hx_node & Hy_to_x & HIsLL_chain_ys')".
+				iFrame "#".
 	  + iAssert (isLL_chain (x' :: xs'') ∗ isLL_chain ys)%I as "[HisLL_chain_xs' HisLL_chain_ys]".
 	  	{
-			iApply "IH".
-			by iDestruct "HisLL_chain_xs_ys" as "(_ & _ & Hchain)".
-		}
-		iDestruct "HisLL_chain_xs_ys" as "(Hx_node & Hx'_to_x & _)".
-		iFrame "#".
+				iApply "IH".
+				by iDestruct "HisLL_chain_xs_ys" as "(_ & _ & Hchain)".
+			}
+			iDestruct "HisLL_chain_xs_ys" as "(Hx_node & Hx'_to_x & _)".
+			iFrame "#".
 Qed.
 
 Lemma isLL_chain_agree : ∀ x y xs xs' ys ys',

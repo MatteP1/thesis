@@ -21,9 +21,9 @@ Variable N : namespace.
 
 (* ===== Sequential Specification for Two-lock M&S Queue ===== *)
 
-Record SeqQgnames := {γ_Hlock_seq 	: gname;
-					  γ_Tlock_seq 	: gname;
-					 }.
+Record SeqQgnames := { γ_Hlock_seq 	: gname;
+											 γ_Tlock_seq 	: gname;
+										 }.
 
 Definition proj_Qgnames_seq (Q_γH : Qgnames) : SeqQgnames :=
 	{| γ_Hlock_seq := Q_γH.(γ_Hlock);
@@ -64,8 +64,7 @@ Proof.
 		iIntros (xs_v') "!>".
 		unfold P, Q.
 		iIntros "[Hauth Hfrag]".
-		iAssert (⌜xs_v = xs_v'⌝)%I with "[Hauth Hfrag]" as "<-"; first by
-			iApply (queue_contents_auth_frag_agree _ xs_v xs_v' 1 with "Hauth Hfrag").
+		iAssert (⌜xs_v = xs_v'⌝)%I with "[Hauth Hfrag]" as "<-"; first by iApply (queue_contents_auth_frag_agree _ xs_v xs_v' 1 with "Hauth Hfrag").
 		by iMod (queue_contents_update _ xs_v xs_v (v :: xs_v) with "Hauth Hfrag").
 	}
 	(* Proving pre-condition of hocap enqueue spec *)
@@ -80,21 +79,20 @@ Lemma dequeue_spec_seq v_q (xs_v : list val) (Q_γS : SeqQgnames) :
 	{{{ is_queue_seq v_q xs_v Q_γS }}}
 		dequeue v_q
 	{{{ v, RET v; (⌜xs_v = []⌝ ∗ ⌜v = NONEV⌝ ∗ is_queue_seq v_q xs_v Q_γS) ∨
-				  (∃x_v xs_v', ⌜xs_v = xs_v' ++ [x_v]⌝ ∗
-				  		⌜v = SOMEV x_v⌝ ∗ is_queue_seq v_q xs_v' Q_γS) }}}.
+								(∃x_v xs_v', ⌜xs_v = xs_v' ++ [x_v]⌝ ∗
+										⌜v = SOMEV x_v⌝ ∗ is_queue_seq v_q xs_v' Q_γS) }}}.
 Proof.
 	iIntros (Φ) "(%Q_γH & %Heq & #His_queue & Hfrag) HΦ".
 	set (P := (Q_γH ⤇◯ xs_v)%I).
 	set (Q := λ v, ((⌜xs_v = []⌝ ∗ ⌜v = NONEV⌝ ∗ Q_γH ⤇◯ xs_v) ∨
-					(∃x_v xs_v', ⌜xs_v = xs_v' ++ [x_v]⌝ ∗
-						⌜v = SOMEV x_v⌝ ∗ Q_γH ⤇◯ xs_v'))%I).
+									(∃x_v xs_v', ⌜xs_v = xs_v' ++ [x_v]⌝ ∗
+										⌜v = SOMEV x_v⌝ ∗ Q_γH ⤇◯ xs_v'))%I).
 	wp_apply (dequeue_spec N v_q Q_γH P Q with "[] [Hfrag]" ).
 	(* Proving viewshift *)
 	{
 		iIntros (xs_v') "!>".
 		iIntros "[Hauth Hfrag]".
-		iAssert (⌜xs_v = xs_v'⌝)%I with "[Hauth Hfrag]" as "<-"; first by
-			iApply (queue_contents_auth_frag_agree _ xs_v xs_v' 1 with "Hauth Hfrag").
+		iAssert (⌜xs_v = xs_v'⌝)%I with "[Hauth Hfrag]" as "<-"; first by iApply (queue_contents_auth_frag_agree _ xs_v xs_v' 1 with "Hauth Hfrag").
 		destruct (ll_case_first xs_v) as [->|[x_v [xs_v' ->]]].
 		- iLeft.
 		  iModIntro.
@@ -146,15 +144,15 @@ Notation NC := (N .@ "concurrent").
 (* ===== Concurrent Specification for Two-lock M&S Queue ===== *)
 
 (* Ghost variable names *)
-Record ConcQgnames := {γ_Hlock_conc 	: gname;
-					   γ_Tlock_conc 	: gname;
-					   γ_E_conc 		: gname;
-					   γ_nE_conc 		: gname;
-					   γ_D_conc 		: gname;
-					   γ_nD_conc 		: gname;
-					   γ_Before_conc 	: gname;
-					   γ_After_conc 	: gname;
-					}.
+Record ConcQgnames := {	γ_Hlock_conc 	: gname;
+												γ_Tlock_conc 	: gname;
+												γ_E_conc 		: gname;
+												γ_nE_conc 		: gname;
+												γ_D_conc 		: gname;
+												γ_nD_conc 		: gname;
+												γ_Before_conc 	: gname;
+												γ_After_conc 	: gname;
+											}.
 
 Definition proj_Qgnames_conc (Q_γH : Qgnames) : ConcQgnames :=
 	{| γ_Hlock_conc := Q_γH.(γ_Hlock);
@@ -208,8 +206,7 @@ Proof.
 		unfold P, Q.
 		iIntros "[Hauth HΨ]".
 		iInv "HInv" as "(%xs_v & >Hfrag & HAll)".
-		iAssert (⌜xs_v = xs_v'⌝)%I with "[Hauth Hfrag]" as "<-"; first by
-			iApply (queue_contents_auth_frag_agree _ xs_v xs_v' 1 with "Hauth Hfrag").
+		iAssert (⌜xs_v = xs_v'⌝)%I with "[Hauth Hfrag]" as "<-"; first by iApply (queue_contents_auth_frag_agree _ xs_v xs_v' 1 with "Hauth Hfrag").
 		iMod (queue_contents_update _ xs_v xs_v (v :: xs_v) with "Hauth Hfrag") as "[Hauth Hfrag]".
 		iModIntro.
 		iSplitL "Hfrag HAll HΨ".
@@ -238,8 +235,7 @@ Proof.
 		iIntros (xs_v') "!>".
 		iIntros "[Hauth _]".
 		iInv "HInv" as "(%xs_v & >Hfrag & HAll)".
-		iAssert (⌜xs_v = xs_v'⌝)%I with "[Hauth Hfrag]" as "<-"; first by
-			iApply (queue_contents_auth_frag_agree _ xs_v xs_v' 1 with "Hauth Hfrag").
+		iAssert (⌜xs_v = xs_v'⌝)%I with "[Hauth Hfrag]" as "<-"; first by iApply (queue_contents_auth_frag_agree _ xs_v xs_v' 1 with "Hauth Hfrag").
 		destruct (ll_case_first xs_v) as [->|[x_v [xs_v' ->]]].
 		- iModIntro.
 		  (* Close Invariant NC *)
