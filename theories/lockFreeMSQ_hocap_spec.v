@@ -337,8 +337,7 @@ Proof. apply _. Qed.
 Lemma initialize_spec:
 	{{{ True }}}
 		initialize #()
-	{{{ v_q Q_γ, RET v_q; is_queue v_q Q_γ ∗
-						  Q_γ ⤇◯ [] }}}.
+	{{{ v_q Q_γ, RET v_q; is_queue v_q Q_γ ∗ Q_γ ⤇◯ [] }}}.
 Proof.
 	iIntros (Φ) "_ HΦ".
 	wp_lam.
