@@ -62,7 +62,7 @@ Proof.
 	(* Proving viewshift *)
 	{
 		iIntros (xs_v') "!>".
-		rewrite /P /Q.
+		unfold P, Q.
 		iIntros "[Hauth Hfrag]".
 		iAssert (⌜xs_v = xs_v'⌝)%I with "[Hauth Hfrag]" as "<-"; first by
 			iApply (queue_contents_auth_frag_agree _ xs_v xs_v' 1 with "Hauth Hfrag").
@@ -95,16 +95,15 @@ Proof.
 		iIntros "[Hauth Hfrag]".
 		iAssert (⌜xs_v = xs_v'⌝)%I with "[Hauth Hfrag]" as "<-"; first by
 			iApply (queue_contents_auth_frag_agree _ xs_v xs_v' 1 with "Hauth Hfrag").
-		destruct xs_v as [| x xs ].
+		destruct (ll_case_first xs_v) as [->|[x_v [xs_v' ->]]].
 		- iLeft.
 		  iModIntro.
 		  iSplit; first done.
 		  iFrame.
-		  rewrite /P /Q.
+		  unfold P, Q.
 		  iLeft.
 		  by repeat iSplit.
-		- destruct (exists_first (x :: xs)) as [x_v [xs_v' Hxs_v_eq]]; first done.
-		  iMod (queue_contents_update _ _ _ (xs_v') with "Hauth Hfrag") as "[Hauth Hfrag]".
+		- iMod (queue_contents_update _ _ _ (xs_v') with "Hauth Hfrag") as "[Hauth Hfrag]".
 		  iRight.
 		  iExists x_v, xs_v'.
 		  iModIntro.
@@ -206,7 +205,7 @@ Proof.
 	(* Proving viewshift *)
 	{
 		iIntros (xs_v') "!>".
-		rewrite /P /Q.
+		unfold P, Q.
 		iIntros "[Hauth HΨ]".
 		iInv "HInv" as "(%xs_v & >Hfrag & HAll)".
 		iAssert (⌜xs_v = xs_v'⌝)%I with "[Hauth Hfrag]" as "<-"; first by
@@ -241,7 +240,7 @@ Proof.
 		iInv "HInv" as "(%xs_v & >Hfrag & HAll)".
 		iAssert (⌜xs_v = xs_v'⌝)%I with "[Hauth Hfrag]" as "<-"; first by
 			iApply (queue_contents_auth_frag_agree _ xs_v xs_v' 1 with "Hauth Hfrag").
-		destruct xs_v as [| x xs ].
+		destruct (ll_case_first xs_v) as [->|[x_v [xs_v' ->]]].
 		- iModIntro.
 		  (* Close Invariant NC *)
 		  iSplitL "Hfrag HAll"; first (iExists []; auto).
@@ -249,10 +248,9 @@ Proof.
 		  iLeft.
 		  iFrame.
 		  iSplit; first done.
-		  rewrite /Q.
+		  unfold Q.
 		  by iLeft.
-		- destruct (exists_first (x :: xs)) as [x_v [xs_v' ->]]; first done.
-		  iMod (queue_contents_update _ _ _ (xs_v') with "Hauth Hfrag") as "[Hauth Hfrag]".
+		- iMod (queue_contents_update _ _ _ (xs_v') with "Hauth Hfrag") as "[Hauth Hfrag]".
 		  iPoseProof (All_split with "HAll") as "[HAll_xs_v' [HΨ _]]".
 		  iModIntro.
 		  (* Close Invariant NC *)
@@ -262,7 +260,7 @@ Proof.
 		  iExists x_v, xs_v'.
 		  iSplit; first done.
 		  iFrame.
-		  rewrite /Q.
+		  unfold Q.
 		  iRight.
 		  iExists x_v.
 		  iSplit; done.

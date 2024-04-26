@@ -18,7 +18,7 @@ Definition isFirst {A} (x : A) xs := ∃ xs_rest, xs = xs_rest ++ [x].
 Definition isLast {A} (x : A) xs := ∃ xs_rest, xs = x :: xs_rest.
 Definition isSndLast {A} (x : A) xs := ∃ x_first xs_rest, xs = x_first :: x :: xs_rest.
 
-Lemma isLast_remove {A} : forall (x y : A) (xs ys : list A),
+Lemma isLast_remove {A} : ∀ (x y : A) (xs ys : list A),
 	isLast x (xs ++ [y] ++ ys) <->
 	isLast x (xs ++ [y]).
 Proof.
@@ -34,7 +34,7 @@ Proof.
 	  by rewrite HisLast.
 Qed.
 
-Lemma exists_first {A} : forall (xs : list A),
+Lemma exists_first {A} : ∀ xs : list A,
 	~(xs = nil) ->
 	∃x_first, isFirst x_first xs.
 Proof.
@@ -46,7 +46,7 @@ Proof.
 	by rewrite H_eq.
 Qed.
 
-Lemma exists_last {A} : forall (xs : list A),
+Lemma exists_last {A} : ∀ xs : list A,
 	~(xs = nil) ->
 	∃x_last, isLast x_last xs.
 Proof.
@@ -55,7 +55,7 @@ Proof.
 	by exists x, xs'.
 Qed.
 
-Lemma list_last_eq {A} : forall (xs_1 xs_2 : list A) x_1 x_2,
+Lemma list_last_eq {A} : ∀ (xs_1 xs_2 : list A) x_1 x_2,
 	xs_1 ++ [x_1] = xs_2 ++ [x_2] ->
 	xs_1 = xs_2 /\ x_1 = x_2.
 Proof.
@@ -70,6 +70,22 @@ Proof.
 		* by eapply IH.
 Qed.
 
+(* Lemmas for nicer destruction of linked lists *)
+Lemma ll_case_first {A} : ∀ xs : list A,
+	xs = [] ∨ ∃x_first, isFirst x_first xs.
+Proof.
+	intros [| x xs].
+	- by left.
+	- right. by apply exists_first.
+Qed.
+
+Lemma ll_case_last {A} : ∀ xs : list A,
+	xs = [] ∨ ∃x_last, isLast x_last xs.
+Proof.
+	intros [| x xs].
+	- by left.
+	- right. by apply exists_last.
+Qed.
 
 (* ------ Projecting out the value (second element of triple) ------ *)
 Fixpoint proj_val {A B C} (xs: list (A * B * C)) :=
@@ -78,7 +94,7 @@ match xs with
 | x :: xs' => n_val x :: proj_val xs'
 end.
 
-Lemma proj_val_split {A B C}: forall (xs_1 xs_2 : list (A * B * C)),
+Lemma proj_val_split {A B C}: ∀ (xs_1 xs_2 : list (A * B * C)),
 	proj_val (xs_1 ++ xs_2) = proj_val xs_1 ++ proj_val xs_2.
 Proof.
 	induction xs_1 as [| x xs'_1 IH]; intros xs_2.
@@ -92,7 +108,7 @@ match xs with
 | x :: xs' => (SOMEV x) :: wrap_some xs'
 end.
 
-Lemma wrap_some_split: forall xs_1 xs_2,
+Lemma wrap_some_split: ∀ xs_1 xs_2,
 	wrap_some (xs_1 ++ xs_2) = wrap_some xs_1 ++ wrap_some xs_2.
 Proof.
 	induction xs_1 as [| x xs'_1 IH]; intros xs_2.
@@ -112,7 +128,7 @@ Fixpoint All {A} (xs : list A) (f : A -> iProp Σ) : iProp Σ :=
 	| x :: xs' => f x ∗ All xs' f
 	end.
 
-Lemma All_split {A} : forall (xs_1 xs_2 : list A) f,
+Lemma All_split {A} : ∀ (xs_1 xs_2 : list A) f,
 	All (xs_1 ++ xs_2) f ∗-∗ All xs_1 f ∗ All xs_2 f.
 Proof.
 	iIntros (xs_1).
@@ -171,7 +187,7 @@ Definition isLL (xs : list node) : iProp Σ :=
 	end.
 
 (* Since isLL_chain is persistent, we can always extract it from isLL. *)
-Lemma isLL_and_chain : forall xs,
+Lemma isLL_and_chain : ∀ xs,
 	isLL xs -∗
 	isLL xs ∗ isLL_chain xs.
 Proof.
@@ -202,7 +218,7 @@ Proof.
 Qed.
 
 (* If x is an element in an isLL_chain, then it is a node. *)
-Lemma isLL_chain_node : forall xs_1 x xs_2,
+Lemma isLL_chain_node : ∀ xs_1 x xs_2,
 	isLL_chain (xs_1 ++ x :: xs_2) -∗
 	n_in x ↦□ (n_val x, #(n_out x)).
 Proof.
@@ -216,7 +232,7 @@ Proof.
 	  iDestruct "HisLL_chain" as "(_ & _ & H)"; done.
 Qed.
 
-Lemma isLL_chain_split : forall xs ys,
+Lemma isLL_chain_split : ∀ xs ys,
 	isLL_chain (xs ++ ys) -∗
 	isLL_chain xs ∗ isLL_chain ys.
 Proof.
@@ -238,7 +254,7 @@ Proof.
 		iFrame "#".
 Qed.
 
-Lemma isLL_chain_agree : forall x y xs xs' ys ys',
+Lemma isLL_chain_agree : ∀ x y xs xs' ys ys',
 	⌜n_in x = n_in y⌝ -∗
 	isLL_chain (xs ++ [x] ++ xs') -∗
 	isLL_chain (ys ++ [y] ++ ys') -∗
@@ -251,7 +267,7 @@ Proof.
 	- by iApply (isLL_chain_node ys y ys').
 Qed.
 
-Lemma isLL_chain_agree_next : forall x y z ys ys' zs zs',
+Lemma isLL_chain_agree_next : ∀ x y z ys ys' zs zs',
 	isLL_chain (ys ++ [y ; x] ++ ys') -∗
 	isLL_chain (zs ++ [z ; x] ++ zs') -∗
 	⌜y = z⌝.
@@ -269,7 +285,7 @@ Proof.
 	iApply n_in_equal; try done. by rewrite Hy_z_in_eq.
 Qed.
 
-Lemma isLL_chain_agree_further : forall x y z ys ys' zs zs' xs,
+Lemma isLL_chain_agree_further : ∀ x y z ys ys' zs zs' xs,
 	isLL_chain (ys ++ [y] ++ xs ++ [x] ++ ys') -∗
 	isLL_chain (zs ++ [z] ++ xs ++ [x] ++ zs') -∗
 	⌜y = z⌝.
@@ -280,7 +296,7 @@ Proof.
 	- iApply (isLL_chain_agree_next x' y z ys (xs' ++ [x] ++ ys') zs ((xs' ++ [x] ++ zs'))); done.
 Qed.
 
-Lemma isLL_split : forall xs ys,
+Lemma isLL_split : ∀ xs ys,
 	isLL (xs ++ ys) -∗
 	isLL xs ∗ isLL_chain ys.
 Proof.

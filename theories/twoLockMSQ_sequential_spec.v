@@ -167,8 +167,8 @@ Proof.
 	iPoseProof (isLL_chain_node xs_queue x_head [] with "[HisLL_chain_xs]") as "Hxhead_node"; first done.
 	wp_load.
 	wp_pures.
-	(* Is the queue empty? *)
-	destruct xs_queue as [| x' xs_queue' ].
+	(* CASE ANALYSIS: Is queue empty? *)
+	destruct (ll_case_first xs_queue) as [->|[x_head_next [xs_queue' ->]]].
 	- (* Queue is empty *)
 	  iDestruct "HisLL_xs" as "[Hxhead_to_none _]".
 	  wp_load.
@@ -190,9 +190,7 @@ Proof.
 	  iFrame.
 	  repeat iSplit; done.
 	- (* Queue is not empty *)
-	  destruct (exists_first (x' :: xs_queue')) as [x_head_next [xs_queue'' Hxs_queue_eq]]; first done.
-	  rewrite Hxs_queue_eq.
-	  iPoseProof (isLL_chain_split xs_queue'' [x_head_next; x_head] with "[HisLL_chain_xs]") as "[_ HisLL_chain_xheadnext]"; first by rewrite <- app_assoc.
+	  iPoseProof (isLL_chain_split xs_queue' [x_head_next; x_head] with "[HisLL_chain_xs]") as "[_ HisLL_chain_xheadnext]"; first by rewrite <- app_assoc.
 	  iDestruct "HisLL_chain_xheadnext" as "(Hxheadnext_node & Hxhead_to_xheadnext & _)".
 	  wp_load.
 	  wp_let.
@@ -210,40 +208,26 @@ Proof.
 	  iModIntro.
 	  iApply ("HΦ" $! (n_val x_head_next)).
 	  iRight.
-	  destruct xs_v; first inversion Hproj.
-	  destruct (exists_first (v :: xs_v)) as [x_head_next_val [xs_val_rest Hxs_val_rest_eq]]; first done.
-	  rewrite Hxs_val_rest_eq.
+	  destruct (ll_case_first xs_v) as [->|[x_head_next_val [xs_val_rest ->]]].
+	  {
+		rewrite proj_val_split in Hproj.
+		exfalso.
+		by apply (app_cons_not_nil (proj_val xs_queue') [] (n_val x_head_next)).
+	  }
 	  iExists x_head_next_val, xs_val_rest.
 	  iSplit; first done.
-	  rewrite Hxs_val_rest_eq in Hproj.
-	  rewrite Hxs_queue_eq in Hproj.
-	  rewrite (proj_val_split xs_queue'' [x_head_next]) in Hproj.
-	  rewrite (wrap_some_split xs_val_rest [x_head_next_val]) in Hproj.
-	  simpl in Hproj.
+	  rewrite proj_val_split wrap_some_split /= in Hproj.
 	  iSplit; first by iPureIntro; eapply list_last_eq.
 	  iExists l_queue, l_head, l_tail, h_lock, t_lock.
 	  do 2 (iSplit; first done).
-	  iExists xs_queue'', x_head_next, x_tail.
-	  iSplit; first by iPureIntro; apply (list_last_eq (proj_val xs_queue'') (wrap_some xs_val_rest) (n_val x_head_next) (InjRV x_head_next_val) Hproj).
+	  iExists xs_queue', x_head_next, x_tail.
+	  iSplit; first by iPureIntro; apply (list_last_eq (proj_val xs_queue') (wrap_some xs_val_rest) (n_val x_head_next) (InjRV x_head_next_val) Hproj).
 	  iFrame.
 	  iSplitL "HisLL_xs".
-	  {
-		rewrite <- Hxs_queue_eq.
-		iDestruct "HisLL_xs" as "[Hxtail_to_none _]".
-		iFrame.
-		iPoseProof (isLL_chain_split (x' :: xs_queue') [x_head] with "HisLL_chain_xs") as "[HisLL_chain_no_head _]".
-		done.
-	  }
-	  iSplit.
-	  {
-		iPureIntro.
-		rewrite <- Hxs_queue_eq.
-		exists (xs_queue').
-		destruct HisLast_xtail as [xs' Heq].
-		inversion Heq.
-		reflexivity.
-	  }
-	  by iSplit.
+	  { by iDestruct (isLL_split with "HisLL_xs") as "[HisLL_new _]". }
+	  repeat (iSplit; try done).
+	  rewrite <- app_assoc in HisLast_xtail.
+	  by apply isLast_remove in HisLast_xtail.
 Qed.
 
 End proofs.

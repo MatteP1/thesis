@@ -72,6 +72,7 @@
   - [x] prove dequeue spec
   - [ ] Might be possible to remove isLL xs
   - [ ] Show the two derived specifications (similar to two-lock versions)
+  - [ ] Try to remove consistency check and see if spec is still provable
 
 - [ ] Clean up proofs and make consistent
   - [ ] Make variable names consistent (x_n vs x_head_new)
@@ -82,8 +83,8 @@
   - [x] in -> node
   - [x] x_n -> xn_
   - [x] remove redundant '
-  - [ ] rewrite with ssreflect (in most places). I.e. rewrite /Reach /=.
-  - [ ] create queue_case lemma
+  - [x] rewrite with ssreflect (in most places). I.e. rewrite /Reach /=.
+  - [x] create queue_case lemma
 
 - [ ] Create a section/chapter explaining some of the basic rules (hoare-triples, weakest-precondition, inv-alloc, resource algebra), and also iris in general.
 

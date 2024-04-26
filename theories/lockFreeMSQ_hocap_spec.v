@@ -40,7 +40,7 @@ Definition Reach (Φ : node -> node -> iProp Σ) (x_n x_m : node) : iProp Σ:=
 	n_in x_n ↦□ (n_val x_n, #(n_out x_n)) ∗
 	(⌜x_n = x_m⌝ ∨ ∃x_p : node, n_out x_n ↦□ #(n_in x_p) ∗ Φ x_p x_m).
 
-Lemma Reach_mono : forall Φ Ψ,
+Lemma Reach_mono : ∀ Φ Ψ,
 	□ (∀ x_n x_m, Φ x_n x_m -∗ Ψ x_n x_m) -∗ ∀ x_n x_m, Reach Φ x_n x_m -∗ Reach Ψ x_n x_m.
 Proof.
 	iIntros (Φ Ψ) "HΦΨ".
@@ -213,7 +213,7 @@ Notation "x ⤏ γ" := (own γ (◯ {[x]}))
 Notation "γ ↣ x" := (∃s, own γ (● s) ∗ [∗ set] x_m ∈ s, reach x_m x)%I
 	(at level 20, format "γ  ↣  x") : bi_scope.
 
-Lemma Abs_Reach_Alloc: forall x,
+Lemma Abs_Reach_Alloc: ∀ x,
 	x ⤳ x ==∗ ∃ γ, γ ↣ x ∗ x ⤏ γ.
 Proof.
 	iIntros (x) "#Hx_reach_x".
@@ -226,7 +226,7 @@ Proof.
 	by rewrite big_opS_singleton.
 Qed.
 
-Lemma Abs_Reach_Concr: forall x_n x_m γ_m,
+Lemma Abs_Reach_Concr: ∀ x_n x_m γ_m,
 	x_n ⤏ γ_m -∗
 	γ_m ↣ x_m -∗
 	x_n ⤳ x_m ∗ γ_m ↣ x_m.
@@ -242,7 +242,7 @@ Proof.
 	by iDestruct "H_reach_xm" as "[Hxn_reach_xm _]".
 Qed.
 
-Lemma Abs_Reach_Abs: forall x_n x_m γ_m,
+Lemma Abs_Reach_Abs: ∀ x_n x_m γ_m,
 	x_n ⤳ x_m -∗
 	γ_m ↣ x_m ==∗
 	x_n ⤏ γ_m ∗ γ_m ↣ x_m.
@@ -271,7 +271,7 @@ Proof.
 		by iFrame "#".
 Qed.
 
-Lemma Abs_Reach_Advance: forall x_m γ_m x_o,
+Lemma Abs_Reach_Advance: ∀ x_m γ_m x_o,
 	γ_m ↣ x_m -∗
 	x_m ⤳ x_o ==∗
 	γ_m ↣ x_o ∗ x_o ⤏ γ_m.
@@ -757,9 +757,8 @@ Proof.
 		iPoseProof (reach_end_eq with "Hxhead_reach_xtail Hxhead_to_none") as "[<- Hxhead_to_none]".
 		iAssert (⌜xs_queue = []⌝)%I as "->".
 		{
-			rewrite Hxs_eq. 
-			destruct xs_queue as [|x xs_queue_rest]; first done.
-			destruct (exists_first (x :: xs_queue_rest)) as [x_head_next [xs_queue_rest' ->]]; first done.
+			rewrite Hxs_eq.
+			destruct (ll_case_first xs_queue) as [->|[x_head_next [xs_queue_rest' ->]]]; first done.
 			rewrite <- app_assoc.
 			iPoseProof (isLL_chain_split with "HisLL_chain_xs") as "(_ & _ & Hxhead_to_xheadnext & _)".
 			iCombine "Hxhead_to_none Hxhead_to_xheadnext" gives "[_ %Hcontra]".
@@ -885,15 +884,13 @@ Proof.
 			}
 			iAssert (⌜∃xs_queue', xs_queue = xs_queue' ++ [x_n]⌝)%I as "[%xs_queue_new ->]".
 			{
-				destruct xs_queue as [|x xs_rest].
+				destruct (ll_case_first xs_queue) as [->|[x_n' [xs_queue' ->]]].
 				- (* Queue is not empty, as x_head doesn't point to none *)
 				  rewrite Hxs_eq.
 				  iDestruct "HisLL_xs" as "[Hxhead_to_none _]".
 				  iCombine "Hxhead_to_xn Hxhead_to_none" gives "[_ %Hcontra]".
 				  simplify_eq.
-				- destruct (exists_first (x :: xs_rest)) as [x_n' [xs_queue' Hxs_rest_queue_eq]]; first done.
-				  iExists xs_queue'.
-				  rewrite Hxs_rest_queue_eq in Hxs_eq *.
+				- iExists xs_queue'.
 				  rewrite Hxs_eq.
 				  rewrite <- app_assoc.
 				  iPoseProof (isLL_and_chain with "HisLL_xs") as "[_ HisLL_chain_xs]".
@@ -904,15 +901,12 @@ Proof.
 			}
 			iMod ("Hvs" $! xs_v with "[HAbst HP]") as "[(>-> & HAbst & HQ) | (%x_v & %xs_v' & >%Hxs_v_eq & HAbst_new & HQ) ]";
 			[ by iFrame |
-			(* The abstract state cannot be empty. Hence the first disjunct is impossible *)
-			rewrite proj_val_split in Hconc_abst_eq;
-			simpl in Hconc_abst_eq;
-			exfalso;
-			by apply (app_cons_not_nil (proj_val xs_queue_new) [] (n_val x_n)) |
+			  (* The abstract state cannot be empty. Hence the first disjunct is impossible *)
+			  rewrite proj_val_split in Hconc_abst_eq;
+			  exfalso;
+			  by apply (app_cons_not_nil (proj_val xs_queue_new) [] (n_val x_n)) |
 			].
-			rewrite Hxs_v_eq in Hconc_abst_eq.
-			rewrite proj_val_split in Hconc_abst_eq.
-			rewrite wrap_some_split in Hconc_abst_eq.
+			rewrite Hxs_v_eq proj_val_split wrap_some_split in Hconc_abst_eq.
 			apply list_last_eq in Hconc_abst_eq as [Hconc_abst_eq Hxn_xv_eq].
 			rewrite Hxs_eq.
 			iDestruct (isLL_split with "HisLL_xs") as "[HisLL_new _]".
