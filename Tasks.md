@@ -75,7 +75,7 @@
   - [ ] Try to remove consistency check and see if spec is still provable
 
 - [ ] Clean up proofs and make consistent
-  - [ ] Make variable names consistent (x_n vs x_head_new)
+  - [x] Make variable names consistent (fx: x_n vs x_head_next)
   - [ ] Fix all todos in code
   - [x] create a name for first node, and the enqueued node
   - [x] _null -> to_none
@@ -91,5 +91,6 @@
 - [ ] Introduce the notion of linearisation points (possibly in hocap for two-lock MSQ) and point out their locations in the proof outlines
 
 - [ ] Mention coq and iris version that the code works with.
+- [ ] Give an overview of Coq files and how they refer to sections in report. Perhaps mention it at beginning/end of each section, or just have an overview in a section (on the coq formalisation)
 
 - [x] If time permits, use hocap spec to prove a spec of a non-trivial client. Fx a client like the one in the java code. (No Time)

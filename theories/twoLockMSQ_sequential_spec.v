@@ -86,11 +86,11 @@ Lemma enqueue_spec_seq v_q (v : val) (xs_v : list val) (Q_γ : SeqQgnames) :
 	{{{w, RET w; is_queue_seq v_q (v :: xs_v) Q_γ }}}.
 Proof.
 	iIntros (Φ) "(%l_queue & %l_head & %l_tail & %h_lock & %t_lock & -> &
-				  #Hl_queue & %xs_queue & %x_head & %x_tail & %Hproj &
+				  #Hl_queue & %xs_queue & %x_head & %x_tail & %Hconc_abst_eq &
 				  HisLL_xs & Hl_head & Hl_tail & %HisLast_xtail & #Hh_lock &
 				  #Ht_lock) HΦ".
-	destruct HisLast_xtail as [xs_rest Hxs_split].
-	rewrite Hxs_split.
+	destruct HisLast_xtail as [xs_rest Hxs_eq].
+	rewrite Hxs_eq.
 	iDestruct "HisLL_xs" as "[Hxtail_to_none #HisLL_chain_xs]".
 	wp_lam.
 	wp_let.
@@ -129,16 +129,11 @@ Proof.
 	iExists l_queue, l_head, l_tail, h_lock, t_lock.
 	do 2 (iSplit; first done).
 	iExists (x_new :: xs_queue), x_head, x_new.
-	iSplit. { iPureIntro. simpl. f_equal; done. }
 	iFrame.
-	iSplit.
-	{
-		iSimpl.
-		rewrite Hxs_split.
-		by repeat iSplit.
-	}
-	iSplit; first by iExists (xs_queue ++ [x_head]).
-	by iSplit.
+	repeat iSplit; try done.
+	- iPureIntro. simpl. f_equal; done.
+	- iSimpl; rewrite Hxs_eq. by repeat iSplit.
+	- by iExists (xs_queue ++ [x_head]).
 Qed.
 
 (* ----- Specification for Dequeue ----- *)
@@ -150,7 +145,7 @@ Lemma dequeue_spec_seq v_q (xs_v : list val) (Q_γ : SeqQgnames) :
 				  		⌜v = SOMEV x_v⌝ ∗ is_queue_seq v_q xs_v' Q_γ) }}}.
 Proof.
 	iIntros (Φ) "(%l_queue & %l_head & %l_tail & %h_lock & %t_lock & -> &
-				  #Hl_queue & %xs_queue & %x_head & %x_tail & %Hproj &
+				  #Hl_queue & %xs_queue & %x_head & %x_tail & %Hconc_abst_eq &
 				  HisLL_xs & Hl_head & Hl_tail & %HisLast_xtail & #Hh_lock &
 				  #Ht_lock) HΦ".
 	iPoseProof (isLL_and_chain with "HisLL_xs") as "[HisLL_xs #HisLL_chain_xs]".
@@ -182,7 +177,7 @@ Proof.
 	  iModIntro.
 	  iApply ("HΦ" $! NONEV).
 	  iLeft.
-	  destruct xs_v; last inversion Hproj.
+	  destruct xs_v; last inversion Hconc_abst_eq.
 	  do 2 (iSplit; first done).
 	  iExists l_queue, l_head, l_tail, h_lock, t_lock.
 	  do 2 (iSplit; first done).
@@ -210,24 +205,22 @@ Proof.
 	  iRight.
 	  destruct (ll_case_first xs_v) as [->|[x_head_next_val [xs_val_rest ->]]].
 	  {
-		rewrite proj_val_split in Hproj.
+		rewrite proj_val_split in Hconc_abst_eq.
 		exfalso.
 		by apply (app_cons_not_nil (proj_val xs_queue') [] (n_val x_head_next)).
 	  }
 	  iExists x_head_next_val, xs_val_rest.
-	  iSplit; first done.
-	  rewrite proj_val_split wrap_some_split /= in Hproj.
-	  iSplit; first by iPureIntro; eapply list_last_eq.
+	  rewrite proj_val_split wrap_some_split /= in Hconc_abst_eq.
+	  apply list_last_eq in Hconc_abst_eq as [Hconc_abst_eq Hxheadnext_val_eq].
+	  repeat (iSplit; try done).
 	  iExists l_queue, l_head, l_tail, h_lock, t_lock.
 	  do 2 (iSplit; first done).
 	  iExists xs_queue', x_head_next, x_tail.
-	  iSplit; first by iPureIntro; apply (list_last_eq (proj_val xs_queue') (wrap_some xs_val_rest) (n_val x_head_next) (InjRV x_head_next_val) Hproj).
+	  iDestruct (isLL_split with "HisLL_xs") as "[HisLL_new _]".
 	  iFrame.
-	  iSplitL "HisLL_xs".
-	  { by iDestruct (isLL_split with "HisLL_xs") as "[HisLL_new _]". }
-	  repeat (iSplit; try done).
 	  rewrite <- app_assoc in HisLast_xtail.
-	  by apply isLast_remove in HisLast_xtail.
+	  apply isLast_remove in HisLast_xtail.
+	  repeat (iSplit; try done).
 Qed.
 
 End proofs.

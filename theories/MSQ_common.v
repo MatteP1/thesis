@@ -24,7 +24,7 @@ Lemma isLast_remove {A} : ∀ (x y : A) (xs ys : list A),
 Proof.
 	intros x y xs ys.
 	split.
-	- intros [xs' HisLast]. 
+	- intros [xs' HisLast].
 	  destruct xs as [|x' xs''].
 	  + exists []. simpl. by inversion HisLast.
 	  + inversion HisLast; subst. by exists (xs'' ++ [y]).
@@ -206,10 +206,10 @@ Lemma n_in_equal (x y : node) :
 	n_in y ↦□ (n_val y, #(n_out y)) -∗
 	⌜x = y⌝.
 Proof.
-	iIntros (Heq_loc) "Hx Hy".
+	iIntros (Hloc_eq) "Hx Hy".
 	simplify_eq.
-	rewrite Heq_loc.
-	iCombine "Hx Hy" gives "[_ %Heq_pair]".
+	rewrite Hloc_eq.
+	iCombine "Hx Hy" gives "[_ %Hpair_eq]".
 	simplify_eq.
 	iPureIntro.
 	destruct x as [[lx1 vx] lx2], y as [[ly1 vy] ly2].
