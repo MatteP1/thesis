@@ -85,6 +85,7 @@
   - [x] remove redundant '
   - [x] rewrite with ssreflect (in most places). I.e. rewrite /Reach /=.
   - [x] create queue_case lemma
+  - [x] fix indentation
 
 - [ ] Create a section/chapter explaining some of the basic rules (hoare-triples, weakest-precondition, inv-alloc, resource algebra), and also iris in general.
 
@@ -92,5 +93,6 @@
 
 - [ ] Mention coq and iris version that the code works with.
 - [ ] Give an overview of Coq files and how they refer to sections in report. Perhaps mention it at beginning/end of each section, or just have an overview in a section (on the coq formalisation)
+- [ ] Mention how to compile the files (via _CoqProject and make)
 
 - [x] If time permits, use hocap spec to prove a spec of a non-trivial client. Fx a client like the one in the java code. (No Time)
