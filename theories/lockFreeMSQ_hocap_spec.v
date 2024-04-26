@@ -431,7 +431,6 @@ Proof.
 Qed.
 
 (* ----- Specification for Enqueue ----- *)
-(* TODO: cleanup *)
 Lemma enqueue_spec v_q (v : val) (Q_γ : Qgnames) (P Q : iProp Σ) :
 	□(∀xs_v, (Q_γ ⤇● xs_v ∗ P ={⊤ ∖ ↑Ni}=∗ ▷ (Q_γ ⤇● (v :: xs_v) ∗ Q))) -∗
 	{{{ is_queue v_q Q_γ ∗ P}}}
@@ -531,7 +530,6 @@ Proof.
 	  iClear (Hconc_abst_eq xs_v Hxs_eq x_head HisLast_xlast x_last xs xs_queue) "Hxhead_ar_γTail Hxtail'_ar_γLast".
 	  wp_pures.
 	  case_bool_decide; wp_if; last first.
-	  (* TODO: Consider using + indentation *)
 	  { (* Inconsistent*)
 		iApply ("IH" with "HP HΦ Hxnew_to_none").
 	  }
@@ -547,8 +545,7 @@ Proof.
 	  iPoseProof (Abs_Reach_Concr x_tail x_last (Q_γ.(γ_Last)) with "Hxtail_ar_γLast HγLast_pt_xlast") as "[#Hxtail_reach_xlast HγLast_pt_xlast]".
 	  (* CASE ANALYSIS: Is tail still last? *)
 	  iDestruct (reach_case with "Hxtail_reach_xlast") as "[><- | (%x_tail_next & Hxtail_to_xtailnext & Hxtailnext_reach_xlast)]"; last first.
-	  (* TODO: Consider using + indentation *)
-	  { (* x_tail is no longer last. CAS fails *)
+	  + (* x_tail is no longer last, hence the CAS fails *)
 	  	(* Note: Have to apply wp_cmpxchg_fail manually due to bug. *)
 		wp_apply wp_cmpxchg_fail; [ | | iFrame "#" | ]; first done; first solve_vals_compare_safe; iIntros "_".
 		iModIntro.
@@ -562,42 +559,41 @@ Proof.
 		}
 		wp_pures.
 		iApply ("IH" with "HP HΦ Hxnew_to_none").
-	  }
-	  (* x_tail is still last. CAS succeeds *)
-	  iPoseProof (isLL_and_chain with "HisLL_xs") as "[HisLL_xs #HisLLchain_xs]".
-	  iAssert (▷n_out x_tail ↦ NONEV)%I with "[HisLL_xs]" as "Hxtail_to_none".
-	  {
-		iNext.
-		destruct HisLast_xlast as [xs_rest ->].
-		by iDestruct "HisLL_xs" as "[Hxtail_to_none _]".
-	  }
-	  wp_cmpxchg_suc.
-	  iMod (pointsto_persist with "Hxtail_to_none") as "#Hxtail_to_xnew".
-	  iMod ("Hvs" $! xs_v with "[HAbst HP]") as "[HAbst_new HQ]"; first by iFrame.
-	  iPoseProof (reach_one_step x_tail x_new with "[] [] []") as "Hxtail_reach_xnew"; try done.
-	  iMod (Abs_Reach_Advance with "HγLast_pt_xlast Hxtail_reach_xnew") as "[HγLast_pt_xnew #Hxnew_ar_γLast]".
-	  iModIntro.
-	  (* Close Invariant: 4 *)
-	  iSplitL "Hl_head Hl_tail Hxnew_to_none HAbst_new HγHead_pt_xhead HγTail_pt_xtail' HγLast_pt_xnew".
-	  {
-		iNext.
-		iExists (v :: xs_v); iFrame "HAbst_new".
-		iExists (x_new :: xs), (x_new :: xs_queue), x_head, x_tail', x_new; iFrame.
-		iFrame "%#".
-		repeat iSplit.
-		- by rewrite Hxs_eq.
-		- destruct HisLast_xlast as [xs_rest ->]. iFrame "#".
-		- by iExists xs.
-		- iPureIntro. simpl. by f_equal.
-	  }
-	  iClear (Hconc_abst_eq xs_v Hxs_eq x_head HisLast_xlast x_tail' xs xs_queue) "HisLLchain_xs Hxhead_ar_γTail Hxtail'_ar_γLast".
-	  wp_pures.
-	  wp_load.
-	  wp_pures.
-	  (* Swing Tail pointer *)
-	  wp_apply (swing_tail with "[Hqueue_inv Hxtail_reach_xnew Hxnew_ar_γLast]"); first iFrame "#".
-	  iIntros (v') "_".
-	  by iApply "HΦ".
+	  + (* x_tail is still last, hence the CAS succeeds and x_new is added to the linked list. This is a linearisation point *)
+		iPoseProof (isLL_and_chain with "HisLL_xs") as "[HisLL_xs #HisLLchain_xs]".
+		iAssert (▷n_out x_tail ↦ NONEV)%I with "[HisLL_xs]" as "Hxtail_to_none".
+		{
+		  iNext.
+		  destruct HisLast_xlast as [xs_rest ->].
+		  by iDestruct "HisLL_xs" as "[Hxtail_to_none _]".
+		}
+		wp_cmpxchg_suc.
+		iMod (pointsto_persist with "Hxtail_to_none") as "#Hxtail_to_xnew".
+		iMod ("Hvs" $! xs_v with "[HAbst HP]") as "[HAbst_new HQ]"; first by iFrame.
+		iPoseProof (reach_one_step x_tail x_new with "[] [] []") as "Hxtail_reach_xnew"; try done.
+		iMod (Abs_Reach_Advance with "HγLast_pt_xlast Hxtail_reach_xnew") as "[HγLast_pt_xnew #Hxnew_ar_γLast]".
+		iModIntro.
+		(* Close Invariant: 4 *)
+		iSplitL "Hl_head Hl_tail Hxnew_to_none HAbst_new HγHead_pt_xhead HγTail_pt_xtail' HγLast_pt_xnew".
+		{
+		  iNext.
+		  iExists (v :: xs_v); iFrame "HAbst_new".
+		  iExists (x_new :: xs), (x_new :: xs_queue), x_head, x_tail', x_new; iFrame.
+		  iFrame "%#".
+		  repeat iSplit.
+		  - by rewrite Hxs_eq.
+		  - destruct HisLast_xlast as [xs_rest ->]. iFrame "#".
+		  - by iExists xs.
+		  - iPureIntro. simpl. by f_equal.
+		}
+		iClear (Hconc_abst_eq xs_v Hxs_eq x_head HisLast_xlast x_tail' xs xs_queue) "HisLLchain_xs Hxhead_ar_γTail Hxtail'_ar_γLast".
+		wp_pures.
+		wp_load.
+		wp_pures.
+		(* Attempt to swing tail pointer *)
+		wp_apply (swing_tail with "[Hqueue_inv Hxtail_reach_xnew Hxnew_ar_γLast]"); first iFrame "#".
+		iIntros (v') "_".
+		by iApply "HΦ".
 	- (* x_tail is not last *)
 	  wp_load.
 	  iPoseProof (reach_from_is_node with "Hxtailnext_reach_xlast") as "Hxtailnext_node".
@@ -632,7 +628,6 @@ Proof.
 	  iClear (Hconc_abst_eq xs_v Hxs_eq x_head HisLast_xlast x_last xs xs_queue) "Hxhead_ar_γTail Hxtail'_ar_γLast".
 	  wp_pures.
 	  case_bool_decide; wp_if; last first.
-	  (* TODO: Consider using + indentation *)
 	  { (* Inconsistent*)
 		iApply ("IH" with "HP HΦ Hxnew_to_none").
 	  }
@@ -642,7 +637,7 @@ Proof.
 	  wp_load.
 	  wp_pures.
 	  iPoseProof (reach_one_step x_tail x_tail_next with "[] [] []") as "Hxtail_reach_xtailnext"; try done.
-	  (* Swing Tail pointer *)
+	  (* Attempt to swing tail pointer *)
 	  wp_apply (swing_tail with "[Hqueue_inv Hxtail_reach_xtailnext Hxtailnext_ar_γLast]"); first iFrame "#".
 	  iIntros (v') "_".
 	  wp_pures.
@@ -650,7 +645,6 @@ Proof.
 Qed.
 
 (* ----- Specification for Dequeue ----- *)
-(* TODO: cleanup *)
 Lemma dequeue_spec v_q (Q_γ : Qgnames) (P : iProp Σ) (Q : val -> iProp Σ):
 	□(∀xs_v, (Q_γ ⤇● xs_v ∗ P
 				={⊤ ∖ ↑Ni}=∗
@@ -732,7 +726,7 @@ Proof.
 	wp_let.
 	wp_load.
 	wp_pures.
-	(* Reason about the result of the consistency check of head *)
+	(* Reason about the result of the consistency check *)
 	destruct (decide (#(n_in x_head) = val_of_list pvs)) as [H_xhead_eq | H_xhead_neq].
 	- (* Consistent *)
 	  wp_bind (! #(n_out x_head))%E.
@@ -741,7 +735,7 @@ Proof.
 	  iPoseProof (Abs_Reach_Concr with  "Hxhead_ar_γLast HγLast_pt_xlast") as "[#Hxhead_reach_xlast HγLast_pt_xlast]".
 	  (* CASE ANALYSIS: Is x_head the last element in the linked list? *)
 	  iDestruct (reach_case with "Hxhead_reach_xlast") as "[><- | (%x_head_next & Hxhead_to_xheadnext & Hxheadnext_reach_xlast)]".
-	  + (* x_head is the last element: x_head = x_last *)
+	  + (* x_head is the last element: x_head = x_last. This means that the queue is empty, hence dequeue will return 'None'. This is a linearisation point. *)
 	  	destruct HisLast_xlast as [xs_rest ->].
 		iDestruct "HisLL_xs" as "[Hxhead_to_none HisLL_chain_xs]".
 		wp_load.
@@ -852,6 +846,7 @@ Proof.
 		clear H_xhead_eq H x_head'.
 		wp_if_true.
 		wp_pures.
+		(* CASE ANALYSIS: is tail lagging behind? *)
 		case_bool_decide as His_xhead_xtail_eq.
 		* (* n_in x_head = n_in x_tail. I.e. x_tail is lagging behind. Swing it to next *)
 		  iAssert (⌜x_head = x_tail⌝)%I as "->"; first (iApply n_in_equal; done).
@@ -875,7 +870,7 @@ Proof.
 		  (* Invariant Opening: 5 *)
 		  iInv "Hqueue_inv" as "(%xs_v & HAbst & %xs & %xs_queue & %x_head' & %x_tail' & %x_last & >%Hxs_eq & HisLL_xs & >%HisLast_xlast & >%Hconc_abst_eq & >Hl_head & >Hl_tail & HγHead_pt_xhead' & >#Hxhead'_ar_γTail & HγTail_pt_xtail' & >#Hxtail'_ar_γLast & HγLast_pt_xlast)".
 		  wp_cmpxchg as Hxhead_eq | Hxhead_neq.
-		  ** (* CAS succeeded. Head pointer swung to x_head_next *)
+		  ** (* CAS succeeded. Head pointer swung to x_head_next. This is a linearisation point. *)
 			iAssert (⌜x_head' = x_head⌝)%I as "->".
 			{
 				iPoseProof (Abs_Reach_Concr with "Hxhead'_ar_γTail HγTail_pt_xtail'") as "[#Hconcr HγTail_pt_xtail']".
@@ -885,7 +880,7 @@ Proof.
 			iAssert (⌜∃xs_queue', xs_queue = xs_queue' ++ [x_head_next]⌝)%I as "[%xs_queue_new ->]".
 			{
 				destruct (ll_case_first xs_queue) as [->|[x_head_next' [xs_queue' ->]]].
-				- (* Queue is not empty, as x_head doesn't point to none *)
+				- (* Queue cannot empty, as x_head doesn't point to none *)
 				  rewrite Hxs_eq.
 				  iDestruct "HisLL_xs" as "[Hxhead_to_none _]".
 				  iCombine "Hxhead_to_xheadnext Hxhead_to_none" gives "[_ %Hcontra]".

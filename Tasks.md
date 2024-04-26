@@ -74,9 +74,9 @@
   - [ ] Show the two derived specifications (similar to two-lock versions)
   - [ ] Try to remove consistency check and see if spec is still provable
 
-- [ ] Clean up proofs and make consistent
+- [x] Clean up proofs and make consistent
   - [x] Make variable names consistent (fx: x_n vs x_head_next)
-  - [ ] Fix all todos in code
+  - [x] Fix all todos in code
   - [x] create a name for first node, and the enqueued node
   - [x] _null -> to_none
   - [x] out -> to_xm
