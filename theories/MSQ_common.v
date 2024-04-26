@@ -158,8 +158,8 @@ Context `{!heapGS Σ}.
    (l_2_in, v_2, l_2_out);
    (l_1_in, v_1, l_1_out)]
   generates:
-  (v_3, l_3_out) <- l_3_in 	∗	l_3_in <- l_2_out	∗
-  (v_2, l_2_out) <- l_2_in 	∗	l_2_in <- l_1_out	∗
+  (v_3, l_3_out) <- l_3_in ∗ l_3_in <- l_2_out ∗
+  (v_2, l_2_out) <- l_2_in ∗ l_2_in <- l_1_out ∗
   (x_1, l_1_out) <- l_1_in
 *)
 

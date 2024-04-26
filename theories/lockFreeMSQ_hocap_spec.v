@@ -21,10 +21,10 @@ Notation Ni := (N .@ "internal").
 (* ===== Hocap Specification for Lock-Free M&S Queue ===== *)
 
 (* ----- Ghost variable names ----- *)
-Record Qgnames := {	γ_Abst 	: gname;
-                    γ_Head 	: gname;
-                    γ_Tail 	: gname;
-                    γ_Last 	: gname;
+Record Qgnames := { γ_Abst : gname;
+                    γ_Head : gname;
+                    γ_Tail : gname;
+                    γ_Last : gname;
                   }.
 
 (* ------ Notation for Abstract State of Queue ------ *)
@@ -708,7 +708,7 @@ Proof.
   }
   iPoseProof (Abs_Reach_Concr with "Hxhead_ar_γTail HγTail_pt_xtail") as "[#Hxhead_reach_xtail HγTail_pt_xtail]".
   iMod (Abs_Reach_Abs with "[] HγTail_pt_xtail") as "[#Hxtail_ar_γTail HγTail_pt_xtail]".
-  { by iApply reach_refl.	}
+  { by iApply reach_refl. }
   iModIntro.
   (* Close Invariant: 2 *)
   iSplitL "Hl_head Hl_tail HisLL_xs HAbst HγHead_pt_xhead HγTail_pt_xtail HγLast_pt_xlast".

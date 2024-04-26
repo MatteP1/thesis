@@ -20,8 +20,8 @@ Notation N := (nroot .@ "twoLockMSQ_seq").
 (* ===== Sequential Specification for Two-lock M&S Queue ===== *)
 
 (* ----- Ghost variable names ----- *)
-Record SeqQgnames := { γ_Hlock 	: gname;
-                       γ_Tlock	: gname;
+Record SeqQgnames := { γ_Hlock : gname;
+                       γ_Tlock : gname;
                      }.
 
 (* ----- The 'is_queue' Predicate for Sequential Spec ------ *)

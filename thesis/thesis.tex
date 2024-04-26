@@ -128,12 +128,12 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \pagestyle{empty}
-\pagenumbering{roman} 
+\pagenumbering{roman}
 \vspace*{\fill}\noindent{\rule{\linewidth}{1mm}\\[4ex]
 {\Huge\sf TITLE HERE}\\[2ex]
 {\huge\sf Mathias Pedersen, 201808137}\\[2ex]
 \noindent\rule{\linewidth}{1mm}\\[4ex]
-\noindent{\Large\sf Master's Thesis, Computer Science\\[1ex] 
+\noindent{\Large\sf Master's Thesis, Computer Science\\[1ex]
 \today \\[1ex] Advisor: Amin Timany\\[15ex]}\\[\fill]}
 \epsfig{file=logo.eps}\clearpage
 
@@ -271,7 +271,7 @@ Figure \ref{MSQTL:impl:figure:dequeue} illustrates running dequeue on a non-empt
   \node (tail) [pointer, above right=of l'1] {$\loc_{tail}$};
   \draw[->] (head) -- (l'1);
   \draw[->] (tail) -- (l'1);
-  
+
   \end{tikzpicture}
   \caption{Queue after initialisation}
   \label{MSQTL:impl:figure:init}
@@ -306,24 +306,24 @@ Figure \ref{MSQTL:impl:figure:dequeue} illustrates running dequeue on a non-empt
       },
       start chain=going right,
     ]
-  
+
     % Linked List
     \node (l'1) [join={by ->}, perspointer,on chain] {$\locin{1}$};
     \node (l1pair) [join={by ->, draw=blue}, pair,on chain] {$v_1$ \nodepart{two} $\locout{1}$};
     \node (l'2) [join={by ->, draw=blue}, perspointer,on chain] {$\locin{2}$};
     \node (l2pair) [join={by ->, draw=blue}, pair,on chain] {$v_2$ \nodepart{two} $\locout{2}$};
     \node (null) [join={by ->, draw=black}, rectangle,on chain] {$\None$};
-  
+
     \node (l'3) [perspointer, above right=of l2pair] {$\locin{3}$};
     \node (l3pair) [join={by ->, draw=blue}, pair,on chain] {$v_3$ \nodepart{two} $\locout{3}$};
     \node (null) [join={by ->, draw=black}, rectangle,on chain] {$\None$};
-  
+
     % Head and tail
     \node (head) [pointer, above=of l'1] {$\loc_{head}$};
     \node (tail) [pointer, above=of l'2] {$\loc_{tail}$};
     \draw[->] (head) -- (l'1);
     \draw[->] (tail) -- (l'2);
-    
+
     \end{tikzpicture}
     \caption{Queue after creating the new node $(\locin{3}, v_3, \locout{3})$ to be added to the queue.}
     \label{MSQTL:impl:figure:enqueue:a}
@@ -355,25 +355,25 @@ Figure \ref{MSQTL:impl:figure:dequeue} illustrates running dequeue on a non-empt
       },
       start chain=going right,
     ]
-  
+
     % Linked List
     \node (l'1) [join={by ->}, perspointer,on chain] {$\locin{1}$};
     \node (l1pair) [join={by ->, draw=blue}, pair,on chain] {$v_1$ \nodepart{two} $\locout{1}$};
     \node (l'2) [join={by ->, draw=blue}, perspointer,on chain] {$\locin{2}$};
     \node (l2pair) [join={by ->, draw=blue}, pair,on chain] {$v_2$ \nodepart{two} $\locout{2}$};
     \node (null) [join={by ->, dotted, draw=black}, rectangle,on chain] {\textcolor{gray}{$\None$}};
-  
+
     \node (l'3) [perspointer, above right=of l2pair] {$\locin{3}$};
     \node (l3pair) [join={by ->, draw=blue}, pair,on chain] {$v_3$ \nodepart{two} $\locout{3}$};
     \node (null) [join={by ->, draw=black}, rectangle,on chain] {$\None$};
     \draw[->, draw=blue] (l2pair) -- (l'3);
-  
+
     % Head and tail
     \node (head) [pointer, above=of l'1] {$\loc_{head}$};
     \node (tail) [pointer, above=of l'2] {$\loc_{tail}$};
     \draw[->] (head) -- (l'1);
     \draw[->] (tail) -- (l'2);
-    
+
     \end{tikzpicture}
     \caption{Queue after adding the new node to linked list.}
     \label{MSQTL:impl:figure:enqueue:b}
@@ -405,26 +405,26 @@ Figure \ref{MSQTL:impl:figure:dequeue} illustrates running dequeue on a non-empt
       },
       start chain=going right,
     ]
-  
+
     % Linked List
     \node (l'1) [join={by ->}, perspointer,on chain] {$\locin{1}$};
     \node (l1pair) [join={by ->, draw=blue}, pair,on chain] {$v_1$ \nodepart{two} $\locout{1}$};
     \node (l'2) [join={by ->, draw=blue}, perspointer,on chain] {$\locin{2}$};
     \node (l2pair) [join={by ->, draw=blue}, pair,on chain] {$v_2$ \nodepart{two} $\locout{2}$};
     \node (null) [join={by ->, dotted, draw=black}, rectangle,on chain] {\textcolor{gray}{$\None$}};
-  
+
     \node (l'3) [perspointer, above right=of l2pair] {$\locin{3}$};
     \node (l3pair) [join={by ->, draw=blue}, pair,on chain] {$v_3$ \nodepart{two} $\locout{3}$};
     \node (null) [join={by ->, draw=black}, rectangle,on chain] {$\None$};
     \draw[->, draw=blue] (l2pair) -- (l'3);
-  
+
     % Head and tail
     \node (head) [pointer, above=of l'1] {$\loc_{head}$};
     \node (tail) [pointer, above=of l'2] {$\loc_{tail}$};
     \draw[->] (head) -- (l'1);
     \draw[->, dotted] (tail) -- (l'2);
     \draw[->] (tail) -- (l'3);
-    
+
     \end{tikzpicture}
     \caption{Queue after swinging tail pointer to the new node.}
     \label{MSQTL:impl:figure:enqueue:c}
@@ -477,7 +477,7 @@ Figure \ref{MSQTL:impl:figure:dequeue} illustrates running dequeue on a non-empt
   \draw[->, dotted] (head) -- (l1in);
   \draw[->, dashed] (head) -- (l2in);
   \draw[->] (tail) -- (l3in);
-  
+
   \end{tikzpicture}
   \caption{Dequeueing an element ($v_2$) from a queue with two elements ($v_2$, $v_3$). The dotted line represents the state before the dequeue, and the dashed line is the state after dequeuing.}
   \label{MSQTL:impl:figure:dequeue}
@@ -502,7 +502,7 @@ Figure \ref{MSQTL:impl:figure:dequeue} illustrates running dequeue on a non-empt
 \end{align*}
 
 \begin{align*}
-  \langkw{let} \dequeue \ Q :=&\\ 
+  \langkw{let} \dequeue \ Q :=&\\
 		& \acquire (\Fst (\Snd (\deref Q)));\\
 		& \Let node = \deref (\Fst (\Fst (\deref Q))) in\\
 		& \Let new\_head = \deref (\Snd(\deref node)) in\\
@@ -617,7 +617,7 @@ Stepping through the function, we first do the superfluous acquire. Next, we get
 
 \textbf{$xs_{queue}$ is not empty}: In this case, we can conclude that there must be some node $x_{head\_next}$, which is the first node in $xs_{queue}$. I.e. $xs_{queue} = xs'_{queue} \catenate [x_{head\_next}]$. We can thus use the $\isLL$ predicate to conclude that $x_{head}$ must point to $x_{head\_next}$. Hence the else branch will be taken. Since $x_{head\_next}$ is part of the linked list, then $\isLL$ tells us it has the node-like structure, allowing us to extract its value in the first line of the else branch.\\
 In the next line, we make the head pointer, $\loc_{head}$ point to $x_{head\_next}$, and we have the resource to do this through $\isqueueseq \; v_q \; xs_v \; Q_\gname$.\\
-Finally, we release the lock and return the value we got from $x_{head\_next}$. We must now prove the post-condition, and this time we prove the second disjunct. Since $xs_v$ is reflected in $xs_{queue}$, then it must also be the case that $xs_v$ is non-empty, and it has a first element, $x_v$, which is related to the first element of $xs_{queue}$, i.e. $x_{head\_next}$. This allows us to conclude that the returned value ($\nVal{x_{head\_next}}$) is exactly $x_v$, but wrapped in a $\Some$, as we had to prove. 
+Finally, we release the lock and return the value we got from $x_{head\_next}$. We must now prove the post-condition, and this time we prove the second disjunct. Since $xs_v$ is reflected in $xs_{queue}$, then it must also be the case that $xs_v$ is non-empty, and it has a first element, $x_v$, which is related to the first element of $xs_{queue}$, i.e. $x_{head\_next}$. This allows us to conclude that the returned value ($\nVal{x_{head\_next}}$) is exactly $x_v$, but wrapped in a $\Some$, as we had to prove.
 Finally, we must prove $\isqueueseq\ v_q\ xs_v'\ Q_\gname$, where $xs_v'$ is $xs_v$ but with $x_v$ removed. For the existentials, we pick the same values we got from the precondition, wit the exception of $xs_{queue}$ and $x_{head}$. For $xs_{queue}$ we pick the same $xs_{queue}$ we got from the precondition, but with the first element, $x_{head\_next}$ removed. By doing this, $xs_{queue}$ will be reflexed in $xs_v'$. For $x_head$, we pick the new head, which we have obtained that $\loc_{head}$ points to: $x_{head\_next}$. With these choices, we can prove the predicate.
 
 
@@ -759,7 +759,7 @@ The option RA $?$, makes the product RA unital which is required by the $\authm$
 As before, we collect the ghost names we will need in a tuple, this time of type $Qgnames$. It is similar to $ConcQgnames$, but with one additional ghost name: $\gname_{Abst}$ which is used for elements in the resource algebra we constructed above.\\
 For an abstract state $xs_v$ and a tuple $\Qg$ of type $Qgnames$, we shall use the notation $\abstractstateauth{\Qg}{xs_v}$ for the ownership assertion $\ownGhost{\Qg.\gname_{Abst}}{\authfull (1, \aginj\ xs_v)}$, meaning that the authoritative view of the abstract state associated with $\Qg.\gname_{Abst}$ is $xs_v$. Similarly we write $\abstractstatefullfrag{\Qg}{xs_v}$ for the assertion $\ownGhost{\Qg.\gname_{Abst}}{\authfrag (1, \aginj\ xs_v)}$.
 
-With this, we now give the hocap-style spec, and explain it afterwards. 
+With this, we now give the hocap-style spec, and explain it afterwards.
 \begin{align*}
   &\Exists \isqueue : \Val \to Qgnames \to \Prop.\\
   &\quad\quad \All v_q, Q_\gname . \isqueue \ v_q \ Q_\gname \implies \persistently \isqueue \ v_q \ Q_\gname\\
@@ -772,8 +772,8 @@ With this, we now give the hocap-style spec, and explain it afterwards.
     \end{array}\\
   &\land\quad \All v_q, Q_\gname, P, Q.
     \begin{array}[t]{l}
-    \left(\All xs_v . \abstractstateauth{\Qg}{xs_v} \ast P \vs[\mask\setminus\Nl.i^\uparrow] \later 
-      \left( 
+    \left(\All xs_v . \abstractstateauth{\Qg}{xs_v} \ast P \vs[\mask\setminus\Nl.i^\uparrow] \later
+      \left(
         \begin{array}{l}
           (xs_v = [] \ast \abstractstateauth{\Qg}{xs_v} \ast Q \ \None)\\
           \lor
@@ -805,7 +805,7 @@ Our definition of $\isqueue$ is almost the same as $\isqueueconc$, so we only me
 \subsection{Proof outline}
 The proofs are largely similar to the concurrent spec, but now, instead of having to handle the $\Psi$ predicate, we must work with the authoritative and fragmental views of the abstract state.\\
 For initialise, we must additionally get ownership of the authoritative and fragmental view of the abstract state, both of which should state that it is empty. I.e. we must get $\abstractstateauth{\Qg}{[]} \ast \abstractstatefullfrag{\Qg}{[]}$. We achieve this by own-op and and own-allocate, which requires us to show that $\authfull (1, \aginj\ []) \cdot \authfrag (1, \aginj\ []) \in \Vl$. This follows by the definitions of the resource algebras. We use $\abstractstateauth{\Qg}{[]}$ to establish the queue invariant, and $\abstractstatefullfrag{\Qg}{[]}$ to prove the post-condition.\\
-For enqueue and dequeue, the only real changes are the points in the proof, where the concrete state of the queue is updated. 
+For enqueue and dequeue, the only real changes are the points in the proof, where the concrete state of the queue is updated.
 
 \textbf{Enqueue} We start by assuming the viewshift which allows us to update $P$ to $Q$ and $\abstractstateauth{\Qg}{xs_v}$ to $\abstractstateauth{\Qg}{v :: xs_v}$, for any $xs_v$. We must then prove the hoare triple for the expression $\enqueue \ v_q \ v$. The only real change from the previous proof happens the second time we open the invariant; the first and third times, the abstract state doesn't change, hence we can simply frame away the newly added authoritative fragment concerning the abstract state, and continue as we did before. The second time we open the invariant, it is around the expression that adds the newly created node to the linked list (\todo{add line number}). When opening it, we get $\abstractstateauth{\Qg}{xs_v}$. As before, we also get all the resources to match up variables and step through the code, updating the concrete state. To close the invariant, we must make the same choice of abstract state as we did previously: $v :: xs_v$. This, however, requires us to obtain $\abstractstateauth{\Qg}{v :: xs_v}$. However, since we have $\abstractstateauth{\Qg}{xs_v}$ and $P$ (from the precondition), we can apply the viewshift to obtain it, along with $Q$. This then allows us to close the invariant, and the proof proceeds as previously. At the end, we must also prove the postcondition $Q$, but this is no issue as we obtained that from the viewshift.
 
@@ -845,7 +845,7 @@ The \textbf{sequential initialise spec} follows almost directly from hocap-style
 
 To prove the \textbf{sequential enqueue spec}, assume some $v_q$, $v$, $xs_v$, and $Q_{\gname S}$. We must then show the hoare-triple concerning the expression: $\enqueue\ v_q\ v$.
 To do this, we shall use the hocap-style spec for enqueue. This requires us to pick $P$ and $Q$, and prove the resulting viewshift.
-We choose $P \eqdef \abstractstatefullfrag{Q_{\gname H}}{xs_v}$ and $Q \eqdef \abstractstatefullfrag{Q_{\gname H}}{(v :: xs_v)}$. Note that with this choice, the hoare triple we get after proving the viewshift almost matches the hoare triple we have to prove. The main thing we need is $\isqueue\ v_q \ Q_{\gname H}$ in the postcondition. However, since $\isqueue$ is persistent, and it is present in the precondition, we may assume it in the postcondition. Hence, all we have to prove is the viewshift: 
+We choose $P \eqdef \abstractstatefullfrag{Q_{\gname H}}{xs_v}$ and $Q \eqdef \abstractstatefullfrag{Q_{\gname H}}{(v :: xs_v)}$. Note that with this choice, the hoare triple we get after proving the viewshift almost matches the hoare triple we have to prove. The main thing we need is $\isqueue\ v_q \ Q_{\gname H}$ in the postcondition. However, since $\isqueue$ is persistent, and it is present in the precondition, we may assume it in the postcondition. Hence, all we have to prove is the viewshift:
 \begin{equation*}
   \All xs_v' . \abstractstateauth{\Qg}{xs_v'} \ast \abstractstatefullfrag{Q_{\gname H}}{xs_v} \vs[\mask\setminus\Nl.i^\uparrow] \later \abstractstateauth{\Qg}{v :: xs_v'} \ast \abstractstatefullfrag{Q_{\gname H}}{(v :: xs_v)}
 \end{equation*}
@@ -858,7 +858,7 @@ In the same way as above, the hoare triple we get matches the one we have to pro
 \subsection{Deriving Concurrent spec}
 Remember that we need the $\isqueueconc$ predicate to be persistent, hence we cannot simply assert $\abstractstatefullfrag{Q_{\gname H}}{xs_v}$ as we did for $\isqueueseq$. Instead we will put it into an invariant. The predicate we will use looks as follows.
 \begin{align*}
-  \isqueueconc \; v_q \; xs_v \; Q_{\gname C} \eqdef 
+  \isqueueconc \; v_q \; xs_v \; Q_{\gname C} \eqdef
   &\Exists Q_{\gname H} \in Qgnames .\\
   &proj\_Qgnames\_conc \ Q_{\gname H} = Q_{\gname C} \ast\\
   &\isqueue \ v_q \ Q_{\gname H} \ast\\
@@ -888,7 +888,7 @@ To derive the dequeue spec, we pick $P \eqdef \TRUE$ and $Q \ v \eqdef v = \None
 
 \cleardoublepage
 \addcontentsline{toc}{chapter}{Bibliography}
-\bibliographystyle{plain} 
+\bibliographystyle{plain}
 \bibliography{refs}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

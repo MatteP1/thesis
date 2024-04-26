@@ -20,14 +20,14 @@ Notation N := (nroot .@ "twoLockMSQ_conc").
 (* ===== Concurrent Specification for Two-lock M&S Queue ===== *)
 
 (* ----- Ghost variable names ----- *)
-Record ConcQgnames := {	γ_Hlock 	: gname;
-                        γ_Tlock 	: gname;
-                        γ_E 		  : gname;
-                        γ_nE 	    : gname;
-                        γ_D 		  : gname;
-                        γ_nD 	    : gname;
+Record ConcQgnames := { γ_Hlock   : gname;
+                        γ_Tlock   : gname;
+                        γ_E       : gname;
+                        γ_nE      : gname;
+                        γ_D       : gname;
+                        γ_nD      : gname;
                         γ_Before  : gname;
-                        γ_After 	: gname;
+                        γ_After   : gname;
                       }.
 
 (* ----- Tokens ----- *)

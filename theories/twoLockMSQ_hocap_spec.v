@@ -22,15 +22,15 @@ Notation Ni := (N .@ "internal").
 (* ===== Hocap Specification for Two-lock M&S Queue ===== *)
 
 (* ----- Ghost variable names ----- *)
-Record Qgnames := {	γ_Abst 		: gname;
-                    γ_Hlock 	: gname;
-                    γ_Tlock 	: gname;
-                    γ_E 			: gname;
-                    γ_nE 			: gname;
-                    γ_D 			: gname;
-                    γ_nD 			: gname;
-                    γ_Before 	: gname;
-                    γ_After 	: gname;
+Record Qgnames := { γ_Abst    : gname;
+                    γ_Hlock   : gname;
+                    γ_Tlock   : gname;
+                    γ_E       : gname;
+                    γ_nE      : gname;
+                    γ_D       : gname;
+                    γ_nD      : gname;
+                    γ_Before  : gname;
+                    γ_After   : gname;
                   }.
 
 (* ----- Tokens ----- *)

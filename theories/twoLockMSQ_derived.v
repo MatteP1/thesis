@@ -21,8 +21,8 @@ Variable N : namespace.
 
 (* ===== Sequential Specification for Two-lock M&S Queue ===== *)
 
-Record SeqQgnames := { γ_Hlock_seq 	: gname;
-                       γ_Tlock_seq 	: gname;
+Record SeqQgnames := { γ_Hlock_seq : gname;
+                       γ_Tlock_seq : gname;
                      }.
 
 Definition proj_Qgnames_seq (Q_γH : Qgnames) : SeqQgnames :=
@@ -144,14 +144,14 @@ Notation NC := (N .@ "concurrent").
 (* ===== Concurrent Specification for Two-lock M&S Queue ===== *)
 
 (* Ghost variable names *)
-Record ConcQgnames := {	γ_Hlock_conc 	: gname;
-                        γ_Tlock_conc 	: gname;
-                        γ_E_conc 		  : gname;
-                        γ_nE_conc 		: gname;
-                        γ_D_conc 		  : gname;
-                        γ_nD_conc 		: gname;
+Record ConcQgnames := { γ_Hlock_conc  : gname;
+                        γ_Tlock_conc  : gname;
+                        γ_E_conc      : gname;
+                        γ_nE_conc     : gname;
+                        γ_D_conc      : gname;
+                        γ_nD_conc     : gname;
                         γ_Before_conc : gname;
-                        γ_After_conc 	: gname;
+                        γ_After_conc  : gname;
                       }.
 
 Definition proj_Qgnames_conc (Q_γH : Qgnames) : ConcQgnames :=

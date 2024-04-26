@@ -34,7 +34,7 @@
   - [x] Do proof sketch on paper
   - [x] Implement proof in Iris (Coq)
   - [x] Add a predicate that should hold of all elements in queue (see isBag)
-  - [x] use {} and [] instead of i: 
+  - [x] use {} and [] instead of i:
   - [x] Rename xs_rest to xs_queue
   - [x] Prove consistency of is_queue
   - [x] Rename qg to Q_γ
