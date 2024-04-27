@@ -566,7 +566,7 @@ Proof.
         destruct HisLast_xlast as [xs_rest ->].
         by iDestruct "HisLL_xs" as "[Hxtail_to_none _]".
       }
-      wp_cmpxchg_suc.
+      wp_cmpxchg_suc. (* Linearisation Point *)
       iMod (pointsto_persist with "Hxtail_to_none") as "#Hxtail_to_xnew".
       iMod ("Hvs" $! xs_v with "[HAbst HP]") as "[HAbst_new HQ]"; first by iFrame.
       iPoseProof (reach_one_step x_tail x_new with "[] [] []") as "Hxtail_reach_xnew"; try done.
@@ -737,17 +737,17 @@ Proof.
     + (* x_head is the last element: x_head = x_last. This means that the queue is empty, hence dequeue will return 'None'. This is a linearisation point. *)
       destruct HisLast_xlast as [xs_rest ->].
       iDestruct "HisLL_xs" as "[Hxhead_to_none HisLL_chain_xs]".
-      wp_load.
       (* x_head ⤳ x_head' *)
       iPoseProof (Abs_Reach_Concr with "Hxhead_ar_γHead HγHead_pt_xhead") as "[Hxhead_reach_xhead' HγHead_pt_xhead]".
       (* x_head ⤳ x_tail' *)
       iPoseProof (Abs_Reach_Concr with "Hxhead_ar_γTail HγTail_pt_xtail") as "[Hxhead_reach_xtail' HγTail_pt_xtail]".
       (* x_head = x_head' *)
-      iPoseProof (reach_end_eq with "Hxhead_reach_xhead' Hxhead_to_none") as "[<- Hxhead_to_none]".
+      iPoseProof (reach_end_eq with "Hxhead_reach_xhead' Hxhead_to_none") as "[><- Hxhead_to_none]".
       (* x_head = x_tail' *)
-      iPoseProof (reach_end_eq with "Hxhead_reach_xtail' Hxhead_to_none") as "[<- Hxhead_to_none]".
+      iPoseProof (reach_end_eq with "Hxhead_reach_xtail' Hxhead_to_none") as "[><- Hxhead_to_none]".
       (* x_head = x_tail *)
-      iPoseProof (reach_end_eq with "Hxhead_reach_xtail Hxhead_to_none") as "[<- Hxhead_to_none]".
+      iPoseProof (reach_end_eq with "Hxhead_reach_xtail Hxhead_to_none") as "[><- Hxhead_to_none]".
+      wp_load. (* Linearisation Point *)
       iAssert (⌜xs_queue = []⌝)%I as "->".
       {
         rewrite Hxs_eq.
@@ -869,7 +869,7 @@ Proof.
         (* Invariant Opening: 5 *)
         iInv "Hqueue_inv" as "(%xs_v & HAbst & %xs & %xs_queue & %x_head' & %x_tail' & %x_last & >%Hxs_eq & HisLL_xs & >%HisLast_xlast & >%Hconc_abst_eq & >Hl_head & >Hl_tail & HγHead_pt_xhead' & >#Hxhead'_ar_γTail & HγTail_pt_xtail' & >#Hxtail'_ar_γLast & HγLast_pt_xlast)".
         wp_cmpxchg as Hxhead_eq | Hxhead_neq.
-        ** (* CAS succeeded. Head pointer swung to x_head_next. This is a linearisation point. *)
+        ** (* CAS succeeded. Head pointer swung to x_head_next. Linearisation point. *)
         iAssert (⌜x_head' = x_head⌝)%I as "->".
         {
           iPoseProof (Abs_Reach_Concr with "Hxhead'_ar_γTail HγTail_pt_xtail'") as "[#Hconcr HγTail_pt_xtail']".

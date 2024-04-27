@@ -50,8 +50,8 @@
   - [x] Remove _2 and _3 from subsequent invariant accesses
 - [x] Clean up proof of Sequential spec for M&S queue with locks in Coq
 - [x] Change let N := ... into Notation (...) for namespaces.
-- [ ] Consider removing some of the CHANGE comments in hocap.
-- [ ] Consider changing indentation from 4 to 2.
+- [x] Consider removing some of the CHANGE comments in hocap.
+- [x] Consider changing indentation from 4 to 2.
 
 - [x] Write about the sequential spec for two-lock M&S queue in the report
   - [x] Mention how it can be used to track exact contents of queue
@@ -66,7 +66,7 @@
   - [x] Show how to derive concurrent and sequential specs from it
 - [x] Update notation for definitions to use triangleq instead of equality
 
-- [ ] State and prove correctness of lock-free M&S Queue
+- [x] State and prove correctness of lock-free M&S Queue
   - [x] Add prophesies to dequeue (linearisation point could be early if the queue is empty)
   - [x] prove enqueue spec
   - [x] prove dequeue spec
