@@ -231,8 +231,8 @@ Lemma Abs_Reach_Concr: ∀ x_n x_m γ_m,
   γ_m ↣ x_m -∗
   x_n ⤳ x_m ∗ γ_m ↣ x_m.
 Proof.
-  iIntros (x_n x_m γ_m) "#Hxn_ar_γm Hγm_pt_xm".
-  iDestruct "Hγm_pt_xm" as "(%s & Hγm_auth & #H_reach_xm)".
+  iIntros (x_n x_m γ_m) "#Hxn_ar_γm Hγm_ap_xm".
+  iDestruct "Hγm_ap_xm" as "(%s & Hγm_auth & #H_reach_xm)".
   iCombine "Hγm_auth" "Hxn_ar_γm" gives "%Hincluded".
   iSplitR "Hγm_auth"; last by iExists s; iFrame.
   rewrite auth_both_valid_discrete in Hincluded.
@@ -247,8 +247,8 @@ Lemma Abs_Reach_Abs: ∀ x_n x_m γ_m,
   γ_m ↣ x_m ==∗
   x_n ⤏ γ_m ∗ γ_m ↣ x_m.
 Proof.
-  iIntros (x_n x_m γ_m) "#xn_reach_xm Hγm_pt_xm".
-  iDestruct "Hγm_pt_xm" as "(%s & Hγm_auth & #H_reach_xm)".
+  iIntros (x_n x_m γ_m) "#xn_reach_xm Hγm_ap_xm".
+  iDestruct "Hγm_ap_xm" as "(%s & Hγm_auth & #H_reach_xm)".
   (* Is x_n in s? *)
   destruct (decide (x_n ∈ s)) as [ Hxn_in_s | Hxn_notin_s ].
   (* Case: x_n ∈ s. It then follows by auth_update_dfrac_alloc *)
@@ -276,8 +276,8 @@ Lemma Abs_Reach_Advance: ∀ x_m γ_m x_o,
   x_m ⤳ x_o ==∗
   γ_m ↣ x_o ∗ x_o ⤏ γ_m.
 Proof.
-  iIntros (x_m γ_m x_o) "Hγm_pt_xm #Hxm_reach_xo".
-  iDestruct "Hγm_pt_xm" as "(%s & Hγm_auth & #H_reach_xm)".
+  iIntros (x_m γ_m x_o) "Hγm_ap_xm #Hxm_reach_xo".
+  iDestruct "Hγm_ap_xm" as "(%s & Hγm_auth & #H_reach_xm)".
   iMod (own_update _ _ (● ({[x_o]} ∪ s) ⋅ ◯ ({[x_o]} ∪ s)) with "Hγm_auth") as "(Hγm_auth & Hγm_frag)".
   - apply auth_update_alloc.
     apply gset_local_update.
@@ -356,15 +356,15 @@ Proof.
   wp_alloc l_head as "Hl_head".
   iMod (own_alloc (●F (to_agree []) ⋅ ◯F (to_agree []))) as (γ_Abst) "[Hγ_Abst_auth Hγ_Abst_frac]"; first by apply frac_auth_valid.
   iAssert (x_1 ⤳ x_1)%I as "Hx1_reach_x1"; first by iApply reach_refl.
-  iMod (Abs_Reach_Alloc x_1 with "Hx1_reach_x1") as (γ_Head) "[HγHead_pt_x1 _]".
-  iMod (Abs_Reach_Alloc x_1 with "Hx1_reach_x1") as (γ_Tail) "[HγTail_pt_x1 #Hx1_ar_γTail]".
-  iMod (Abs_Reach_Alloc x_1 with "Hx1_reach_x1") as (γ_Last) "[HγLast_pt_x1 #Hx1_ar_γLast]".
+  iMod (Abs_Reach_Alloc x_1 with "Hx1_reach_x1") as (γ_Head) "[HγHead_ap_x1 _]".
+  iMod (Abs_Reach_Alloc x_1 with "Hx1_reach_x1") as (γ_Tail) "[HγTail_ap_x1 #Hx1_ar_γTail]".
+  iMod (Abs_Reach_Alloc x_1 with "Hx1_reach_x1") as (γ_Last) "[HγLast_ap_x1 #Hx1_ar_γLast]".
   set (Queue_gnames := {| γ_Abst := γ_Abst;
                           γ_Head := γ_Head;
                           γ_Tail := γ_Tail;
                           γ_Last := γ_Last;
                        |}).
-  iMod (inv_alloc Ni _ (queue_invariant l_head l_tail Queue_gnames) with "[Hγ_Abst_auth Hl_head Hl_tail Hx1_to_none HγHead_pt_x1 HγTail_pt_x1 HγLast_pt_x1]") as "#HqueueInv".
+  iMod (inv_alloc Ni _ (queue_invariant l_head l_tail Queue_gnames) with "[Hγ_Abst_auth Hl_head Hl_tail Hx1_to_none HγHead_ap_x1 HγTail_ap_x1 HγLast_ap_x1]") as "#HqueueInv".
   {
     iNext.
     iExists []; iFrame "Hγ_Abst_auth"; simpl.
@@ -392,19 +392,19 @@ Proof.
   iPoseProof (reach_to_is_node with "Hxtail_reach_xnewtail") as "Hxnewtail_node".
   wp_bind (CmpXchg _ _ _).
   (* Open Invariant *)
-  iInv "Hqueue_inv" as "(%xs_v & HAbst & %xs & %xs_queue & %x_head & %x_tail' & %x_last & >%Hxs_eq & HisLL_xs & >%HisLast_xlast & >%Hconc_abst_eq & >Hl_head & >Hl_tail & HγHead_pt_xhead & >#Hxhead_ar_γTail & HγTail_pt_xtail' & >#Hxtail'_ar_γLast & HγLast_pt_xlast)".
+  iInv "Hqueue_inv" as "(%xs_v & HAbst & %xs & %xs_queue & %x_head & %x_tail' & %x_last & >%Hxs_eq & HisLL_xs & >%HisLast_xlast & >%Hconc_abst_eq & >Hl_head & >Hl_tail & HγHead_ap_xhead & >#Hxhead_ar_γTail & HγTail_ap_xtail' & >#Hxtail'_ar_γLast & HγLast_ap_xlast)".
   wp_cmpxchg as Hxtail_eq | Hxtail_neq.
   - (* CAS succeeded *)
     iAssert (⌜x_tail' = x_tail⌝)%I as "->".
     {
-      iApply (n_in_equal with "[] [HγTail_pt_xtail']"); try done.
+      iApply (n_in_equal with "[] [HγTail_ap_xtail']"); try done.
       iApply (reach_to_is_node x_head).
-      by iDestruct (Abs_Reach_Concr with "Hxhead_ar_γTail HγTail_pt_xtail'") as "[Hxhead_reach_xtail' _]".
+      by iDestruct (Abs_Reach_Concr with "Hxhead_ar_γTail HγTail_ap_xtail'") as "[Hxhead_reach_xtail' _]".
     }
-    iMod (Abs_Reach_Advance with "HγTail_pt_xtail' Hxtail_reach_xnewtail") as "[HγTail_pt_xnew #Hxnew_ar_γTail]".
+    iMod (Abs_Reach_Advance with "HγTail_ap_xtail' Hxtail_reach_xnewtail") as "[HγTail_ap_xnew #Hxnew_ar_γTail]".
     iModIntro.
     (* Close Invariant *)
-    iSplitL "Hl_head Hl_tail HisLL_xs HAbst HγHead_pt_xhead HγTail_pt_xnew HγLast_pt_xlast".
+    iSplitL "Hl_head Hl_tail HisLL_xs HAbst HγHead_ap_xhead HγTail_ap_xnew HγLast_ap_xlast".
     {
       iNext.
       iExists xs_v; iFrame "HAbst".
@@ -417,7 +417,7 @@ Proof.
   - (* CAS failed *)
     iModIntro.
     (* Close Invariant *)
-    iSplitL "Hl_head Hl_tail HisLL_xs HAbst HγHead_pt_xhead HγTail_pt_xtail' HγLast_pt_xlast".
+    iSplitL "Hl_head Hl_tail HisLL_xs HAbst HγHead_ap_xhead HγTail_ap_xtail' HγLast_ap_xlast".
     {
       iNext.
       iExists xs_v; iFrame "HAbst".
@@ -462,16 +462,16 @@ Proof.
   wp_pures.
   wp_bind (! #l_tail)%E.
   (* Invariant Opening: 1 *)
-  iInv "Hqueue_inv" as "(%xs_v & HAbst & %xs & %xs_queue & %x_head & %x_tail & %x_last & >%Hxs_eq & HisLL_xs & >%HisLast_xlast & >%Hconc_abst_eq & >Hl_head & >Hl_tail & HγHead_pt_xhead & >#Hxhead_ar_γTail & HγTail_pt_xtail & >#Hxtail_ar_γLast & HγLast_pt_xlast)".
+  iInv "Hqueue_inv" as "(%xs_v & HAbst & %xs & %xs_queue & %x_head & %x_tail & %x_last & >%Hxs_eq & HisLL_xs & >%HisLast_xlast & >%Hconc_abst_eq & >Hl_head & >Hl_tail & HγHead_ap_xhead & >#Hxhead_ar_γTail & HγTail_ap_xtail & >#Hxtail_ar_γLast & HγLast_ap_xlast)".
   wp_load.
   iAssert ((n_in x_tail ↦□ (n_val x_tail, #(n_out x_tail)))%I) as "#Hxtail_node".
   {
     iApply (reach_to_is_node x_head).
-    by iDestruct (Abs_Reach_Concr with "Hxhead_ar_γTail HγTail_pt_xtail") as "[Hxhead_reach_xtail _]".
+    by iDestruct (Abs_Reach_Concr with "Hxhead_ar_γTail HγTail_ap_xtail") as "[Hxhead_reach_xtail _]".
   }
   iModIntro.
   (* Close Invariant: 1 *)
-  iSplitL "Hl_head Hl_tail HisLL_xs HAbst HγHead_pt_xhead HγTail_pt_xtail HγLast_pt_xlast".
+  iSplitL "Hl_head Hl_tail HisLL_xs HAbst HγHead_ap_xhead HγTail_ap_xtail HγLast_ap_xlast".
   {
     iNext.
     iExists xs_v; iFrame "HAbst".
@@ -484,8 +484,8 @@ Proof.
   wp_pures.
   wp_bind (! #(n_out x_tail))%E.
   (* Invariant Opening: 2 *)
-  iInv "Hqueue_inv" as "(%xs_v & HAbst & %xs & %xs_queue & %x_head & %x_tail' & %x_last & >%Hxs_eq & HisLL_xs & >%HisLast_xlast & >%Hconc_abst_eq & >Hl_head & >Hl_tail & HγHead_pt_xhead & >#Hxhead_ar_γTail & HγTail_pt_xtail' & >#Hxtail'_ar_γLast & HγLast_pt_xlast)".
-  iPoseProof (Abs_Reach_Concr x_tail x_last (Q_γ.(γ_Last)) with "Hxtail_ar_γLast HγLast_pt_xlast") as "[#Hxtail_reach_xlast HγLast_pt_xlast]".
+  iInv "Hqueue_inv" as "(%xs_v & HAbst & %xs & %xs_queue & %x_head & %x_tail' & %x_last & >%Hxs_eq & HisLL_xs & >%HisLast_xlast & >%Hconc_abst_eq & >Hl_head & >Hl_tail & HγHead_ap_xhead & >#Hxhead_ar_γTail & HγTail_ap_xtail' & >#Hxtail'_ar_γLast & HγLast_ap_xlast)".
+  iPoseProof (Abs_Reach_Concr x_tail x_last (Q_γ.(γ_Last)) with "Hxtail_ar_γLast HγLast_ap_xlast") as "[#Hxtail_reach_xlast HγLast_ap_xlast]".
   (* CASE ANALYSIS: Is x_tail last? *)
   iDestruct (reach_case with "Hxtail_reach_xlast") as "[><- | (%x_tail_next & Hxtail_to_xtailnext & Hxtailnext_reach_xlast)]".
   - (* x_tail is last. i.e. x_tail = x_last *)
@@ -499,7 +499,7 @@ Proof.
     wp_load.
     iModIntro.
     (* Close Invariant: 2 *)
-    iSplitL "Hl_head Hl_tail Hxtail_to_none HAbst HγHead_pt_xhead HγTail_pt_xtail' HγLast_pt_xlast".
+    iSplitL "Hl_head Hl_tail Hxtail_to_none HAbst HγHead_ap_xhead HγTail_ap_xtail' HγLast_ap_xlast".
     {
       iNext.
       iExists xs_v; iFrame "HAbst".
@@ -516,8 +516,8 @@ Proof.
     (* Attempt to add x_new to linked list *)
     wp_bind (CmpXchg _ _ _).
     (* Invariant Opening: 3 *)
-    iInv "Hqueue_inv" as "(%xs_v & HAbst & %xs & %xs_queue & %x_head & %x_tail' & %x_last & >%Hxs_eq & HisLL_xs & >%HisLast_xlast & >%Hconc_abst_eq & >Hl_head & >Hl_tail & HγHead_pt_xhead & >#Hxhead_ar_γTail & HγTail_pt_xtail' & >#Hxtail'_ar_γLast & HγLast_pt_xlast)".
-    iPoseProof (Abs_Reach_Concr x_tail x_last (Q_γ.(γ_Last)) with "Hxtail_ar_γLast HγLast_pt_xlast") as "[#Hxtail_reach_xlast HγLast_pt_xlast]".
+    iInv "Hqueue_inv" as "(%xs_v & HAbst & %xs & %xs_queue & %x_head & %x_tail' & %x_last & >%Hxs_eq & HisLL_xs & >%HisLast_xlast & >%Hconc_abst_eq & >Hl_head & >Hl_tail & HγHead_ap_xhead & >#Hxhead_ar_γTail & HγTail_ap_xtail' & >#Hxtail'_ar_γLast & HγLast_ap_xlast)".
+    iPoseProof (Abs_Reach_Concr x_tail x_last (Q_γ.(γ_Last)) with "Hxtail_ar_γLast HγLast_ap_xlast") as "[#Hxtail_reach_xlast HγLast_ap_xlast]".
     (* CASE ANALYSIS: Is tail still last? *)
     iDestruct (reach_case with "Hxtail_reach_xlast") as "[><- | (%x_tail_next & Hxtail_to_xtailnext & Hxtailnext_reach_xlast)]"; last first.
     + (* x_tail is no longer last, hence the CAS fails *)
@@ -525,7 +525,7 @@ Proof.
       wp_apply wp_cmpxchg_fail; [ | | iFrame "#" | ]; first done; first solve_vals_compare_safe; iIntros "_".
       iModIntro.
       (* Close Invariant: 3 *)
-      iSplitL "Hl_head Hl_tail HisLL_xs HAbst HγHead_pt_xhead HγTail_pt_xtail' HγLast_pt_xlast".
+      iSplitL "Hl_head Hl_tail HisLL_xs HAbst HγHead_ap_xhead HγTail_ap_xtail' HγLast_ap_xlast".
       {
         iNext.
         iExists xs_v; iFrame "HAbst".
@@ -546,10 +546,10 @@ Proof.
       iMod (pointsto_persist with "Hxtail_to_none") as "#Hxtail_to_xnew".
       iMod ("Hvs" $! xs_v with "[HAbst HP]") as "[HAbst_new HQ]"; first by iFrame.
       iPoseProof (reach_one_step x_tail x_new with "[] [] []") as "Hxtail_reach_xnew"; try done.
-      iMod (Abs_Reach_Advance with "HγLast_pt_xlast Hxtail_reach_xnew") as "[HγLast_pt_xnew #Hxnew_ar_γLast]".
+      iMod (Abs_Reach_Advance with "HγLast_ap_xlast Hxtail_reach_xnew") as "[HγLast_ap_xnew #Hxnew_ar_γLast]".
       iModIntro.
       (* Close Invariant: 3 *)
-      iSplitL "Hl_head Hl_tail Hxnew_to_none HAbst_new HγHead_pt_xhead HγTail_pt_xtail' HγLast_pt_xnew".
+      iSplitL "Hl_head Hl_tail Hxnew_to_none HAbst_new HγHead_ap_xhead HγTail_ap_xtail' HγLast_ap_xnew".
       {
         iNext.
         iExists (v :: xs_v); iFrame "HAbst_new".
@@ -572,10 +572,10 @@ Proof.
   - (* x_tail is not last *)
     wp_load.
     iPoseProof (reach_from_is_node with "Hxtailnext_reach_xlast") as "Hxtailnext_node".
-    iMod (Abs_Reach_Abs with "Hxtailnext_reach_xlast HγLast_pt_xlast") as "[#Hxtailnext_ar_γLast HγLast_pt_xlast]".
+    iMod (Abs_Reach_Abs with "Hxtailnext_reach_xlast HγLast_ap_xlast") as "[#Hxtailnext_ar_γLast HγLast_ap_xlast]".
     iModIntro.
     (* Close Invariant: 2 *)
-    iSplitL "Hl_head Hl_tail HisLL_xs HAbst HγHead_pt_xhead HγTail_pt_xtail' HγLast_pt_xlast".
+    iSplitL "Hl_head Hl_tail HisLL_xs HAbst HγHead_ap_xhead HγTail_ap_xtail' HγLast_ap_xlast".
     {
       iNext.
       iExists xs_v; iFrame "HAbst".
@@ -622,23 +622,23 @@ Proof.
   wp_pures.
   wp_bind (! #l_head)%E.
   (* Invariant Opening: 1 *)
-  iInv "Hqueue_inv" as "(%xs_v & HAbst & %xs & %xs_queue & %x_head & %x_tail & %x_last & >%Hxs_eq & HisLL_xs & >%HisLast_xlast & >%Hconc_abst_eq & >Hl_head & >Hl_tail & HγHead_pt_xhead & >#Hxhead_ar_γTail & HγTail_pt_xtail & >#Hxtail_ar_γLast & HγLast_pt_xlast)".
+  iInv "Hqueue_inv" as "(%xs_v & HAbst & %xs & %xs_queue & %x_head & %x_tail & %x_last & >%Hxs_eq & HisLL_xs & >%HisLast_xlast & >%Hconc_abst_eq & >Hl_head & >Hl_tail & HγHead_ap_xhead & >#Hxhead_ar_γTail & HγTail_ap_xtail & >#Hxtail_ar_γLast & HγLast_ap_xlast)".
   wp_load.
   iAssert ((n_in x_head ↦□ (n_val x_head, #(n_out x_head)))%I) as "#Hxhead_node".
   {
     iApply (reach_from_is_node x_head x_tail).
-    by iDestruct (Abs_Reach_Concr with "Hxhead_ar_γTail HγTail_pt_xtail") as "[Hxhead_reach_xtail _]".
+    by iDestruct (Abs_Reach_Concr with "Hxhead_ar_γTail HγTail_ap_xtail") as "[Hxhead_reach_xtail _]".
   }
   iPoseProof (reach_refl with "Hxhead_node") as "Hxhead_reach_xhead".
-  iMod (Abs_Reach_Abs with "Hxhead_reach_xhead HγHead_pt_xhead") as "[#Hxhead_ar_γHead HγHead_pt_xhead]".
-  iPoseProof (Abs_Reach_Concr with "Hxhead_ar_γTail HγTail_pt_xtail") as "[#Hxhead_reach_xtail HγTail_pt_xtail]".
-  iPoseProof (Abs_Reach_Concr with "Hxtail_ar_γLast HγLast_pt_xlast") as "[#Hxtail_reach_xlast HγLast_pt_xlast]".
+  iMod (Abs_Reach_Abs with "Hxhead_reach_xhead HγHead_ap_xhead") as "[#Hxhead_ar_γHead HγHead_ap_xhead]".
+  iPoseProof (Abs_Reach_Concr with "Hxhead_ar_γTail HγTail_ap_xtail") as "[#Hxhead_reach_xtail HγTail_ap_xtail]".
+  iPoseProof (Abs_Reach_Concr with "Hxtail_ar_γLast HγLast_ap_xlast") as "[#Hxtail_reach_xlast HγLast_ap_xlast]".
   iPoseProof (reach_trans with "Hxhead_reach_xtail Hxtail_reach_xlast") as "Hxhead_reach_xlast".
-  iMod (Abs_Reach_Abs with "Hxhead_reach_xlast HγLast_pt_xlast") as "[#Hxhead_ar_γLast HγLast_pt_xlast]".
+  iMod (Abs_Reach_Abs with "Hxhead_reach_xlast HγLast_ap_xlast") as "[#Hxhead_ar_γLast HγLast_ap_xlast]".
   iClear "Hxhead_reach_xhead Hxhead_reach_xtail Hxtail_reach_xlast Hxhead_reach_xlast".
   iModIntro.
   (* Close Invariant: 1 *)
-  iSplitL "Hl_head Hl_tail HisLL_xs HAbst HγHead_pt_xhead HγTail_pt_xtail HγLast_pt_xlast".
+  iSplitL "Hl_head Hl_tail HisLL_xs HAbst HγHead_ap_xhead HγTail_ap_xtail HγLast_ap_xlast".
   {
     iNext.
     iExists xs_v; iFrame "HAbst".
@@ -651,19 +651,19 @@ Proof.
   wp_pures.
   wp_bind (! #l_tail)%E.
   (* Invariant Opening: 2 *)
-  iInv "Hqueue_inv" as "(%xs_v & HAbst & %xs & %xs_queue & %x_head' & %x_tail & %x_last & >%Hxs_eq & HisLL_xs & >%HisLast_xlast & >%Hconc_abst_eq & >Hl_head & >Hl_tail & HγHead_pt_xhead & >#Hxhead'_ar_γTail & HγTail_pt_xtail & >#Hxtail_ar_γLast & HγLast_pt_xlast)".
+  iInv "Hqueue_inv" as "(%xs_v & HAbst & %xs & %xs_queue & %x_head' & %x_tail & %x_last & >%Hxs_eq & HisLL_xs & >%HisLast_xlast & >%Hconc_abst_eq & >Hl_head & >Hl_tail & HγHead_ap_xhead & >#Hxhead'_ar_γTail & HγTail_ap_xtail & >#Hxtail_ar_γLast & HγLast_ap_xlast)".
   wp_load.
   iAssert ((n_in x_tail ↦□ (n_val x_tail, #(n_out x_tail)))%I) as "#Hxtail_node".
   {
     iApply (reach_to_is_node x_head x_tail).
-    by iDestruct (Abs_Reach_Concr with "Hxhead_ar_γTail HγTail_pt_xtail") as "[Hxhead_reach_xtail _]".
+    by iDestruct (Abs_Reach_Concr with "Hxhead_ar_γTail HγTail_ap_xtail") as "[Hxhead_reach_xtail _]".
   }
-  iPoseProof (Abs_Reach_Concr with "Hxhead_ar_γTail HγTail_pt_xtail") as "[#Hxhead_reach_xtail HγTail_pt_xtail]".
-  iMod (Abs_Reach_Abs with "[] HγTail_pt_xtail") as "[#Hxtail_ar_γTail HγTail_pt_xtail]".
+  iPoseProof (Abs_Reach_Concr with "Hxhead_ar_γTail HγTail_ap_xtail") as "[#Hxhead_reach_xtail HγTail_ap_xtail]".
+  iMod (Abs_Reach_Abs with "[] HγTail_ap_xtail") as "[#Hxtail_ar_γTail HγTail_ap_xtail]".
   { by iApply reach_refl. }
   iModIntro.
   (* Close Invariant: 2 *)
-  iSplitL "Hl_head Hl_tail HisLL_xs HAbst HγHead_pt_xhead HγTail_pt_xtail HγLast_pt_xlast".
+  iSplitL "Hl_head Hl_tail HisLL_xs HAbst HγHead_ap_xhead HγTail_ap_xtail HγLast_ap_xlast".
   {
     iNext.
     iExists xs_v; iFrame "HAbst".
@@ -676,17 +676,17 @@ Proof.
   wp_pures.
   wp_bind (! #(n_out x_head))%E.
   (* Invariant Opening: 3 *)
-  iInv "Hqueue_inv" as "(%xs_v & HAbst & %xs & %xs_queue & %x_head' & %x_tail' & %x_last & >%Hxs_eq & HisLL_xs & >%HisLast_xlast & >%Hconc_abst_eq & >Hl_head & >Hl_tail & HγHead_pt_xhead & >#Hxhead'_ar_γTail & HγTail_pt_xtail & >#Hxtail'_ar_γLast & HγLast_pt_xlast)".
-  iPoseProof (Abs_Reach_Concr with  "Hxhead_ar_γLast HγLast_pt_xlast") as "[#Hxhead_reach_xlast HγLast_pt_xlast]".
+  iInv "Hqueue_inv" as "(%xs_v & HAbst & %xs & %xs_queue & %x_head' & %x_tail' & %x_last & >%Hxs_eq & HisLL_xs & >%HisLast_xlast & >%Hconc_abst_eq & >Hl_head & >Hl_tail & HγHead_ap_xhead & >#Hxhead'_ar_γTail & HγTail_ap_xtail & >#Hxtail'_ar_γLast & HγLast_ap_xlast)".
+  iPoseProof (Abs_Reach_Concr with  "Hxhead_ar_γLast HγLast_ap_xlast") as "[#Hxhead_reach_xlast HγLast_ap_xlast]".
   (* CASE ANALYSIS: Is x_head the last element in the linked list? *)
   iDestruct (reach_case with "Hxhead_reach_xlast") as "[><- | (%x_head_next & Hxhead_to_xheadnext & Hxheadnext_reach_xlast)]".
   - (* x_head is the last element: x_head = x_last. This means that the queue is empty, hence dequeue will return 'None'. This is a linearisation point. *)
     destruct HisLast_xlast as [xs_rest ->].
     iDestruct "HisLL_xs" as "[Hxhead_to_none HisLL_chain_xs]".
     (* x_head ⤳ x_head' *)
-    iPoseProof (Abs_Reach_Concr with "Hxhead_ar_γHead HγHead_pt_xhead") as "[Hxhead_reach_xhead' HγHead_pt_xhead]".
+    iPoseProof (Abs_Reach_Concr with "Hxhead_ar_γHead HγHead_ap_xhead") as "[Hxhead_reach_xhead' HγHead_ap_xhead]".
     (* x_head ⤳ x_tail' *)
-    iPoseProof (Abs_Reach_Concr with "Hxhead_ar_γTail HγTail_pt_xtail") as "[Hxhead_reach_xtail' HγTail_pt_xtail]".
+    iPoseProof (Abs_Reach_Concr with "Hxhead_ar_γTail HγTail_ap_xtail") as "[Hxhead_reach_xtail' HγTail_ap_xtail]".
     (* x_head = x_head' *)
     iPoseProof (reach_end_eq with "Hxhead_reach_xhead' Hxhead_to_none") as "[><- Hxhead_to_none]".
     (* x_head = x_tail' *)
@@ -713,7 +713,7 @@ Proof.
     ].
     iModIntro.
     (* Close Invariant: 3 *)
-    iSplitL "Hl_head Hl_tail Hxhead_to_none HAbst HγHead_pt_xhead HγTail_pt_xtail HγLast_pt_xlast".
+    iSplitL "Hl_head Hl_tail Hxhead_to_none HAbst HγHead_ap_xhead HγTail_ap_xtail HγLast_ap_xlast".
     {
       iNext.
       iExists []; iFrame "HAbst".
@@ -733,10 +733,10 @@ Proof.
   - (* x_head is not the last element *)
     wp_load.
     iPoseProof (reach_from_is_node with "Hxheadnext_reach_xlast") as "Hxheadnext_node".
-    iMod (Abs_Reach_Abs with "Hxheadnext_reach_xlast HγLast_pt_xlast") as "[#Hxheadnext_ar_γLast HγLast_pt_xlast]".
+    iMod (Abs_Reach_Abs with "Hxheadnext_reach_xlast HγLast_ap_xlast") as "[#Hxheadnext_ar_γLast HγLast_ap_xlast]".
     iModIntro.
     (* Close Invariant: 3 *)
-    iSplitL "Hl_head Hl_tail HisLL_xs HAbst HγHead_pt_xhead HγTail_pt_xtail HγLast_pt_xlast".
+    iSplitL "Hl_head Hl_tail HisLL_xs HAbst HγHead_ap_xhead HγTail_ap_xtail HγLast_ap_xlast".
     {
       iNext.
       iExists xs_v; iFrame "HAbst".
@@ -768,12 +768,12 @@ Proof.
       wp_pures.
       wp_bind (CmpXchg _ _ _).
       (* Invariant Opening: 4 *)
-      iInv "Hqueue_inv" as "(%xs_v & HAbst & %xs & %xs_queue & %x_head' & %x_tail' & %x_last & >%Hxs_eq & HisLL_xs & >%HisLast_xlast & >%Hconc_abst_eq & >Hl_head & >Hl_tail & HγHead_pt_xhead' & >#Hxhead'_ar_γTail & HγTail_pt_xtail' & >#Hxtail'_ar_γLast & HγLast_pt_xlast)".
+      iInv "Hqueue_inv" as "(%xs_v & HAbst & %xs & %xs_queue & %x_head' & %x_tail' & %x_last & >%Hxs_eq & HisLL_xs & >%HisLast_xlast & >%Hconc_abst_eq & >Hl_head & >Hl_tail & HγHead_ap_xhead' & >#Hxhead'_ar_γTail & HγTail_ap_xtail' & >#Hxtail'_ar_γLast & HγLast_ap_xlast)".
       wp_cmpxchg as Hxhead_eq | Hxhead_neq.
       * (* CAS succeeded. Head pointer swung to x_head_next. Linearisation point. *)
         iAssert (⌜x_head' = x_head⌝)%I as "->".
         {
-          iPoseProof (Abs_Reach_Concr with "Hxhead'_ar_γTail HγTail_pt_xtail'") as "[#Hconcr HγTail_pt_xtail']".
+          iPoseProof (Abs_Reach_Concr with "Hxhead'_ar_γTail HγTail_ap_xtail'") as "[#Hconcr HγTail_ap_xtail']".
           iApply n_in_equal; try done.
           by iApply reach_from_is_node.
         }
@@ -806,7 +806,7 @@ Proof.
         rewrite Hxs_eq.
         iDestruct (isLL_split with "HisLL_xs") as "[HisLL_new _]".
         iPoseProof (reach_one_step x_head x_head_next with "[] [] []") as "Hxhead_reach_xheadnext"; try done.
-        iMod (Abs_Reach_Advance with "HγHead_pt_xhead' Hxhead_reach_xheadnext") as "[HγHead_pt_xheadnext #Hxheadnext_ar_γHead]".
+        iMod (Abs_Reach_Advance with "HγHead_ap_xhead' Hxhead_reach_xheadnext") as "[HγHead_ap_xheadnext #Hxheadnext_ar_γHead]".
         iDestruct (reach_case with "Hxhead_reach_xtail") as "[-> | (%x_head_next' & Hxhead_to_xheadnext' & Hxheadnext_reach_xtail) ]"; first contradiction.
         iAssert (⌜x_head_next' = x_head_next⌝)%I as "->".
         {
@@ -817,12 +817,12 @@ Proof.
         iAssert (x_head_next ⤳ x_tail')%I as "#Hxheadnext_reach_xtail'".
         {
           iApply (reach_trans with "Hxheadnext_reach_xtail").
-          by iDestruct (Abs_Reach_Concr with "Hxtail_ar_γTail HγTail_pt_xtail'") as "[Hxtail_reach_xtail' _]".
+          by iDestruct (Abs_Reach_Concr with "Hxtail_ar_γTail HγTail_ap_xtail'") as "[Hxtail_reach_xtail' _]".
         }
-        iMod (Abs_Reach_Abs with "Hxheadnext_reach_xtail' HγTail_pt_xtail'") as "[#Hxheadnext_ar_γTail HγTail_pt_xtail']".
+        iMod (Abs_Reach_Abs with "Hxheadnext_reach_xtail' HγTail_ap_xtail'") as "[#Hxheadnext_ar_γTail HγTail_ap_xtail']".
         iModIntro.
         (* Close Invariant: 4 *)
-        iSplitL "Hl_head Hl_tail HisLL_new HAbst_new HγHead_pt_xheadnext HγTail_pt_xtail' HγLast_pt_xlast".
+        iSplitL "Hl_head Hl_tail HisLL_new HAbst_new HγHead_ap_xheadnext HγTail_ap_xtail' HγLast_ap_xlast".
         {
           iNext.
           iExists xs_v'; iFrame "HAbst_new".
@@ -839,7 +839,7 @@ Proof.
       * (* CAS failed *)
         iModIntro.
         (* Close Invariant: 4 *)
-        iSplitL "Hl_head Hl_tail HisLL_xs HAbst HγHead_pt_xhead' HγTail_pt_xtail' HγLast_pt_xlast".
+        iSplitL "Hl_head Hl_tail HisLL_xs HAbst HγHead_ap_xhead' HγTail_ap_xtail' HγLast_ap_xlast".
         {
           iNext.
           iExists xs_v; iFrame "HAbst".

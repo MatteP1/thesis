@@ -116,10 +116,16 @@
 \newcommand{\AAA}{\ensuremath{\mathbb{A}}}
 \newcommand{\EE}{\ensuremath{\mathbb{E}}}
 
+\newcommand{\isNode}[1]{\nIn{#1} \mapsto^{\persistently} (\nVal{#1}, \nOut{#1})}
+
 \newcommand{\abstractstatefrac}[3]{#1 \Mapsto\kern-0.5ex\tfrac{1}{#2} #3}
 \newcommand{\abstractstate}[3]{#1 \Mapsto^{#2}_{\circ} #3}
 \newcommand{\abstractstatefullfrag}[2]{#1 \Mapsto_{\circ} #2}
 \newcommand{\abstractstateauth}[2]{#1 \Mapsto_{\bullet} #2}
+
+\newcommand{\reach}[2]{#1 \leadsto #2}
+\newcommand{\ar}[2]{#1 \dashrightarrow #2}
+\newcommand{\ap}[2]{#1 \rightarrowtail #2}
 
 \newcommand{\todo}[1]{{\color[rgb]{.5,0,0}\textbf{$\blacktriangleright$#1$\blacktriangleleft$}}}
 
@@ -710,7 +716,7 @@ We will use several tokens, each of which is the valid element of their own inst
 
 With this, we can now give our definition of $\isqueueconc$. In the below, we let $\Nl$ be some namespace.
 \begin{align*}
-  \isqueueconc \; \Psi \; v_q \; xs_v \; \Qg \eqdef &\Exists \loc_{queue}, \loc_{head}, \loc_{tail} \in \Loc . \Exists h_{lock}, t_{lock} \in \Val . \\
+  \isqueueconc \; \Psi \; v_q \; \Qg \eqdef &\Exists \loc_{queue}, \loc_{head}, \loc_{tail} \in \Loc . \Exists h_{lock}, t_{lock} \in \Val . \\
   &v_q = \loc_{queue} \ast \loc_{queue} \mapsto^{\persistently} ((\loc_{head}, \loc_{tail}), (h_{lock}, t_{lock})) \ast\\
 	&\knowInv{\Nl.queue}{queue\_invariant \Phi \loc_{head} \loc_{tail} \Qg} \ast\\
 	&isLock \ Q_\gname.\gname_{Hlock} \ h_{lock} \ (\TokDQg) \ast\\
@@ -876,6 +882,108 @@ To derive the dequeue spec, we pick $P \eqdef \TRUE$ and $Q \ v \eqdef v = \None
 
 
 \chapter{The Lock-Free Michael Scott Queue}
+
+
+\section{Reachability}
+
+\subsection{Concrete Reachability}
+\begin{definition}
+  $\reach{x_n}{x_m} \eqdef \nIn{x_n} \mapsto^{\persistently} (\nVal{x_n}, \nOut{x_n}) \ast (x_n = x_m \lor \Exists x_p . \nOut{x_n} \mapsto^{\persistently} \nIn{x_p} \ast \reach{x_p}{x_m})$
+\end{definition}
+
+Reach is persistent
+
+\todo{fix notation}
+\begin{lemma}
+  $\reach{x_n}{x_m} \ast-\ast \isNode{x_n}$
+\end{lemma}
+
+\todo{fix notation}
+\begin{lemma}
+  $\reach{x_n}{x_m} -\ast \reach{x_m}{x_o} -\ast \reach{x_n}{x_o}$
+\end{lemma}
+
+\begin{lemma}
+  $\reach{x_n}{x_m} -\ast \isNode{x_n}$
+\end{lemma}
+
+\begin{lemma}
+  $\reach{x_n}{x_m} -\ast \isNode{x_m}$
+\end{lemma}
+
+\begin{lemma}
+  $\reach{x_n}{x_m} -\ast \nOut{x_n} \mapsto \None -\ast x_n = x_m \ast \nOut{x_n} \mapsto \None$
+\end{lemma}
+
+\subsection*{Abstract Reachability}
+
+\begin{definition}[Abstract Reach]
+  $\ar{x}{\gname} \eqdef \ownGhost{\gname}{\authfrag \{x\}}$
+\end{definition}
+
+\todo{fix notation}
+\begin{definition}[Abstract Points to]
+  $\ap{x}{\gname} \eqdef \Exists s . \ownGhost{\gname}{\authfull s} \ast \ast_{x_m \in s} \reach{x_m}{x}$
+\end{definition}
+
+\todo{is it a viewshift?}
+\begin{lemma}
+  $\reach{x}{x} \vs (\Exists \gname . \ap{\gname}{x} \ast \ar{x}{\gname})$
+\end{lemma}
+
+\begin{lemma}
+  $\ar{x_n}{\gname_m} -\ast
+   \ap{\gname_m}{x_m} -\ast
+   \reach{x_n}{x_m} \ast \ap{\gname_m}{x_m}$
+\end{lemma}
+
+\begin{lemma}[Abs-Reach-Alloc]
+  $\ar{x_n}{\gname_m} -\ast
+   \ap{\gname_m}{x_m} -\ast
+   \reach{x_n}{x_m} \ast \ap{\gname_m}{x_m}$
+\end{lemma}
+
+\begin{lemma}[Abs-Reach-Concr]
+  $\reach{x_n}{x_m} -\ast
+   \ap{\gname_m}{x_m} \vs
+   \ar{x_n}{\gname_m} \ast \ap{\gname_m}{x_m}$
+\end{lemma}
+
+\begin{lemma}[Abs-Reach-Abs]
+  $\reach{x_n}{x_m} -\ast
+   \ap{\gname_m}{x_m} \vs
+   \ar{x_n}{\gname_m} \ast \ap{\gname_m}{x_m}$
+\end{lemma}
+
+\begin{lemma}[Abs-Reach-Advance]
+    $\ap{\gname_m}{x_m} -\ast
+     \reach{x_m}{x_o} \vs
+     \ap{\gname_m}{x_o} \ast \ar{x_o}{\gname_m}$
+\end{lemma}
+
+\begin{definition}[Lock-Free M\&S-Queue Invariant]\label{MSQLF:spec:invariant}
+  \begin{align*}
+    &queue\_invariant \ \loc_{head} \ \loc_{tail} \ Q_\gname \eqdef\\
+    &\Exists xs_v. \abstractstateauth{Q_\gname}{xs_v} \ast &&\text{(abstract state)}\\
+    &\Exists xs, xs_{queue}, x_{head}, x_{tail} x_{last} . &&\text{(concrete state)}\\
+    &xs = xs_{queue} \catenate [x_{head}] \ast\\
+    &\isLL \ xs \ast\\
+    &isLast \ x_{last} \ xs\\
+    &proj\_val \ xs_{queue} = wrap\_some \ xs_v \ast\\
+    &\loc_{head} \mapsto \nIn{x_{head}} \ast\\
+    &\loc_{tail} \mapsto \nIn{x_{tail}} \ast\\
+    &\ap{Q_\gname.\gname_{Head}}{x_{head}} \ast \ar{x_{head}}{Q_\gname.\gname_{Tail}} \ast\\
+    &\ap{Q_\gname.\gname_{Tail}}{x_{tail}} \ast \ar{x_{tail}}{Q_\gname.\gname_{Last}} \ast\\
+    &\ap{Q_\gname.\gname_{Last}}{x_{last}}
+  \end{align*}
+\end{definition}
+
+\begin{align*}
+  \isqueue \; v_q \; \Qg \eqdef &\Exists \loc_{queue}, \loc_{head}, \loc_{tail} \in \Loc . \\
+  &v_q = \loc_{queue} \ast \loc_{queue} \mapsto^{\persistently} (\loc_{head}, \loc_{tail}) \ast\\
+	&\knowInv{\Nl.queue}{queue\_invariant \loc_{head} \loc_{tail} \Qg}
+\end{align*}
+
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

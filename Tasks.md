@@ -86,6 +86,7 @@
   - [x] rewrite with ssreflect (in most places). I.e. rewrite /Reach /=.
   - [x] create queue_case lemma
   - [x] fix indentation
+  - [x] Consider renaming 'pt' to 'ap' for abstract points-to in lockfreeMSQ_hocap and lockAndCCfreeMSQ_hocap.
 
 - [ ] Create a section/chapter explaining some of the basic rules (hoare-triples, weakest-precondition, inv-alloc, resource algebra), and also iris in general.
 
