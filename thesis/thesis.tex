@@ -493,7 +493,7 @@ Figure \ref{MSQTL:impl:figure:dequeue} illustrates running dequeue on a non-empt
 
 \begin{align*}
   \langkw{let} \initialise := &\\
-                    & \Let node = \Ref((\None, \Ref(\None))) in\\
+                    & \Let node = \Ref(\None, \Ref(\None)) in\\
                     & \Let H\_lock = newlock \TT in\\
                     & \Let T\_lock = newlock \TT in\\
                     & \Ref ((\Ref(node), \Ref(node)), (H\_lock, T\_lock))
@@ -501,7 +501,7 @@ Figure \ref{MSQTL:impl:figure:dequeue} illustrates running dequeue on a non-empt
 
 \begin{align*}
   \langkw{let} \enqueue \ Q \ value :=&\\
-		& \Let node = \Ref ((\Some value, \Ref(\None))) in\\
+		& \Let node = \Ref (\Some value, \Ref(\None)) in\\
 		& \acquire (\Snd (\Snd (\deref Q)));\\
 		& \Snd (\deref(\deref(\Snd (\Fst(\deref Q))))) \gets node;\\
 		& \Snd (\Fst (\deref Q)) \gets node;\\
@@ -883,6 +883,50 @@ To derive the dequeue spec, we pick $P \eqdef \TRUE$ and $Q \ v \eqdef v = \None
 
 \chapter{The Lock-Free Michael Scott Queue}
 
+\section{Implementation}
+\begin{align*}
+  \langkw{let} \initialise := &\\
+                    & \Let node = \Ref(\None, \Ref(\None)) in\\
+                    & \Ref (\Ref(node), \Ref(node))
+\end{align*}
+
+\begin{align*}
+  \langkw{let} \enqueue \ Q \ value :=&\\
+		& \hspace{00pt} \Let node = \Ref (\Some value, \Ref(\None)) in\\
+    & \hspace{00pt} (\Rec {loop} \_ =\\
+      & \hspace{20pt} \Let tail = \deref (\Snd (\deref Q)) in\\
+      & \hspace{20pt} \Let next = \deref (\Snd (\deref tail)) in\\
+      & \hspace{20pt} \If tail = \deref (\Snd (\deref Q)) then\\
+        & \hspace{40pt} \If next = \None then\\
+          & \hspace{60pt} \If \CAS \ (\Snd (\deref tail)) \ next \ node then\\
+            & \hspace{80pt} \CAS \ (\Snd (\deref Q)) \ tail \ node\\
+          & \hspace{60pt} \Else loop \ \TT\\
+        & \hspace{40pt} \Else \CAS \ (\Snd (\deref Q)) \ tail \ next; loop \ \TT\\
+		  & \hspace{20pt} \Else loop \ \TT\\
+    & ) \ ()
+\end{align*}
+
+\begin{align*}
+  \langkw{let} \dequeue \ Q =&\\
+    & \hspace{00pt} (\Rec {loop} \_ =\\
+      & \hspace{20pt} \Let head = \deref (\Fst (\deref Q)) in\\
+      & \hspace{20pt} \Let tail = \deref (\Snd (\deref Q)) in\\
+      & \hspace{20pt} \Let \prophid = \NewProph in\\
+      & \hspace{20pt} \Let next = \deref (\Snd (\deref head)) in\\
+      & \hspace{20pt} \If head = \Resolve(\deref (\Fst (\deref Q)), \prophid, \TT) then\\
+        & \hspace{40pt} \If head = tail then\\
+          & \hspace{60pt} \If next = \None then\\
+            & \hspace{80pt} \None\\
+          & \hspace{60pt} \Else\\
+            & \hspace{80pt} \CAS (\Snd (\deref Q)) \ tail \ next; loop \ \TT\\
+        & \hspace{40pt} \Else\\
+          & \hspace{60pt} \Let value = \Fst (\deref next) in\\
+          & \hspace{60pt} \If \CAS \ (Fst (\deref Q)) \ head \ next then\\
+            & \hspace{80pt} value\\
+          & \hspace{60pt} \Else loop \ \TT\\
+      & \hspace{20pt} \Else loop \ \TT\\
+      & \hspace{20pt} ) \TT.
+\end{align*}
 
 \section{Reachability}
 
