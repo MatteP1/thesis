@@ -1,5 +1,5 @@
 \documentclass[twoside,11pt,openright]{report}
-
+\usepackage{minted}
 \usepackage[utf8]{inputenc}
 \usepackage[english]{babel}
 \usepackage{a4}
@@ -23,8 +23,9 @@
 \usepackage{iris}
 \usepackage{heaplang}
 \usepackage{tikz}
-\usepackage{stmaryrd}
 \usetikzlibrary{calc,shapes.multipart,chains,arrows}
+\usepackage{xspace}
+\usepackage{lineno}
 
 \renewcommand*\sfdefault{lmss}
 \renewcommand*\ttdefault{txtt}
@@ -186,21 +187,35 @@
 
 \chapter{Preliminaries}
 \label{ch:preliminaries}
-\todo{Talk about:}
-- Iris
-- Derivation rules
-- HeapLang
-- Syntactic sugar (i.e. e1 ;; e2 = (lam v, e2) e1 where v is fresh, and CAS ... as Snd (CMPXHG ...)), and derived rules for them.
-- Hoare triples and Weakest precondition
-- Resource algebras
-- Invariants
-- Fancy update modality and viewshift
-- Mechanisation in Coq
+
+\todo{Mention that the project uses heaplang and the program logic iris, and hence we need to know about them}
+
+
+\section{\heaplang}
+\todo{Write about heaplang}
+\todo{Talk about Syntactic sugar: i.e. e1 ;; e2 = (lam v, e2) e1 where v is fresh, and CAS ... as Snd (CMPXHG ...), and derived rules for them.}
+
+\todo{Question: should formal definition of heaplang be in section, appendix, or reference to ILN?}
+
+\section{The Iris Program Logic Framework}
+\todo{Write about Iris}
+\todo{Seperation logic}
+\todo{Present some of the derivation rules}
+\todo{Present hoare Triples and Weakest Pre-condition}
+\todo{Resource Algebra}
+\todo{Invariants}
+\todo{Fancy update modality and viewshift}
+
+
+\section{Formalisation in Coq}
+\todo{Mention that Iris is formalised in Coq}
+\todo{Stuff works in terms of weakest precondition}
+\todo{Mention that all the work done in this project has also been mechanised in Coq}
 
 
 \chapter{The Two-Lock Michael Scott Queue}
 
-I present here he an implementation of the Two-lock MS-Queue in HeapLang. This implementation differs slightly from the original, presented in \cite{DBLP:conf/podc/MichaelS96}, but most changes simply reflect the differences in the two languages.
+I present here he an implementation of the Two-lock MS-Queue in \heaplang. This implementation differs slightly from the original, presented in \cite{DBLP:conf/podc/MichaelS96}, but most changes simply reflect the differences in the two languages.
 
 
 \section{Preliminaries}
@@ -209,7 +224,7 @@ The underlying data structure making up the queue is a singly-linked list. The l
 
 In my implementation, a node can be thought of as a triple $(\locin{i}, v_i, \locout{i})$. The location $\locin{i}$ points to the pair $(v_i, \locout{i})$, where $v_i$ is the value of the node, and $\locout{i}$ either points to $\None$ which represents the null pointer, or to the next node in the linked list. When we say that a location $\loc$ points to a node $(\locin{i}, v_i, \locout{i})$, we mean that $\loc \mapsto \locin{i}$. Hence, if we have two adjacent nodes $(\locin{i}, v_i, \locout{i})$, $(\locin{i+1}, v_{i+1}, \locout{i+1})$ in the linked list, then we have the following structure: $\locin{i} \mapsto (v_i, \locout{i})$, $\locout{i} \mapsto \locin{i+1}$, and $\locin{i+1} \mapsto v_{i+1}, \locout{i+1}$.
 
-The reader may wonder why there is an extra, intermediary "in" pointer, between the pairs of the linked list, and why the "out" pointer couldn't point directly to the next pair. In the original implementation \cite{DBLP:conf/podc/MichaelS96}, nodes are allocated on the heap. To simulate this in HeapLang, when creating a new node, we create a pointer to a pair making up the node. Now, in the C-like language used in the original specification, an assignment operator is available which is not present in HeapLang. So in order to mimic this behaviour, we model variables as pointers. In this way, we can model a variable $\lvarA$ as a location $\loc_{\lvarA}$, and the value stored at $\loc_{\lvarA}$ is the current value of $\lvarA$. This means that the variable $\locout{i}$ (called "next" in the original) becomes a location $\loc_{head}$, and the value stored at the location is what head is currently assigned to. Since $\locout{i}$ is supposed to be a variable containing a pointer, then the value saved at that location will also be a pointer.
+The reader may wonder why there is an extra, intermediary "in" pointer, between the pairs of the linked list, and why the "out" pointer couldn't point directly to the next pair. In the original implementation \cite{DBLP:conf/podc/MichaelS96}, nodes are allocated on the heap. To simulate this in \heaplang, when creating a new node, we create a pointer to a pair making up the node. Now, in the C-like language used in the original specification, an assignment operator is available which is not present in \heaplang. So in order to mimic this behaviour, we model variables as pointers. In this way, we can model a variable $\lvarA$ as a location $\loc_{\lvarA}$, and the value stored at $\loc_{\lvarA}$ is the current value of $\lvarA$. This means that the variable $\locout{i}$ (called "next" in the original) becomes a location $\loc_{head}$, and the value stored at the location is what head is currently assigned to. Since $\locout{i}$ is supposed to be a variable containing a pointer, then the value saved at that location will also be a pointer.
 
 
 \section{implementation}\label{section:two_lock:impl}
@@ -221,7 +236,7 @@ The queue consists of 3 functions: $\initialise$, $\enqueue$, and $\dequeue$ whi
 $\initialise$ will first create a single node -- the sentinel -- marking the start of the linked list. It then creates two locks, $H\_lock$ and $T\_lock$, protecting the head and tail pointers, respectively. Finally, it creates the head and tail pointers, both pointing to the sentinel. The queue is then a pointer to a structure containing the head, the tail, and the two locks.\\
 Figure \ref{MSQTL:impl:figure:init} illustrates the structure of the queue after initialisation. Note that one of the pointers is coloured blue. This represents a \emph{persistent} pointer; a pointer that will never be updated again. All "in" pointers $\locin{i}$, are persistent, meaning that, once created, they will only ever point to $(v_i, \locout{i})$. We shall use the notation $\loc \mapsto^{\persistently} v$ (introduced in \cite{DBLP:conf/cpp/VindumB21}) to mean that $\loc$ points persistently to $v$.
 
-Note that in the original specification, a queue is a pointer to a 4-tuple $(\loc_{head}, \loc_{tail}, H\_lock, T\_lock)$. Since HeapLang doesn't support 4-tuples, we instead represent the queue as a pointer to a pair of pairs: $((\loc_{head}, \loc_{tail}), (H\_lock, T\_lock))$.
+Note that in the original specification, a queue is a pointer to a 4-tuple $(\loc_{head}, \loc_{tail}, H\_lock, T\_lock)$. Since \heaplang doesn't support 4-tuples, we instead represent the queue as a pointer to a pair of pairs: $((\loc_{head}, \loc_{tail}), (H\_lock, T\_lock))$.
 
 
 \subsection[enqueue]{$\enqueue$}
@@ -490,43 +505,74 @@ Figure \ref{MSQTL:impl:figure:dequeue} illustrates running dequeue on a non-empt
   \label{MSQTL:impl:figure:dequeue}
 \end{figure}
 
+\begin{minted}[linenos=true, escapeinside=||,mathescape=true]{ocaml}
+|$\label{}$|  |$ \initialise \eqdef $|
+|$\label{}$|    |$ \Let node = \Ref(\None, \Ref(\None)) in $|
+|$\label{}$|    |$ \Let H\_lock = newlock \TT in $|
+|$\label{}$|    |$ \Let T\_lock = newlock \TT in $|
+|$\label{}$|    |$ \Ref((\Ref(node), \Ref(node)), (H\_lock, T\_lock)) $|
+\end{minted}
 
-\begin{align*}
-  \langkw{let} \initialise := &\\
-                    & \Let node = \Ref(\None, \Ref(\None)) in\\
-                    & \Let H\_lock = newlock \TT in\\
-                    & \Let T\_lock = newlock \TT in\\
-                    & \Ref ((\Ref(node), \Ref(node)), (H\_lock, T\_lock))
-\end{align*}
+\begin{minted}[linenos=true, escapeinside=||,mathescape=true]{ocaml}
+|$\label{}$|  |$ \enqueue \ Q \ value \eqdef $|
+|$\label{}$|    |$ \Let node = \Ref(\Some value, \Ref(\None)) in $|
+|$\label{}$|    |$ \acquire (\Snd (\Snd (\deref Q))); $|
+|$\label{}$|    |$ \Snd (\deref(\deref(\Snd (\Fst(\deref Q))))) \gets node; $|
+|$\label{}$|    |$ \Snd (\Fst (\deref Q)) \gets node; $|
+|$\label{}$|    |$ \release (\Snd (\Snd (\deref Q))) $|
+\end{minted}
 
-\begin{align*}
-  \langkw{let} \enqueue \ Q \ value :=&\\
-		& \Let node = \Ref (\Some value, \Ref(\None)) in\\
-		& \acquire (\Snd (\Snd (\deref Q)));\\
-		& \Snd (\deref(\deref(\Snd (\Fst(\deref Q))))) \gets node;\\
-		& \Snd (\Fst (\deref Q)) \gets node;\\
-		& \release (\Snd (\Snd (\deref Q)))
-\end{align*}
+\begin{minted}[linenos=true, escapeinside=||,mathescape=true]{ocaml}
+|$\label{}$|  |$ \dequeue \ Q \eqdef $|
+|$\label{}$|    |$ \acquire (\Fst (\Snd (\deref Q))); $|
+|$\label{}$|    |$ \Let node = \deref (\Fst (\Fst (\deref Q))) in $|
+|$\label{}$|    |$ \Let new\_head = \deref (\Snd(\deref node)) in $|
+|$\label{}$|    |$ \If new\_head = \None then $|
+|$\label{}$|      |$ \release (\Fst (\Snd(\deref Q))); $|
+|$\label{}$|      |$ \None $|
+|$\label{}$|    |$ \Else $|
+|$\label{}$|      |$ \Let value = \Fst (\deref new\_head) in $|
+|$\label{}$|      |$ \Fst (\Fst (\deref Q)) \gets new\_head; $|
+|$\label{}$|      |$ \release (\Fst (\Snd (\deref Q))); $|
+|$\label{}$|      |$ value $|
+\end{minted}
 
-\begin{align*}
-  \langkw{let} \dequeue \ Q :=&\\
-		& \acquire (\Fst (\Snd (\deref Q)));\\
-		& \Let node = \deref (\Fst (\Fst (\deref Q))) in\\
-		& \Let new\_head = \deref (\Snd(\deref node)) in\\
-		& \If new\_head = \None then\\
-			& \hspace{20pt} \release (\Fst (\Snd(\deref Q)));\\
-			& \hspace{20pt} \None\\
-		& \Else\\
-			& \hspace{20pt} \Let value = \Fst (\deref new\_head) in\\
-			& \hspace{20pt} \Fst (\Fst (\deref Q)) \gets new\_head;\\
-			& \hspace{20pt} \release (\Fst (\Snd (\deref Q)));\\
-      & \hspace{20pt} value
-\end{align*}
+% \begin{align*}
+%   \langkw{let} \initialise := &\\
+%                     & \Let node = \Ref(\None, \Ref(\None)) in\\
+%                     & \Let H\_lock = newlock \TT in\\
+%                     & \Let T\_lock = newlock \TT in\\
+%                     & \Ref((\Ref(node), \Ref(node)), (H\_lock, T\_lock))
+% \end{align*}
+
+% \begin{align*}
+%   \langkw{let} \enqueue \ Q \ value :=&\\
+% 		& \Let node = \Ref(\Some value, \Ref(\None)) in\\
+% 		& \acquire (\Snd (\Snd (\deref Q)));\\
+% 		& \Snd (\deref(\deref(\Snd (\Fst(\deref Q))))) \gets node;\\
+% 		& \Snd (\Fst (\deref Q)) \gets node;\\
+% 		& \release (\Snd (\Snd (\deref Q)))
+% \end{align*}
+
+% \begin{align*}
+%   \langkw{let} \dequeue \ Q :=&\\
+% 		& \acquire (\Fst (\Snd (\deref Q)));\\
+% 		& \Let node = \deref (\Fst (\Fst (\deref Q))) in\\
+% 		& \Let new\_head = \deref (\Snd(\deref node)) in\\
+% 		& \If new\_head = \None then\\
+% 			& \hspace{20pt} \release (\Fst (\Snd(\deref Q)));\\
+% 			& \hspace{20pt} \None\\
+% 		& \Else\\
+% 			& \hspace{20pt} \Let value = \Fst (\deref new\_head) in\\
+% 			& \hspace{20pt} \Fst (\Fst (\deref Q)) \gets new\_head;\\
+% 			& \hspace{20pt} \release (\Fst (\Snd (\deref Q)));\\
+%       & \hspace{20pt} value
+% \end{align*}
 
 
 \section{Sequential Specification}\label{MSQTL:Sequential}
 
-Let us first prove a specification for the two-lock michael scott queue in the simple case where we don't allows for concurrency. In this case, we know that only a single thread will interact with the queue at any given point in a sequential manner. This means that we give a specification that tracks the exact contents of the queue. To this end, we shall define the abstract state of the queue, denoted $xs_v$ as a list of HeapLang values. I.e. $xs_v : \List \ \Val$. We adopt the convention that enqueueing an element is done by adding it to the front of the list, and dequeueing removes the last element of the list (if such an element exists). The reason for this choice is purely technical.
+Let us first prove a specification for the two-lock michael scott queue in the simple case where we don't allows for concurrency. In this case, we know that only a single thread will interact with the queue at any given point in a sequential manner. This means that we give a specification that tracks the exact contents of the queue. To this end, we shall define the abstract state of the queue, denoted $xs_v$ as a list of \heaplang values. I.e. $xs_v : \List \ \Val$. We adopt the convention that enqueueing an element is done by adding it to the front of the list, and dequeueing removes the last element of the list (if such an element exists). The reason for this choice is purely technical.
 
 Since the queue uses two locks, we will get two ghost names; one for each lock. For this specification, these are the only two ghost names we will need. However, for the later specifications, we will use more resource algebra, and will need more ghost names. Thus, to ease notation, we shall define the type "$SeqQgnames$" whose purpose is to keep track of the ghost names used for a specific queue. Since we only have two ghost names for this specification, element of $SeqQgnames$ will simply be pairs. For an element $Q_\gname \in SeqQgnames$, the first element of the pair, written $Q_\gname.\gname_{Hlock}$, will contain the ghost name for the head lock, and the second element, $Q_\gname.\gname_{Tlock}$, the ghost name for the head lock.
 
@@ -882,51 +928,99 @@ To derive the dequeue spec, we pick $P \eqdef \TRUE$ and $Q \ v \eqdef v = \None
 
 
 \chapter{The Lock-Free Michael Scott Queue}
+\section{introduction}
+\todo{Introduce the goal of the chapter}
+\todo{Introduce what we will go through in the chapter}
 
 \section{Implementation}
-\begin{align*}
-  \langkw{let} \initialise := &\\
-                    & \Let node = \Ref(\None, \Ref(\None)) in\\
-                    & \Ref (\Ref(node), \Ref(node))
-\end{align*}
 
-\begin{align*}
-  \langkw{let} \enqueue \ Q \ value :=&\\
-		& \hspace{00pt} \Let node = \Ref (\Some value, \Ref(\None)) in\\
-    & \hspace{00pt} (\Rec {loop} \_ =\\
-      & \hspace{20pt} \Let tail = \deref (\Snd (\deref Q)) in\\
-      & \hspace{20pt} \Let next = \deref (\Snd (\deref tail)) in\\
-      & \hspace{20pt} \If tail = \deref (\Snd (\deref Q)) then\\
-        & \hspace{40pt} \If next = \None then\\
-          & \hspace{60pt} \If \CAS \ (\Snd (\deref tail)) \ next \ node then\\
-            & \hspace{80pt} \CAS \ (\Snd (\deref Q)) \ tail \ node\\
-          & \hspace{60pt} \Else loop \ \TT\\
-        & \hspace{40pt} \Else \CAS \ (\Snd (\deref Q)) \ tail \ next; loop \ \TT\\
-		  & \hspace{20pt} \Else loop \ \TT\\
-    & ) \ ()
-\end{align*}
+\begin{minted}[linenos=true, escapeinside=||,mathescape=true]{ocaml}
+|$\label{}$|  |$ \initialise \eqdef $|
+|$\label{}$|    |$ \Let node = \Ref(\None, \Ref(\None)) in $|
+|$\label{}$|    |$ \Ref(\Ref(node), \Ref(node)) $|
+\end{minted}
 
-\begin{align*}
-  \langkw{let} \dequeue \ Q =&\\
-    & \hspace{00pt} (\Rec {loop} \_ =\\
-      & \hspace{20pt} \Let head = \deref (\Fst (\deref Q)) in\\
-      & \hspace{20pt} \Let tail = \deref (\Snd (\deref Q)) in\\
-      & \hspace{20pt} \Let \prophid = \NewProph in\\
-      & \hspace{20pt} \Let next = \deref (\Snd (\deref head)) in\\
-      & \hspace{20pt} \If head = \Resolve(\deref (\Fst (\deref Q)), \prophid, \TT) then\\
-        & \hspace{40pt} \If head = tail then\\
-          & \hspace{60pt} \If next = \None then\\
-            & \hspace{80pt} \None\\
-          & \hspace{60pt} \Else\\
-            & \hspace{80pt} \CAS (\Snd (\deref Q)) \ tail \ next; loop \ \TT\\
-        & \hspace{40pt} \Else\\
-          & \hspace{60pt} \Let value = \Fst (\deref next) in\\
-          & \hspace{60pt} \If \CAS \ (Fst (\deref Q)) \ head \ next then\\
-            & \hspace{80pt} value\\
-          & \hspace{60pt} \Else loop \ \TT\\
-      & \hspace{20pt} \Else loop \ \TT\\
-      & \hspace{20pt} ) \TT.
-\end{align*}
+\begin{minted}[linenos=true, escapeinside=||,mathescape=true]{ocaml}
+|$\label{}$|  |$ \enqueue \ Q \ value \eqdef $|
+|$\label{}$|    |$ \Let node = \Ref(\Some value, \Ref(\None)) in $|
+|$\label{}$|    |$ (\Rec {loop} \_ = $|
+|$\label{}$|      |$ \Let tail = \deref (\Snd (\deref Q)) in$|
+|$\label{}$|      |$ \Let next = \deref (\Snd (\deref tail)) in $|
+|$\label{}$|      |$ \If tail = \deref (\Snd (\deref Q)) then $|
+|$\label{}$|        |$ \If next = \None then $|
+|$\label{}$|          |$ \If \CAS \ (\Snd (\deref tail)) \ next \ node then $|
+|$\label{}$|            |$ \CAS \ (\Snd (\deref Q)) \ tail \ node $|
+|$\label{}$|          |$ \Else loop \ \TT $|
+|$\label{}$|        |$ \Else \CAS \ (\Snd (\deref Q)) \ tail \ next; loop \ \TT $|
+|$\label{}$|      |$ \Else loop \ \TT $|
+|$\label{}$|    |$ ) \ \TT $|
+\end{minted}
+
+\begin{minted}[linenos=true, escapeinside=||,mathescape=true]{ocaml}
+|$\label{}$|  |$ \dequeue \ Q \eqdef $|
+|$\label{}$|    |$ (\Rec {loop} \_ = $|
+|$\label{}$|      |$ \Let head = \deref (\Fst (\deref Q)) in $|
+|$\label{}$|      |$ \Let tail = \deref (\Snd (\deref Q)) in $|
+|$\label{}$|      |$ \Let \prophid = \NewProph in $|
+|$\label{}$|      |$ \Let next = \deref (\Snd (\deref head)) in $|
+|$\label{}$|      |$ \If head = \langkw{Resolve} (\deref(\Fst (\deref Q)), \prophid, \TT) then $|
+|$\label{}$|        |$ \If head = tail then $|
+|$\label{}$|          |$ \If next = \None then $|
+|$\label{}$|            |$ \None $|
+|$\label{}$|          |$ \Else $|
+|$\label{}$|            |$ \CAS (\Snd (\deref Q)) \ tail \ next; loop \ \TT $|
+|$\label{}$|        |$ \Else $|
+|$\label{}$|          |$ \Let value = \Fst (\deref next) in $|
+|$\label{}$|          |$ \If \CAS \ (Fst (\deref Q)) \ head \ next then $|
+|$\label{}$|            |$ value $|
+|$\label{}$|          |$ \Else loop \ \TT $|
+|$\label{}$|      |$ \Else loop \ \TT $|
+|$\label{}$|      |$ ) \TT $|
+\end{minted}
+
+% \begin{align*}
+%   \langkw{let} \initialise \eqdef &\\
+%                     & \Let node = \Ref(\None, \Ref(\None)) in\\
+%                     & \Ref (\Ref(node), \Ref(node))
+% \end{align*}
+
+% \begin{align*}
+%   \langkw{let} \enqueue \ Q \ value \eqdef&\\
+%     & \hspace{00pt} \Let node = \Ref (\Some value, \Ref(\None)) in\\
+%     & \hspace{00pt} (\Rec {loop} \_ =\\
+%       & \hspace{20pt} \Let tail = \deref (\Snd (\deref Q)) in\\
+%       & \hspace{20pt} \Let next = \deref (\Snd (\deref tail)) in\\
+%       & \hspace{20pt} \If tail = \deref (\Snd (\deref Q)) then\\
+%         & \hspace{40pt} \If next = \None then\\
+%           & \hspace{60pt} \If \CAS \ (\Snd (\deref tail)) \ next \ node then\\
+%             & \hspace{80pt} \CAS \ (\Snd (\deref Q)) \ tail \ node\\
+%           & \hspace{60pt} \Else loop \ \TT\\
+%         & \hspace{40pt} \Else \CAS \ (\Snd (\deref Q)) \ tail \ next; loop \ \TT\\
+% 		  & \hspace{20pt} \Else loop \ \TT\\
+%     & ) \ \TT
+% \end{align*}
+
+% \begin{align*}
+%   \langkw{let} \dequeue \ Q \eqdef&\\
+%     & \hspace{00pt} (\Rec {loop} \_ =\\
+%       & \hspace{20pt} \Let head = \deref (\Fst (\deref Q)) in\\
+%       & \hspace{20pt} \Let tail = \deref (\Snd (\deref Q)) in\\
+%       & \hspace{20pt} \Let \prophid = \NewProph in\\
+%       & \hspace{20pt} \Let next = \deref (\Snd (\deref head)) in\\
+%       & \hspace{20pt} \If head = \Resolve(\deref (\Fst (\deref Q)), \prophid, \TT) then\\
+%         & \hspace{40pt} \If head = tail then\\
+%           & \hspace{60pt} \If next = \None then\\
+%             & \hspace{80pt} \None\\
+%           & \hspace{60pt} \Else\\
+%             & \hspace{80pt} \CAS (\Snd (\deref Q)) \ tail \ next; loop \ \TT\\
+%         & \hspace{40pt} \Else\\
+%           & \hspace{60pt} \Let value = \Fst (\deref next) in\\
+%           & \hspace{60pt} \If \CAS \ (Fst (\deref Q)) \ head \ next then\\
+%             & \hspace{80pt} value\\
+%           & \hspace{60pt} \Else loop \ \TT\\
+%       & \hspace{20pt} \Else loop \ \TT\\
+%       & \hspace{20pt} ) \TT
+% \end{align*}
 
 \section{Reachability}
 
@@ -937,27 +1031,40 @@ To derive the dequeue spec, we pick $P \eqdef \TRUE$ and $Q \ v \eqdef v = \None
 
 Reach is persistent
 
-\todo{fix notation}
-\begin{lemma}
-  $\reach{x_n}{x_m} \ast-\ast \isNode{x_n}$
+\begin{lemma}[reach-reflexive]
+  $\reach{x_n}{x_n} \wandIff \isNode{x_n}$
 \end{lemma}
+\begin{proof}
+  \todo{write in proof}
+\end{proof}
 
-\todo{fix notation}
-\begin{lemma}
-  $\reach{x_n}{x_m} -\ast \reach{x_m}{x_o} -\ast \reach{x_n}{x_o}$
+\begin{lemma}[reach-Transitive]
+  $\reach{x_n}{x_m} \wand \reach{x_m}{x_o} -\ast \reach{x_n}{x_o}$
 \end{lemma}
+\begin{proof}
+  \todo{write in proof}
+\end{proof}
 
-\begin{lemma}
-  $\reach{x_n}{x_m} -\ast \isNode{x_n}$
+\begin{lemma}[reach-from-is-node]
+  $\reach{x_n}{x_m} \wand \isNode{x_n}$
 \end{lemma}
+\begin{proof}
+  \todo{write in proof}
+\end{proof}
 
-\begin{lemma}
-  $\reach{x_n}{x_m} -\ast \isNode{x_m}$
+\begin{lemma}[reach-to-is-node]
+  $\reach{x_n}{x_m} \wand \isNode{x_m}$
 \end{lemma}
+\begin{proof}
+  \todo{write in proof}
+\end{proof}
 
-\begin{lemma}
-  $\reach{x_n}{x_m} -\ast \nOut{x_n} \mapsto \None -\ast x_n = x_m \ast \nOut{x_n} \mapsto \None$
+\begin{lemma}[reach-last]
+  $\reach{x_n}{x_m} \wand \nOut{x_n} \mapsto \None \wand x_n = x_m \ast \nOut{x_n} \mapsto \None$
 \end{lemma}
+\begin{proof}
+  \todo{write in proof}
+\end{proof}
 
 \subsection*{Abstract Reachability}
 
@@ -971,39 +1078,39 @@ Reach is persistent
 \end{definition}
 
 \todo{is it a viewshift?}
-\begin{lemma}
+\begin{lemma}[Abs-Reach-Alloc]
   $\reach{x}{x} \vs (\Exists \gname . \ap{\gname}{x} \ast \ar{x}{\gname})$
 \end{lemma}
-
-\begin{lemma}
-  $\ar{x_n}{\gname_m} -\ast
-   \ap{\gname_m}{x_m} -\ast
-   \reach{x_n}{x_m} \ast \ap{\gname_m}{x_m}$
-\end{lemma}
-
-\begin{lemma}[Abs-Reach-Alloc]
-  $\ar{x_n}{\gname_m} -\ast
-   \ap{\gname_m}{x_m} -\ast
-   \reach{x_n}{x_m} \ast \ap{\gname_m}{x_m}$
-\end{lemma}
+\begin{proof}
+  \todo{write in proof}
+\end{proof}
 
 \begin{lemma}[Abs-Reach-Concr]
-  $\reach{x_n}{x_m} -\ast
-   \ap{\gname_m}{x_m} \vs
-   \ar{x_n}{\gname_m} \ast \ap{\gname_m}{x_m}$
+  $\ar{x_n}{\gname_m} -\ast
+   \ap{\gname_m}{x_m} -\ast
+   \reach{x_n}{x_m} \ast \ap{\gname_m}{x_m}$
 \end{lemma}
+\begin{proof}
+  \todo{write in proof}
+\end{proof}
 
 \begin{lemma}[Abs-Reach-Abs]
   $\reach{x_n}{x_m} -\ast
    \ap{\gname_m}{x_m} \vs
    \ar{x_n}{\gname_m} \ast \ap{\gname_m}{x_m}$
 \end{lemma}
+\begin{proof}
+  \todo{write in proof}
+\end{proof}
 
 \begin{lemma}[Abs-Reach-Advance]
     $\ap{\gname_m}{x_m} -\ast
      \reach{x_m}{x_o} \vs
      \ap{\gname_m}{x_o} \ast \ar{x_o}{\gname_m}$
 \end{lemma}
+\begin{proof}
+  \todo{write in proof}
+\end{proof}
 
 \begin{definition}[Lock-Free M\&S-Queue Invariant]\label{MSQLF:spec:invariant}
   \begin{align*}
@@ -1029,6 +1136,17 @@ Reach is persistent
 \end{align*}
 
 
+\subsection{Proof outline}
+\todo{introduce what we have to do}
+
+\subsubsection{Initialise}
+\todo{write in proof outline}
+
+\subsubsection{Enqueue}
+\todo{write in proof outline}
+
+\subsubsection{Dequeue}
+\todo{write in proof outline}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

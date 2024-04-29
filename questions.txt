@@ -1,0 +1,1 @@
+- should formal definition of heaplang be in section, appendix, or reference to ILN?
