@@ -584,14 +584,14 @@ Figure \ref{TLMSQ:impl:figure:dequeue} illustrates running dequeue on a non-empt
 
 Let us first prove a specification for the two-lock michael scott queue in the simple case where we don't allows for concurrency. In this case, we know that only a single thread will interact with the queue at any given point in a sequential manner. This means that we give a specification that tracks the exact contents of the queue. To this end, we shall define the abstract state of the queue, denoted $xs_v$ as a list of \heaplang values. I.e. $xs_v : \List \ \Val$. We adopt the convention that enqueueing an element is done by adding it to the front of the list, and dequeueing removes the last element of the list (if such an element exists). The reason for this choice is purely technical.
 
-Since the queue uses two locks, we will get two ghost names; one for each lock. For this specification, these are the only two ghost names we will need. However, for the later specifications, we will use more resource algebra, and will need more ghost names. Thus, to ease notation, we shall define the type "$SeqQgnames$" whose purpose is to keep track of the ghost names used for a specific queue. Since we only have two ghost names for this specification, element of $SeqQgnames$ will simply be pairs. For an element $Q_\gname \in SeqQgnames$, the first element of the pair, written $Q_\gname.\gname_{Hlock}$, will contain the ghost name for the head lock, and the second element, $Q_\gname.\gname_{Tlock}$, the ghost name for the head lock.
+Since the queue uses two locks, we will get two ghost names; one for each lock. For this specification, these are the only two ghost names we will need. However, for the later specifications, we will use more resource algebra, and will need more ghost names. Thus, to ease notation, we shall define the type "$SeqQgnames$" whose purpose is to keep track of the ghost names used for a specific queue. Since we only have two ghost names for this specification, elements of $SeqQgnames$ will simply be pairs. For an element $Q_\gname \in SeqQgnames$, the first element of the pair, written $Q_\gname.\gname_{Hlock}$, will contain the ghost name for the head lock, and the second element, $Q_\gname.\gname_{Tlock}$, the ghost name for the tail lock.
 
 The sequential specification we wish to prove is the following:
 \begin{align*}
   &\Exists \isqueueseq : \Val \to \List \ \Val \to SeqQgnames \to \Prop.\\
   &\quad\quad\hoare{\TRUE}{\initialise \TT}{v_q . \Exists Q_\gname. \isqueueseq\ v_q\ []\ Q_\gname}\\
   &\land\quad\All v_q, v, xs_v, Q_\gname. \hoare{\isqueueseq \; v_q \; xs_v \; Q_\gname}{\enqueue\ v_q\ v}{w . \isqueueseq\ v_q\ (v :: xs_v)\ Q_\gname}\\
-  &\land\quad\All v_q, xs_v, Q_\gname. \hoareV[t]{\isqueueseq \; v_q \; xs_v \; Q_\gname}{\dequeue\ v_q}{v . \begin{array}{l}(xs_v = [] \ast v = \None \ast \isqueueseq\ v_q\ xs_v\ Q_\gname) \; \lor\\ (\Exists x_v, xs_v' . xs_v = xs_v' \catenate [x_v] \ast v = \Some x_v \ast \isqueueseq\ v_q\ xs_v'\ Q_\gname) \end{array}}
+  &\land\quad\All v_q, xs_v, Q_\gname. \hoareV[t]{\isqueueseq \; v_q \; xs_v \; Q_\gname}{\dequeue\ v_q}{v . \begin{array}{l}(xs_v = [] \star v = \None \star \isqueueseq\ v_q\ xs_v\ Q_\gname) \; \lor\\ (\Exists x_v, xs_v' . xs_v = xs_v' \catenate [x_v] \star v = \Some x_v \star \isqueueseq\ v_q\ xs_v'\ Q_\gname) \end{array}}
 \end{align*}
 
 The predicate $\isqueueseq \; v_q \; xs_v \; Q_\gname$ captures that the value $v_q$ is a queue, whose content matches that of our abstract representation $xs_v$, and the queue uses the ghost names described by $Q_\gname$. Note that the $\isqueueseq$ predicate is not required to be persistent, hence it cannot be duplicated and given to multiple threads. This is the sense in which this specification is sequential.
@@ -611,13 +611,13 @@ Insight \ref{TLMSQ:insights:persistent} means that we can mark all pointers in t
 
 \begin{align*}
   \isqueueseq \; v_q \; xs_v \; Q_\gname \eqdef &\Exists \loc_{queue}, \loc_{head}, \loc_{tail} \in \Loc . \Exists h_{lock}, t_{lock} \in \Val . \\
-  &v_q = \loc_{queue} \ast \loc_{queue} \mapsto^{\persistently} ((\loc_{head}, \loc_{tail}), (h_{lock}, t_{lock})) \ast\\
+  &v_q = \loc_{queue} \star \loc_{queue} \mapsto^{\persistently} ((\loc_{head}, \loc_{tail}), (h_{lock}, t_{lock})) \star\\
   &\Exists xs_{queue} \in \List (\Loc \times \Val \times \Loc) . \Exists x_{head}, x_{tail} \in (\Loc \times \Val \times \Loc) .\\
-	&proj\_val \ xs_{queue} = wrap\_some \ xs_v \ast\\
-	&\isLL (xs_{queue} \catenate [x_{head}]) \ast\\
-	&\loc_{head} \mapsto (\nIn{x_{head}}) \ast\\
-	&\loc_{tail} \mapsto (\nIn{x_{tail}}) \ast isLast \ x_{tail} \ (xs_{queue} \catenate [x_{head}]) \ast\\
-	&isLock \ Q_\gname.\gname_{Hlock} \ h_{lock} \ \TRUE \ast\\
+	&proj\_val \ xs_{queue} = wrap\_some \ xs_v \star\\
+	&\isLL (xs_{queue} \catenate [x_{head}]) \star\\
+	&\loc_{head} \mapsto (\nIn{x_{head}}) \star\\
+	&\loc_{tail} \mapsto (\nIn{x_{tail}}) \star isLast \ x_{tail} \ (xs_{queue} \catenate [x_{head}]) \star\\
+	&isLock \ Q_\gname.\gname_{Hlock} \ h_{lock} \ \TRUE \star\\
 	&isLock \ Q_\gname.\gname_{Tlock} \ t_{lock} \ \TRUE.
 \end{align*}
 
@@ -630,7 +630,7 @@ The $\isLL$ predicate essentially creates the structure seen in the examples of 
   \begin{align*}
     \isLLchain{[]} \equiv& \TRUE\\
     \isLLchain{[x]} \equiv& \nIn{x} \mapsto^{\persistently} (\nVal{x}, \nOut{x})\\
-    \isLLchain{x :: x' :: xs} \equiv& \nIn{x} \mapsto^{\persistently} (\nVal{x}, \nOut{x}) \ast \nOut{x'} \mapsto^{\persistently} \nIn{x} \ast \isLLchain{x' :: xs}
+    \isLLchain{x :: x' :: xs} \equiv& \nIn{x} \mapsto^{\persistently} (\nVal{x}, \nOut{x}) \star \nOut{x'} \mapsto^{\persistently} \nIn{x} \star \isLLchain{x' :: xs}
   \end{align*}
 \end{definition}
 
@@ -638,14 +638,14 @@ Then, to define $\isLL$, we add that the last node in the linked list points to 
 \begin{definition}[Linked List Predicate]
   \begin{align*}
     \isLL{[]} \equiv& \TRUE\\
-    \isLL{x :: xs} \equiv& \nOut{x} \mapsto \None \ast \isLLchain{x :: xs}
+    \isLL{x :: xs} \equiv& \nOut{x} \mapsto \None \star \isLLchain{x :: xs}
   \end{align*}
 \end{definition}
 
-For instance, if we wanted to capture the linked list in figure \ref{TLMSQ:impl:figure:enqueue:c}, we would use the list $xs = [(\locin{3}, v_3, \locout{3}); (\locin{2}, v_2, \locout{2});  (\locin{1}, v_1, \locout{1})]$. $\isLL{xs}$ will expand to $\locout{3} \mapsto \None \ast \isLLchain{xs}$, and $\isLLchain{xs}$ expands to
+For instance, if we wanted to capture the linked list in figure \ref{TLMSQ:impl:figure:enqueue:c}, we would use the list $xs = [(\locin{3}, v_3, \locout{3}); (\locin{2}, v_2, \locout{2});  (\locin{1}, v_1, \locout{1})]$. $\isLL{xs}$ will expand to $\locout{3} \mapsto \None \star \isLLchain{xs}$, and $\isLLchain{xs}$ expands to
 \begin{align*}
-  &\locin{3} \mapsto^{\persistently} (x_3, \locout{3}) \ast \locout{2}	\mapsto^{\persistently} \locin{3}\ast\\
-  &\locin{2} \mapsto^{\persistently} (x_2, \locout{2}) \ast \locout{1}\mapsto^{\persistently} \locin{2} \ast\\
+  &\locin{3} \mapsto^{\persistently} (x_3, \locout{3}) \star \locout{2}	\mapsto^{\persistently} \locin{3}\star\\
+  &\locin{2} \mapsto^{\persistently} (x_2, \locout{2}) \star \locout{1}\mapsto^{\persistently} \locin{2} \star\\
   &\locin{1} \mapsto^{\persistently} (x_1, \locout{1})
 \end{align*}
 Note how this matches the structure of the linked list in figure \ref{TLMSQ:impl:figure:enqueue:c}.
@@ -694,8 +694,8 @@ For the concurrent specification, we will need the predicate capturing the queue
   &\All \Phi : \Val \to \Prop.\\
   &\quad\quad \All v_q, Q_\gname . \isqueueconc \ \Phi \ v_q \ Q_\gname \implies \persistently \isqueueconc \ \Phi \ v_q \ Q_\gname\\
   &\land\quad\hoare{\TRUE}{\initialise \TT}{v_q . \Exists Q_\gname. \isqueueconc\ \Phi \ v_q \ Q_\gname}\\
-  &\land\quad\All v_q, v, Q_\gname. \hoare{\isqueueconc \ \Phi \ v_q \ Q_\gname \ast \Phi \ v}{\enqueue\ v_q\ v}{v . \TRUE}\\
-  &\land\quad\All v_q, Q_\gname. \hoare{\isqueueconc \ \Phi \ v_q \ Q_\gname}{\dequeue\ v_q}{v . v = \None \lor (\Exists x_v. v = \Some x_v \ast \Phi \ x_v)}
+  &\land\quad\All v_q, v, Q_\gname. \hoare{\isqueueconc \ \Phi \ v_q \ Q_\gname \star \Phi \ v}{\enqueue\ v_q\ v}{v . \TRUE}\\
+  &\land\quad\All v_q, Q_\gname. \hoare{\isqueueconc \ \Phi \ v_q \ Q_\gname}{\dequeue\ v_q}{v . v = \None \lor (\Exists x_v. v = \Some x_v \star \Phi \ x_v)}
 \end{align*}
 Note that the type of the collection of ghost names here is $ConcQgnames$, as we will require more ghost names than before. The new ghost names are used for "tokens" which are introduced in the following section.
 
@@ -728,25 +728,25 @@ Since we want $\isqueueconc$ to be persistent, then we cannot directly state the
 \begin{definition}[Two-Lock M\&S-Queue Invariant]\label{TLMSQ:spec:invariant}
   \begin{align*}
     &queue\_invariant \ \Phi \ \loc_{head} \ \loc_{tail} \ Q_\gname \eqdef\\
-    &\Exists xs_v. All \ xs_v \ \Phi \ast &&\text{(abstract state)}\\
+    &\Exists xs_v. All \ xs_v \ \Phi \star &&\text{(abstract state)}\\
     &\Exists xs, xs_{queue}, xs_{old}, x_{head}, x_{tail} . &&\text{(concrete state)}\\
-    &xs = xs_{queue} \catenate [x_{head}] \catenate xs_{old} \ast\\
-    &\isLL \ xs \ast\\
-    &proj\_val \ xs_{queue} = wrap\_some \ xs_v \ast\\
+    &xs = xs_{queue} \catenate [x_{head}] \catenate xs_{old} \star\\
+    &\isLL \ xs \star\\
+    &proj\_val \ xs_{queue} = wrap\_some \ xs_v \star\\
     &(\\
-    &\quad\quad\loc_{head} \mapsto (\nIn{x_{head}}) \ast \loc_{tail} \mapsto (\nIn{x_{tail}}) \ast isLast \ x_{tail} \ xs \ast &&\text{(\StaticState)}\\
-    &\quad\quad \ToknEQg \ast \ToknDQg \ast \TokUpdatedQg\\
+    &\quad\quad\loc_{head} \mapsto (\nIn{x_{head}}) \star \loc_{tail} \mapsto (\nIn{x_{tail}}) \star isLast \ x_{tail} \ xs \star &&\text{(\StaticState)}\\
+    &\quad\quad \ToknEQg \star \ToknDQg \star \TokUpdatedQg\\
     &\quad\lor\\
-    &\quad\quad\loc_{head} \mapsto (\nIn{x_{head}}) \ast \loc_{tail} \mapsto^{\frac{1}{2}} (\nIn{x_{tail}}) \ast &&\text{(\EnqueueState)}\\
-    &\quad\quad (isLast \ x_{tail} \ xs \ast \TokBeforeQg \lor isSndLast \ x_{tail} \ xs \ast \TokAfterQg) \ast\\
-    &\quad\quad \TokEQg \ast \ToknDQg\\
+    &\quad\quad\loc_{head} \mapsto (\nIn{x_{head}}) \star \loc_{tail} \mapsto^{\frac{1}{2}} (\nIn{x_{tail}}) \star &&\text{(\EnqueueState)}\\
+    &\quad\quad (isLast \ x_{tail} \ xs \star \TokBeforeQg \lor isSndLast \ x_{tail} \ xs \star \TokAfterQg) \star\\
+    &\quad\quad \TokEQg \star \ToknDQg\\
     &\quad\lor\\
-    &\quad\quad\loc_{head} \mapsto^{\frac{1}{2}} (\nIn{x_{head}}) \ast \loc_{tail} \mapsto (\nIn{x_{tail}}) \ast isLast \ x_{tail} \ xs \ast &&\text{(\DequeueState)}\\
-    &\quad\quad \ToknEQg \ast \TokDQg \ast \TokUpdatedQg\\
+    &\quad\quad\loc_{head} \mapsto^{\frac{1}{2}} (\nIn{x_{head}}) \star \loc_{tail} \mapsto (\nIn{x_{tail}}) \star isLast \ x_{tail} \ xs \star &&\text{(\DequeueState)}\\
+    &\quad\quad \ToknEQg \star \TokDQg \star \TokUpdatedQg\\
     &\quad\lor\\
-    &\quad\quad\loc_{head} \mapsto^{\frac{1}{2}} (\nIn{x_{head}}) \ast \loc_{tail} \mapsto^{\frac{1}{2}} (\nIn{x_{tail}}) \ast &&\text{(\BothState)}\\
-    &\quad\quad (isLast \ x_{tail} \ xs \ast \TokBeforeQg \lor isSndLast x_{tail} xs \ast \TokAfterQg) \ast\\
-    &\quad\quad \TokEQg \ast \TokDQg\\
+    &\quad\quad\loc_{head} \mapsto^{\frac{1}{2}} (\nIn{x_{head}}) \star \loc_{tail} \mapsto^{\frac{1}{2}} (\nIn{x_{tail}}) \star &&\text{(\BothState)}\\
+    &\quad\quad (isLast \ x_{tail} \ xs \star \TokBeforeQg \lor isSndLast x_{tail} xs \star \TokAfterQg) \star\\
+    &\quad\quad \TokEQg \star \TokDQg\\
     &)
   \end{align*}
 \end{definition}
@@ -768,7 +768,7 @@ We will use several tokens, each of which is the valid element of their own inst
   \item $\TokDQg$ represents that a thread is dequeueing.
   \item $\TokBeforeQg$ represents that an enqueueing thread has not yet added the new node to the linked list.
   \item $\TokAfterQg$ represents that an enqueueing thread has added the new node to the linked list, but not yet swung the tail.
-  \item $\TokUpdatedQg$ is defined as $\TokBeforeQg \ast \TokAfterQg$, and represents that the queue is up to date.
+  \item $\TokUpdatedQg$ is defined as $\TokBeforeQg \star \TokAfterQg$, and represents that the queue is up to date.
 \end{itemize}
 
 
@@ -777,9 +777,9 @@ We will use several tokens, each of which is the valid element of their own inst
 With this, we can now give our definition of $\isqueueconc$. In the below, we let $\Nl$ be some namespace.
 \begin{align*}
   \isqueueconc \; \Psi \; v_q \; \Qg \eqdef &\Exists \loc_{queue}, \loc_{head}, \loc_{tail} \in \Loc . \Exists h_{lock}, t_{lock} \in \Val . \\
-  &v_q = \loc_{queue} \ast \loc_{queue} \mapsto^{\persistently} ((\loc_{head}, \loc_{tail}), (h_{lock}, t_{lock})) \ast\\
-	&\knowInv{\Nl.queue}{queue\_invariant \Phi \loc_{head} \loc_{tail} \Qg} \ast\\
-	&isLock \ Q_\gname.\gname_{Hlock} \ h_{lock} \ (\TokDQg) \ast\\
+  &v_q = \loc_{queue} \star \loc_{queue} \mapsto^{\persistently} ((\loc_{head}, \loc_{tail}), (h_{lock}, t_{lock})) \star\\
+	&\knowInv{\Nl.queue}{queue\_invariant \Phi \loc_{head} \loc_{tail} \Qg} \star\\
+	&isLock \ Q_\gname.\gname_{Hlock} \ h_{lock} \ (\TokDQg) \star\\
 	&isLock \ Q_\gname.\gname_{Tlock} \ t_{lock} \ (\TokEQg).
 \end{align*}
 
@@ -787,7 +787,7 @@ In contrast to the sequential specification, the locks now protect $\TokEQg$ and
 
 
 \subsection{Proof outline}
-Firstly, we must show that $\isqueueconc$ is persistent. This however follows from the fact that invariants are persistent, the $isLock$ predicates are persistent, persistent points-to predicates are persistent, and persistency is preserved by $\ast$ and quantifications (rules: persistently-sep, persistently-$\land$, persistently-$\exists$).
+Firstly, we must show that $\isqueueconc$ is persistent. This however follows from the fact that invariants are persistent, the $isLock$ predicates are persistent, persistent points-to predicates are persistent, and persistency is preserved by $\star$ and quantifications (rules: persistently-sep, persistently-$\land$, persistently-$\exists$).
 
 The proofs structure for the specifications are largely similar to the sequential counterparts. The major difference is that we don't have access to the resources all the time; we must get them from the invariant. Further we also have to keep track of which state we are in. For the proof outlines below, these points will be the main focus.
 
@@ -817,7 +817,7 @@ Had we not used an $xs_{old}$ and essentially just "forgotten" old nodes, we cou
 \section{Hocap-style Specification}
 \label{TLMSQ:section:hocap}
 
-When proving the concurrent specification, we were quite careful with tracking the state of the queue, and to some extent, even it's contents. The contents may have been existentially quantified, but through saving half a pointer, we could match up the contents of the queue between invariant openings. Given this precision in the proof, the reader may wonder if it is possible to give a more precise spec: one which is both concurrent and allows tracking of the contents of the queue. Indeed, this is possible, and we will explore such a spec in this section. We shall refer to this spec as a hocap-style spec (higher order concurrent abstract predicate) since the spec will be concurrent and parametrised by abstract predicates. This spec is more general than both the sequential and concurrent specs in the sense that those specs can be derived from the hocap-style spec. We prove this in section \ref{section:two_lock:deriving_seq_and_conc}.
+When proving the concurrent specification, we were quite careful with tracking the state of the queue, and to some extent, even it's contents. The contents may have been existentially quantified, but through saving half a pointer, we could match up the contents of the queue between invariant openings. Given this precision in the proof, the reader may wonder if it is possible to give a more precise spec: one which is both concurrent and allows tracking of the contents of the queue. Indeed, this is possible, and we will explore such a spec in this section. We shall refer to this spec as a hocap-style spec (higher order concurrent abstract predicate) since the spec will be concurrent and parametrised by abstract predicates. This spec is more general than both the sequential and concurrent specs in the sense that those specs can be derived from the hocap-style spec. We prove this in section \ref{TLMSQ:section:deriving_seq_and_conc}.
 
 As before, we cannot simply parametrise the $\isqueue$ predicate with the abstract state of the queue, as we wish for it to be concurrent. So to allow clients to keep track of the contents of the queue, we will "split" the abstract state up in two parts, the authoritative view and the fragmental view. The client will then own the fragmental view, allowing them to keep track of the contents of the queue, whereas the $\isqueue$ predicate will own the authoritative view. We will in particular make sure that, if one has both the fragmental and authoritative views, then these agree on the abstract state of the queue. Further, it is only possible to update the abstract state of the queue (through the fup) if one possess both the authoritative and fragmental views.
 
@@ -831,30 +831,30 @@ With this, we now give the hocap-style spec, and explain it afterwards.
 \begin{align*}
   &\Exists \isqueue : \Val \to Qgnames \to \Prop.\\
   &\quad\quad \All v_q, Q_\gname . \isqueue \ v_q \ Q_\gname \implies \persistently \isqueue \ v_q \ Q_\gname\\
-  &\land\quad\hoare{\TRUE}{\initialise \TT}{v_q . \Exists Q_\gname . \isqueue\ v_q \ Q_\gname \ast \abstractstatefullfrag{\Qg}{[]} }\\
+  &\land\quad\hoare{\TRUE}{\initialise \TT}{v_q . \Exists Q_\gname . \isqueue\ v_q \ Q_\gname \star \abstractstatefullfrag{\Qg}{[]} }\\
   &\land\quad \All v_q, v, Q_\gname, P, Q.
     \begin{array}[t]{l}
-    \left(\All xs_v . \abstractstateauth{\Qg}{xs_v} \ast P \vs[\mask\setminus\Nl.i^\uparrow] \later \abstractstateauth{\Qg}{v :: xs_v} \ast Q \right)
+    \left(\All xs_v . \abstractstateauth{\Qg}{xs_v} \star P \vs[\mask\setminus\Nl.i^\uparrow] \later \abstractstateauth{\Qg}{v :: xs_v} \star Q \right)
     \wand\\
-    \hoare{\isqueue \ v_q \ Q_\gname \ast P}{\enqueue\ v_q\ v}{w . Q}
+    \hoare{\isqueue \ v_q \ Q_\gname \star P}{\enqueue\ v_q\ v}{w . Q}
     \end{array}\\
   &\land\quad \All v_q, Q_\gname, P, Q.
     \begin{array}[t]{l}
-    \left(\All xs_v . \abstractstateauth{\Qg}{xs_v} \ast P \vs[\mask\setminus\Nl.i^\uparrow] \later
+    \left(\All xs_v . \abstractstateauth{\Qg}{xs_v} \star P \vs[\mask\setminus\Nl.i^\uparrow] \later
       \left(
         \begin{array}{l}
-          (xs_v = [] \ast \abstractstateauth{\Qg}{xs_v} \ast Q \ \None)\\
+          (xs_v = [] \star \abstractstateauth{\Qg}{xs_v} \star Q \ \None)\\
           \lor
           \left(
             \begin{array}{l}
-              \Exists x_v, xs_v' . xs_v = xs_v' \catenate [x_v] \ast\\
-              \abstractstateauth{\Qg}{xs_v'} \ast Q \ (\Some{x_v})
+              \Exists x_v, xs_v' . xs_v = xs_v' \catenate [x_v] \star\\
+              \abstractstateauth{\Qg}{xs_v'} \star Q \ (\Some{x_v})
             \end{array}
             \right)
         \end{array}
       \right) \right)
     \wand\\
-    \hoare{\isqueue \ v_q \ Q_\gname \ast P}{\dequeue\ v_q}{v . Q\ v}
+    \hoare{\isqueue \ v_q \ Q_\gname \star P}{\dequeue\ v_q}{v . Q\ v}
     \end{array}
 \end{align*}
 Firstly, we require $\isqueue$ to be persistent, giving us support for concurrent clients.
@@ -872,16 +872,16 @@ Our definition of $\isqueue$ is almost the same as $\isqueueconc$, so we only me
 
 \subsection{Proof outline}
 The proofs are largely similar to the concurrent spec, but now, instead of having to handle the $\Psi$ predicate, we must work with the authoritative and fragmental views of the abstract state.\\
-For initialise, we must additionally get ownership of the authoritative and fragmental view of the abstract state, both of which should state that it is empty. I.e. we must get $\abstractstateauth{\Qg}{[]} \ast \abstractstatefullfrag{\Qg}{[]}$. We achieve this by own-op and and own-allocate, which requires us to show that $\authfull (1, \aginj\ []) \cdot \authfrag (1, \aginj\ []) \in \Vl$. This follows by the definitions of the resource algebras. We use $\abstractstateauth{\Qg}{[]}$ to establish the queue invariant, and $\abstractstatefullfrag{\Qg}{[]}$ to prove the post-condition.\\
+For initialise, we must additionally get ownership of the authoritative and fragmental view of the abstract state, both of which should state that it is empty. I.e. we must get $\abstractstateauth{\Qg}{[]} \star \abstractstatefullfrag{\Qg}{[]}$. We achieve this by own-op and and own-allocate, which requires us to show that $\authfull (1, \aginj\ []) \cdot \authfrag (1, \aginj\ []) \in \Vl$. This follows by the definitions of the resource algebras. We use $\abstractstateauth{\Qg}{[]}$ to establish the queue invariant, and $\abstractstatefullfrag{\Qg}{[]}$ to prove the post-condition.\\
 For enqueue and dequeue, the only real changes are the points in the proof, where the concrete state of the queue is updated.
 
 \textbf{Enqueue} We start by assuming the viewshift which allows us to update $P$ to $Q$ and $\abstractstateauth{\Qg}{xs_v}$ to $\abstractstateauth{\Qg}{v :: xs_v}$, for any $xs_v$. We must then prove the hoare triple for the expression $\enqueue \ v_q \ v$. The only real change from the previous proof happens the second time we open the invariant; the first and third times, the abstract state doesn't change, hence we can simply frame away the newly added authoritative fragment concerning the abstract state, and continue as we did before. The second time we open the invariant, it is around the expression that adds the newly created node to the linked list (\todo{add line number}). When opening it, we get $\abstractstateauth{\Qg}{xs_v}$. As before, we also get all the resources to match up variables and step through the code, updating the concrete state. To close the invariant, we must make the same choice of abstract state as we did previously: $v :: xs_v$. This, however, requires us to obtain $\abstractstateauth{\Qg}{v :: xs_v}$. However, since we have $\abstractstateauth{\Qg}{xs_v}$ and $P$ (from the precondition), we can apply the viewshift to obtain it, along with $Q$. This then allows us to close the invariant, and the proof proceeds as previously. At the end, we must also prove the postcondition $Q$, but this is no issue as we obtained that from the viewshift.
 
 \textbf{Dequeue} We assume the viewshift and proceed as in the concurrent proof until we get to the second time we open the invariant, which is around the expression that reads head's next node. It is here that we figure out whether or not the queue is empty by doing case analysis on $xs_{queue}$.
 
-In the case that the queue is empty, then the abstract state of the queue will not change. We thus apply the viewshift (we have $P$ from the precondition and $\abstractstateauth{\Qg}{xs_v}$ from the invariant), which gives us the disjunct. The right disjunct states that the abstract state $xs_v$ is non-empty, but since the abstract state is reflected in $xs_{queue}$, which \emph{is} empty, then we know that the right disjunct is impossible. Hence we may assume the left disjunct. I.e. $xs_v = [] \ast \abstractstateauth{\Qg}{xs_v} \ast Q \ \None$. We now proceed as before, this time giving up $\abstractstateauth{\Qg}{xs_v}$ to close the invariant. After stepping through the code, we are left with proving the postcondition: $Q \ \None$, which we got from the viewshift.
+In the case that the queue is empty, then the abstract state of the queue will not change. We thus apply the viewshift (we have $P$ from the precondition and $\abstractstateauth{\Qg}{xs_v}$ from the invariant), which gives us the disjunct. The right disjunct states that the abstract state $xs_v$ is non-empty, but since the abstract state is reflected in $xs_{queue}$, which \emph{is} empty, then we know that the right disjunct is impossible. Hence we may assume the left disjunct. I.e. $xs_v = [] \star \abstractstateauth{\Qg}{xs_v} \star Q \ \None$. We now proceed as before, this time giving up $\abstractstateauth{\Qg}{xs_v}$ to close the invariant. After stepping through the code, we are left with proving the postcondition: $Q \ \None$, which we got from the viewshift.
 
-If the queue is not empty, then we do not apply the viewshift (as the abstract state doesn't change within this invariant opening), and simply continue as we did previously. The next time we open the invariant is around the expression that writes the new head to $\loc_{head}$. It is this store that updates the abstract state of the queue, so it is within this invariant opening that we apply the viewshift (again, we have $P$ from the precondition and $\abstractstateauth{\Qg}{xs_v}$ from the invariant). This time, we know that $xs_{queue}$ is non-empty, and since $xs_v$ is reflected in $xs_{queue}$, then we can conclude that the first disjunct is impossible, so the viewshift gives us $\Exists x_v, xs_v' . xs_v = xs_v' \catenate [x_v] \ast \abstractstateauth{\Qg}{xs_v'} \ast Q \ (\Some{x_v})$. As before, we conclude that $\Some{x_v}$ is the return value (through the reflection between $xs_{queue}$ and $xs_v$), and proceed to close the invariant, this time giving up $\abstractstateauth{\Qg}{xs_v'}$. Stepping through the code, we end up having to prove the post-condition $Q \ (\Some{x_v})$, which we got from the viewshift.
+If the queue is not empty, then we do not apply the viewshift (as the abstract state doesn't change within this invariant opening), and simply continue as we did previously. The next time we open the invariant is around the expression that writes the new head to $\loc_{head}$. It is this store that updates the abstract state of the queue, so it is within this invariant opening that we apply the viewshift (again, we have $P$ from the precondition and $\abstractstateauth{\Qg}{xs_v}$ from the invariant). This time, we know that $xs_{queue}$ is non-empty, and since $xs_v$ is reflected in $xs_{queue}$, then we can conclude that the first disjunct is impossible, so the viewshift gives us $\Exists x_v, xs_v' . xs_v = xs_v' \catenate [x_v] \star \abstractstateauth{\Qg}{xs_v'} \star Q \ (\Some{x_v})$. As before, we conclude that $\Some{x_v}$ is the return value (through the reflection between $xs_{queue}$ and $xs_v$), and proceed to close the invariant, this time giving up $\abstractstateauth{\Qg}{xs_v'}$. Stepping through the code, we end up having to prove the post-condition $Q \ (\Some{x_v})$, which we got from the viewshift.
 
 
 \section{Deriving Sequential and Concurrent specs from Hocap}
@@ -890,12 +890,12 @@ If the queue is not empty, then we do not apply the viewshift (as the abstract s
 In this section we show that we can derive the sequential and concurrent specifications from sections \ref{TLMSQ:section:sequential} and \ref{TLMSQ:section:concurrent} from the Hocap-style specification. The derivations will need to show how to update the abstract state of the queue. To help with this, we use the following lemmas, both of which follow from the definitions of the involved resource algebras. The first shows the authoritative and fragmental views of the abstract state agree.
 \begin{lemma}[Abstract state agree]\label{TLMSQ:hocap:abst:agree}
   $\All xs_v, xs_v' .\\
-  \abstractstateauth{Q_{\gname H}}{xs_v} \ast \abstractstatefullfrag{Q_{\gname H}}{xs_v'} \proves xs_v = xs_v'$
+  \abstractstateauth{Q_{\gname H}}{xs_v} \star \abstractstatefullfrag{Q_{\gname H}}{xs_v'} \proves xs_v = xs_v'$
 \end{lemma}
 The second shows that, if we own both the authoritative and fragmental views, we are allowed to update the abstract state to whatever we like.
 \begin{lemma}[Abstract state update]\label{TLMSQ:hocap:abst:update}
   $\All xs_v, xs_v', xs_v'' .\\
-  \abstractstateauth{Q_{\gname H}}{xs_v} \ast \abstractstatefullfrag{Q_{\gname H}}{xs_v'} \proves \abstractstateauth{Q_{\gname H}}{xs_v''} \ast \abstractstatefullfrag{Q_{\gname H}}{xs_v''}$
+  \abstractstateauth{Q_{\gname H}}{xs_v} \star \abstractstatefullfrag{Q_{\gname H}}{xs_v'} \proves \abstractstateauth{Q_{\gname H}}{xs_v''} \star \abstractstatefullfrag{Q_{\gname H}}{xs_v''}$
 \end{lemma}
 
 \subsection{Deriving Sequential spec}
@@ -903,26 +903,26 @@ We define the $\isqueueseq$ predicate as follows.
 \begin{align*}
   \isqueueseq \; v_q \; xs_v \; Q_{\gname S} \eqdef
     &\Exists Q_{\gname H} \in Qgnames .\\
-    &proj\_Qgnames\_seq \ Q_{\gname H} = Q_{\gname S} \ast\\
-    &\isqueue \ v_q \ Q_{\gname H} \ast\\
+    &proj\_Qgnames\_seq \ Q_{\gname H} = Q_{\gname S} \star\\
+    &\isqueue \ v_q \ Q_{\gname H} \star\\
     &\abstractstatefullfrag{Q_{\gname H}}{xs_v}
 \end{align*}
 
 Here, $proj\_Qgnames\_seq \ Q_{\gname H}$ simply creates an element of $SeqQgnames$, with ghost names matching those of $Q_{\gname H}$.
 $\isqueue$ is the predicate from the hocap-style spec, hence we know that it is duplicable.
 
-The \textbf{sequential initialise spec} follows almost directly from hocap-style initialise spec. They only differ in the post-condition. The post-condition in the hocap-style spec states $\Exists Q_{\gname H} . \isqueue\ v_q \ Q_{\gname H} \ast \abstractstatefullfrag{Q_{\gname H}}{[]}$, whereas we have to prove $\Exists Q_{\gname S}. \isqueueseq\ v_q\ []\ Q_{\gname S}$. If we choose $proj\_Qgnames\_seq \ Q_{\gname H}$ for $Q_{\gname S}$, then the equality in $\isqueueseq$ becomes trivially true, and the postcondition we must prove follows from the hocap-style postcondition.
+The \textbf{sequential initialise spec} follows almost directly from hocap-style initialise spec. They only differ in the post-condition. The post-condition in the hocap-style spec states $\Exists Q_{\gname H} . \isqueue\ v_q \ Q_{\gname H} \star \abstractstatefullfrag{Q_{\gname H}}{[]}$, whereas we have to prove $\Exists Q_{\gname S}. \isqueueseq\ v_q\ []\ Q_{\gname S}$. If we choose $proj\_Qgnames\_seq \ Q_{\gname H}$ for $Q_{\gname S}$, then the equality in $\isqueueseq$ becomes trivially true, and the postcondition we must prove follows from the hocap-style postcondition.
 
 To prove the \textbf{sequential enqueue spec}, assume some $v_q$, $v$, $xs_v$, and $Q_{\gname S}$. We must then show the hoare-triple concerning the expression: $\enqueue\ v_q\ v$.
 To do this, we shall use the hocap-style spec for enqueue. This requires us to pick $P$ and $Q$, and prove the resulting viewshift.
 We choose $P \eqdef \abstractstatefullfrag{Q_{\gname H}}{xs_v}$ and $Q \eqdef \abstractstatefullfrag{Q_{\gname H}}{(v :: xs_v)}$. Note that with this choice, the hoare triple we get after proving the viewshift almost matches the hoare triple we have to prove. The main thing we need is $\isqueue\ v_q \ Q_{\gname H}$ in the postcondition. However, since $\isqueue$ is persistent, and it is present in the precondition, we may assume it in the postcondition. Hence, all we have to prove is the viewshift:
 \begin{equation*}
-  \All xs_v' . \abstractstateauth{\Qg}{xs_v'} \ast \abstractstatefullfrag{Q_{\gname H}}{xs_v} \vs[\mask\setminus\Nl.i^\uparrow] \later \abstractstateauth{\Qg}{v :: xs_v'} \ast \abstractstatefullfrag{Q_{\gname H}}{(v :: xs_v)}
+  \All xs_v' . \abstractstateauth{\Qg}{xs_v'} \star \abstractstatefullfrag{Q_{\gname H}}{xs_v} \vs[\mask\setminus\Nl.i^\uparrow] \later \abstractstateauth{\Qg}{v :: xs_v'} \star \abstractstatefullfrag{Q_{\gname H}}{(v :: xs_v)}
 \end{equation*}
-So assume some $xs_v'$, $\abstractstateauth{\Qg}{xs_v'}$ and $\abstractstatefullfrag{Q_{\gname H}}{xs_v}$. We must then prove $\pvs[\mask\setminus\Nl.i^\uparrow] \later \abstractstateauth{\Qg}{(v :: xs_v')} \ast \abstractstatefullfrag{Q_{\gname H}}{(v :: xs_v)}$
+So assume some $xs_v'$, $\abstractstateauth{\Qg}{xs_v'}$ and $\abstractstatefullfrag{Q_{\gname H}}{xs_v}$. We must then prove $\pvs[\mask\setminus\Nl.i^\uparrow] \later \abstractstateauth{\Qg}{(v :: xs_v')} \star \abstractstatefullfrag{Q_{\gname H}}{(v :: xs_v)}$
 By property \ref{TLMSQ:hocap:abst:agree}, $xs_v = xs_v'$, hence, we can apply property \ref{TLMSQ:hocap:abst:update} to update the authoritative and fragmental views to $(v :: xs_v)$, which is what we wanted.
 
-We use a similar approach to above to prove the \textbf{sequential dequeue spec}. So we assume some $v_q$, $xs_v$, and $Q_{\gname S}$, and must then prove the hoare-triple concerning the expression: $\dequeue\ v_q$. This time, we use the hocap-style dequeue spec, with the following choices: $P \eqdef \abstractstatefullfrag{Q_{\gname H}}{xs_v}$, and $Q \ v \eqdef (xs_v = [] \ast v = \None \ast \abstractstatefullfrag{Q_{\gname H}}{xs_v}) \lor (\Exists x_v, xs_v'. xs_v = xs_v' \catenate [x_v] \ast v = \Some{x_v} \ast \abstractstatefullfrag{Q_{\gname H}}{xs_v'})$.
+We use a similar approach to above to prove the \textbf{sequential dequeue spec}. So we assume some $v_q$, $xs_v$, and $Q_{\gname S}$, and must then prove the hoare-triple concerning the expression: $\dequeue\ v_q$. This time, we use the hocap-style dequeue spec, with the following choices: $P \eqdef \abstractstatefullfrag{Q_{\gname H}}{xs_v}$, and $Q \ v \eqdef (xs_v = [] \star v = \None \star \abstractstatefullfrag{Q_{\gname H}}{xs_v}) \lor (\Exists x_v, xs_v'. xs_v = xs_v' \catenate [x_v] \star v = \Some{x_v} \star \abstractstatefullfrag{Q_{\gname H}}{xs_v'})$.
 In the same way as above, the hoare triple we get matches the one we have to prove (after a bit of manipulation). So we only have to prove the viewshift. First we conclude that the abstract states in the authoritative and fragmental views are equal. Then we do a case analysis on the abstract state, $xs_v$. If $xs_v$ is empty, then we prove the left disjunct in the consequent of the viewshift, \emph{without} updating the authoritative and fragmental views. If $xs_v$ is non-empty, i.e. $xs_v = xs_v' \catenate [x_v]$ for some $xs_v'$ and $x_v$, then we prove the right-side of the consequent in the viewshift, using property \ref{TLMSQ:hocap:abst:update} to update the authoritative and fragmental views to the new abstract state ($xs_v'$).
 
 \subsection{Deriving Concurrent spec}
@@ -930,9 +930,9 @@ Remember that we need the $\isqueueconc$ predicate to be persistent, hence we ca
 \begin{align*}
   \isqueueconc \; v_q \; xs_v \; Q_{\gname C} \eqdef
   &\Exists Q_{\gname H} \in Qgnames .\\
-  &proj\_Qgnames\_conc \ Q_{\gname H} = Q_{\gname C} \ast\\
-  &\isqueue \ v_q \ Q_{\gname H} \ast\\
-  &\knowInv{\Nl.c}{\Exists xs_v. \abstractstatefullfrag{Q_{\gname H}}{xs_v} \ast All\ xs_v\ \Psi}
+  &proj\_Qgnames\_conc \ Q_{\gname H} = Q_{\gname C} \star\\
+  &\isqueue \ v_q \ Q_{\gname H} \star\\
+  &\knowInv{\Nl.c}{\Exists xs_v. \abstractstatefullfrag{Q_{\gname H}}{xs_v} \star All\ xs_v\ \Psi}
 \end{align*}
 Persistency of $\isqueueconc$ follows by the persistency of $\isqueue$ and the fact that invariants and equalities are persistent.
 
@@ -941,7 +941,7 @@ The concurrent initialise spec follows from the hocap-style initialise spec, aft
 Next, to prove the enqueue spec, we assume some $v_q$, $v$, and $Q_{\gname C}$, and must then prove the hoare triple concerning the expression: $\enqueue\ v_q\ v$. We specialise the hocap-style enqueue spec with $P \eqdef \Psi \ v$ and $Q \eqdef \TRUE$. The hoare triple we get after proving the viewshift matches the hoare triple we must prove, except that its precondition is weaker: it doesn't mention the invariant or the equality. Hence, the hoare triple we have to prove simply follows by the rule of consequence.
 To prove the viewshift, we must supply the full fragmental view. When deriving the sequential spec, we had this available through $P$. But this time we shall get it by opening the invariant in $\isqueueconc$. Proving the viewshift is then similar to what we did for the sequential spec.
 
-To derive the dequeue spec, we pick $P \eqdef \TRUE$ and $Q \ v \eqdef v = \None \lor (\Exists x_v . v = \Some{x_v} \ast \Psi \ x_v)$. Again, the hoare triple we get after proving the viewshift is exactly the hoare triple we must prove, except that its precondition is weaker. Hence, we only have to prove the viewshift. This is done analogously to the sequential case (i.e. case distinction on $xs_v$), except this time we get $\abstractstatefullfrag{Q_{\gname H}}{xs_v}$ through the invariant, and in the case where $xs_v$ is not empty, i.e. $xs_v = xs_v' \catenate [x_v]$ for some $xs_v'$ and $x_v$, we extract $\Psi \ x_v$ from $All\ xs_v \ \Psi$, and use this to prove the right disjunct in $Q$.
+To derive the dequeue spec, we pick $P \eqdef \TRUE$ and $Q \ v \eqdef v = \None \lor (\Exists x_v . v = \Some{x_v} \star \Psi \ x_v)$. Again, the hoare triple we get after proving the viewshift is exactly the hoare triple we must prove, except that its precondition is weaker. Hence, we only have to prove the viewshift. This is done analogously to the sequential case (i.e. case distinction on $xs_v$), except this time we get $\abstractstatefullfrag{Q_{\gname H}}{xs_v}$ through the invariant, and in the case where $xs_v$ is not empty, i.e. $xs_v = xs_v' \catenate [x_v]$ for some $xs_v'$ and $x_v$, we extract $\Psi \ x_v$ from $All\ xs_v \ \Psi$, and use this to prove the right disjunct in $Q$.
 
 
 \chapter{The Lock-Free Michael Scott Queue}
@@ -1061,7 +1061,7 @@ To capture these properties, we introduce two notions of reachability: concrete 
 \subsection{Concrete Reachability}
 We say that a node $x_n$ in a linked list can concretely reach a node $x_m$ when, if we start traversing succeeding nodes (by following the out and in pointers starting from $x_n$), we will eventually get to $x_m$. If this is the case, we write $\reach{x_n}{x_m}$. We allow for traversing zero nodes to reach $x_m$, which essentially means that all nodes can reach themselves. Formally, we define $\reach{x_n}{x_m}$ inductively as follows.
 \begin{definition}[Concrete Reachability]
-  $\reach{x_n}{x_m} \eqdef \nIn{x_n} \mapsto^{\persistently} (\nVal{x_n}, \nOut{x_n}) \ast (x_n = x_m \lor \Exists x_p . \nOut{x_n} \mapsto^{\persistently} \nIn{x_p} \ast \reach{x_p}{x_m})$
+  $\reach{x_n}{x_m} \eqdef \nIn{x_n} \mapsto^{\persistently} (\nVal{x_n}, \nOut{x_n}) \star (x_n = x_m \lor \Exists x_p . \nOut{x_n} \mapsto^{\persistently} \nIn{x_p} \star \reach{x_p}{x_m})$
 \end{definition}
 This definition firstly states that $x_n$ is a node: $\nIn{x_n} \mapsto^{\persistently} (\nVal{x_n}, \nOut{x_n})$. Secondly, $x_n$ is either the node 
 to be reached $x_m$, or it has a succeeding node $x_p$, which can reach $x_m$.
@@ -1075,7 +1075,7 @@ We proceed to prove some useful lemmas about concrete reachability.
   $\reach{x_n}{x_n} \wandIff \isNode{x_n}$
 \end{lemma}
 \begin{proof}
-  The $\wand$ direction follows directly by the definition. To prove the $\wandby$ direction, it suffices to show $(x_n = x_n \lor \Exists x_p . \nOut{x_n} \mapsto^{\persistently} \nIn{x_p} \ast \reach{x_p}{x_n})$. Clearly, this follows as the left disjunction holds.
+  The $\wand$ direction follows directly by the definition. To prove the $\wandby$ direction, it suffices to show $(x_n = x_n \lor \Exists x_p . \nOut{x_n} \mapsto^{\persistently} \nIn{x_p} \star \reach{x_p}{x_n})$. Clearly, this follows as the left disjunction holds.
 \end{proof}
 
 \begin{lemma}[reach-transitive]
@@ -1105,7 +1105,7 @@ We proceed to prove some useful lemmas about concrete reachability.
 \end{proof}
 
 \begin{lemma}[reach-last]
-  $\reach{x_n}{x_m} \wand \nOut{x_n} \mapsto \None \wand x_n = x_m \ast \nOut{x_n} \mapsto \None$
+  $\reach{x_n}{x_m} \wand \nOut{x_n} \mapsto \None \wand x_n = x_m \star \nOut{x_n} \mapsto \None$
 \end{lemma}
 \begin{proof}
   Assuming $\reach{x_n}{x_m}$ and $\nOut{x_n} \mapsto \None$, we must prove that $x_n = x_m$ and $\nOut{x_n} \mapsto \None$.
@@ -1114,47 +1114,56 @@ We proceed to prove some useful lemmas about concrete reachability.
 
 
 \subsection{Abstract Reachability}
-\todo{Introduce the concept}
 
+As discussed, we wish to capture that if a node can reach either the head or tail node at one point during the program, then it can reach any future head or tail nodes. To do this we introduce the notion of abstract reachability. The idea is to introduce ghost variables that can "point" to nodes in the linked list, just as the head and tail pointers do. We shall write $\ap{\gname}{x}$ to mean that the ghost variable $\gname$ \emph{abstractly points} to the node $x$. We shall construct the abstract points-to predicate so that we can update $\ap{\gname}{x}$ to $\ap{\gname}{y}$ only if $x$ can concretely reach $y$, i.e. $\reach{x}{y}$. This additional restriction compared to the normal points-to predicate is what allows us to capture the property described above. We write $\ar{x}{\gname}$ to mean that the node $x$ can \emph{abstractly reach} the ghost variable $\gname$. The idea is that, if we have established $\ar{x}{\gname}$, then no matter what node $\gname$ abstractly points to, for instance $\ap{\gname}{y}$, we can conclude $\reach{x}{y}$. This means that if we update $\ap{\gname}{y}$ in the future to, say $\ap{\gname}{z}$, then we can conclude that $\reach{x}{z}$.
+
+To define the abstract points-to predicate and the abstract reach predicate, we create the following resource algebra: $\authm(\mathcal{P}(\Node))$, where $\Node = (\Loc \times \Val) \times \Loc$. Here, the resource algebra $\mathcal{P}(\Node)$ denotes the set of subsets of $\Node$, with union as the operation. The empty set is the unit element, meaning that $\mathcal{P}(\Node)$ is unital. We may now define abstract reach and abstract points-to as follows.
 \begin{definition}[Abstract Reach]
   $\ar{x}{\gname} \eqdef \ownGhost{\gname}{\authfrag \{x\}}$
 \end{definition}
 
-\todo{fix notation}
 \begin{definition}[Abstract Points to]
-  $\ap{x}{\gname} \eqdef \Exists s . \ownGhost{\gname}{\authfull s} \ast \ast_{x_m \in s} \reach{x_m}{x}$
+  $\ap{\gname}{x} \eqdef \Exists s . \ownGhost{\gname}{\authfull s} \star \Sep_{x_m \in s} \reach{x_m}{x}$
 \end{definition}
 
-\todo{is it a viewshift?}
-\begin{lemma}[Abs-Reach-Alloc]
-  $\reach{x}{x} \vs (\Exists \gname . \ap{\gname}{x} \ast \ar{x}{\gname})$
+One should think about sets $s \in \mathcal{P}(\Node)$ as specifying which nodes can abstractly reach a certain ghost variable. Due to how the authoritative resource algebra work, the assertion $\ownGhost{\gname}{\authfrag \{x\}}$ essentially states that $x$ is \textit{one} of the nodes that can reach the node that $\gname$ points to. This is because, when combining fragmental and authoritative elements, we get that the fragmental element is "smaller" than the authoritative. In this case, "smaller" amounts to "subset". Hence, $\ownGhost{\gname}{\authfrag \{x\}}$ means that, whatever the authoritative set is, it will contain the node $x$. 
+
+The authoritative set is existentially quantified as it can change over time, but whatever it is, we assert that all the nodes it contains \textit{can} concretely reach the node that the ghost name is currently pointing to. This choice of definitions enables us to prove the properties we desired of abstract reachability above. The four lemmas below is all we need for abstract reachability when we prove the specification for the lock-free M\&S-queue later.
+
+Firstly, if we have a node, we may allocate some ghost variable $\gname$ which points to it and assert that the node can reach $\gname$.
+\begin{lemma}[Abs-Reach-Alloc]\label{lemma:abs-reach-alloc}
+  \todo{is it a viewshift?}
+  $\reach{x}{x} \vs (\Exists \gname . \ap{\gname}{x} \star \ar{x}{\gname})$
 \end{lemma}
 \begin{proof}
   \todo{write in proof}
 \end{proof}
 
-\begin{lemma}[Abs-Reach-Concr]
+The second lemma allows us to get a \textit{concrete} reachability predicate out of an abstract one. If a ghost name $\gname_m$ currently points abstractly to some node $x_m$, then any node that can abstractly reach $\gname$, can also \textit{concretely} reach $x_m$.
+\begin{lemma}[Abs-Reach-Concr]\label{lemma:abs-reach-concr}
   $\ar{x_n}{\gname_m} \wand
    \ap{\gname_m}{x_m} \wand
-   \reach{x_n}{x_m} \ast \ap{\gname_m}{x_m}$
+   \reach{x_n}{x_m} \star \ap{\gname_m}{x_m}$
 \end{lemma}
 \begin{proof}
   \todo{write in proof}
 \end{proof}
 
-\begin{lemma}[Abs-Reach-Abs]
+We can also go the other way, and get an abstract reachability predicate out of a concrete one. If a ghost variable $\gname_m$ points abstractly to some node $x_m$, and a node $x_n$ can \textit{concretely} reach $x_m$, then we may deduce that $x_n$ can \textit{abstractly} reach $\gname_m$, meaning that $x_n$ can reach any node that $\gname_m$ will ever point to in the future.
+\begin{lemma}[Abs-Reach-Abs]\label{lemma:abs-reach-abs}
   $\reach{x_n}{x_m} \wand
    \ap{\gname_m}{x_m} \vs
-   \ar{x_n}{\gname_m} \ast \ap{\gname_m}{x_m}$
+   \ar{x_n}{\gname_m} \star \ap{\gname_m}{x_m}$
 \end{lemma}
 \begin{proof}
   \todo{write in proof}
 \end{proof}
 
-\begin{lemma}[Abs-Reach-Advance]
+The final lemma allows us update abstract pointers. As discussed above, we will require that whatever node we update the pointer to is a successor of the current node. That is, if a ghost variable $\gname_m$ currently points to $x_m$, then we must show that $x_m$ can reach $x_o$, before we can update $\gname$ to point abstractly to $x_o$. After the update we additionally get that $x_o$ can abstractly reach $\gname$.
+\begin{lemma}[Abs-Reach-Advance]\label{lemma:abs-reach-advance}
     $\ap{\gname_m}{x_m} \wand
      \reach{x_m}{x_o} \vs
-     \ap{\gname_m}{x_o} \ast \ar{x_o}{\gname_m}$
+     \ap{\gname_m}{x_o} \star \ar{x_o}{\gname_m}$
 \end{lemma}
 \begin{proof}
   \todo{write in proof}
@@ -1166,23 +1175,23 @@ We proceed to prove some useful lemmas about concrete reachability.
 \begin{definition}[Lock-Free M\&S-Queue Invariant]\label{LFMSQ:spec:invariant}
   \begin{align*}
     &queue\_invariant \ \loc_{head} \ \loc_{tail} \ Q_\gname \eqdef\\
-    &\Exists xs_v. \abstractstateauth{Q_\gname}{xs_v} \ast &&\text{(abstract state)}\\
+    &\Exists xs_v. \abstractstateauth{Q_\gname}{xs_v} \star &&\text{(abstract state)}\\
     &\Exists xs, xs_{queue}, x_{head}, x_{tail} x_{last} . &&\text{(concrete state)}\\
-    &xs = xs_{queue} \catenate [x_{head}] \ast\\
-    &\isLL \ xs \ast\\
+    &xs = xs_{queue} \catenate [x_{head}] \star\\
+    &\isLL \ xs \star\\
     &isLast \ x_{last} \ xs\\
-    &proj\_val \ xs_{queue} = wrap\_some \ xs_v \ast\\
-    &\loc_{head} \mapsto \nIn{x_{head}} \ast\\
-    &\loc_{tail} \mapsto \nIn{x_{tail}} \ast\\
-    &\ap{Q_\gname.\gname_{Head}}{x_{head}} \ast \ar{x_{head}}{Q_\gname.\gname_{Tail}} \ast\\
-    &\ap{Q_\gname.\gname_{Tail}}{x_{tail}} \ast \ar{x_{tail}}{Q_\gname.\gname_{Last}} \ast\\
+    &proj\_val \ xs_{queue} = wrap\_some \ xs_v \star\\
+    &\loc_{head} \mapsto \nIn{x_{head}} \star\\
+    &\loc_{tail} \mapsto \nIn{x_{tail}} \star\\
+    &\ap{Q_\gname.\gname_{Head}}{x_{head}} \star \ar{x_{head}}{Q_\gname.\gname_{Tail}} \star\\
+    &\ap{Q_\gname.\gname_{Tail}}{x_{tail}} \star \ar{x_{tail}}{Q_\gname.\gname_{Last}} \star\\
     &\ap{Q_\gname.\gname_{Last}}{x_{last}}
   \end{align*}
 \end{definition}
 
 \begin{align*}
   \isqueue \; v_q \; \Qg \eqdef &\Exists \loc_{queue}, \loc_{head}, \loc_{tail} \in \Loc . \\
-  &v_q = \loc_{queue} \ast \loc_{queue} \mapsto^{\persistently} (\loc_{head}, \loc_{tail}) \ast\\
+  &v_q = \loc_{queue} \star \loc_{queue} \mapsto^{\persistently} (\loc_{head}, \loc_{tail}) \star\\
 	&\knowInv{\Nl.queue}{queue\_invariant \loc_{head} \loc_{tail} \Qg}
 \end{align*}
 
@@ -1199,12 +1208,20 @@ We proceed to prove some useful lemmas about concrete reachability.
 \subsubsection{Dequeue}
 \todo{write in proof outline}
 
+
+\section{Discussion}
+\label{LFMSQ:discussion}
+
+\todo{Mention that one can remove the consistency check and hence also the prophecy}
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\chapter{Conclusion}
-\label{ch:conclusion}
+\chapter{Conclusion and Future work}
+\label{ch:conclusion_fw}
 
 \todo{conclude on the problem statement from the introduction}
+
+\todo{Mention the possibility of simplifying queue invariant for lock-free by removing isLL (and adding x\_last -> None)}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
