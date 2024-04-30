@@ -1056,50 +1056,60 @@ Secondly, similarly to the two-lock variant, the correctness of the queue relies
 
 Thirdly, whereas it was possible for the tail node to lag behind the head node in the two-lock version, it is not possible in the lock-free version. Indeed, if such a scenario could happen, $\dequeue$ could crash! Consider the scenario where the head node is the last node in the linked list (hence the queue is empty), and the tail is lagging behind the head. If someone invokes $\dequeue$, the check on line \ref{LFD:heqt}, which is supposed to detect an empty queue or a lagging tail will result to false, and hence, incorrectly, take the `else' branch, which assumes that there is something to dequeue. But since the queue is empty, then $next$ -- the node after head -- is $\None$, and when we try to dereference $next$ on line \ref{LFD:vd}, we will crash. Therefore, our invariant must ensure that the tail never lags behind the head.
 
-To capture these properties, we introduce two notions of reachability: concrete reachability and abstract reachability, which we introduce in the following sections.
+To capture these properties, we introduce two notions of reachability: concrete reachability and abstract reachability, which we introduce in the following sections. This way of modelling the queue was originally introduced in \cite{DBLP:conf/cpp/VindumB21}. The presentation here borrows the same ideas, but the presentation differs in the sense that it is node-oriented instead of location-oriented. Moreover, we prove some additional properties of reachability which allows us to simplify the queue invariant slightly.
 
 \subsection{Concrete Reachability}
-\todo{Introduce the concept}
-
-\begin{definition}
+We say that a node $x_n$ in a linked list can concretely reach a node $x_m$ when, if we start traversing succeeding nodes (by following the out and in pointers starting from $x_n$), we will eventually get to $x_m$. If this is the case, we write $\reach{x_n}{x_m}$. We allow for traversing zero nodes to reach $x_m$, which essentially means that all nodes can reach themselves. Formally, we define $\reach{x_n}{x_m}$ inductively as follows.
+\begin{definition}[Concrete Reachability]
   $\reach{x_n}{x_m} \eqdef \nIn{x_n} \mapsto^{\persistently} (\nVal{x_n}, \nOut{x_n}) \ast (x_n = x_m \lor \Exists x_p . \nOut{x_n} \mapsto^{\persistently} \nIn{x_p} \ast \reach{x_p}{x_m})$
 \end{definition}
+This definition firstly states that $x_n$ is a node: $\nIn{x_n} \mapsto^{\persistently} (\nVal{x_n}, \nOut{x_n})$. Secondly, $x_n$ is either the node 
+to be reached $x_m$, or it has a succeeding node $x_p$, which can reach $x_m$.
+Note that the points-to propositions are all persistent, which mimics the fact that the linked list is only ever changed by appending new nodes to the end.
+\todo{decide which of the following two sentences makes more sense}
+This in turn makes concrete reachability a persistent predicate.
+This in turn makes $\reach{x_n}{x_m}$ persistent for all $x_n$ and $x_m$.
 
-Reach is persistent
-
+We proceed to prove some useful lemmas about concrete reachability.
 \begin{lemma}[reach-reflexive]
   $\reach{x_n}{x_n} \wandIff \isNode{x_n}$
 \end{lemma}
 \begin{proof}
-  \todo{write in proof}
+  The $\wand$ direction follows directly by the definition. To prove the $\wandby$ direction, it suffices to show $(x_n = x_n \lor \Exists x_p . \nOut{x_n} \mapsto^{\persistently} \nIn{x_p} \ast \reach{x_p}{x_n})$. Clearly, this follows as the left disjunction holds.
 \end{proof}
 
-\begin{lemma}[reach-Transitive]
-  $\reach{x_n}{x_m} \wand \reach{x_m}{x_o} -\ast \reach{x_n}{x_o}$
+\begin{lemma}[reach-transitive]
+  $\reach{x_n}{x_m} \wand \reach{x_m}{x_o} \wand \reach{x_n}{x_o}$
 \end{lemma}
 \begin{proof}
-  \todo{write in proof}
+  We proceed by induction in $\reach{x_n}{x_m}$.
+  \begin{itemize}
+    \item[B.C.] In the base case, $x_n = x_m$. We get to assume that $\reach{x_m}{x_o}$, and must prove $\reach{x_n}{x_o}$. Since $x_n = x_m$, we are done.
+    \item[I.C.] In the inductive case, we assume that $x_n$ is a node that points to some $x_p$, which satisfies $\reach{x_m}{x_o} \wand \reach{x_p}{x_o}$. Assuming $\reach{x_m}{x_o}$, we must prove $\reach{x_n}{x_o}$.\\
+    To prove $\reach{x_n}{x_o}$ we must first show that $x_n$ is a node, which we have already established. Next, we must show that either $x_n = x_o$, or $x_n$ steps to some $x_p'$ which can reach $x_o$. We prove the second case by choosing our $x_p$ for $x_p'$. Thus, we have to show $\reach{x_p}{x_o}$. This then follow by the induction hypothesis together with our assumption that $\reach{x_m}{x_o}$.
+  \end{itemize}
 \end{proof}
 
-\begin{lemma}[reach-from-is-node]
+\begin{lemma}[reach-from-is-node]\label{lemma:reach-from-is-node}
   $\reach{x_n}{x_m} \wand \isNode{x_n}$
 \end{lemma}
 \begin{proof}
-  \todo{write in proof}
+  This follow immediately from the definition or concrete reachability.
 \end{proof}
 
 \begin{lemma}[reach-to-is-node]
   $\reach{x_n}{x_m} \wand \isNode{x_m}$
 \end{lemma}
 \begin{proof}
-  \todo{write in proof}
+  We proceed by induction in $\reach{x_n}{x_m}$. The base case follows by lemma \ref{lemma:reach-from-is-node} above. In the inductive case, we assume that $x_n$ points to some $x_p$, which reaches $x_m$. Our induction hypothesis is $\isNode{x_m}$, which is also our proof obligation, so we are done.
 \end{proof}
 
 \begin{lemma}[reach-last]
   $\reach{x_n}{x_m} \wand \nOut{x_n} \mapsto \None \wand x_n = x_m \ast \nOut{x_n} \mapsto \None$
 \end{lemma}
 \begin{proof}
-  \todo{write in proof}
+  Assuming $\reach{x_n}{x_m}$ and $\nOut{x_n} \mapsto \None$, we must prove that $x_n = x_m$ and $\nOut{x_n} \mapsto \None$.
+  By $\reach{x_n}{x_m}$, we know that either $x_n = x_m$, or $x_n$ points to some $x_p$ and $\reach{x_p}{x_m}$. The first case immediately gives us everything we need to prove both goals. If we are in the second case, then we know that $\nOut{x_n} \mapsto^{\persistently} \nIn{x_p}$. But by our initial assumption, $\nOut{x_n} \mapsto \None$. Since $\nIn{x_p}$ is a location, then this is clearly a contradiction.
 \end{proof}
 
 
@@ -1124,8 +1134,8 @@ Reach is persistent
 \end{proof}
 
 \begin{lemma}[Abs-Reach-Concr]
-  $\ar{x_n}{\gname_m} -\ast
-   \ap{\gname_m}{x_m} -\ast
+  $\ar{x_n}{\gname_m} \wand
+   \ap{\gname_m}{x_m} \wand
    \reach{x_n}{x_m} \ast \ap{\gname_m}{x_m}$
 \end{lemma}
 \begin{proof}
@@ -1133,7 +1143,7 @@ Reach is persistent
 \end{proof}
 
 \begin{lemma}[Abs-Reach-Abs]
-  $\reach{x_n}{x_m} -\ast
+  $\reach{x_n}{x_m} \wand
    \ap{\gname_m}{x_m} \vs
    \ar{x_n}{\gname_m} \ast \ap{\gname_m}{x_m}$
 \end{lemma}
@@ -1142,7 +1152,7 @@ Reach is persistent
 \end{proof}
 
 \begin{lemma}[Abs-Reach-Advance]
-    $\ap{\gname_m}{x_m} -\ast
+    $\ap{\gname_m}{x_m} \wand
      \reach{x_m}{x_o} \vs
      \ap{\gname_m}{x_o} \ast \ar{x_o}{\gname_m}$
 \end{lemma}

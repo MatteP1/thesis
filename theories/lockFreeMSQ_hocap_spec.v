@@ -183,7 +183,7 @@ Proof.
 Qed.
 
 (* If x_n points to none, then it only reaches itself *)
-Lemma reach_end_eq : ∀ x_n x_m,
+Lemma reach_last : ∀ x_n x_m,
   x_n ⤳ x_m -∗
   n_out x_n ↦ NONEV -∗
   ⌜x_n = x_m⌝ ∗ n_out x_n ↦ NONEV.
@@ -742,11 +742,11 @@ Proof.
       (* x_head ⤳ x_tail' *)
       iPoseProof (Abs_Reach_Concr with "Hxhead_ar_γTail HγTail_ap_xtail") as "[Hxhead_reach_xtail' HγTail_ap_xtail]".
       (* x_head = x_head' *)
-      iPoseProof (reach_end_eq with "Hxhead_reach_xhead' Hxhead_to_none") as "[><- Hxhead_to_none]".
+      iPoseProof (reach_last with "Hxhead_reach_xhead' Hxhead_to_none") as "[><- Hxhead_to_none]".
       (* x_head = x_tail' *)
-      iPoseProof (reach_end_eq with "Hxhead_reach_xtail' Hxhead_to_none") as "[><- Hxhead_to_none]".
+      iPoseProof (reach_last with "Hxhead_reach_xtail' Hxhead_to_none") as "[><- Hxhead_to_none]".
       (* x_head = x_tail *)
-      iPoseProof (reach_end_eq with "Hxhead_reach_xtail Hxhead_to_none") as "[><- Hxhead_to_none]".
+      iPoseProof (reach_last with "Hxhead_reach_xtail Hxhead_to_none") as "[><- Hxhead_to_none]".
       wp_load. (* Linearisation Point *)
       iAssert (⌜xs_queue = []⌝)%I as "->".
       {
