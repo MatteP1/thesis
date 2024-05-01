@@ -872,7 +872,7 @@ Our definition of $\isqueue$ is almost the same as $\isqueueconc$, so we only me
 
 \subsection{Proof outline}
 The proofs are largely similar to the concurrent spec, but now, instead of having to handle the $\Psi$ predicate, we must work with the authoritative and fragmental views of the abstract state.\\
-For initialise, we must additionally get ownership of the authoritative and fragmental view of the abstract state, both of which should state that it is empty. I.e. we must get $\abstractstateauth{\Qg}{[]} \star \abstractstatefullfrag{\Qg}{[]}$. We achieve this by own-op and and own-allocate, which requires us to show that $\authfull (1, \aginj\ []) \cdot \authfrag (1, \aginj\ []) \in \Vl$. This follows by the definitions of the resource algebras. We use $\abstractstateauth{\Qg}{[]}$ to establish the queue invariant, and $\abstractstatefullfrag{\Qg}{[]}$ to prove the post-condition.\\
+For initialise, we must additionally get ownership of the authoritative and fragmental view of the abstract state, both of which should state that it is empty. I.e. we must get $\abstractstateauth{\Qg}{[]} \star \abstractstatefullfrag{\Qg}{[]}$. We achieve this by own-op and and own-allocate, which requires us to show that $\authfull (1, \aginj\ []) \mtimes \authfrag (1, \aginj\ []) \in \Vl$. This follows by the definitions of the resource algebras. We use $\abstractstateauth{\Qg}{[]}$ to establish the queue invariant, and $\abstractstatefullfrag{\Qg}{[]}$ to prove the post-condition.\\
 For enqueue and dequeue, the only real changes are the points in the proof, where the concrete state of the queue is updated.
 
 \textbf{Enqueue} We start by assuming the viewshift which allows us to update $P$ to $Q$ and $\abstractstateauth{\Qg}{xs_v}$ to $\abstractstateauth{\Qg}{v :: xs_v}$, for any $xs_v$. We must then prove the hoare triple for the expression $\enqueue \ v_q \ v$. The only real change from the previous proof happens the second time we open the invariant; the first and third times, the abstract state doesn't change, hence we can simply frame away the newly added authoritative fragment concerning the abstract state, and continue as we did before. The second time we open the invariant, it is around the expression that adds the newly created node to the linked list (\todo{add line number}). When opening it, we get $\abstractstateauth{\Qg}{xs_v}$. As before, we also get all the resources to match up variables and step through the code, updating the concrete state. To close the invariant, we must make the same choice of abstract state as we did previously: $v :: xs_v$. This, however, requires us to obtain $\abstractstateauth{\Qg}{v :: xs_v}$. However, since we have $\abstractstateauth{\Qg}{xs_v}$ and $P$ (from the precondition), we can apply the viewshift to obtain it, along with $Q$. This then allows us to close the invariant, and the proof proceeds as previously. At the end, we must also prove the postcondition $Q$, but this is no issue as we obtained that from the viewshift.
@@ -1071,14 +1071,14 @@ This in turn makes concrete reachability a persistent predicate.
 This in turn makes $\reach{x_n}{x_m}$ persistent for all $x_n$ and $x_m$.
 
 We proceed to prove some useful lemmas about concrete reachability.
-\begin{lemma}[reach-reflexive]
+\begin{lemma}[reach-reflexive]\label{lemma:reach-reflexive}
   $\reach{x_n}{x_n} \wandIff \isNode{x_n}$
 \end{lemma}
 \begin{proof}
   The $\wand$ direction follows directly by the definition. To prove the $\wandby$ direction, it suffices to show $(x_n = x_n \lor \Exists x_p . \nOut{x_n} \mapsto^{\persistently} \nIn{x_p} \star \reach{x_p}{x_n})$. Clearly, this follows as the left disjunction holds.
 \end{proof}
 
-\begin{lemma}[reach-transitive]
+\begin{lemma}[reach-transitive]\label{lemma:reach-transitive}
   $\reach{x_n}{x_m} \wand \reach{x_m}{x_o} \wand \reach{x_n}{x_o}$
 \end{lemma}
 \begin{proof}
@@ -1097,14 +1097,14 @@ We proceed to prove some useful lemmas about concrete reachability.
   This follow immediately from the definition or concrete reachability.
 \end{proof}
 
-\begin{lemma}[reach-to-is-node]
+\begin{lemma}[reach-to-is-node]\label{lemma:reach-to-is-node}
   $\reach{x_n}{x_m} \wand \isNode{x_m}$
 \end{lemma}
 \begin{proof}
   We proceed by induction in $\reach{x_n}{x_m}$. The base case follows by lemma \ref{lemma:reach-from-is-node} above. In the inductive case, we assume that $x_n$ points to some $x_p$, which reaches $x_m$. Our induction hypothesis is $\isNode{x_m}$, which is also our proof obligation, so we are done.
 \end{proof}
 
-\begin{lemma}[reach-last]
+\begin{lemma}[reach-last]\label{lemma:reach-last}
   $\reach{x_n}{x_m} \wand \nOut{x_n} \mapsto \None \wand x_n = x_m \star \nOut{x_n} \mapsto \None$
 \end{lemma}
 \begin{proof}
@@ -1136,7 +1136,7 @@ Firstly, if we have a node, we may allocate some ghost variable $\gname$ which p
   $\reach{x}{x} \vs (\Exists \gname . \ap{\gname}{x} \star \ar{x}{\gname})$
 \end{lemma}
 \begin{proof}
-  \todo{write in proof}
+  We assume $\reach{x}{x}$ and must show $\pvs \Exists \gname' . \ap{\gname'}{x} \star \ar{x}{\gname'}$. By definition or the authoritative RA, the element $\authfull \{x\} \mtimes \authfrag \{x\}$ is valid. Hence by the Ghost-alloc rule, we may get $\pvs \Exists \gname . \ownGhost{\gname}{\authfull \{x\} \mtimes \authfrag \{x\}}$. By Upd-mono, we may strip away the update modality on the goal and the previous assertion. Thus, we must prove $\Exists \gname' . \ap{\gname'}{x} \star \ar{x}{\gname'}$, and we have that $\Exists \gname . \ownGhost{\gname}{\authfull \{x\} \mtimes \authfrag \{x\}}$. We use $\gname$ as the witness in the goal meaning we must prove  $\ap{\gname}{x} \star \ar{x}{\gname}$. We can split the ownership of the authoritative and fragmental parts up using Own-op, giving us $\ownGhost{\gname}{\authfull \{x\}}$ and $\ownGhost{\gname}{\authfrag \{x\}}$. The latter assertion is equivalent to $\ar{x}{\gname}$, which matches the second obligation in the goal. To prove the first obligation, we must give some set as witness, and show that all nodes in the set can reach $x$. We of course choose $\{x\}$ as the witness, and must then prove that $\reach{x}{x}$, which we assumed in the beginning.
 \end{proof}
 
 The second lemma allows us to get a \textit{concrete} reachability predicate out of an abstract one. If a ghost name $\gname_m$ currently points abstractly to some node $x_m$, then any node that can abstractly reach $\gname$, can also \textit{concretely} reach $x_m$.
@@ -1146,7 +1146,7 @@ The second lemma allows us to get a \textit{concrete} reachability predicate out
    \reach{x_n}{x_m} \star \ap{\gname_m}{x_m}$
 \end{lemma}
 \begin{proof}
-  \todo{write in proof}
+  Assuming $\ar{x_n}{\gname_m}$ and $\ap{\gname_m}{x_m}$, we must show $\reach{x_n}{x_m}$ without "consuming" $\ap{\gname_m}{x_m}$. From $\ap{\gname_m}{x_m}$ we can deduce that there is some set $s$ so that $\ownGhost{\gname_m}{\authfull s}$ and $\Sep_{x' \in s} \reach{x'}{x_m}$. Since we own both $\ownGhost{\gname_m}{\authfull s}$ and $\ownGhost{\gname_m}{\authfrag \{x_n\}}$ (from $\ar{x_n}{\gname_m}$), we may conclude that their product is valid, which in our instantiation of the authoritative RA equates to $x_n \in s$. We may now frame away the second part of the goal, $\ap{\gname_m}{x_m}$, using $\ownGhost{\gname_m}{\authfull s}$ and $\Sep_{x' \in s} \reach{x'}{x_m}$. Note that we get to keep the latter assertion as reach is persistent. Thus, from that assertion and by $x_n \in s$, we can deduce that $\reach{x_n}{x_m}$, which is what we had to prove.
 \end{proof}
 
 We can also go the other way, and get an abstract reachability predicate out of a concrete one. If a ghost variable $\gname_m$ points abstractly to some node $x_m$, and a node $x_n$ can \textit{concretely} reach $x_m$, then we may deduce that $x_n$ can \textit{abstractly} reach $\gname_m$, meaning that $x_n$ can reach any node that $\gname_m$ will ever point to in the future.
@@ -1156,7 +1156,12 @@ We can also go the other way, and get an abstract reachability predicate out of 
    \ar{x_n}{\gname_m} \star \ap{\gname_m}{x_m}$
 \end{lemma}
 \begin{proof}
-  \todo{write in proof}
+  Assuming $\reach{x_n}{x_m}$ and $\ap{\gname_m}{x_m}$ we must conclude $\pvs \ar{x_n}{\gname_m}$. From $\ap{\gname_m}{x_m}$ we know that there is some set $s$ so that $\ownGhost{\gname_m}{\authfull s}$ and $\Sep_{x' \in s} \reach{x'}{x_m}$. There are now two cases to consider: either $x_n \in s$ or $x_n \notin s$.
+  \begin{itemize}
+    \item[$x_n \in s$] By the definition of our authoritative RA, if a set $y$ is a subset of $s$, then we may update our ghost resources to obtain ownership of the fragment $y$. In our case, since $x_n \in s$, we may update our resources to additionally get $\ownGhost{\gname_m}{\authfrag \{x_n\}}$, which is exactly what we wanted. Since we still have $\ownGhost{\gname_m}{\authfull s}$, we can also prove $\ap{\gname_m}{x_m}$.
+    \item[$x_n \notin s$] In this case we may update $\ownGhost{\gname_m}{\authfull s}$ so that the set also includes $x_n$. The reason we may do this, is because, according to the $\mathcal{P}(\Node)$ RA, we may update a set $X$ to $Y$, as long as $X \subseteq Y$. Thus, we can update our resource to get $\ownGhost{\gname_m}{\authfull \{x_n\} \cup s}$. As in the previous case, we can further get $\ownGhost{\gname_m}{\authfrag \{x_n\}}$ out of this, which we use to frame away the goal $\ar{x_n}{\gname_m}$.\\
+    To prove $\ap{\gname_m}{x_m}$, we use the set $\{x_n\} \cup s$, and immediately frame away the authoritative part, which we owned. We are left with having to prove $\Sep_{x' \in \{x_n\} \cup s} \reach{x'}{x_m}$. However, by $\Sep_{x' \in s} \reach{x'}{x_m}$ and our assumption that $\reach{x_n}{x_m}$, we can easily conclude this.
+  \end{itemize}
 \end{proof}
 
 The final lemma allows us update abstract pointers. As discussed above, we will require that whatever node we update the pointer to is a successor of the current node. That is, if a ghost variable $\gname_m$ currently points to $x_m$, then we must show that $x_m$ can reach $x_o$, before we can update $\gname$ to point abstractly to $x_o$. After the update we additionally get that $x_o$ can abstractly reach $\gname$.
@@ -1166,11 +1171,18 @@ The final lemma allows us update abstract pointers. As discussed above, we will 
      \ap{\gname_m}{x_o} \star \ar{x_o}{\gname_m}$
 \end{lemma}
 \begin{proof}
-  \todo{write in proof}
+  Assuming $\ap{\gname_m}{x_m}$ and $\reach{x_m}{x_o}$ we must prove $\pvs \ap{\gname_m}{x_o} \star \ar{x_o}{\gname_m}$. From $\ap{\gname_m}{x_m}$, we get some set $s$ so that $\ownGhost{\gname_m}{\authfull s}$ and $\Sep_{x' \in s} \reach{x'}{x_m}$. As we did in previous proof (lemma \ref{lemma:abs-reach-abs}), we update $\ownGhost{\gname_m}{\authfull s}$ so that the set additionally contains $x_o$. Thus, we get $\ownGhost{\gname_m}{\authfull \{x_o\} \cup s}$. From this, we may extract ownership of the fragmental part: $\ownGhost{\gname_m}{\authfull \{x_o\}}$, which we use to prove the second part of the goal.\\
+  We are thus left with proving $\ap{\gname_m}{x_o}$. We use $\{x_o\} \cup s$ as witness for the authoritative set, and immediately frame away the ownership assertion of the authoritative part. We are left with proving $\Sep_{x' \in \{x_o\} \cup s} \reach{x'}{x_o}$. We already know that $\Sep_{x' \in s} \reach{x'}{x_m}$ and $\reach{x_m}{x_o}$. Thus, by transitivity of reach (lemma \ref{lemma:reach-transitive}), we may conclude $\Sep_{x' \in \cup s} \reach{x'}{x_o}$. Thus, we are done if we can prove that $\reach{x_o}{x_o}$, which by \ref{lemma:reach-reflexive} amount to showing that $x_o$ is a node. However, since $\reach{x_m}{x_o}$, then, by \ref{lemma:reach-to-is-node}, we know that this is the case.
 \end{proof}
 
 \section{Specification for Lock-Free M\&S-Queue}
 \label{LFMSQ:section:spec}
+
+\todo{mention similarity to two-lock variant}
+
+\subsection[The isqueue predicate]{The $\isqueue$ predicate}
+
+\todo{explain invariant and predicate}
 
 \begin{definition}[Lock-Free M\&S-Queue Invariant]\label{LFMSQ:spec:invariant}
   \begin{align*}

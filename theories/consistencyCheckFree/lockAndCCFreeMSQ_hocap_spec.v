@@ -288,22 +288,21 @@ Proof.
     iFrame "Hxo_ar_γm".
     iExists ({[x_o]} ∪ s).
     iFrame "Hγm_auth".
-    destruct (decide (x_o ∈ s)) as [ Hxo_in_s | Hxo_notin_s ].
-    + assert (Heq: {[x_o]} ∪ s = s); first set_solver.
-      rewrite Heq.
+    iAssert ([∗ set] x' ∈ s, x' ⤳ x_o)%I as "H_reach_xo".
+    {
       iApply (big_sepS_impl with "H_reach_xm").
       iModIntro.
       iIntros (x) "%Hx_in_s #Hx_reach_xm".
       by iApply reach_trans.
+    }
+    destruct (decide (x_o ∈ s)) as [ Hxo_in_s | Hxo_notin_s ].
+    + assert (Heq: {[x_o]} ∪ s = s); first set_solver.
+      by rewrite Heq.
     + iApply (big_opS_union _ {[x_o]} s); first set_solver.
-      iSplit.
-      * rewrite big_opS_singleton.
-        iApply reach_refl.
-        by iApply reach_to_is_node.
-      * iApply (big_sepS_impl with "H_reach_xm").
-        iModIntro.
-        iIntros (x) "%Hx_in_s #Hx_reach_xm".
-        by iApply reach_trans.
+      iSplit; last done.
+      rewrite big_opS_singleton.
+      iApply reach_refl.
+      by iApply reach_to_is_node.
 Qed.
 
 (* ----- Queue Invariant ------ *)
