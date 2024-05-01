@@ -948,14 +948,14 @@ To derive the dequeue spec, we pick $P \eqdef \TRUE$ and $Q \ v \eqdef v = \None
 \label{ch:LF}
 
 \section{Introduction}
-\label{LFMSQ:introduction}
+\label{LFMSQ:section:introduction}
 
 In this chapter we will study the Lock-Free Michael Scott Queue. As with the two-lock version, the original implementation can be found in \cite{DBLP:conf/podc/MichaelS96}. As the name "Lock-Free" suggests, the implementation doesn't rely on locks to achieve correct behaviour. Instead, it uses the atomic operation: $\CAS$ which we discussed in section \ref{Pre:section:heaplang} \todo{Make sure you have discussed it}.
 
 \todo{Introduce what we will go through in the chapter}
 
 \section{Implementation}
-\label{LFMSQLF:implementation}
+\label{LFMSQ:section:implementation}
 
 \begin{minted}[linenos=true, escapeinside=||,mathescape=true]{ocaml}
 |$\label{}$|  |$ \initialise \eqdef $|
@@ -1046,7 +1046,7 @@ In this chapter we will study the Lock-Free Michael Scott Queue. As with the two
 % \end{align*}
 
 \section{Reachability}
-\label{LFMSQLF:reachability}
+\label{LFMSQ:section:reachability}
 
 An important aspect in the correctness of the lock-free M\&S-queue is which nodes a particular node is able to \textit{reach} through the linked list (i.e. by following the chain of pointers), and how the head and tail pointers change during the lifetime of the queue.
 
@@ -1178,7 +1178,12 @@ The final lemma allows us update abstract pointers. As discussed above, we will 
 \section{Specification for Lock-Free M\&S-Queue}
 \label{LFMSQ:section:spec}
 
-\todo{mention similarity to two-lock variant}
+From the perspective of a client, the two-lock M\&S-Queue and the lock-free M\&S-Queue should behave similarly -- they should both behave as a concurrent queue. Hence, in this section, we will prove specifications that are almost identical to those we proved for the two-lock M\&S-queue; a sequential, a concurrent, and a hocap-style spec.
+
+As we showed in the previous chapter, the sequential and concurrent specifications can be derive from the hocap-style spec \emph{without} referring to the actual implementation. Thus, in this chapter we will only focus on proving the hocap-style spec -- the derivations of the sequential and concurrent specs will be practically identical to that of the last chapter.
+
+The only two differences between the hocap spec we prove for the lock-free version compared to the two-lock version is the collection of ghost names, and the fact that the expressions in our hoare-triples -- $\initialise$, $\enqueue$, and $\dequeue$ -- refer to the lock-free versions from section \ref{LFMSQ:section:implementation}.\\
+The collection $Qgnames$ will contain $\gname_{Abst}$ whose purpose is the same as before; to keep track of the abstract state of the queue. Additionally, we will have $\gname_{Head}$, $\gname_{Tail}$, and $\gname_{Last}$, which will abstractly point to the head, tail, and last node, respectively. 
 
 \subsection[The isqueue predicate]{The $\isqueue$ predicate}
 
