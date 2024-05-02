@@ -515,35 +515,35 @@ Figure \ref{TLMSQ:impl:figure:dequeue} illustrates running dequeue on a non-empt
 \end{figure}
 
 \begin{minted}[linenos=true, escapeinside=||,mathescape=true]{ocaml}
-|$\label{}$|  |$ \initialise \eqdef $|
-|$\label{}$|    |$ \Let node = \Ref(\None, \Ref(\None)) in $|
-|$\label{}$|    |$ \Let H\_lock = newlock \TT in $|
-|$\label{}$|    |$ \Let T\_lock = newlock \TT in $|
-|$\label{}$|    |$ \Ref((\Ref(node), \Ref(node)), (H\_lock, T\_lock)) $|
+|$\label{TLI:fun}$|  |$ \initialise \eqdef $|
+|$\label{TLI:nod}$|    |$ \Let node = \Ref(\None, \Ref(\None)) in $|
+|$\label{TLI:hlo}$|    |$ \Let H\_lock = newlock \TT in $|
+|$\label{TLI:tlo}$|    |$ \Let T\_lock = newlock \TT in $|
+|$\label{TLI:que}$|    |$ \Ref((\Ref(node), \Ref(node)), (H\_lock, T\_lock)) $|
 \end{minted}
 
 \begin{minted}[linenos=true, escapeinside=||,mathescape=true]{ocaml}
-|$\label{}$|  |$ \enqueue \ Q \ value \eqdef $|
-|$\label{}$|    |$ \Let node = \Ref(\Some value, \Ref(\None)) in $|
-|$\label{}$|    |$ \acquire (\Snd (\Snd (\deref Q))); $|
-|$\label{}$|    |$ \Snd (\deref(\deref(\Snd (\Fst(\deref Q))))) \gets node; $|
-|$\label{}$|    |$ \Snd (\Fst (\deref Q)) \gets node; $|
-|$\label{}$|    |$ \release (\Snd (\Snd (\deref Q))) $|
+|$\label{TLE:fun}$|  |$ \enqueue \ Q \ value \eqdef $|
+|$\label{TLE:nod}$|    |$ \Let node = \Ref(\Some value, \Ref(\None)) in $|
+|$\label{TLE:acq}$|    |$ \acquire (\Snd (\Snd (\deref Q))); $|
+|$\label{TLE:add}$|    |$ \Snd (\deref(\deref(\Snd (\Fst(\deref Q))))) \gets node; $|
+|$\label{TLE:sts}$|    |$ \Snd (\Fst (\deref Q)) \gets node; $|
+|$\label{TLE:rel}$|    |$ \release (\Snd (\Snd (\deref Q))) $|
 \end{minted}
 
 \begin{minted}[linenos=true, escapeinside=||,mathescape=true]{ocaml}
-|$\label{}$|  |$ \dequeue \ Q \eqdef $|
-|$\label{}$|    |$ \acquire (\Fst (\Snd (\deref Q))); $|
-|$\label{}$|    |$ \Let node = \deref (\Fst (\Fst (\deref Q))) in $|
-|$\label{}$|    |$ \Let new\_head = \deref (\Snd(\deref node)) in $|
-|$\label{}$|    |$ \If new\_head = \None then $|
-|$\label{}$|      |$ \release (\Fst (\Snd(\deref Q))); $|
-|$\label{}$|      |$ \None $|
-|$\label{}$|    |$ \Else $|
-|$\label{}$|      |$ \Let value = \Fst (\deref new\_head) in $|
-|$\label{}$|      |$ \Fst (\Fst (\deref Q)) \gets new\_head; $|
-|$\label{}$|      |$ \release (\Fst (\Snd (\deref Q))); $|
-|$\label{}$|      |$ value $|
+|$\label{TLD:fun}$|  |$ \dequeue \ Q \eqdef $|
+|$\label{TLD:acq}$|    |$ \acquire (\Fst (\Snd (\deref Q))); $|
+|$\label{TLD:nod}$|    |$ \Let node = \deref (\Fst (\Fst (\deref Q))) in $|
+|$\label{TLD:new}$|    |$ \Let new\_head = \deref (\Snd(\deref node)) in $|
+|$\label{TLD:ifn}$|    |$ \If new\_head = \None then $|
+|$\label{TLD:re1}$|      |$ \release (\Fst (\Snd(\deref Q))); $|
+|$\label{TLD:non}$|      |$ \None $|
+|$\label{TLD:els}$|    |$ \Else $|
+|$\label{TLD:vde}$|      |$ \Let value = \Fst (\deref new\_head) in $|
+|$\label{TLD:shs}$|      |$ \Fst (\Fst (\deref Q)) \gets new\_head; $|
+|$\label{TLD:re2}$|      |$ \release (\Fst (\Snd (\deref Q))); $|
+|$\label{TLD:val}$|      |$ value $|
 \end{minted}
 
 % \begin{align*}
@@ -973,47 +973,47 @@ In this chapter we will study the Lock-Free Michael Scott Queue. As with the two
 \label{LFMSQ:section:implementation}
 
 \begin{minted}[linenos=true, escapeinside=||,mathescape=true]{ocaml}
-|$\label{}$|  |$ \initialise \eqdef $|
-|$\label{}$|    |$ \Let node = \Ref(\None, \Ref(\None)) in $|
-|$\label{}$|    |$ \Ref(\Ref(node), \Ref(node)) $|
+|$\label{LFI:fun}$|  |$ \initialise \eqdef $|
+|$\label{LFI:nod}$|    |$ \Let node = \Ref(\None, \Ref(\None)) in $|
+|$\label{LFI:que}$|    |$ \Ref(\Ref(node), \Ref(node)) $|
 \end{minted}
 
 \begin{minted}[linenos=true, escapeinside=||,mathescape=true]{ocaml}
-|$\label{}$|  |$ \enqueue \ Q \ value \eqdef $|
-|$\label{}$|    |$ \Let node = \Ref(\Some value, \Ref(\None)) in $|
-|$\label{}$|    |$ (\Rec {loop} \_ = $|
-|$\label{}$|      |$ \Let tail = \deref (\Snd (\deref Q)) in$|
-|$\label{}$|      |$ \Let next = \deref (\Snd (\deref tail)) in $|
-|$\label{}$|      |$ \If tail = \deref (\Snd (\deref Q)) then $|
-|$\label{}$|        |$ \If next = \None then $|
-|$\label{}$|          |$ \If \CAS \ (\Snd (\deref tail)) \ next \ node then $|
-|$\label{}$|            |$ \CAS \ (\Snd (\deref Q)) \ tail \ node $|
-|$\label{}$|          |$ \Else loop \ \TT $|
-|$\label{}$|        |$ \Else \CAS \ (\Snd (\deref Q)) \ tail \ next; loop \ \TT $|
-|$\label{}$|      |$ \Else loop \ \TT $|
-|$\label{}$|    |$ ) \ \TT $|
+|$\label{LFE:fun}$|  |$ \enqueue \ Q \ value \eqdef $|
+|$\label{LFE:nod}$|    |$ \Let node = \Ref(\Some value, \Ref(\None)) in $|
+|$\label{LFE:lop}$|    |$ (\Rec {loop} \_ = $|
+|$\label{LFE:tal}$|      |$ \Let tail = \deref (\Snd (\deref Q)) in$|
+|$\label{LFE:nex}$|      |$ \Let next = \deref (\Snd (\deref tail)) in $|
+|$\label{LFE:cct}$|      |$ \If tail = \deref (\Snd (\deref Q)) then $|
+|$\label{LFE:nen}$|        |$ \If next = \None then $|
+|$\label{LFE:add}$|          |$ \If \CAS \ (\Snd (\deref tail)) \ next \ node then $|
+|$\label{LFE:sts}$|            |$ \CAS \ (\Snd (\deref Q)) \ tail \ node $|
+|$\label{LFE:re1}$|          |$ \Else loop \ \TT $|
+|$\label{LFE:stl}$|        |$ \Else \CAS \ (\Snd (\deref Q)) \ tail \ next; loop \ \TT $|
+|$\label{LFE:re2}$|      |$ \Else loop \ \TT $|
+|$\label{LFE:app}$|    |$ ) \ \TT $|
 \end{minted}
 
 \begin{minted}[linenos=true, escapeinside=||,mathescape=true]{ocaml}
-|$\label{}$|  |$ \dequeue \ Q \eqdef $|
-|$\label{}$|    |$ (\Rec {loop} \_ = $|
-|$\label{}$|      |$ \Let head = \deref (\Fst (\deref Q)) in $|
-|$\label{}$|      |$ \Let tail = \deref (\Snd (\deref Q)) in $|
-|$\label{}$|      |$ \Let \prophid = \NewProph in $|
-|$\label{}$|      |$ \Let next = \deref (\Snd (\deref head)) in $|
-|$\label{}$|      |$ \If head = \langkw{Resolve} (\deref(\Fst (\deref Q)), \prophid, \TT) then $|
-|$\label{LFD:heqt}$|        |$ \If head = tail then $|
-|$\label{}$|          |$ \If next = \None then $|
-|$\label{}$|            |$ \None $|
-|$\label{}$|          |$ \Else $|
-|$\label{}$|            |$ \CAS (\Snd (\deref Q)) \ tail \ next; loop \ \TT $|
-|$\label{}$|        |$ \Else $|
-|$\label{LFD:vd}$|          |$ \Let value = \Fst (\deref next) in $|
-|$\label{}$|          |$ \If \CAS \ (Fst (\deref Q)) \ head \ next then $|
-|$\label{}$|            |$ value $|
-|$\label{}$|          |$ \Else loop \ \TT $|
-|$\label{}$|      |$ \Else loop \ \TT $|
-|$\label{}$|      |$ ) \TT $|
+|$\label{LFD:fun}$|  |$ \dequeue \ Q \eqdef $|
+|$\label{LFD:lop}$|    |$ (\Rec {loop} \_ = $|
+|$\label{LFD:hed}$|      |$ \Let head = \deref (\Fst (\deref Q)) in $|
+|$\label{LFD:tal}$|      |$ \Let tail = \deref (\Snd (\deref Q)) in $|
+|$\label{LFD:pro}$|      |$ \Let \prophid = \NewProph in $|
+|$\label{LFD:nex}$|      |$ \Let next = \deref (\Snd (\deref head)) in $|
+|$\label{LFD:cch}$|      |$ \If head = \langkw{Resolve} (\deref(\Fst (\deref Q)), \prophid, \TT) then $|
+|$\label{LFD:hte}$|        |$ \If head = tail then $|
+|$\label{LFD:nen}$|          |$ \If next = \None then $|
+|$\label{LFD:non}$|            |$ \None $|
+|$\label{LFD:el1}$|          |$ \Else $|
+|$\label{LFD:stl}$|            |$ \CAS (\Snd (\deref Q)) \ tail \ next; loop \ \TT $|
+|$\label{LFD:el2}$|        |$ \Else $|
+|$\label{LFD:vde}$|          |$ \Let value = \Fst (\deref next) in $|
+|$\label{LFD:shs}$|          |$ \If \CAS \ (Fst (\deref Q)) \ head \ next then $|
+|$\label{LFD:val}$|            |$ value $|
+|$\label{LFD:re1}$|          |$ \Else loop \ \TT $|
+|$\label{LFD:re2}$|      |$ \Else loop \ \TT $|
+|$\label{LFD:app}$|      |$ ) \TT $|
 \end{minted}
 
 % \begin{align*}
@@ -1069,7 +1069,7 @@ Firstly, the underlying linked list still only ever grows, and it does so only a
 
 Secondly, similarly to the two-lock variant, the correctness of the queue relies on the fact that the head and tail pointers are only ever swung towards the end of the linked list. That is, if a node can reach, say, the tail node at one point during the program, then it can reach any future tail nodes.
 
-Thirdly, whereas it was possible for the tail node to lag behind the head node in the two-lock version, it is not possible in the lock-free version. Indeed, if such a scenario could happen, $\dequeue$ could crash! Consider the scenario where the head node is the last node in the linked list (hence the queue is empty), and the tail is lagging behind the head. If someone invokes $\dequeue$, the check on line \ref{LFD:heqt}, which is supposed to detect an empty queue or a lagging tail will result to false, and hence, incorrectly, take the `else' branch, which assumes that there is something to dequeue. But since the queue is empty, then $next$ -- the node after head -- is $\None$, and when we try to dereference $next$ on line \ref{LFD:vd}, we will crash. Therefore, our invariant must ensure that the tail never lags behind the head.
+Thirdly, whereas it was possible for the tail node to lag behind the head node in the two-lock version, it is not possible in the lock-free version. Indeed, if such a scenario could happen, $\dequeue$ could crash! Consider the scenario where the head node is the last node in the linked list (hence the queue is empty), and the tail is lagging behind the head. If someone invokes $\dequeue$, the check on line \ref{LFD:hte}, which is supposed to detect an empty queue or a lagging tail will result to false, and hence, incorrectly, take the `else' branch, which assumes that there is something to dequeue. But since the queue is empty, then $next$ -- the node after head -- is $\None$, and when we try to dereference $next$ on line \ref{LFD:vde}, we will crash. Therefore, our invariant must ensure that the tail never lags behind the head.
 
 To capture these properties, we introduce two notions of reachability: concrete reachability and abstract reachability, which we introduce in the following sections. This way of modelling the queue was originally introduced in \cite{DBLP:conf/cpp/VindumB21}. The presentation here borrows the same ideas, but the presentation differs in the sense that it is node-oriented instead of location-oriented. Moreover, we prove some additional properties of reachability which allows us to simplify the queue invariant slightly.
 
@@ -1235,10 +1235,26 @@ The $\isqueue$ predicate is now quite simple: it states that the value represent
 
 \subsection{Proof outline}
 
-We instantiate the specification with our definition of $\isqueue$ (\ref{LFMSQ:spec:isqueue}). By the definition of $\isqueue$ we easily show that $\isqueue$ is persistent. What remains to be shown is the specifications for $\initialise$, $\enqueue$, and $\dequeue$, which we handle next.
+We instantiate the specification with our definition of $\isqueue$ (\ref{LFMSQ:spec:isqueue}). By the definition of $\isqueue$ we easily show that $\isqueue$ is persistent. What remains to be shown is the specifications for $\initialise$, $\enqueue$, and $\dequeue$. Both $\enqueue$ and $\dequeue$ has code that attempt to swing the tail pointer forward (for enqueue, lines \ref{LFE:sts} and \ref{LFE:stl}, and for dequeue, line \ref{LFD:stl}). These all behave similarly, so we additionally prove a specification for swinging the tail.
 
 \subsubsection{Initialise}
-\todo{write in proof outline}
+We first step through line \ref{LFI:nod} which creates a new node: $x_1 = (\locin{1}, \None, \locout{1})$, with $\locout{1} \mapsto \None$ and $\locin{1} \mapsto (\None, \locout{1})$, the latter of which we make persistent. Next, we step through line \ref{LFI:que} which gives us some locations $\loc_{head}$, $\loc_{tail}$, and $\loc_{queue}$, with $\loc_{head} \mapsto x_1$ and $\loc_{tail} \mapsto x_1$, and finally $\loc_{queue} \mapsto (\loc_{head}, \loc_{tail})$.\\
+As we did for the two-lock version, we allocate an empty abstract queue, giving us some ghost name $\gname_{Abst}$ that we put into $\Qg$, and the resources $\abstractstateauth{\Qg}{[]} \star \abstractstatefullfrag{\Qg}{[]}$. To allocate the invariant, we must additionally obtain abstract reach propositions. Since $x_1$ is a node, we may use lemma \ref{lemma:reach-reflexive} to conclude $\reach{x_1}{x_1}$. We can now use lemma \ref{lemma:abs-reach-alloc} three times, giving us ghost names $\gname_{Head}$, $\gname_{Tail}$, $\gname_{Last}$ which we again put into $\Qg$, and the resources
+\begin{equation*}
+  \ap{\Qg.\gname_{Head}}{x_1} \star \ap{\Qg.\gname_{Tail}}{x_1} \star \ar{x_1}{\Qg.\gname_{Tail}} \star \ap{\Qg.\gname_{Last}}{x_1} \star \ar{x_1}{\Qg.\gname_{Last}}
+\end{equation*}
+We now have all the resources we need to allocate the invariant with the head, tail, and last node being $x_1$.\\
+With the invariant allocated, proving the post-condition becomes straightforward.
+
+\subsubsection{Swing Tail}\label{LFMSQ:subsubsection:swingtail}
+The specification we wish to prove is the following.
+\begin{lemma}[Swing Tail]
+  $\All \loc_{head}, \loc_{tail}, x_{tail}, x_{newtail}, \Qg .\\
+  \hoareV[t]{\knowInv{\Nl.queue}{queue\_invariant \loc_{head} \loc_{tail} \Qg} \star \reach{x_{tail}}{x_{newtail}} \star \ar{x_{newtail}}{\Qg.\gname_{Last}}}{\CAS \ \loc_{tail} \ \nIn{x_{tail}} \ \nIn{x_{newtail}}}{v . v = \True \lor v = \False}$
+\end{lemma}
+\begin{proof}
+  \todo{write in proof outline}
+\end{proof}
 
 \subsubsection{Enqueue}
 \todo{write in proof outline}

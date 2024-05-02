@@ -20,7 +20,7 @@
 
 - [x] Read and understand M&S queue with locks
 - [x] Write down explanation of M&S Queue with locks (in latex)
-- [ ] Write down explanation of lock-free M&S Queue (in latex)
+- [x] Write down explanation of lock-free M&S Queue (in latex)
 
 - [x] State and prove correctness of M&S queue with locks (non-concurrent)
   - [x] Locks protect nothing (True) and all resources are always available (not duplicable, hence non-concurrent)
@@ -70,7 +70,7 @@
   - [x] Add prophesies to dequeue (linearisation point could be early if the queue is empty)
   - [x] prove enqueue spec
   - [x] prove dequeue spec
-  - [ ] Might be possible to remove isLL xs
+  - [x] Might be possible to remove isLL xs (future work)
   - [x] Show the two derived specifications (similar to two-lock versions)
   - [x] Try to remove consistency check and see if spec is still provable (concussion: spec is still provable)
 
@@ -95,5 +95,7 @@
 - [ ] Mention coq and iris version that the code works with.
 - [ ] Give an overview of Coq files and how they refer to sections in report. Perhaps mention it at beginning/end of each section, or just have an overview in a section (on the coq formalisation)
 - [ ] Mention how to compile the files (via _CoqProject and make)
+
+- [ ] Create better notation of nIn, nOut and nVal
 
 - [x] If time permits, use hocap spec to prove a spec of a non-trivial client. Fx a client like the one in the java code. (No Time)
