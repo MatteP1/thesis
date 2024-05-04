@@ -387,8 +387,6 @@ Lemma swing_tail (l_head l_tail : loc) (x_tail x_newtail : node) (Q_γ : Qgnames
   {{{v, RET v; ⌜v = #true⌝ ∨ ⌜v = #false⌝ }}}.
 Proof.
   iIntros (Φ) "(#Hqueue_inv & #Hxtail_reach_xnewtail & #Hxnewtail_ar_γLast) HΦ".
-  iPoseProof (reach_from_is_node with "Hxtail_reach_xnewtail") as "Hxtail_node".
-  iPoseProof (reach_to_is_node with "Hxtail_reach_xnewtail") as "Hxnewtail_node".
   wp_bind (CmpXchg _ _ _).
   (* Open Invariant *)
   iInv "Hqueue_inv" as "(%xs_v & HAbst & %xs & %xs_queue & %x_head & %x_tail' & %x_last & >%Hxs_eq & HisLL_xs & >%HisLast_xlast & >%Hconc_abst_eq & >Hl_head & >Hl_tail & HγHead_ap_xhead & >#Hxhead_ar_γTail & HγTail_ap_xtail' & >#Hxtail'_ar_γLast & HγLast_ap_xlast)".
@@ -396,9 +394,10 @@ Proof.
   - (* CAS succeeded *)
     iAssert (⌜x_tail' = x_tail⌝)%I as "->".
     {
-      iApply (n_in_equal with "[] [HγTail_ap_xtail']"); try done.
-      iApply (reach_to_is_node x_head).
-      by iDestruct (Abs_Reach_Concr with "Hxhead_ar_γTail HγTail_ap_xtail'") as "[Hxhead_reach_xtail' _]".
+      iPoseProof (reach_from_is_node with "Hxtail_reach_xnewtail") as "Hxtail_node".
+      iDestruct (Abs_Reach_Concr with "Hxhead_ar_γTail HγTail_ap_xtail'") as "[#Hxhead_reach_xtail' _]".
+      iPoseProof (reach_to_is_node with "Hxhead_reach_xtail'") as "Hxtail'_node".
+      iApply n_in_equal; try done.
     }
     iMod (Abs_Reach_Advance with "HγTail_ap_xtail' Hxtail_reach_xnewtail") as "[HγTail_ap_xnew #Hxnew_ar_γTail]".
     iModIntro.

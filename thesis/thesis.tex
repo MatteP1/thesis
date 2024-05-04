@@ -1250,10 +1250,17 @@ With the invariant allocated, proving the post-condition becomes straightforward
 The specification we wish to prove is the following.
 \begin{lemma}[Swing Tail]
   $\All \loc_{head}, \loc_{tail}, x_{tail}, x_{newtail}, \Qg .\\
-  \hoareV[t]{\knowInv{\Nl.queue}{queue\_invariant \loc_{head} \loc_{tail} \Qg} \star \reach{x_{tail}}{x_{newtail}} \star \ar{x_{newtail}}{\Qg.\gname_{Last}}}{\CAS \ \loc_{tail} \ \nIn{x_{tail}} \ \nIn{x_{newtail}}}{v . v = \True \lor v = \False}$
+  \hoareV[t]{\knowInv{\Nl.queue}{queue\_invariant \ \loc_{head} \ \loc_{tail} \ \Qg} \star \reach{x_{tail}}{x_{newtail}} \star \ar{x_{newtail}}{\Qg.\gname_{Last}}}{\CAS \ \loc_{tail} \ \nIn{x_{tail}} \ \nIn{x_{newtail}}}{v . v = \True \lor v = \False}$
 \end{lemma}
 \begin{proof}
-  \todo{write in proof outline}
+  The rule for $\CAS$ demands that we have a points-to predicate for $\loc_{tail}$. This is available inside the invariant, so we proceed to open it. This tells us that there is some $x_{tail}'$ so that $\loc_{tail} \mapsto x_{tail}'$. We consider both cases of the CAS:
+
+  \textbf{CAS Succeeds.} It must then have been the case that $\nIn{x_{tail}'} = \nIn{x_{tail}}$. Since we have $\reach{x_{tail}}{x_{newtail}}$, we know that $x_{tail}$ is a node (lemma \ref{lemma:reach-from-is-node}).
+  From the invariant, we additionally got that $\ap{\Qg.\gname_{Tail}}{x_{tail}'}$ and $\ar{x_{head}}{\Qg.\gname_{Tail}}$, which by lemma \ref{lemma:abs-reach-concr} means that $\reach{x_{head}}{x_{tail}'}$. We can thus also conclude that $x_{tail}'$ is a node (lemma \ref{lemma:reach-to-is-node}). So since both $x_{tail}$ and $x_{tail}'$ are nodes, and $\nIn{x_{tail}'} = \nIn{x_{tail}}$, then it must be that $x_{tail} = x_{tail}'$. In other words, we have now know that $\ap{\Qg.\gname_{Tail}}{x_{tail}}$.\\
+  Since the $\CAS$ succeeded, we now have that $\loc_{tail} \mapsto \nIn{x_{newtail}}$. Since the invariant demands that $\Qg.\gname_{Tail}$ and $\loc_{tail}$ agree on the node they point to, we must update $\ap{\Qg.\gname_{Tail}}{x_{tail}}$ to $\ap{\Qg.\gname_{Tail}}{x_{newtail}}$. We can do this using lemma \ref{lemma:abs-reach-advance} as we assumed $\reach{x_{tail}}{x_{newtail}}$. With this, we can close the invariant again, using $x_{newtail}$ as the tail node.\\
+  The $\CAS$ evaluates to $\True$ which we use to prove the first disjunct of the post-condition.
+
+  \textbf{CAS Fails.} Since the $\CAS$ failed, nothing was updated, and we can close the invariant again with the same resources we got out of it. The $\CAS$ evaluates to $\False$, hence we can prove the second disjunct in the post-condition.
 \end{proof}
 
 \subsubsection{Enqueue}
