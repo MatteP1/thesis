@@ -97,5 +97,11 @@
 - [ ] Mention how to compile the files (via _CoqProject and make)
 
 - [ ] Create better notation of nIn, nOut and nVal
+- [ ] Wrap proofs of initialise, enqueue, and dequeue in begin{proof}
+- [ ] Add lemmas in sections when proving initialise, enqueue, and dequeue, showing exactly what we are proving (see lock-free proof outline).
+
+- [ ] Create references to:
+  - [ ] Iris Technical Reference (if reader wishes to see the relevant technical definitions)
+  - [ ] Iris from the ground up (As a somewhat gentle introduction to concepts used for the Coq code)
 
 - [x] If time permits, use hocap spec to prove a spec of a non-trivial client. Fx a client like the one in the java code. (No Time)

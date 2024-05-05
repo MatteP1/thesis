@@ -1238,6 +1238,12 @@ The $\isqueue$ predicate is now quite simple: it states that the value represent
 We instantiate the specification with our definition of $\isqueue$ (\ref{LFMSQ:spec:isqueue}). By the definition of $\isqueue$ we easily show that $\isqueue$ is persistent. What remains to be shown is the specifications for $\initialise$, $\enqueue$, and $\dequeue$. Both $\enqueue$ and $\dequeue$ has code that attempt to swing the tail pointer forward (for enqueue, lines \ref{LFE:sts} and \ref{LFE:stl}, and for dequeue, line \ref{LFD:stl}). These all behave similarly, so we additionally prove a specification for swinging the tail.
 
 \subsubsection{Initialise}
+\begin{lemma}[Lock-Free M\&S-Queue Specification - Initialise]\label{LFMSQ:spec:init}
+  \begin{equation*}
+    \hoare{\TRUE}{\initialise \TT}{v_q . \Exists Q_\gname . \isqueue\ v_q \ Q_\gname \star \abstractstatefullfrag{\Qg}{[]}}
+  \end{equation*}
+\end{lemma}
+\begin{proof}
 We first step through line \ref{LFI:nod} which creates a new node: $x_1 = (\locin{1}, \None, \locout{1})$, with $\locout{1} \mapsto \None$ and $\locin{1} \mapsto (\None, \locout{1})$, the latter of which we make persistent. Next, we step through line \ref{LFI:que} which gives us some locations $\loc_{head}$, $\loc_{tail}$, and $\loc_{queue}$, with $\loc_{head} \mapsto x_1$ and $\loc_{tail} \mapsto x_1$, and finally $\loc_{queue} \mapsto (\loc_{head}, \loc_{tail})$.\\
 As we did for the two-lock version, we allocate an empty abstract queue, giving us some ghost name $\gname_{Abst}$ that we put into $\Qg$, and the resources $\abstractstateauth{\Qg}{[]} \star \abstractstatefullfrag{\Qg}{[]}$. To allocate the invariant, we must additionally obtain abstract reach propositions. Since $x_1$ is a node, we may use lemma \ref{lemma:reach-reflexive} to conclude $\reach{x_1}{x_1}$. We can now use lemma \ref{lemma:abs-reach-alloc} three times, giving us ghost names $\gname_{Head}$, $\gname_{Tail}$, $\gname_{Last}$ which we again put into $\Qg$, and the resources
 \begin{equation*}
@@ -1245,29 +1251,101 @@ As we did for the two-lock version, we allocate an empty abstract queue, giving 
 \end{equation*}
 We now have all the resources we need to allocate the invariant with the head, tail, and last node being $x_1$.\\
 With the invariant allocated, proving the post-condition becomes straightforward.
+\end{proof}
 
 \subsubsection{Swing Tail}\label{LFMSQ:subsubsection:swingtail}
 The specification we wish to prove is the following.
-\begin{lemma}[Swing Tail]
+\begin{lemma}[Swing Tail]\label{LFMSQ:spec:swingtail}
   $\All \loc_{head}, \loc_{tail}, x_{tail}, x_{newtail}, \Qg .\\
   \hoareV[t]{\knowInv{\Nl.queue}{queue\_invariant \ \loc_{head} \ \loc_{tail} \ \Qg} \star \reach{x_{tail}}{x_{newtail}} \star \ar{x_{newtail}}{\Qg.\gname_{Last}}}{\CAS \ \loc_{tail} \ \nIn{x_{tail}} \ \nIn{x_{newtail}}}{v . v = \True \lor v = \False}$
 \end{lemma}
 \begin{proof}
   The rule for $\CAS$ demands that we have a points-to predicate for $\loc_{tail}$. This is available inside the invariant, so we proceed to open it. This tells us that there is some $x_{tail}'$ so that $\loc_{tail} \mapsto x_{tail}'$. We consider both cases of the CAS:
-
-  \textbf{CAS Succeeds.} It must then have been the case that $\nIn{x_{tail}'} = \nIn{x_{tail}}$. Since we have $\reach{x_{tail}}{x_{newtail}}$, we know that $x_{tail}$ is a node (lemma \ref{lemma:reach-from-is-node}).
-  From the invariant, we additionally got that $\ap{\Qg.\gname_{Tail}}{x_{tail}'}$ and $\ar{x_{head}}{\Qg.\gname_{Tail}}$, which by lemma \ref{lemma:abs-reach-concr} means that $\reach{x_{head}}{x_{tail}'}$. We can thus also conclude that $x_{tail}'$ is a node (lemma \ref{lemma:reach-to-is-node}). So since both $x_{tail}$ and $x_{tail}'$ are nodes, and $\nIn{x_{tail}'} = \nIn{x_{tail}}$, then it must be that $x_{tail} = x_{tail}'$. In other words, we have now know that $\ap{\Qg.\gname_{Tail}}{x_{tail}}$.\\
-  Since the $\CAS$ succeeded, we now have that $\loc_{tail} \mapsto \nIn{x_{newtail}}$. Since the invariant demands that $\Qg.\gname_{Tail}$ and $\loc_{tail}$ agree on the node they point to, we must update $\ap{\Qg.\gname_{Tail}}{x_{tail}}$ to $\ap{\Qg.\gname_{Tail}}{x_{newtail}}$. We can do this using lemma \ref{lemma:abs-reach-advance} as we assumed $\reach{x_{tail}}{x_{newtail}}$. With this, we can close the invariant again, using $x_{newtail}$ as the tail node.\\
-  The $\CAS$ evaluates to $\True$ which we use to prove the first disjunct of the post-condition.
-
-  \textbf{CAS Fails.} Since the $\CAS$ failed, nothing was updated, and we can close the invariant again with the same resources we got out of it. The $\CAS$ evaluates to $\False$, hence we can prove the second disjunct in the post-condition.
+  \begin{itemize}
+    \item[\textbf{Case}] $\CAS$ succeeds.
+    It must then have been the case that $\nIn{x_{tail}'} = \nIn{x_{tail}}$. Since we have $\reach{x_{tail}}{x_{newtail}}$, we know that $x_{tail}$ is a node (lemma \ref{lemma:reach-from-is-node}).
+    From the invariant, we additionally got that $\ap{\Qg.\gname_{Tail}}{x_{tail}'}$ and $\ar{x_{head}}{\Qg.\gname_{Tail}}$, which by lemma \ref{lemma:abs-reach-concr} means that $\reach{x_{head}}{x_{tail}'}$. We can thus also conclude that $x_{tail}'$ is a node (lemma \ref{lemma:reach-to-is-node}). So since both $x_{tail}$ and $x_{tail}'$ are nodes, and $\nIn{x_{tail}'} = \nIn{x_{tail}}$, then it must be that $x_{tail} = x_{tail}'$. In other words, we have now know that $\ap{\Qg.\gname_{Tail}}{x_{tail}}$.\\
+    Since the $\CAS$ succeeded, we now have that $\loc_{tail} \mapsto \nIn{x_{newtail}}$. Since the invariant demands that $\Qg.\gname_{Tail}$ and $\loc_{tail}$ agree on the node they point to, we must update $\ap{\Qg.\gname_{Tail}}{x_{tail}}$ to $\ap{\Qg.\gname_{Tail}}{x_{newtail}}$. We can do this using lemma \ref{lemma:abs-reach-advance} as we assumed $\reach{x_{tail}}{x_{newtail}}$. With this, we can close the invariant again, using $x_{newtail}$ as the tail node.\\
+    The $\CAS$ evaluates to $\True$ which we use to prove the first disjunct of the post-condition.
+    
+    \item[\textbf{Case}] $\CAS$ Fails. Since the $\CAS$ failed, nothing was updated, and we can close the invariant again with the same resources we got out of it. The $\CAS$ evaluates to $\False$, hence we can prove the second disjunct in the post-condition.
+  \end{itemize}
 \end{proof}
 
 \subsubsection{Enqueue}
-\todo{write in proof outline}
+\begin{lemma}[Lock-Free M\&S-Queue Specification - Enqueue]\label{LFMSQ:spec:enqueue}
+\begin{equation*}
+  \All v_q, v, Q_\gname, P, Q.
+    \begin{array}[t]{l}
+    \left(\All xs_v . \abstractstateauth{\Qg}{xs_v} \star P \vs[\mask\setminus\Nl.i^\uparrow] \later \abstractstateauth{\Qg}{v :: xs_v} \star Q \right)
+    \wand\\
+    \hoare{\isqueue \ v_q \ Q_\gname \star P}{\enqueue\ v_q\ v}{w . Q}
+    \end{array}
+\end{equation*}
+\end{lemma}
+\begin{proof}
+  We assume the viewshift and proceed to prove the hoare triple. By definition of $\isqueue$, we know that the queue $v_q$ is a location $\loc_{queue}$ and there are locations $\loc_{head}$ and $\loc_{tail}$ so that 
+  \begin{equation}\label{LFMSQ:spec:proof:isqueue}
+    \loc_{queue} \mapsto^{\persistently} (\loc_{head}, \loc_{tail}) \star
+    \knowInv{\Nl.queue}{queue\_invariant \loc_{head} \loc_{tail} \Qg}
+  \end{equation}
+  We first step through line \ref{LFE:nod} which creates a new node $x_{new}$, so that
+  \begin{equation}\label{LFMSQ:spec:proof:xnew}
+    \nIn{x_{new}} \mapsto^{\persistently} (\Some v, \nOut{x_{new}}) \star \nOut{x_{new}} \mapsto \None
+  \end{equation}
+  The next line is the beginning of the looping function. We proceed by löb induction, which allows us to assume the hoare triple we wish to prove \emph{later}. This means that, if we reach a recursive call, we will have the hoare triple that we must prove -- the later will be immediately stripped when we apply $\TT$ and ``step into'' the recursive function.\\
+  Line \ref{LFE:tal} first dereferences to the tail pointer $\loc_{tail}$ using the resources in \ref{LFMSQ:spec:proof:isqueue}. We open the invariant to obtain the points-to predicate concerning $\loc_{tail}$. We get that $\loc_{tail}$ points to some $x_{tail}$. Using the resources from the invariant, we may conclude the following persistent information:
+  \begin{equation}\label{LFMSQ:spec:proof:xtail}
+    \ar{x_{tail}}{\Qg.\gname_{Last}} \star \nIn{x_{tail}} \mapsto^{\persistently} (\nVal{x_{tail}}, \nOut{x_{tail}})
+  \end{equation}
+  The first part is directly from the invariant, and the second we may derive using lemmas \ref{lemma:abs-reach-concr} and \ref{lemma:reach-to-is-node}. We perform the load, and close the invariant.\\
+  The next line (line \ref{LFE:nex}) finds out what $x_{tail}$ points to. Using the points-to predicate from \ref{LFMSQ:spec:proof:xtail} we step to $\deref (\nOut{x_{tail}})$. The points-to predicate required to perform this dereference is owned by the invariant (as it might be non-persistent), so we open the invariant again. We get that there is some $x_{last}$, with $\ap{\Qg.\gname_{Last}}{x_{last}}$. From this, the abstract reachability predicate in \ref{LFMSQ:spec:proof:xtail}, and lemma \ref{lemma:abs-reach-concr} we conclude $\reach{x_{tail}}{x_{last}}$. This gives us two cases to consider: either $x_{tail}$ \textit{is} $x_{last}$ (meaning that $x_{tail}$ is not lagging behind), or it points to some node $x_{tail\_next}$ which can reach $x_{last}$ (meaning that $x_{tail}$ is lagging behind).
+  \begin{itemize}
+    \item[\textbf{Case}]
+    $x_{tail} = x_{last}$. Since we had $isLast x_{last} xs$, we know that $x_{tail}$ is the last node in the linked list, hence it points to $\None$. We perform the load which sets $next$ to $\None$, and close the invariant.\\
+    We proceed to the consistency check on line \ref{LFE:cct}. As before, the points-to predicate for $\loc_{tail}$ is in the invariant, so we open it. We get $\loc_{tail} \mapsto x_{tail}'$, for some $x_{tail}'$. Using this, we perform the deference and close the invariant. The branch taken now depends on whether or not $x_{tail}'$ is consistent with $x_{tail}$. In case they aren't, we take the `else branch on line \ref{LFE:re2}, which simply consists of a recursive call to the looping function. We are done by the induction hypothesis (from the löb induction).\\
+    If they are consistent, we take the `then' branch and step to line \ref{LFE:nen}. Here we check whether or not $next$ is $\None$. We already know this is the case, so we proceed to line \ref{LFE:add}. This consists of a $\CAS$ instruction which attempts to add $x_{new}$ to the linked list. The $\CAS$ will succeed if and only if $\loc_{tail}$ still points to $\None$. We open the invariant to gain access to the relevant points-to predicate. Similarly to what we did earlier, we apply lemma \ref{lemma:abs-reach-concr} to conclude $\reach{x_{tail}}{x_{last}'}$, where $x_{last}'$ is the current last node of the linked list (according to the invariant). As before, we perform case analysis on $\reach{x_{tail}}{x_{last}'}$.
+    \begin{itemize}
+      \item[\textbf{Case}]
+      $x_{tail} = x_{last}'$. We now know that $x_{tail}$ is still the last node in the linked list, hence $\nOut{x_{tail}} \mapsto \None$, and the $\CAS$ will succeed. This instruction makes $x_{tail}$ point to $x_{new}$, which essentially adds it to the linked list. Thus, the value in $x_{new}$ becomes enqueued. In other words, this is a linearisation point, so we must apply the viewshift. We instantiate the viewshift with the abstract state of the queue $xs_v$ from the invariant opening, and supply $\abstractstateauth{Q_\gname}{xs_v}$ from the invariant and the $P$ from the pre-condition. We hence get $\abstractstateauth{Q_\gname}{v :: xs_v}$ and $Q$.\\
+      When closing the invariant, we use $(v :: xs_v)$ for the abstract state, $(x_{new} :: xs)$ for the concrete state, $x_{new} :: xs_{queue}$ for the queue, and we take $x_{new}$ to be the last node. The head and tail nodes remain the same. This means we give up $\abstractstateauth{Q_\gname}{v :: xs_v}$ that we got from the viewshift, and the non-persistent points-to predicate from \ref{LFMSQ:spec:proof:xnew} (used to assert $\isLL (x_{new} :: xs))$. The only thing left to prove is $\ap{\Qg.\gname_{Last}}{x_{new}}$. From the invariant opening, we have $\ap{\Qg.\gname_{Last}}{x_{tail}}$. Since $\reach{x_{tail}}{x_{new}}$, we may apply lemma \ref{lemma:abs-reach-advance} to update the abstract points-to resource to $\ap{\Qg.\gname_{Last}}{x_{new}}$ and additionally obtain $\ar{x_{new}}{\Qg.\gname_{Last}}$. With this, we can close the invariant, and step to line \ref{LFE:sts}. This line attempts to swing the tail, so we apply our swing-tail lemma (lemma \ref{LFMSQ:spec:swingtail}) by supplying our invariant, $\reach{x_{tail}}{x_{new}}$, and $\ar{x_{new}}{\Qg.\gname_{Last}}$. This tells us that the $\CAS$ is safe, and it either succeeds or fails. The resulting value is the returned value of the $\enqueue$ function, but since the post-condition is simply $Q$, which we own, we are done.
+
+      \item[\textbf{Case}]
+      $\nOut{x_{tail} \mapsto^{\persistently} \nIn{x_{tail\_next}}} \star \reach{x_{tail\_next}}{x_{last}}$. Since $x_{tail}$ doesn't point to $\None$, the $\CAS$ will fail. We close the invariant and step to line \ref{LFE:re1}. We finish by applying the induction hypothesis.
+    \end{itemize}
+
+    \item[\textbf{Case}]
+    $\nOut{x_{tail} \mapsto^{\persistently} \nIn{x_{tail\_next}}} \star \reach{x_{tail\_next}}{x_{last}}$. Using this we perform the load, which sets $next$ to $\nIn{x_{tail\_next}}$. Before closing the invariant, we apply lemma \ref{lemma:abs-reach-abs} with $\reach{x_{tail\_next}}{x_{last}}$ and $\ap{\Qg.\gname_{Last}}{x_{last}}$ to obtain $\ar{x_{tail\_next}}{\Qg.\gname_{Last}}$. We now proceed to close the invariant. Next, we reach the consistency check. We handle it similarly to the previous case: open the invariant, get some $x_{tail}'$, close the invariant, and in case of inconsistency, apply induction hypothesis. If the nodes are consistent, we step to line \ref{LFE:nen}. This time, the check will fail as $next$ is $\nIn{x_{tail\_next}}$ which is not $\None$. Hence we step to line \ref{LFE:stl} which attempts to swing the tail pointer. We here apply lemma \ref{LFMSQ:spec:swingtail} which we can do as we own the invariant, $\reach{x_{tail}}{x_{tail\_next}}$, and $\ar{x_{tail\_next}}{\Qg.\gname_{Last}}$. We step through to the recursive call and finish by applying the induction hypothesis.
+  \end{itemize}
+
+\end{proof}
 
 \subsubsection{Dequeue}
-\todo{write in proof outline}
+\begin{lemma}[Lock-Free M\&S-Queue Specification - Enqueue]\label{LFMSQ:spec:dequeue}
+  \begin{equation*}
+    \All v_q, Q_\gname, P, Q.
+    \begin{array}[t]{l}
+    \left(\All xs_v . \abstractstateauth{\Qg}{xs_v} \star P \vs[\mask\setminus\Nl.i^\uparrow] \later
+      \left(
+        \begin{array}{l}
+          (xs_v = [] \star \abstractstateauth{\Qg}{xs_v} \star Q \ \None)\\
+          \lor
+          \left(
+            \begin{array}{l}
+              \Exists x_v, xs_v' . xs_v = xs_v' \catenate [x_v] \star\\
+              \abstractstateauth{\Qg}{xs_v'} \star Q \ (\Some{x_v})
+            \end{array}
+            \right)
+        \end{array}
+      \right) \right)
+    \wand\\
+    \hoare{\isqueue \ v_q \ Q_\gname \star P}{\dequeue\ v_q}{v . Q\ v}
+    \end{array}
+  \end{equation*}
+  \end{lemma}
+  \begin{proof}
+    \todo{write in proof outline}
+  \end{proof}
 
 
 \section{Discussion}
