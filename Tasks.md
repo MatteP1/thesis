@@ -99,6 +99,8 @@
 - [ ] Create better notation of nIn, nOut and nVal
 - [ ] Wrap proofs of initialise, enqueue, and dequeue in begin{proof}
 - [ ] Add lemmas in sections when proving initialise, enqueue, and dequeue, showing exactly what we are proving (see lock-free proof outline).
+- [ ] Add isLL lemmas in appendix
+- [ ] Refer to nIn-equal lemma in proofs
 
 - [ ] Create references to:
   - [ ] Iris Technical Reference (if reader wishes to see the relevant technical definitions)

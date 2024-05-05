@@ -656,6 +656,8 @@ For instance, if we wanted to capture the linked list in figure \ref{TLMSQ:impl:
 \end{align*}
 Note how this matches the structure of the linked list in figure \ref{TLMSQ:impl:figure:enqueue:c}.
 
+The proofs require us manipulate specific $\isLL$ predicates quite a bit -- appendix \todo{Add appendix and refer to it} shows the specific lemmas we will use, but the proof outlines will generally not mention the lemmas explicitly.
+
 \subsection{Proof outline}
 
 \subsubsection{Initialise}
@@ -1013,7 +1015,7 @@ In this chapter we will study the Lock-Free Michael Scott Queue. As with the two
 |$\label{LFD:stl}$|            |$ \CAS (\Snd (\deref Q)) \ tail \ next; loop \ \TT $|
 |$\label{LFD:el2}$|        |$ \Else $|
 |$\label{LFD:vde}$|          |$ \Let value = \Fst (\deref next) in $|
-|$\label{LFD:shs}$|          |$ \If \CAS \ (Fst (\deref Q)) \ head \ next then $|
+|$\label{LFD:shs}$|          |$ \If \CAS \ (\Fst (\deref Q)) \ head \ next then $|
 |$\label{LFD:val}$|            |$ value $|
 |$\label{LFD:re1}$|          |$ \Else loop \ \TT $|
 |$\label{LFD:re2}$|      |$ \Else loop \ \TT $|
@@ -1063,6 +1065,8 @@ In this chapter we will study the Lock-Free Michael Scott Queue. As with the two
 %       & \hspace{20pt} \Else loop \ \TT\\
 %       & \hspace{20pt} ) \TT
 % \end{align*}
+
+\todo{mention the addition of the prophecy variable and the reason why (linearisation point)}
 
 \section{Reachability}
 \label{LFMSQ:section:reachability}
@@ -1372,7 +1376,11 @@ The specification we wish to prove is the following.
   We close the invariant and step to line \ref{LFD:pro}. This line creates our \textit{prophecy variable} $p$, which will be resolved on line \ref{LFD:cch}. This allows us to reason about the result of the consistency check: we will later show that the expression associated with $p$ (i.e. $\deref(\Fst (\deref Q))$) evaluates to some value $v_p$, but we can already now case on whether $v_p$ will be equal to $\nIn{x_{head}}$ -- the left hand side of the equality check on line \ref{LFD:cch}.
   \begin{itemize}
     \item[\textbf{Case}] $\nIn{x_{head}} = v_p$.
-    We continue to line \ref{LFD:nex}, which finds out what $x_{head}$ points to. As $x_{head}$ could be the last node in the linked list, we don't have the relevant points-to predicate. We therefore open the invariant. We get the three nodes $x_{head}'$, $x_{tail}'$, and $x_{last}$. Specifically, $x_{last}$ is the last node in the linked list, and $\ap{\Qg.\gname_{Last}}{x_{last}}$. Combining this with \ref{LFMSQ:spec:proof:dequeue:xhead_glast} and lemma \ref{lemma:abs-reach-concr} we conclude $\reach{x_{head}}{x_{last}}$. This gives us two cases to consider: either $x_{head} = x_{last}$ or $x_{head}$ points to some $x_{head\_next}$, which reaches $x_{last}$.
+    We continue to line \ref{LFD:nex}, which finds out what $x_{head}$ points to. As $x_{head}$ could be the last node in the linked list, we don't have the relevant points-to predicate. We therefore open the invariant. We get the three nodes $x_{head}'$, $x_{tail}'$, and $x_{last}$. Specifically, $x_{last}$ is the last node in the linked list, and 
+    \begin{equation}\label{LFMSQ:spec:proof:dequeue:glast_xlast}
+      \ap{\Qg.\gname_{Last}}{x_{last}}
+    \end{equation}
+    Combining this with \ref{LFMSQ:spec:proof:dequeue:xhead_glast} and lemma \ref{lemma:abs-reach-concr} we conclude $\reach{x_{head}}{x_{last}}$. This gives us two cases to consider: either $x_{head} = x_{last}$ or $x_{head}$ points to some $x_{head\_next}$, which reaches $x_{last}$.
     \begin{itemize}
       \item[\textbf{Case}] $x_{head} = x_{last}$. This corresponds to the queue being empty, which we derive below.\\
       As $x_{last}$ is the last node, we have that $\nOut{x_{head}} \mapsto \None$, hence the load resolves to $\None$. Using the abstract points-to predicates from the invariant together with \ref{LFMSQ:spec:proof:dequeue:xhead_ghead}, \ref{LFMSQ:spec:proof:dequeue:xhead_gtail}, and lemma \ref{lemma:abs-reach-concr} we get $\reach{x_{head}}{x_{head}'}$ and $\reach{x_{head}}{x_{tail'}}$. We can now apply lemma \ref{lemma:reach-last} three times to conclude $x_{head} = x_{head}' = x_{tail'} = x_{tail}$. Since $x_{head'}$ points to $\None$, then $xs_{queue}$ has to be empty (if it wasn't we could deduce that $x_{head'}$ pointed to a node). This also implies that abstract state of the queue $xs_v$, is empty, $xs_v = []$.\\
@@ -1380,8 +1388,25 @@ The specification we wish to prove is the following.
       Since $xs_v = []$, then our abstract state predicate from the invariant states $\abstractstateauth{\Qg}{[]}$. We thus instantiate the viewshift with $[]$, and supply the $P$ from the pre-condition. As $xs_v = []$ we can conclude that the first disjunct must be true (the second contains a contradiction), so we get $Q \ \None$ and $\abstractstateauth{\Qg}{[]}$. As we haven't changed any resources, we can close the invariant again.\\
       We reach the consistency check on line \ref{LFD:cch}. By \ref{LFMSQ:spec:proof:dequeue:isqueue}, we know that $\deref(\Fst (\deref Q))$ steps to $\deref(\loc_{head})$, but to resolve the prophecy, we must first show what $\deref(\loc_{head})$ evaluates to. This resource is inside the invariant so we open it. We get that $\loc_{head} \mapsto \nIn{x_{head}''}$ for some node $x_{head}''$. We close the invariant and resolve the prophecy: $\deref(\Fst (\deref Q))$ evaluated to $\nIn{x_{head}''}$. In other words, $v_p = \nIn{x_{head}''}$, and therefore $\nIn{x_{head}} = \nIn{x_{head}''}$. Since the remaining if statement on line \ref{LFD:cch} compares $\nIn{x_{head}}$ to $\nIn{x_{head}''}$, we know that we will take the `then' branch, so we step to line \ref{LFD:hte}. Since $x_{head} = x_{tail}$ and $next$ was set to $\None$, we step to line \ref{LFD:non} which returns $\None$. The post-condition thus requires us to prove $Q \ \None$, which we already have.
 
-      \item[\textbf{Case}] $\nOut{x_{tail} \mapsto^{\persistently} \nIn{x_{tail\_next}}} \star \reach{x_{tail\_next}}{x_{last}}$.
-      \todo{finish case}
+      \item[\textbf{Case}] $\nOut{x_{head} \mapsto^{\persistently} \nIn{x_{head\_next}}} \star \reach{x_{head\_next}}{x_{last}}$. This means that the queue is not empty, and there is an element to be dequeued: the value in $x_{head\_next}$. The load resolves to $\nIn{x_{head\_next}}$, and the program variable $next$ is set to this. Using lemmas \ref{lemma:reach-from-is-node} and \ref{lemma:abs-reach-abs} with \ref{LFMSQ:spec:proof:dequeue:glast_xlast} we get
+      \begin{align}
+        &\isNode{x_{head\_next}}\label{LFMSQ:spec:proof:dequeue:x_headnext_node}\\
+        &\ar{x_{head\_next}}{\Qg.\gname_{Last}}\label{LFMSQ:spec:proof:dequeue:x_headnext_glast}
+      \end{align}
+      We close the invariant and step to the consistency check on line \ref{LFD:cch}. We handle this similarly to the previous case, and conclude that the consistency check succeeds and we take the `then' branch to line \ref{LFD:hte}. This line ensures that the dequeue will not make the tail node lag behind the head node. We can simply consider both cases of the check.\\
+      The case where the `if' succeeds takes us to the $\CAS$ on line \ref{LFD:stl}, which attempts to swing the tail, and try dequeueing again. We handle the $\CAS$ with our swing-tail lemma (lemma \ref{LFMSQ:spec:swingtail}), and the recursive call by the induction hypothesis.\\
+      If the `if' fails, then the tail node will not lag behind as a result of the dequeue, so we step to the else block on line \ref{LFD:el2} which attempts to dequeue. We first read the value out of $x_{head\_next}$ on line \ref{LFD:vde}. Next, we attempt to swing the head pointer on line \ref{LFD:shs}. The rule for $\CAS$ demands a points-to predicate for $\loc_{head}$, so we open the invariant which gives us fresh nodes $x_{head}'$, $x_{tail}'$, and $x_{last}'$, so that $\loc_{head} \mapsto \nIn{x_{head}}'$. The success of the $\CAS$ depends on whether $\nIn{x_{head}'}$ equals $\nIn{x_{head}}$. If they aren't equal, the $\CAS$ fails and nothing is updated. We can thus close the invariant and we step to the recursive call on line \ref{LFD:re1} and apply the induction hypothesis. So for the remainder, we assume they are equal and the $\CAS$ succeeds. Since the $\CAS$ moved the head pointer to $x_{head\_next}$, the $\dequeue$ will succeed, so this is a linearisation point.\\
+      Using the abstract points-to and reachability propositions from the invariant together with lemmas \ref{lemma:abs-reach-concr} and \ref{lemma:reach-from-is-node}, we may deduce that $x_{head}'$ is a node. As we already know that $x_{head}$ is a node (from \ref{LFMSQ:spec:proof:dequeue:xhead_node}), we get that $x_{head} = x_{head}'$ from lemma \ref{lemma:nIn-equal}. From the invariant (specifically $\isLL xs$) we know that $x_{head}'$ points to the first element of $xs_{queue}$. But since $x_{head} = x_{head}'$, then this element must be our $x_{head\_next}$. In other words, $xs_{queue} = xs_{queue}' \catenate [x_{head\_next}]$, for some $xs_{queue}'$.
+      This means that, when we apply the viewshift (giving up $p$ and $\abstractstateauth{\Qg}{xs_v}$ as usual), only the second case of the resulting disjunct is possible: $xs_v$ cannot be empty as $xs_{queue}$ isn't. We therefore get that there are some $xs_v'$ and $x_v$ so that
+      \begin{align}
+        &xs_v = xs_v' \catenate [x_v]\\
+        &\abstractstateauth{\Qg}{xs_v'}\\
+        &Q \ (\Some x_v)\label{LFMSQ:spec:proof:dequeue:Qxv}
+      \end{align}
+      Since $xs_v$ is reflected in $xs_{queue}$ (according to the invariant), we may additionally conclude that $xs_v'$ is reflected in $xs_{queue}'$ and $\Some x_v = \nVal{x_{head\_next}}$.\\
+      To close the invariant, we must update some of our resources. Since we now have $\loc_{head} \mapsto \nIn{x_{head\_next}}$, we must pick $x_{head\_next}$ for the head node. But currently $\ap{\Qg.\gname_{Head}}{x_{head}}$. So we use lemma \ref{lemma:abs-reach-advance} to advance the pointer, and we get $\ap{\Qg.\gname_{Head}}{x_{head\_next}}$.\\
+      We are now required to show that $\ar{x_{head\_next}}{\Qg.\gname_{Tail}}$. Since $\reach{x_{head}}{x_{tail}}$, and $x_{head} \neq x_{tail}$, then it must be the case that $\reach{x_{head\_next}}{x_{tail}}$. Lemma \ref{lemma:abs-reach-concr} with \ref{LFMSQ:spec:proof:dequeue:xtail_gtail} now tells us that $x_{tail}$ can reach the current tail node, $x_{tail}'$. By transitivity (lemma \ref{lemma:reach-transitive}), we get $\reach{x_{head\_next}}{x_{tail}'}$, and hence by lemma \ref{lemma:abs-reach-abs}, we get the desired $\ar{x_{head\_next}}{\Qg.\gname_{Tail}}$.\\
+      We now own all the resources required to close the invariant. As the $\CAS$ succeed, we step to line \ref{LFD:val} which simply returns $\nVal{x_{head\_next}}$. Thus, we must prove the post-condition $Q \ (\nVal{x_{head\_next}})$. We can do this since we still own \ref{LFMSQ:spec:proof:dequeue:Qxv} and we deduced that $\Some x_v = \nVal{x_{head\_next}}$.
     \end{itemize}
 
     \item[\textbf{Case}] $\nIn{x_{head}} \neq v_p$.
@@ -1417,6 +1442,16 @@ The specification we wish to prove is the following.
 \cleardoublepage
 \appendix
 \chapter{The Technical Details}
+
+\begin{lemma}[Node equality]\label{lemma:nIn-equal}
+  \begin{align*}
+    &\All x, y.\\
+    &\nIn{x} = \nIn{y} \wand\\
+    &\isNode{x} \wand\\
+    &\isNode{y} \wand\\
+    &x = y
+  \end{align*}
+\end{lemma}
 
 % \begin{definition}[Simplified Two-Lock M\&S-Queue Invariant]\label{TLMSQ:spec:invariant:simple}
 %   \todo{Write it in}
