@@ -729,7 +729,7 @@ Proof.
     wp_bind (! #(n_out x_head))%E.
     (* Invariant Opening: 3 *)
     iInv "Hqueue_inv" as "(%xs_v & HAbst & %xs & %xs_queue & %x_head' & %x_tail' & %x_last & >%Hxs_eq & HisLL_xs & >%HisLast_xlast & >%Hconc_abst_eq & >Hl_head & >Hl_tail & HγHead_ap_xhead & >#Hxhead'_ar_γTail & HγTail_ap_xtail & >#Hxtail'_ar_γLast & HγLast_ap_xlast)".
-    iPoseProof (Abs_Reach_Concr with  "Hxhead_ar_γLast HγLast_ap_xlast") as "[#Hxhead_reach_xlast HγLast_ap_xlast]".
+    iPoseProof (Abs_Reach_Concr with "Hxhead_ar_γLast HγLast_ap_xlast") as "[#Hxhead_reach_xlast HγLast_ap_xlast]".
     (* CASE ANALYSIS: Is x_head the last element in the linked list? *)
     iDestruct (reach_case with "Hxhead_reach_xlast") as "[><- | (%x_head_next & Hxhead_to_xheadnext & Hxheadnext_reach_xlast)]".
     + (* x_head is the last element: x_head = x_last. This means that the queue is empty, hence dequeue will return 'None'. This is a linearisation point. *)
@@ -949,7 +949,7 @@ Proof.
     wp_bind (! #(n_out x_head))%E.
     (* Invariant Opening: 3 *)
     iInv "Hqueue_inv" as "(%xs_v & HAbst & %xs & %xs_queue & %x_head' & %x_tail' & %x_last & >%Hxs_eq & HisLL_xs & >%HisLast_xlast & >%Hconc_abst_eq & >Hl_head & >Hl_tail & HγHead_ap_xhead & >#Hxhead'_ar_γTail & HγTail_ap_xtail & >#Hxtail'_ar_γLast & HγLast_ap_xlast)".
-    iPoseProof (Abs_Reach_Concr with  "Hxhead_ar_γLast HγLast_ap_xlast") as "[#Hxhead_reach_xlast HγLast_ap_xlast]".
+    iPoseProof (Abs_Reach_Concr with "Hxhead_ar_γLast HγLast_ap_xlast") as "[#Hxhead_reach_xlast HγLast_ap_xlast]".
     (* The result of the load is unimportant as the consistency check will fail. Thus, we just prove that the load is safe *)
     iApply (wp_wand _ _ _ (λ v, isLL xs) with "[HisLL_xs]").
     {
