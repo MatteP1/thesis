@@ -1,1 +1,9 @@
 - should formal definition of heaplang be in section, appendix, or reference to ILN?
+
+- Title of project?
+
+- size of Margins?
+  Use a4 package?
+  fontsize?
+
+- Some todos in report...
