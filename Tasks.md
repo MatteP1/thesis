@@ -90,17 +90,20 @@
 
 - [ ] Create a section/chapter explaining some of the basic rules (hoare-triples, weakest-precondition, inv-alloc, resource algebra), and also iris in general.
 
-- [ ] Introduce the notion of linearisation points (possibly in hocap for two-lock MSQ) and point out their locations in the proof outlines
+- [ ] Introduce the notion of linearisation points
+- [x] Point out the linearisation points in the proof outlines
 
 - [ ] Mention coq and iris version that the code works with.
 - [ ] Give an overview of Coq files and how they refer to sections in report. Perhaps mention it at beginning/end of each section, or just have an overview in a section (on the coq formalisation)
 - [ ] Mention how to compile the files (via _CoqProject and make)
 
 - [ ] Create better notation of nIn, nOut and nVal
+- [ ] Write macros for many of the predicates (queue_invariant isLast, etc.)
 - [x] Wrap proofs of initialise, enqueue, and dequeue in begin{proof}
 - [x] Add lemmas in sections when proving initialise, enqueue, and dequeue, showing exactly what we are proving (see lock-free proof outline).
 - [ ] Add isLL lemmas in appendix
 - [ ] Refer to nIn-equal lemma in proofs
+- [ ] change null / null node / ... to None
 
 - [ ] Create references to:
   - [ ] Iris Technical Reference (if reader wishes to see the relevant technical definitions)
