@@ -304,7 +304,7 @@ The reader may wonder why there is an extra, intermediary "in" pointer, between 
 
 The queue consists of 3 functions: $\initialise$, $\enqueue$, and $\dequeue$, and as the name of the data structure suggests, the functions rely on two locks. To this end, we shall assume that we have some lock implementation given. In the accompanying coq mechanisation, a "spin-lock" is used, but the only part we really care about is its specification; this can be found in Example 8.38 in \todo{Cite Iris Lecture Notes}.
 
-\subsection[initialise]{$\initialise$}
+\subsection[Initialise]{$\initialise$}
 
 $\initialise$ will first create a single node -- the sentinel -- marking the start of the linked list. It then creates two locks, $H\_lock$ and $T\_lock$, protecting the head and tail pointers, respectively. Finally, it creates the head and tail pointers, both pointing to the sentinel. The queue is then a pointer to a structure containing the head, the tail, and the two locks.\\
 Figure \ref{TLMSQ:impl:figure:init} illustrates the structure of the queue after initialisation. Note that one of the pointers is coloured blue. This represents a \emph{persistent} pointer; a pointer that will never be updated again. All "in" pointers $\locin{i}$, are persistent, meaning that, once created, they will only ever point to $(v_i, \locout{i})$. We shall use the notation $\loc \mapsto^{\persistently} v$ (introduced in \cite{DBLP:conf/cpp/VindumB21}) to mean that $\loc$ points persistently to $v$.
@@ -312,7 +312,7 @@ Figure \ref{TLMSQ:impl:figure:init} illustrates the structure of the queue after
 Note that in the original specification, a queue is a pointer to a 4-tuple $(\loc_{head}, \loc_{tail}, H\_lock, T\_lock)$. Since \heaplang doesn't support 4-tuples, we instead represent the queue as a pointer to a pair of pairs: $((\loc_{head}, \loc_{tail}), (H\_lock, T\_lock))$.
 
 
-\subsection[enqueue]{$\enqueue$}
+\subsection[Enqueue]{$\enqueue$}
 
 To enqueue a value, we must create a new node, append it to the underlying linked-list, and swing the tail pointer to this new node. These three operations are depicted in figure \ref{TLMSQ:impl:figure:enqueue}.
 
@@ -320,7 +320,7 @@ $\enqueue$ takes as argument the value to be enqueued and creates a new node con
 
 Figure \ref{TLMSQ:impl:figure:enqueue} also illustrates when pointers become persistent; once the previous last node is updated to point to the newly inserted node, that pointer will never be updated again, hence becoming persistent.
 
-\subsection[dequeue]{$\dequeue$}
+\subsection[Dequeue]{$\dequeue$}
 
 It is of course only possible to dequeue an element from the queue if the queue contains at least one element. Hence, the first thing $\dequeue$ does is check if the queue is empty. We can detect an empty queue by checking if the sentinel is the last node in the linked list. Being the last node in the linked list corresponds to having the "out" node be $\None$. If this is the case, then the queue is empty and the code returns $\None$. Otherwise, there is a node just after the sentinel, which is the first node of the queue. To dequeue it, we first read the associated value, and next we swing the head to it, making it the new sentinel. Finally, we return the value we read.
 
@@ -1091,6 +1091,25 @@ In this chapter we will study the Lock-Free Michael Scott Queue. As with the two
 \section{Implementation}
 \label{LFMSQ:section:implementation}
 
+The implementation shares many commonalities with the two-lock variant, most importantly, the underlying queue is still a linked list. The major differences are how we manipulate the linked list and the head and tail pointers.
+
+\subsection[Initialise]{$\initialise$}
+As the implementation doesn't use locks, the queue data structure is now just a pointer to a pair consisting of the head and tail pointers.
+
+\subsection[Enqueue]{$\enqueue$}
+Enqueueing a node consists of the same two steps as before: add the newly created node to the linked list, and swing the tail pointer. In this way, figures \ref{TLMSQ:impl:figure:enqueue:a}, \ref{TLMSQ:impl:figure:enqueue:b}, and \ref{TLMSQ:impl:figure:enqueue:c} still accurately reflect the state changes that the queue goes through during an enqueue. However, one big difference is that swinging the tail pointer to the newly inserted node is not necessarily done by the thread that enqueued it. We discuss this below.\\
+Since other threads can work on the linked list at the same time, we must do some extra checks when enqueueing a new node.\\
+Firstly, we must ensure that the tail pointer is actually pointing to the last node. We ensure this on line \ref{LFE:nen}. If it isn't, that means that another enqueueing thread has added a new node to the linked list, but hasn't yet swung the tail pointer. So instead of waiting for it, we \textit{help} it by trying to swing the tail pointer for it. Afterwards, we try to enqueue our node again.\\
+Secondly, before we can add the node, we must ensure that no thread has performed an enqueue while we have been working, so that we don't overwrite another threads enqueue. This is ensured with the $\CAS$ instruction on line \ref{LFE:add} -- it adds the new node to the linked list only if our tail node is still the last, and hence points to $\None$. After adding the node, we attempt to swing the tail pointer to it. This may fail, but that simply means that another thread has already swung it for us.
+Finally, we have an additional \textit{consistency check} on line \ref{LFE:cct}. We discuss the purpose of this extra check in section \ref{LFMSQ:section:discussion}.
+
+\subsection[Dequeue]{$\dequeue$}
+Fundamentally, a dequeue operation still consists of swinging the head pointer to the next node in the linked list. The original authors decided that the tail pointer shouldn't lag behind the head pointer, hence $\dequeue$ also accesses the tail node and checks ensures it won't lag behind as result of the dequeue. on line \ref{LFD:hte}, we check whether the head and tail nodes are the same. If this is the case, then the queue is either empty or the tail pointer is lagging behind. We distinguish between these two cases on line \ref{LFD:nen}. If the tail node is indeed lagging behind, then some thread has enqueued a node, but not yet swung the tail pointer, so we help it out by swinging the pointer.\\
+If the head and tail nodes are not the same, then it must be safe to dequeue, which we attempt in the else block on line \ref{LFD:el2}.
+
+\subsection{Prophecies}
+On line \ref{LFD:pro} in $\dequeue$, we create a "prophecy variable" which is resolved on line \ref{LFD:cch}. Prophecies are a part of Iris and allow us to reason about the result of future expressions. They are only used in the logic and do not alter the semantics of the code. The reason we need it is because the load on line \ref{LFD:nex} is a possible linearisation point -- if the load resolves to $\None$ (i.e. the queue is empty) and the consistency check on the next line passes, the dequeue will conclude the queue is empty and return $\None$. So when we are at the load, we need to know whether or not the consistency check passes; if it does, we should apply the viewshift, and if it doesn't, we shouldn't apply it. The prophecy variable allows us to reason about the result of the consistency check already at the load, allowing us to make the correct choice.
+
 \begin{minted}[linenos=true, escapeinside=||,mathescape=true]{ocaml}
 |$\label{LFI:fun}$|  |$ \initialise \eqdef $|
 |$\label{LFI:nod}$|    |$ \Let node = \Ref(\None, \Ref(\None)) in $|
@@ -1178,8 +1197,6 @@ In this chapter we will study the Lock-Free Michael Scott Queue. As with the two
 %       & \hspace{20pt} \Else loop \ \TT\\
 %       & \hspace{20pt} ) \TT
 % \end{align*}
-
-\todo{mention the addition of the prophecy variable and the reason why (linearisation point)}
 
 \section{Reachability}
 \label{LFMSQ:section:reachability}
@@ -1512,7 +1529,13 @@ The specification we wish to prove is the following.
 \section{Discussion}
 \label{LFMSQ:section:discussion}
 
-\todo{Mention that one can remove the consistency check and hence also the prophecy}
+It was shown in \cite{DBLP:conf/cpp/VindumB21} that a version of the lock free M\&S-queue with the consistency checks is contextually equivalent to a version without consistency checks. In the original presentation (\cite{DBLP:conf/podc/MichaelS96}) the implementation language was assumed to not have a garbage collector. This meant that the ABA problem was an issue; if a node is freed by a dequeue, and afterwards a new node is allocated at the same location with the same value through an enqueue, it will look as though it is the exact same node. This can cause inconsistencies for threads that read the original node, went to sleep, and continued after the new allocation. 
+To fix the issue, the authors added \textit{modification counters} to their pointers, which means that the pointer to the newly allocated node will have a higher counter, and we can hence tell that it isn't the same node as the original. The essence of the consistency checks is to ensure that previously read nodes are the exact same nodes as from before, by ensuring that the counter is the same.
+We do this check \textit{after} reading any "next" nodes to ensure that they are indeed the next of the node we originally read -- the original node and its next node are consistent.
+
+However, the language that both we and \cite{DBLP:conf/cpp/VindumB21} have used, \heaplang, is a garbage collected language. This means that we do not need to worry about freeing nodes, and the ABA problem doesn't occur. In other words, when we read the "next" of a node, we can be certain that it is the next of the node we originally read -- no one could have freed it in a dequeue it and subsequently allocated a similar looking node in an enqueue. This then means that the consistency checks are no longer needed. 
+
+Indeed, in the Coq formalisations, we prove the Hocap-style specification for an implementation that doesn't have the consistency checks. As an additional benefit, removing the consistency check means that in $\dequeue$, we know already when we read the "next" of the head node on line \ref{LFD:nex} whether or not the dequeue will conclude that the queue is empty, and hence whether or not the load is a linearisation point. The prophecy variable is thus not needed, which further simplifies the proof of the specification.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

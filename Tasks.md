@@ -104,6 +104,7 @@
 - [ ] Add isLL lemmas in appendix
 - [ ] Refer to nIn-equal lemma in proofs
 - [ ] change null / null node / ... to None
+- [ ] Consider not using the term "sentinel"
 
 - [ ] Create references to:
   - [ ] Iris Technical Reference (if reader wishes to see the relevant technical definitions)
