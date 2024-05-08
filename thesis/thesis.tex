@@ -29,6 +29,10 @@
 \usetikzlibrary{calc,shapes.multipart,chains,arrows}
 \usepackage{xspace}
 \usepackage{lineno}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{multirow}
+\usepackage{adjustbox}
 
 \renewcommand*\sfdefault{lmss}
 \renewcommand*\ttdefault{txtt}
@@ -299,10 +303,60 @@ In this section, we give a brief introduction to Iris -- the logic we use to rea
 \section{Formalisation in Coq}
 \label{Pre:section:coq}
 
-\todo{Mention that Iris is formalised in Coq}
-\todo{Stuff works in terms of weakest precondition}
-\todo{Mention that all the work done in this project has also been mechanised in Coq}
-\todo{give an overview of how the coq files relate to each chapter/section}
+Iris has been mechanised in the Coq proof assistant\footnote{The mechanisation can be found at \url{https://gitlab.mpi-sws.org/iris/iris/}} -- a tool to machine-check proofs of mathematical assertions. All results in this project have been completely machine-verified in the Iris mechanisation in Coq, or Coq-Iris for short \todo{correct short-form?}. In Coq-Iris, specifications are usually written in terms of hoare-triples, but their proofs first convert the hoare-triples to equivalent weakest-preconditions, as this is usually easier to work with. The proofs presented in this report will follow suit and give specifications using hoare-triples, but prove them assuming they are weakest-preconditions. The proofs presented in the report thus follow the mechanised proofs very closely, making it possible to "step-through" the mechanised proofs in tandem with reading the paper-proofs presented in this report.
+
+One caveat is that, although the theory discussed in the previous section remain valid, the underlying model of Iris is somewhat more complex than the section presented it to be. Working with the Iris mechanisation in Coq, or Coq-Iris for short, thus requires a bit deeper understanding of the model of Iris. \cite{DBLP:journals/jfp/JungKJBBD18} explains the underlying model of an older version of Iris, but many of the concepts discussed are still relevant\footnote{For an up-to-date presentation, please consult the Technical Reference at \url{https://iris-project.org/}}. 
+
+Table \ref{Pre:files-table} gives an overview over the files developed in the project and how they relate to this report.
+
+\begin{table}[h]
+\begin{adjustbox}{center}
+\begin{tabularx}{1.21\textwidth}{llX}
+  \toprule
+  \textbf{File Name} & \textbf{Relevant Sections} & \textbf{Description} \\
+  \midrule
+  \path{MSQ_common.v} & Chapters \ref{ch:TLMSQ} - \ref{ch:LFMSQ} & Common definitions and lemmas. \\
+  \midrule
+  \path{twoLockMSQ_impl.v} & Chapter \ref{ch:TLMSQ} & \multirow{5}{\linewidth}{Two-Lock M\&S-queue implementation and proofs of three specifications. Two of them shown to be derivable from the third.} \\
+  \path{twoLockMSQ_sequential_spec.v} & Chapter \ref{ch:TLMSQSEQ} & \\
+  \path{twoLockMSQ_concurrent_spec.v} & Chapter \ref{ch:TLMSQCONC} & \\
+  \path{twoLockMSQ_hocap_spec.v} & Chapter \ref{ch:TLMSQHOCAP}& \\
+  \path{twoLockMSQ_derived.v} & Section \ref{TLMSQHOCAP:section:deriving-seq-and-conc} & \\
+  \midrule
+  \path{lockFreeMSQ_impl.v} & Section \ref{LFMSQ:section:implementation} & \multirow{3}{\linewidth}{Lock-Free M\&S-queue implementation and Hocap-style + derived specifications.} \\
+  \path{lockFreeMSQ_hocap_spec.v} & Sections \ref{LFMSQ:section:reachability} - \ref{LFMSQ:section:proof-outline} & \\
+  \path{lockFreeMSQ_derived.v} & Sections \ref{LFMSQ:section:spec} and \ref{TLMSQHOCAP:section:deriving-seq-and-conc} & \\
+  \midrule
+  \path{lockAndCCFreeMSQ_impl.v} & Section \ref{LFMSQ:section:discussion} & \multirow{2}{\linewidth}{Consistency-Check-Free version of Lock-Free M\&S-queue.}\\
+  \path{lockAndCCFreeMSQ_hocap_spec.v} & Section \ref{LFMSQ:section:discussion}& \\
+  \bottomrule
+\end{tabularx}
+\end{adjustbox}
+\caption{Overview of Coq Files}
+\label{Pre:files-table}
+\end{table}
+
+
+% \begin{tabularx}{1.2\linewidth}{llX}
+%   \toprule
+%   \textbf{File Name} & \textbf{Relevant Sections} & \textbf{Description} \\
+%   \midrule
+%   \path{MSQ_common.v} & Chapters \ref{ch:TLMSQ} - \ref{ch:LFMSQ} & Common definitions and lemmas used across most files. \\
+%   \midrule
+%   \path{twoLockMSQ_impl.v} & Chapter \ref{ch:TLMSQ} & Implementation of Two-lock M\&S-queue in \heaplang \\
+%   \path{twoLockMSQ_sequential_spec.v} & Chapter \ref{ch:TLMSQSEQ} & Sequential specification \\
+%   \path{twoLockMSQ_concurrent_spec.v} & Chapter \ref{ch:TLMSQCONC} & Concurrent specification \\
+%   \path{twoLockMSQ_hocap_spec.v} & Chapter \ref{ch:TLMSQHOCAP} & Hocap-style specification \\
+%   \path{twoLockMSQ_derived.v} & Section \ref{TLMSQHOCAP:section:deriving-seq-and-conc} & Deriving Sequential and Concurrent specifications from Hocap-style specification \\
+%   \midrule
+%   \path{lockFreeMSQ_impl.v} & Section \ref{LFMSQ:section:implementation} & Implementation of Lock-free M\&S queue in \heaplang\\
+%   \path{lockFreeMSQ_hocap_spec.v} & Sections \ref{LFMSQ:section:reachability} - \ref{LFMSQ:section:proof-outline} & Hocap-style specification\\
+%   \path{lockFreeMSQ_derived.v} & Sections \ref{LFMSQ:section:spec} and \ref{TLMSQHOCAP:section:deriving-seq-and-conc} & Deriving Sequential and Concurrent specifications from Hocap-style specification \\
+%   \midrule
+%   \path{lockAndCCFreeMSQ_impl.v} & Section \ref{LFMSQ:section:discussion} & \\
+%   \path{lockAndCCFreeMSQ_hocap_spec.v} & Section \ref{LFMSQ:section:discussion}& \\
+%   \bottomrule
+% \end{tabularx}
 
 
 \chapter{The Two-Lock Michael Scott Queue}

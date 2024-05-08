@@ -16,4 +16,6 @@
 
 - referencing ILN. Any predefined bibtex entries?
 
+- How to refer to the mechanisation of Iris in Coq. Coq-Iris?
+
 - Some todos in report...
