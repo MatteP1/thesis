@@ -6,4 +6,8 @@
   Use a4 package?
   fontsize?
 
+- Are the topics i want to cover for preliminary section sufficient?
+
+- Any place I can see formally what linearisation points are, and refer to it in my section?
+
 - Some todos in report...

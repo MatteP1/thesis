@@ -259,16 +259,41 @@
 
 \section{The Iris Program Logic Framework}
 \label{Pre:section:iris}
+In this section, we give a brief introduction to Iris -- the logic we use to reason about the M\&S-queues. Iris is quite expressive and supports a myriad of features and derived rules, many of which have been utilised in this project. As such, it will be impossible to cover all facets of Iris in detail, so we limit ourselves to give an overview of the main aspects of Iris. If the reader wishes a more thorough introduction, or wants to see further details of the topics covered, please consult the Iris Lecture Notes \todo{cite ILN}.
 
-\todo{Write about Iris}
-\todo{Seperation logic}
-\todo{Present some of the derivation rules}
-\todo{Present hoare Triples and Weakest Pre-condition}
-\todo{Persistent and Later}
-  \todo{For Later, explain that it ties propositions to program-steps. Explain the löb induction rule, mention the intuition when P is hoare triple}
-\todo{Resource Algebra}
-\todo{Invariants}
-\todo{Fancy update modality and viewshift}
+\subsection{Fundamentals of Iris}
+\todo{program logic framework}
+\todo{instantiate with a language, here heaplang}
+\todo{higher order logic}
+\todo{seperation logic}
+\todo{- exclusive ownership and duplicabiity}
+\todo{points-to predicates}
+\todo{resource oriented}
+\todo{derivation rules examples...}
+
+\subsection*{Persistent Modality}
+
+\subsection{Hoare Triples and Weakest Pre-Condition}
+\todo{explain them}
+\todo{show how they are related}
+
+\subsection{Later Modality}
+\todo{explain concept}
+\todo{ties propositions to program steps}
+\todo{Explain the löb induction rule, mention the intuition when P is hoare triple}
+
+\subsection{Invariants}
+\todo{explain the idea}
+\todo{namespaces}
+
+\subsection{Resource Algebra}
+\todo{Introduce the idea}
+\todo{mention that points-to predicate is also a resource algebra}
+\todo{composing resource algebras}
+\todo{we introduce the resource algebras we use at the point of use}
+
+\subsection*{Update modality and Viewshift}
+\todo{explain the ideas}
 
 
 \section{Formalisation in Coq}
@@ -278,6 +303,7 @@
 \todo{Stuff works in terms of weakest precondition}
 \todo{Mention that all the work done in this project has also been mechanised in Coq}
 \todo{give an overview of how the coq files relate to each chapter/section}
+
 
 \chapter{The Two-Lock Michael Scott Queue}
 \label{ch:TLMSQ}
@@ -886,7 +912,12 @@ In contrast to the sequential specification, the locks now protect $\TokEQg$ and
 
 \section{Linearisation Points}
 \label{TLMSQCONC:section:lin-points}
-An important notion for concurrent algorithms is linearisability. \todo{talk about linearisability}
+An important notion for concurrent algorithms is linearisability. One way to characterise linearisability is through the concept of linearisation points. We say that a function (such as $\enqueue$ or $\dequeue$) is linearisable, if all invocations of the function has a \textit{linearisation point} somewhere between the invocation and the response. Further, the effects of the function appear to occur instantaneously at the linearisation point; a single, atomic instruction performs the desired change that the function must carry out.
+\todo{cite source}
+
+For example, $\enqueue$ has a single linearisation point at the instruction that appends the newly created node to the linked list (the store on line \ref{TLE:add}). At exactly that point, the effect of the enqueue takes place. $\dequeue$ is slightly more complicated as it has multiple linearisation points. If the queue is empty when we read the head node's out pointer on line \ref{TLD:new}, then at that very read, the $\dequeue$ function is guaranteed to return $\None$, making that dereference the linearisation point. On the hand, if the queue was not empty at that point, then the linearisation point is at line \ref{TLD:shs}, when we swing the head pointer. At that very store operation, the effect of $\dequeue$ occurs.
+
+Linearisation points are closely tied to updates of the abstract state of the queue. The abstract state of the queue changes only at linearisation points. This is consistent with the notion that the effects of the function takes effect at the linearisation points -- updates to the abstract state appear to happen atomically. This link to the abstract state becomes even more prevalent when we introduce Hocap-style specifications in chapter \ref{ch:TLMSQHOCAP}.
 
 \section{Proof Outline}
 \label{TLMSQCONC:section:proof-outline}
