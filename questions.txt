@@ -10,4 +10,8 @@
 
 - Any place I can see formally what linearisation points are, and refer to it in my section?
 
+- Should I talk about adequacy/partial correctness in section on hoare/wp?
+
+- referencing ILN. Any predefined bibtex entries?
+
 - Some todos in report...
