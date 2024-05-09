@@ -88,13 +88,13 @@
   - [x] fix indentation
   - [x] Consider renaming 'pt' to 'ap' for abstract points-to in lockfreeMSQ_hocap and lockAndCCfreeMSQ_hocap.
 
-- [ ] Create a section/chapter explaining some of the basic rules (hoare-triples, weakest-precondition, inv-alloc, resource algebra), and also iris in general.
-
-- [ ] Introduce the notion of linearisation points
+- [x] Introduce the notion of linearisation points
 - [x] Point out the linearisation points in the proof outlines
 
+- [ ] Create a section/chapter explaining some of the basic rules (hoare-triples, weakest-precondition, inv-alloc, resource algebra), and also iris in general.
+
 - [ ] Mention coq and iris version that the code works with.
-- [ ] Give an overview of Coq files and how they refer to sections in report. Perhaps mention it at beginning/end of each section, or just have an overview in a section (on the coq formalisation)
+- [x] Give an overview of Coq files and how they refer to sections in report. Perhaps mention it at beginning/end of each section, or just have an overview in a section (on the coq formalisation)
 - [ ] Mention how to compile the files (via _CoqProject and make)
 
 - [ ] Create better notation of nIn, nOut and nVal
@@ -105,9 +105,12 @@
 - [ ] Refer to nIn-equal lemma in proofs
 - [ ] change null / null node / ... to None
 - [ ] Consider not using the term "sentinel"
+- [ ] change "x" to ``x'', and similarly for 'x'.
+- [ ] Decide on name/notation for Qgnames (including SeqQgnames and ConcQgnames). Maybe \mathcal(G)_{\text{seq}}?
 
 - [ ] Create references to:
-  - [ ] Iris Technical Reference (if reader wishes to see the relevant technical definitions)
-  - [ ] Iris from the ground up (As a somewhat gentle introduction to concepts used for the Coq code)
+  - [x] Iris Technical Reference (if reader wishes to see the relevant technical definitions)
+  - [x] Iris from the ground up (As a somewhat gentle introduction to concepts used for the Coq code)
+  - [ ] Iris Lecture Notes (see todos in report)
 
 - [x] If time permits, use hocap spec to prove a spec of a non-trivial client. Fx a client like the one in the java code. (No Time)

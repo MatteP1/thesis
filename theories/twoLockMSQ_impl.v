@@ -78,6 +78,7 @@ Definition test_dequeue_empty2 : expr :=
   let: "v3" := dequeue "Q" in
   ("v1", "v2", "v3").
 
-Compute (exec 200 test_dequeue_empty2).
+(* Uncomment below to run test. Requires Iris-Unstable *)
+(* Compute (exec 200 test_dequeue_empty2). *)
 
 End tests.

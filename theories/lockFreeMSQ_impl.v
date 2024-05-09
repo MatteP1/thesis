@@ -85,7 +85,7 @@ Definition test_dequeue_empty2 : expr :=
   let: "v3" := dequeue "Q" in
   ("v1", "v2", "v3").
 
-(* Note: tests only work without the prophecy variable. *)
-Compute (exec 200 test_dequeue_empty2).
+(* Uncomment below to run test. Requires Iris-Unstable *)
+(* Compute (exec 200 test_dequeue_empty2). *)
 
 End tests.
