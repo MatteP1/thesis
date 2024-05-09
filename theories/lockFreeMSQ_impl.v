@@ -3,7 +3,7 @@ From iris.algebra Require Import excl.
 From iris.bi Require Import derived_laws.
 From iris.heap_lang Require Import lang proofmode notation.
 From iris.base_logic.lib Require Import invariants.
-From iris.unstable.heap_lang Require Import interpreter.
+(* From iris.unstable.heap_lang Require Import interpreter. *)
 
 Definition initialize : val :=
   rec: "initialize" <> :=
@@ -85,7 +85,7 @@ Definition test_dequeue_empty2 : expr :=
   let: "v3" := dequeue "Q" in
   ("v1", "v2", "v3").
 
-(* Uncomment below to run test. Requires Iris-Unstable *)
+(* To run the tests, import the HeapLang interpreter. Requires Iris-Unstable. *)
 (* Compute (exec 200 test_dequeue_empty2). *)
 
 End tests.

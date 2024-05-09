@@ -349,35 +349,12 @@ Table \ref{Pre:files-table} gives an overview over the files developed in the pr
 \end{table}
 
 \subsection{Compiling the Project}
-Accompanying the files is a \path{_CoqProject} file. To compile the project (on linux), open a terminal and navigate to the folder containing \path{_CoqProject}. Then run the following two commands, which (1) generates a makefile and (2) runs the makefile.
+Compiling the project (on \linuxname) requires both Coq and Iris to be installed. Once installed, open a terminal and navigate to the project folder, containing \path{_CoqProject}. Then run the following two commands, which (1) generates a makefile and (2) runs the makefile.
 \begin{minted}[style=friendly, bgcolor=codebg, linenos]{shell-session}
   $ coq_makefile -f _CoqProject -o CoqMakefile
   $ make -f CoqMakefile
 \end{minted}
-The project is known to compile with Coq version XX and Iris version XX.
-\todo{write in the versions}
-
-
-% \begin{tabularx}{1.2\linewidth}{llX}
-%   \toprule
-%   \textbf{File Name} & \textbf{Relevant Sections} & \textbf{Description} \\
-%   \midrule
-%   \path{MSQ_common.v} & Chapters \ref{ch:TLMSQ} - \ref{ch:LFMSQ} & Common definitions and lemmas used across most files. \\
-%   \midrule
-%   \path{twoLockMSQ_impl.v} & Chapter \ref{ch:TLMSQ} & Implementation of Two-lock M\&S-queue in \heaplang \\
-%   \path{twoLockMSQ_sequential_spec.v} & Chapter \ref{ch:TLMSQSEQ} & Sequential specification \\
-%   \path{twoLockMSQ_concurrent_spec.v} & Chapter \ref{ch:TLMSQCONC} & Concurrent specification \\
-%   \path{twoLockMSQ_hocap_spec.v} & Chapter \ref{ch:TLMSQHOCAP} & Hocap-style specification \\
-%   \path{twoLockMSQ_derived.v} & Section \ref{TLMSQHOCAP:section:deriving-seq-and-conc} & Deriving Sequential and Concurrent specifications from Hocap-style specification \\
-%   \midrule
-%   \path{lockFreeMSQ_impl.v} & Section \ref{LFMSQ:section:implementation} & Implementation of Lock-free M\&S queue in \heaplang\\
-%   \path{lockFreeMSQ_hocap_spec.v} & Sections \ref{LFMSQ:section:reachability} - \ref{LFMSQ:section:proof-outline} & Hocap-style specification\\
-%   \path{lockFreeMSQ_derived.v} & Sections \ref{LFMSQ:section:spec} and \ref{TLMSQHOCAP:section:deriving-seq-and-conc} & Deriving Sequential and Concurrent specifications from Hocap-style specification \\
-%   \midrule
-%   \path{lockAndCCFreeMSQ_impl.v} & Section \ref{LFMSQ:section:discussion} & \\
-%   \path{lockAndCCFreeMSQ_hocap_spec.v} & Section \ref{LFMSQ:section:discussion}& \\
-%   \bottomrule
-% \end{tabularx}
+The project is known to compile with Coq version 8.19.0 and Iris version 4.2.0.
 
 
 \chapter{The Two-Lock Michael Scott Queue}
