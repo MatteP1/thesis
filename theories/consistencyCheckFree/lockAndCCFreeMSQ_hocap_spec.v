@@ -384,7 +384,7 @@ Qed.
 Lemma swing_tail (l_head l_tail : loc) (x_tail x_newtail : node) (Q_γ : Qgnames) :
   {{{ inv Ni (queue_invariant l_head l_tail Q_γ) ∗ x_tail ⤳ x_newtail ∗ x_newtail ⤏ Q_γ.(γ_Last) }}}
     CAS #l_tail #(n_in x_tail) #(n_in x_newtail)
-  {{{v, RET v; ⌜v = #true⌝ ∨ ⌜v = #false⌝ }}}.
+  {{{w, RET w; ⌜w = #true⌝ ∨ ⌜w = #false⌝ }}}.
 Proof.
   iIntros (Φ) "(#Hqueue_inv & #Hxtail_reach_xnewtail & #Hxnewtail_ar_γLast) HΦ".
   wp_bind (CmpXchg _ _ _).
@@ -565,7 +565,7 @@ Proof.
       wp_pures.
       (* Attempt to swing tail pointer *)
       wp_apply (swing_tail with "[Hqueue_inv Hxtail_reach_xnew Hxnew_ar_γLast]"); first iFrame "#".
-      iIntros (v') "_".
+      iIntros (w) "_".
       by iApply "HΦ".
   - (* x_tail is not last *)
     wp_load.
@@ -588,7 +588,7 @@ Proof.
     iPoseProof (reach_one_step x_tail x_tail_next with "[] [] []") as "Hxtail_reach_xtailnext"; try done.
     (* Attempt to swing tail pointer *)
     wp_apply (swing_tail with "[Hqueue_inv Hxtail_reach_xtailnext Hxtailnext_ar_γLast]"); first iFrame "#".
-    iIntros (v') "_".
+    iIntros (w) "_".
     wp_pures.
     iApply ("IH" with "HP HΦ Hxnew_to_none").
 Qed.
@@ -598,13 +598,13 @@ Lemma dequeue_spec v_q (Q_γ : Qgnames) (P : iProp Σ) (Q : val -> iProp Σ):
   □(∀xs_v, (Q_γ ⤇● xs_v ∗ P
               ={⊤ ∖ ↑Ni}=∗
               ▷ (( ⌜xs_v = []⌝ ∗ Q_γ ⤇● xs_v ∗ Q NONEV) ∨
-              (∃x_v xs_v', ⌜xs_v = xs_v' ++ [x_v]⌝ ∗ Q_γ ⤇● xs_v' ∗ Q (SOMEV x_v)))
+              (∃v xs_v', ⌜xs_v = xs_v' ++ [v]⌝ ∗ Q_γ ⤇● xs_v' ∗ Q (SOMEV v)))
             )
    )
   -∗
   {{{ is_queue v_q Q_γ ∗ P }}}
     dequeue v_q
-  {{{ v, RET v; Q v }}}.
+  {{{ w, RET w; Q w }}}.
 Proof.
   iIntros "#Hvs".
   iIntros (Φ) "!> [(%l_queue & %l_head & %l_tail & -> &
@@ -703,11 +703,11 @@ Proof.
     }
     iAssert (⌜xs_v = []⌝)%I as "->".
     { by destruct xs_v. }
-    iMod ("Hvs" $! [] with "[HAbst HP]") as "[(_ & HAbst & HQ) | (%x_v & %xs_v' & >%Hcontra & HAbst_new & HQ) ]";
+    iMod ("Hvs" $! [] with "[HAbst HP]") as "[(_ & HAbst & HQ) | (%v & %xs_v' & >%Hcontra & HAbst_new & HQ) ]";
     [ by iFrame | |
       (* The abstract state must be empty. Hence the second disjunct is impossible. *)
       exfalso;
-      by apply (app_cons_not_nil xs_v' [] x_v)
+      by apply (app_cons_not_nil xs_v' [] v)
     ].
     iModIntro.
     (* Close Invariant: 3 *)
@@ -755,7 +755,7 @@ Proof.
       iPoseProof (reach_one_step x_tail x_head_next with "[] [] []") as "Hxtail_reach_xheadnext"; try done.
       (* Swing Tail pointer *)
       wp_apply (swing_tail with "[Hqueue_inv Hxtail_reach_xheadnext Hxheadnext_ar_γLast]"); first iFrame "#".
-      iIntros (v') "_".
+      iIntros (w) "_".
       wp_pures.
       iApply ("IH" with "HP HΦ").
     + (* x_tail is not lagging behind. Attempt to swing head pointer *)
@@ -792,7 +792,7 @@ Proof.
             iDestruct (n_in_equal with "[] [Hxheadnext_node] [Hxheadnext'_node]") as "%Hxheadnext_eq"; try done.
             by rewrite Hxheadnext_eq.
         }
-        iMod ("Hvs" $! xs_v with "[HAbst HP]") as "[(>-> & HAbst & HQ) | (%x_v & %xs_v' & >%Hxs_v_eq & HAbst_new & HQ) ]";
+        iMod ("Hvs" $! xs_v with "[HAbst HP]") as "[(>-> & HAbst & HQ) | (%v & %xs_v' & >%Hxs_v_eq & HAbst_new & HQ) ]";
         [ by iFrame |
           (* The abstract state cannot be empty. Hence the first disjunct is impossible *)
           rewrite proj_val_split in Hconc_abst_eq;
@@ -800,7 +800,7 @@ Proof.
           by apply (app_cons_not_nil (proj_val xs_queue_new) [] (n_val x_head_next)) |
         ].
         rewrite Hxs_v_eq proj_val_split wrap_some_split in Hconc_abst_eq.
-        apply list_last_eq in Hconc_abst_eq as [Hconc_abst_eq Hxheadnext_xv_eq].
+        apply list_last_eq in Hconc_abst_eq as [Hconc_abst_eq Hxheadnext_v_eq].
         rewrite Hxs_eq.
         iDestruct (isLL_split with "HisLL_xs") as "[HisLL_new _]".
         iPoseProof (reach_one_step x_head x_head_next with "[] [] []") as "Hxhead_reach_xheadnext"; try done.
@@ -833,7 +833,7 @@ Proof.
         }
         wp_pures.
         iApply "HΦ".
-        by rewrite Hxheadnext_xv_eq.
+        by rewrite Hxheadnext_v_eq.
       * (* CAS failed *)
         iModIntro.
         (* Close Invariant: 4 *)

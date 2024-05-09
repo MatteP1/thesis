@@ -137,9 +137,9 @@ Qed.
 Lemma dequeue_spec_seq v_q (xs_v : list val) (Q_γ : SeqQgnames) :
   {{{ is_queue_seq v_q xs_v Q_γ }}}
     dequeue v_q
-  {{{ v, RET v; (⌜xs_v = []⌝ ∗ ⌜v = NONEV⌝ ∗ is_queue_seq v_q xs_v Q_γ) ∨
-                (∃x_v xs_v', ⌜xs_v = xs_v' ++ [x_v]⌝ ∗
-                    ⌜v = SOMEV x_v⌝ ∗ is_queue_seq v_q xs_v' Q_γ) }}}.
+  {{{ w, RET w; (⌜xs_v = []⌝ ∗ ⌜w = NONEV⌝ ∗ is_queue_seq v_q xs_v Q_γ) ∨
+                (∃v xs_v', ⌜xs_v = xs_v' ++ [v]⌝ ∗
+                    ⌜w = SOMEV v⌝ ∗ is_queue_seq v_q xs_v' Q_γ) }}}.
 Proof.
   iIntros (Φ) "(%l_queue & %l_head & %l_tail & %h_lock & %t_lock & -> & #Hl_queue & %xs_queue & %x_head & %x_tail & %Hconc_abst_eq & HisLL_xs & Hl_head & Hl_tail & %HisLast_xtail & #Hh_lock & #Ht_lock) HΦ".
   iPoseProof (isLL_and_chain with "HisLL_xs") as "[HisLL_xs #HisLL_chain_xs]".

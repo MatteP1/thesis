@@ -93,9 +93,9 @@
 
 - [ ] Create a section/chapter explaining some of the basic rules (hoare-triples, weakest-precondition, inv-alloc, resource algebra), and also iris in general.
 
-- [ ] Mention coq and iris version that the code works with.
+- [x] Mention coq and iris version that the code works with.
 - [x] Give an overview of Coq files and how they refer to sections in report. Perhaps mention it at beginning/end of each section, or just have an overview in a section (on the coq formalisation)
-- [ ] Mention how to compile the files (via _CoqProject and make)
+- [x] Mention how to compile the files (via _CoqProject and make)
 
 - [ ] Create better notation of nIn, nOut and nVal
 - [ ] Write macros for many of the predicates (queue_invariant isLast, etc.)
@@ -107,6 +107,8 @@
 - [ ] Consider not using the term "sentinel"
 - [ ] change "x" to ``x'', and similarly for 'x'.
 - [ ] Decide on name/notation for Qgnames (including SeqQgnames and ConcQgnames). Maybe \mathcal(G)_{\text{seq}}?
+- [ ] Center figures on page (not on line)
+- [x] Make sure all node values are 'w' and queue values are 'v'
 
 - [ ] Create references to:
   - [x] Iris Technical Reference (if reader wishes to see the relevant technical definitions)

@@ -163,7 +163,7 @@ Context `{!heapGS Σ}.
   (x_1, l_1_out) <- l_1_in
 *)
 
-Fixpoint isLL_chain (xs : list node ) : iProp Σ :=
+Fixpoint isLL_chain (xs : list node) : iProp Σ :=
   match xs with
   | [] => True
   | [x] => n_in x ↦□ (n_val x, #(n_out x))

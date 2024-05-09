@@ -369,7 +369,7 @@ Qed.
 Lemma dequeue_spec_conc v_q Ψ (Q_γ : ConcQgnames) :
   {{{ is_queue_conc Ψ v_q Q_γ }}}
     dequeue v_q
-  {{{ v, RET v; ⌜v = NONEV⌝ ∨ (∃ x_v, ⌜v = SOMEV x_v⌝ ∗ Ψ x_v) }}}.
+  {{{ w, RET w; ⌜w = NONEV⌝ ∨ (∃ v, ⌜w = SOMEV v⌝ ∗ Ψ v) }}}.
 Proof.
   iIntros (Φ) "(%l_queue & %l_head & %l_tail & %h_lock & %t_lock & -> &
                #Hl_queue & #Hqueue_inv & #Hh_lock & #Ht_lock) HΦ".
@@ -510,14 +510,14 @@ Proof.
       by iApply n_in_equal.
     }
     (* Sync up abstract state *)
-    destruct (ll_case_first xs_v) as [->|[x_v [xs_v' ->]]].
+    destruct (ll_case_first xs_v) as [->|[v [xs_v' ->]]].
     {
       rewrite proj_val_split in Hconc_abst_eq.
       exfalso.
       by apply (app_cons_not_nil (proj_val xs_queue') [] (n_val x_head_next)).
     }
     rewrite proj_val_split wrap_some_split /= in Hconc_abst_eq.
-    apply list_last_eq in Hconc_abst_eq as [Hxs_rest_val_eq Hxheadnext_xv_eq].
+    apply list_last_eq in Hconc_abst_eq as [Hxs_rest_val_eq Hxheadnext_v_eq].
     iPoseProof (All_split with "HAll_xs") as "[HAll_xs_val_rest [Hxheadnext_val_Ψ _]]".
     iModIntro.
     (* Close in Static / Enqueue *)
@@ -540,7 +540,7 @@ Proof.
     iModIntro.
     iApply "HΦ".
     iRight.
-    iExists x_v.
+    iExists v.
     by iSplit.
 Qed.
 

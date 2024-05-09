@@ -394,13 +394,13 @@ Lemma dequeue_spec v_q (Q_γ : Qgnames) (P : iProp Σ) (Q : val -> iProp Σ):
   □(∀xs_v, (Q_γ ⤇● xs_v ∗ P
               ={⊤ ∖ ↑Ni}=∗
               ▷ (( ⌜xs_v = []⌝ ∗ Q_γ ⤇● xs_v ∗ Q NONEV) ∨
-              (∃x_v xs_v', ⌜xs_v = xs_v' ++ [x_v]⌝ ∗ Q_γ ⤇● xs_v' ∗ Q (SOMEV x_v)))
+              (∃v xs_v', ⌜xs_v = xs_v' ++ [v]⌝ ∗ Q_γ ⤇● xs_v' ∗ Q (SOMEV v)))
             )
    )
   -∗
   {{{ is_queue v_q Q_γ ∗ P }}}
     dequeue v_q
-  {{{ v, RET v; Q v }}}.
+  {{{ w, RET w; Q w }}}.
 Proof.
   (* CHANGE: assume the viewshift *)
   iIntros "#Hvs".
@@ -461,12 +461,12 @@ Proof.
     iDestruct "HisLL_xs" as "[Hxhead_to_none _]".
     wp_load. (* Linearisation Point *)
     (* CHANGE: The load was a linearisation point. Update the abstract state using the viewshift *)
-    iMod ("Hvs" $! xs_v with "[HAbst HP]") as "[(>-> & HAbst & HQ) | (%x_v & %xs_v' & >-> & HAbst_new & HQ) ]";
+    iMod ("Hvs" $! xs_v with "[HAbst HP]") as "[(>-> & HAbst & HQ) | (%v & %xs_v' & >-> & HAbst_new & HQ) ]";
     [ by iFrame | |
       (* The abstract state must be empty. Hence the second disjunct is impossible. *)
       rewrite wrap_some_split in Hconc_abst_eq;
       exfalso;
-      by apply (app_cons_not_nil (wrap_some xs_v') [] (SOMEV x_v))
+      by apply (app_cons_not_nil (wrap_some xs_v') [] (SOMEV v))
     ].
     iModIntro.
     (* Close in Static / Enqueue *)
@@ -552,7 +552,7 @@ Proof.
       by iApply n_in_equal.
     }
     (* CHANGE: The store was a linearisation point. Update the abstract state using the viewshift *)
-    iMod ("Hvs" $! xs_v with "[HAbst HP]") as "[(>-> & HAbst & HQ) | (%x_v & %xs_v' & >-> & HAbst_new & HQ) ]";
+    iMod ("Hvs" $! xs_v with "[HAbst HP]") as "[(>-> & HAbst & HQ) | (%v & %xs_v' & >-> & HAbst_new & HQ) ]";
     [ by iFrame |
       (* The abstract state cannot be empty. Hence the first disjunct is impossible *)
       rewrite proj_val_split in Hconc_abst_eq;
@@ -560,7 +560,7 @@ Proof.
       by apply (app_cons_not_nil (proj_val xs_queue') [] (n_val x_head_next)) |
     ].
     rewrite proj_val_split wrap_some_split /= in Hconc_abst_eq.
-    apply list_last_eq in Hconc_abst_eq as [Hxs_rest_val_eq Hxheadnext_xv_eq].
+    apply list_last_eq in Hconc_abst_eq as [Hxs_rest_val_eq Hxheadnext_v_eq].
     iModIntro.
     (* Close in Static / Enqueue *)
     iSplitL "Hl_head Htail HToknD HisLL_xs HAbst_new".
@@ -582,7 +582,7 @@ Proof.
     iModIntro.
     iApply "HΦ".
     (* CHANGE: prove Q *)
-    by rewrite Hxheadnext_xv_eq.
+    by rewrite Hxheadnext_v_eq.
 Qed.
 
 End proofs.

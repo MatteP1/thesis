@@ -66,22 +66,22 @@ Qed.
 Lemma dequeue_spec_seq v_q (xs_v : list val) (Q_γH : Qgnames) :
   {{{ is_queue_seq v_q xs_v Q_γH }}}
     dequeue v_q
-  {{{ v, RET v; (⌜xs_v = []⌝ ∗ ⌜v = NONEV⌝ ∗ is_queue_seq v_q xs_v Q_γH) ∨
-                (∃x_v xs_v', ⌜xs_v = xs_v' ++ [x_v]⌝ ∗
-                    ⌜v = SOMEV x_v⌝ ∗ is_queue_seq v_q xs_v' Q_γH) }}}.
+  {{{ w, RET w; (⌜xs_v = []⌝ ∗ ⌜w = NONEV⌝ ∗ is_queue_seq v_q xs_v Q_γH) ∨
+                (∃v xs_v', ⌜xs_v = xs_v' ++ [v]⌝ ∗
+                    ⌜w = SOMEV v⌝ ∗ is_queue_seq v_q xs_v' Q_γH) }}}.
 Proof.
   iIntros (Φ) "(#His_queue & Hfrag) HΦ".
   set (P := (Q_γH ⤇◯ xs_v)%I).
-  set (Q := λ v, ((⌜xs_v = []⌝ ∗ ⌜v = NONEV⌝ ∗ Q_γH ⤇◯ xs_v) ∨
-                  (∃x_v xs_v', ⌜xs_v = xs_v' ++ [x_v]⌝ ∗
-                    ⌜v = SOMEV x_v⌝ ∗ Q_γH ⤇◯ xs_v'))%I).
+  set (Q := λ w, ((⌜xs_v = []⌝ ∗ ⌜w = NONEV⌝ ∗ Q_γH ⤇◯ xs_v) ∨
+                  (∃v xs_v', ⌜xs_v = xs_v' ++ [v]⌝ ∗
+                    ⌜w = SOMEV v⌝ ∗ Q_γH ⤇◯ xs_v'))%I).
   wp_apply (dequeue_spec N v_q Q_γH P Q with "[] [Hfrag]" ).
   (* Proving viewshift *)
   {
     iIntros (xs_v') "!>".
     iIntros "[Hauth Hfrag]".
     iAssert (⌜xs_v = xs_v'⌝)%I with "[Hauth Hfrag]" as "<-"; first by iApply (queue_contents_auth_frag_agree _ xs_v xs_v' 1 with "Hauth Hfrag").
-    destruct (ll_case_first xs_v) as [->|[x_v [xs_v' ->]]].
+    destruct (ll_case_first xs_v) as [->|[v [xs_v' ->]]].
     - iLeft.
       iModIntro.
       iSplit; first done.
@@ -91,12 +91,12 @@ Proof.
       by repeat iSplit.
     - iMod (queue_contents_update _ _ _ (xs_v') with "Hauth Hfrag") as "[Hauth Hfrag]".
       iRight.
-      iExists x_v, xs_v'.
+      iExists v, xs_v'.
       iModIntro.
       iSplit; first done.
       iFrame.
       iRight.
-      iExists x_v, xs_v'.
+      iExists v, xs_v'.
       by repeat iSplit.
   }
   (* Proving pre-condition of hocap enqueue spec *)
@@ -104,11 +104,11 @@ Proof.
   iIntros (w) "HQ".
   iApply ("HΦ" $! w).
   unfold Q.
-  iDestruct "HQ" as "[(-> & %Hres & Hfrag) | (%x_v & %xs_v' & %Hxs_v_eq & %Hres & Hfrag)]".
+  iDestruct "HQ" as "[(-> & %Hres & Hfrag) | (%v & %xs_v' & %Hxs_v_eq & %Hres & Hfrag)]".
   - iLeft.
     by repeat iSplit.
   - iRight.
-    iExists x_v, xs_v'.
+    iExists v, xs_v'.
     by repeat iSplit.
 Qed.
 
@@ -181,11 +181,11 @@ Qed.
 Lemma dequeue_spec_conc v_q Ψ (Q_γH : Qgnames) :
   {{{ is_queue_conc Ψ v_q Q_γH }}}
     dequeue v_q
-  {{{ v, RET v; ⌜v = NONEV⌝ ∨ (∃ x_v, ⌜v = SOMEV x_v⌝ ∗ Ψ x_v) }}}.
+  {{{ w, RET w; ⌜w = NONEV⌝ ∨ (∃ v, ⌜w = SOMEV v⌝ ∗ Ψ v) }}}.
 Proof.
   iIntros (Φ) "(#His_queue & #HInv) HΦ".
   set (P := True%I : iProp Σ).
-  set (Q := λ v, (⌜v = NONEV⌝ ∨ (∃x_v, ⌜v = SOMEV x_v⌝ ∗ Ψ x_v))%I).
+  set (Q := λ w, (⌜w = NONEV⌝ ∨ (∃v, ⌜w = SOMEV v⌝ ∗ Ψ v))%I).
   wp_apply (dequeue_spec N v_q Q_γH P Q).
   (* Proving viewshift *)
   {
@@ -193,7 +193,7 @@ Proof.
     iIntros "[Hauth _]".
     iInv "HInv" as "(%xs_v & >Hfrag & HAll)".
     iAssert (⌜xs_v = xs_v'⌝)%I with "[Hauth Hfrag]" as "<-"; first by iApply (queue_contents_auth_frag_agree _ xs_v xs_v' 1 with "Hauth Hfrag").
-    destruct (ll_case_first xs_v) as [->|[x_v [xs_v' ->]]].
+    destruct (ll_case_first xs_v) as [->|[v [xs_v' ->]]].
     - iModIntro.
       (* Close Invariant NC *)
       iSplitL "Hfrag HAll"; first (iExists []; auto).
@@ -210,12 +210,12 @@ Proof.
       iSplitL "Hfrag HAll_xs_v'"; first (iExists xs_v'; iFrame).
       iModIntro.
       iRight.
-      iExists x_v, xs_v'.
+      iExists v, xs_v'.
       iSplit; first done.
       iFrame.
       unfold Q.
       iRight.
-      iExists x_v.
+      iExists v.
       iSplit; done.
   }
   (* Proving pre-condition of hocap enqueue spec *)
