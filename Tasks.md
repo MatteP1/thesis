@@ -105,10 +105,12 @@
 - [ ] Refer to nIn-equal lemma in proofs
 - [ ] change null / null node / ... to None
 - [ ] Consider not using the term "sentinel"
-- [ ] change "x" to ``x'', and similarly for 'x'.
+- [x] change "x" to ``x'', and similarly for 'x'
 - [ ] Decide on name/notation for Qgnames (including SeqQgnames and ConcQgnames). Maybe \mathcal(G)_{\text{seq}}?
-- [ ] Center figures on page (not on line)
+- [x] Center figures on page (not on line)
 - [x] Make sure all node values are 'w' and queue values are 'v'
+- [ ] Rewrite some of the proofs for two-lock
+- [ ] Refer to line numbers in proofs for two-lock
 
 - [ ] Create references to:
   - [x] Iris Technical Reference (if reader wishes to see the relevant technical definitions)

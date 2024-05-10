@@ -18,4 +18,8 @@
 
 - How to refer to the mechanisation of Iris in Coq. Coq-Iris?
 
+- Should applications of predicates be curried?
+  i.e. \isqueue v_q \ xs_v \ Q_g
+  vs   \isqueue(v_q, xs_v, Q_g)
+
 - Some todos in report...
