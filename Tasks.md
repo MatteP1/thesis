@@ -112,14 +112,14 @@
 - [ ] Rewrite some of the proofs for two-lock
 - [ ] Refer to line numbers in proofs for two-lock
 
-- [ ] fix readme.
-  - [ ] formatting
-  - [ ] content
-  - [ ] correct version numbers
+- [x] fix readme
+  - [x] formatting
+  - [x] content
+  - [x] correct version numbers
 
 - [ ] Create references to:
   - [x] Iris Technical Reference (if reader wishes to see the relevant technical definitions)
   - [x] Iris from the ground up (As a somewhat gentle introduction to concepts used for the Coq code)
   - [ ] Iris Lecture Notes (see todos in report)
 
-- [ ] If time permits, use hocap spec to prove a spec of a trivial client.
+- [ ] If time permits, use hocap spec to prove a spec of a trivial client

@@ -1,6 +1,23 @@
+# Compiling the Project
 
-# Coq version known to compile project.
-coq                   8.18.0                    pinned to version 8.18.0
-coq-core              8.18.0                    The Coq Proof Assistant -- Core Binaries and Tools
-coq-iris              dev.2024-04-03.0.70000a57 A Higher-Order Concurrent Separation Logic Framework with support for interactive proofs
-coq-iris-heap-lang    dev.2024-04-03.0.70000a57 The canonical example language for Iris
+## Required Packages and Versions Known to Compile Project
+
+To compile the project, make sure the following packages are installed.
+
+- coq-core              8.19.0
+- coq-iris              4.2.0
+- coq-iris-heap-lang    4.2.0
+- coq-stdlib            8.19.0
+- coq-stdpp             1.10.0
+
+Installation instructions can be found at [coq.inria.fr/download](https://coq.inria.fr/download) and [The Iris Repository](https://gitlab.mpi-sws.org/iris/iris/blob/master/README.md).
+
+## Compilation instructions
+
+Clone the repository and navigate to `/thesis`. To generate a make file, run:
+
+	coq_makefile -f _CoqProject -o CoqMakefile
+
+Then compile the project with:
+
+	make -f CoqMakefile

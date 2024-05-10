@@ -1,28 +1,14 @@
 - should formal definition of heaplang be in section, appendix, or reference to ILN?
   Refer to ILN for specification. Just mention basics of language in section: ml like, with a heap, Cas, prophecies.
 
-- Title of project?
-  Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms
-
-- size of Margins?
-  Use a4 package?
-  fontsize?
-  fullsize, 10pt.
-
-- Are the topics i want to cover for preliminary section sufficient?
-  Explain persistently modality in Fundamentals of Iris.
-
 - Overall structure of report?
-
+  it is fine.
 
 - Any place I can see formally what linearisation points are, and refer to it in my section?
   M P Herlihy Linearizability. no 5 MSQ paper
 
 - Should I talk about adequacy/partial correctness in section on hoare/wp?
   Yes, explain it in the section on HT and WP
-
-- referencing ILN. Any predefined bibtex entries?
-  use entry from mail.
 
 - How to refer to the mechanisation of Iris in Coq. Coq-Iris?
   Just use Coq formalisation of Iris
@@ -32,8 +18,5 @@
   vs   \isqueue(v_q, xs_v, Q_g)
   Doesn't have to be curried.
   For applications in curry style, use ~ instead of \
-
-- Some todos in report...
-
 
 Could change initialize to initialise
