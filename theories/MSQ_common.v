@@ -371,6 +371,13 @@ Qed.
 
 End queue_contents.
 
+Notation "γ ⤇● xs_v" := (own γ (●F (to_agree xs_v)))
+  (at level 20, format "γ  ⤇●  xs_v") : bi_scope.
+Notation "γ ⤇◯ xs_v" := (own γ (◯F (to_agree xs_v)))
+  (at level 20, format "γ  ⤇◯  xs_v") : bi_scope.
+Notation "γ ⤇[ q ] xs_v" := (own γ (◯F{ q } (to_agree xs_v)))
+  (at level 20, format "γ  ⤇[ q ]  xs_v") : bi_scope.
+
 
 (* ------ Miscellaneous ------ *)
 
@@ -380,3 +387,45 @@ Definition val_of_list (vs : list (val * val)) : val :=
   | []          => #()
   | (v, _) :: _ => v
   end.
+
+
+Class queue := Queue {
+  initialize : val;
+  enqueue : val;
+  dequeue : val;
+
+  queueG : gFunctors → Type;
+
+  Qgnames : Type;
+  γ_Abst : Qgnames → gname;
+
+  N : namespace;
+  Ni := (N .@ "internal");
+
+  is_queue `{!heapGS Σ} {L : queueG Σ} `{!inG Σ (frac_authR (agreeR (listO val)))} (v_q : val) (Q_γ: Qgnames) : iProp Σ;
+
+  #[global] is_queue_persistent `{!heapGS Σ} {L : queueG Σ} `{!inG Σ (frac_authR (agreeR (listO val)))} v_q Q_γ :: Persistent (is_queue (L:=L) v_q Q_γ);
+
+  initialize_spec `{!heapGS Σ} {L : queueG Σ} `{!inG Σ (frac_authR (agreeR (listO val)))} :
+  {{{ True }}}
+    initialize #()
+  {{{ v_q Q_γ, RET v_q; is_queue (L:=L) v_q Q_γ ∗ Q_γ.(γ_Abst) ⤇◯ [] }}};
+
+  enqueue_spec `{!heapGS Σ} {L : queueG Σ} `{!inG Σ (frac_authR (agreeR (listO val)))} v_q (v : val) (Q_γ : Qgnames) (P Q : iProp Σ) :
+  □(∀xs_v, (Q_γ.(γ_Abst) ⤇● xs_v ∗ P ={⊤ ∖ ↑Ni}=∗ ▷ (Q_γ.(γ_Abst) ⤇● (v :: xs_v) ∗ Q))) -∗
+  {{{ is_queue (L:=L) v_q Q_γ ∗ P}}}
+    enqueue v_q v
+  {{{ w, RET w; Q }}};
+
+  dequeue_spec `{!heapGS Σ} {L : queueG Σ} `{!inG Σ (frac_authR (agreeR (listO val)))} v_q (Q_γ : Qgnames) (P : iProp Σ) (Q : val -> iProp Σ):
+  □(∀xs_v, (Q_γ.(γ_Abst) ⤇● xs_v ∗ P
+              ={⊤ ∖ ↑Ni}=∗
+              ▷ (( ⌜xs_v = []⌝ ∗ Q_γ.(γ_Abst) ⤇● xs_v ∗ Q NONEV) ∨
+              (∃v xs_v', ⌜xs_v = xs_v' ++ [v]⌝ ∗ Q_γ.(γ_Abst) ⤇● xs_v' ∗ Q (SOMEV v)))
+            )
+   )
+  -∗
+  {{{ is_queue (L:=L) v_q Q_γ ∗ P }}}
+    dequeue v_q
+  {{{ w, RET w; Q w }}}
+}.

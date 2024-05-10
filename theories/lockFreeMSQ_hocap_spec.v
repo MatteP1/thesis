@@ -1006,3 +1006,30 @@ Notation "Q_γ ⤇◯ xs_v" := (own Q_γ.(γ_Abst) (◯F (to_agree xs_v)))
   (at level 20, format "Q_γ  ⤇◯  xs_v") : bi_scope.
 Notation "Q_γ ⤇[ q ] xs_v" := (own Q_γ.(γ_Abst) (◯F{ q } (to_agree xs_v)))
   (at level 20, format "Q_γ  ⤇[ q ]  xs_v") : bi_scope.
+
+
+Print queue.
+Locate Qgnames.
+About is_queue.
+
+(* todo: change init to MSQ_common.initialise... *)
+Definition LFqueue : queue := 
+{|
+  init := initialize;
+  enq := enqueue;
+  deq := dequeue;
+
+  queueG Σ := inG Σ (authR (gsetUR nodeO));
+
+  MSQ_common.Qgnames := Qgnames;
+  MSQ_common.γ_Abst Q_γ := Q_γ.(γ_Abst);
+
+  N := nroot.@"lock-free-MSQ";
+
+  MSQ_common.is_queue Σ _ L _  v_q Q_γ := @is_queue Σ _ _ _ (nroot.@"lock-free-MSQ") v_q Q_γ;
+
+|}.
+
+  MSQ_common.initialize_spec := initialize_spec;
+  MSQ_common.enqueue_spec := enqueue_spec;
+  MSQ_common.dequeue_spec := dequeue_spec

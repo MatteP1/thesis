@@ -1,11 +1,11 @@
-\documentclass[a4paper, 11pt]{report}
+\documentclass[a4paper, 10pt]{report}
 
-\usepackage[a4paper,left=1in,right=1in,top=1in,bottom=1in]{geometry}
-
+% \usepackage[a4paper,left=1in,right=1in,top=1in,bottom=1in]{geometry}
+\usepackage{fullpage}
 \usepackage{minted}
 \usepackage[utf8]{inputenc}
 \usepackage[english]{babel}
-\usepackage{a4}
+% \usepackage{a4}
 \usepackage{latexsym}
 \usepackage{amssymb}
 \usepackage{amsmath}
@@ -300,6 +300,12 @@
 
 \todo{example of a citation: \cite{DBLP:conf/podc/MichaelS96}}
 \todo{get your bibtex entries from \url{https://dblp.org/}}
+\todo{Emphasise that specs for two-lock and lock-free are Syntactically equivalent, only the interpretation of the queue functions differ}
+\todo{Have a bullet point list of contributions}
+
+direct specifications for TL and LF Queues (instead of refinement)
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -314,6 +320,7 @@
 
 \todo{Write about heaplang}
 \todo{Talk about Syntactic sugar: i.e. e1 ;; e2 = (lam v, e2) e1 where v is fresh, and CAS ... as Snd (CMPXHG ...), and derived rules for them.}
+\todo{also mention prophecies and refer to section talking about them}
 
 \todo{Question: should formal definition of heaplang be in section, appendix, or reference to ILN?}
 
@@ -331,7 +338,7 @@ In this section, we give a brief introduction to Iris -- the logic we use to rea
 \todo{resource oriented}
 \todo{derivation rules examples...}
 
-\subsection{Persistent Modality}
+\subsection{Persistently Modality}
 \todo{introduce concept, duplicability}
 
 \subsection{Hoare Triples and Weakest Pre-Condition}
@@ -369,7 +376,7 @@ Table \ref{Pre:files-table} gives an overview over the files developed in the pr
 
 \begin{table}[h]
 \begin{adjustbox}{center}
-\begin{tabularx}{1.21\textwidth}{llX}
+\begin{tabularx}{\textwidth}{llX}
   \toprule
   \textbf{File Name} & \textbf{Relevant Sections} & \textbf{Description} \\
   \midrule
@@ -977,7 +984,7 @@ Since we want $\isqueueconc$ to be persistent, then we cannot directly state the
     &\quad\quad \ToknEQg \star \TokDQg \star \TokUpdatedQg\\
     &\quad\lor\\
     &\quad\quad\lochead \mapsto^{\frac{1}{2}} (\nIn{\nodehead}) \star \loctail \mapsto^{\frac{1}{2}} (\nIn{\nodetail}) \star &&\text{(\BothState)}\\
-    &\quad\quad (\isLast \nodetail \ \xsc \star \TokBeforeQg \lor \isSndLast \nodetail \ \xsc \star \TokAfterQg) \star\\
+    &\quad\quad (\isLast \nodetail \ \xsc \star \TokBeforeQg \lor \isSndLast \nodetail \ \xsc \star \TokAfterQg) \star \\
     &\quad\quad \TokEQg \star \TokDQg\\
     &)
   \end{align*}
@@ -1110,7 +1117,7 @@ Firstly, we require $\isqueue$ to be persistent, giving us support for concurren
 
 Next, the initialise spec gives clients an additional resource in the postcondition: the ownership of the fragmental view of the empty list, $\abstractstatefullfrag{\Qg}{[]}$. As discussed above, this allows them to keep track of the contents of the queue.
 
-Finally, the specs for enqueue and dequeue have been parametrised by two predicates $P$ and $Q$. The clients get to pick $P$ and $Q$, and the choice depends on what the client wishes to prove; $P$ describes those resources that the client has before enqueue or dequeue, and $Q$ the resources it will have after. Hence $P$ is in the precondition and $Q$ in the postcondition of the hoare triple. However, before the client gets access to the hoare triple for enqueue or dequeue they must prove a viewshift. This viewshift states how the abstract state of the queue will change as a result of running enqueue or dequeue, and further shows that $P$ can be updated to $Q$. Note that the consequent\todo{or righthand-side?} of the viewshift contains a $\later$. This signifies that the update in the abstract state is tied to a step in the code. The mask on the viewshift further disallows opening of invariants in the namespace $\Nl.i$. This is because, when proving the specs, we will use an invariant within this namespace. Thus, to be able to use the viewshift while our invariant is open, we must make sure the viewshift doesn't use our invariant (since invariants can only be opened once, before being closed).
+Finally, the specs for enqueue and dequeue have been parametrised by two predicates $P$ and $Q$. The clients get to pick $P$ and $Q$, and the choice depends on what the client wishes to prove; $P$ describes those resources that the client has before enqueue or dequeue, and $Q$ the resources it will have after. Hence $P$ is in the precondition and $Q$ in the postcondition of the hoare triple. However, before the client gets access to the hoare triple for enqueue or dequeue they must prove a viewshift. This viewshift states how the abstract state of the queue will change as a result of running enqueue or dequeue, and further shows that $P$ can be updated to $Q$. Note that the consequent\todo{or righthand-side? Consequent is fine} of the viewshift contains a $\later$. This signifies that the update in the abstract state is tied to a step in the code. The mask on the viewshift further disallows opening of invariants in the namespace $\Nl.i$. This is because, when proving the specs, we will use an invariant within this namespace. Thus, to be able to use the viewshift while our invariant is open, we must make sure the viewshift doesn't use our invariant (since invariants can only be opened once, before being closed).
 
 It might seem a bit strange that the client has to prove that the abstract state can be updated, but remember that the client owns the fragmental view, and that both this and the authoritative view, which is owned by the queue, is needed to update the abstract state. When proving the viewshift, clients aren't updating the abstract state of the queue, they are merely showing that they can supply the fragmental view, allowing the abstract state to be updated. This then enables the queue to update the authoritative view of the abstract state (using the proved viewshift) in conjunction with updating the concrete view.
 
@@ -1359,7 +1366,7 @@ We say that a node $\nodeM{n}$ in a linked list can concretely reach a node $\no
 \end{definition}
 This definition firstly states that $\nodeM{n}$ is a node: $\isNode{\nodeM{n}}$. Secondly, $\nodeM{n}$ is either the node to be reached $\nodeM{m}$, or it has a succeeding node $\nodeM{p}$, which can reach $\nodeM{m}$.
 Note that the points-to propositions are all persistent, which mimics the fact that the linked list is only ever changed by appending new nodes to the end.
-\todo{decide which of the following two sentences makes more sense}
+\todo{decide which of the following two sentences makes more sense. Persistent predicate makes sense}
 This in turn makes concrete reachability a persistent predicate.
 This in turn makes $\reach{\nodeM{n}}{\nodeM{m}}$ persistent for all $\nodeM{n}$ and $\nodeM{m}$.
 
@@ -1425,8 +1432,8 @@ The authoritative set is existentially quantified as it can change over time, bu
 
 Firstly, if we have a node, we may allocate some ghost variable $\gname$ which points to it and assert that the node can reach $\gname$.
 \begin{lemma}[Abs-Reach-Alloc]\label{lemma:abs-reach-alloc}
-  \todo{is it a viewshift?}
-  $\reach{\node}{\node} \vs (\Exists \gname . \ap{\gname}{\node} \star \ar{\node}{\gname})$
+  \todo{change it to proves pvs in the other places for (==*)}
+  $\reach{\node}{\node} \proves \pvs (\Exists \gname . \ap{\gname}{\node} \star \ar{\node}{\gname})$
 \end{lemma}
 \begin{proof}
   We assume $\reach{\node}{\node}$ and must show $\pvs \Exists \gname' . \ap{\gname'}{\node} \star \ar{\node}{\gname'}$. By definition or the authoritative RA, the element $\authfull \{\node\} \mtimes \authfrag \{\node\}$ is valid. Hence by the Ghost-alloc rule, we may get $\pvs \Exists \gname . \ownGhost{\gname}{\authfull \{\node\} \mtimes \authfrag \{\node\}}$. By Upd-mono, we may strip away the update modality on the goal and the previous assertion. Thus, we must prove $\Exists \gname' . \ap{\gname'}{\node} \star \ar{\node}{\gname'}$, and we have that $\Exists \gname . \ownGhost{\gname}{\authfull \{\node\} \mtimes \authfrag \{\node\}}$. We use $\gname$ as the witness in the goal meaning we must prove  $\ap{\gname}{\node} \star \ar{\node}{\gname}$. We can split the ownership of the authoritative and fragmental parts up using Own-op, giving us $\ownGhost{\gname}{\authfull \{\node\}}$ and $\ownGhost{\gname}{\authfrag \{\node\}}$. The latter assertion is equivalent to $\ar{\node}{\gname}$, which matches the second obligation in the goal. To prove the first obligation, we must give some set as witness, and show that all nodes in the set can reach $\node$. We of course choose $\{\node\}$ as the witness, and must then prove that $\reach{\node}{\node}$, which we assumed in the beginning.

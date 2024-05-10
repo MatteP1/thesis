@@ -4,8 +4,8 @@ From iris.bi Require Import derived_laws.
 From iris.heap_lang Require Import lang proofmode notation.
 From iris.heap_lang.lib Require Import lock spin_lock.
 From iris.base_logic.lib Require Import invariants.
-From MSQueue Require Import twoLockMSQ_impl.
 From MSQueue Require Import MSQ_common.
+From MSQueue Require Import twoLockMSQ_impl.
 
 Local Existing Instance spin_lock.
 

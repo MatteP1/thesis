@@ -4,8 +4,8 @@ From iris.bi Require Import fixpoint big_op.
 From iris.bi Require Import derived_laws.
 From iris.heap_lang Require Import lang proofmode notation primitive_laws.
 From iris.base_logic.lib Require Import invariants.
-From MSQueue Require Import lockAndCCFreeMSQ_impl.
 From MSQueue Require Import MSQ_common.
+From MSQueue Require Import lockAndCCFreeMSQ_impl.
 
 Section proofs.
 
