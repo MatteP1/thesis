@@ -300,7 +300,7 @@
 
 \todo{example of a citation: \cite{DBLP:conf/podc/MichaelS96}}
 \todo{get your bibtex entries from \url{https://dblp.org/}}
-\todo{Emphasise that specs for two-lock and lock-free are Syntactically equivalent, only the interpretation of the queue functions differ}
+\todo{Emphasise that specs for two-lock and lock-free are equivalent, with only the queue functions being different. This is even shown in the coq proofs}
 \todo{Have a bullet point list of contributions}
 
 direct specifications for TL and LF Queues (instead of refinement)
@@ -328,6 +328,8 @@ direct specifications for TL and LF Queues (instead of refinement)
 \label{Pre:section:iris}
 In this section, we give a brief introduction to Iris -- the logic we use to reason about the M\&S-queues. Iris is quite expressive and supports a myriad of features and derived rules, many of which have been utilised in this project. As such, it will be impossible to cover all facets of Iris in detail, so we limit ourselves to give an overview of the main aspects of Iris. If the reader wishes a more thorough introduction, or wants to see further details of the topics covered, please consult the Iris Lecture Notes \todo{cite ILN}.
 
+\todo{FOCUS IN THIS SECTION is on explaining the basic ideas of the concepts and showing the notation used. Assume the reader is somewhat familiar with program verification. }
+
 \subsection{Fundamentals of Iris}
 \todo{program logic framework}
 \todo{instantiate with a language, here heaplang}
@@ -349,6 +351,8 @@ In this section, we give a brief introduction to Iris -- the logic we use to rea
 \todo{explain concept}
 \todo{ties propositions to program steps}
 \todo{Explain the löb induction rule, mention the intuition when P is hoare triple}
+
+The later modality adds a notion of step indexing to Iris propositions. This step indexing is technically parallel to the notion of taking steps in the programs, but the way we define hoare-triples and weakest-preconditions tie program steps together with steps in the logic. In other words, a single Later corresponds to a single step in the program.
 
 \subsection{Invariants}
 \todo{explain the idea}
@@ -402,6 +406,7 @@ Table \ref{Pre:files-table} gives an overview over the files developed in the pr
 \end{table}
 
 \subsection{Compiling the Project}
+\todo{add github page}
 Compiling the project (on \linuxname) requires both Coq and Iris to be installed. Once installed, open a terminal and navigate to the project folder, containing \path{_CoqProject}. Then run the following two commands, which (1) generates a makefile and (2) runs the makefile.
 \begin{minted}[style=friendly, bgcolor=codebg, linenos]{shell-session}
   $ coq_makefile -f _CoqProject -o CoqMakefile

@@ -1007,7 +1007,6 @@ Notation "Q_γ ⤇◯ xs_v" := (own Q_γ.(γ_Abst) (◯F (to_agree xs_v)))
 Notation "Q_γ ⤇[ q ] xs_v" := (own Q_γ.(γ_Abst) (◯F{ q } (to_agree xs_v)))
   (at level 20, format "Q_γ  ⤇[ q ]  xs_v") : bi_scope.
 
-(* todo: change init to MSQ_common.initialise... *)
 Program Definition LFqueue : queue :=
 {|
   MSQ_common.is_queue Σ _ (_ : inG Σ (authR (gsetUR nodeO))) _ :=

@@ -10,7 +10,7 @@
 
 - [x] Study the Agreement RA
 - [x] Read Contextual Refinement Paper
-- [ ] Reread about fancy updated and view-shift (sections in chapter 14 ILN)
+- [x] Reread about fancy update and view-shift (sections in chapter 14 ILN)
 - [x] Reread about invariant namespaces (chapter 14.5 ILN)
 - [x] Read chapter 13 of Iris Lecture Notes (Hocap style Specs)
 - [ ] Read paper: The Future is Ours: Prophecy Variables in Separation Logic
@@ -112,9 +112,14 @@
 - [ ] Rewrite some of the proofs for two-lock
 - [ ] Refer to line numbers in proofs for two-lock
 
+- [ ] fix readme.
+  - [ ] formatting
+  - [ ] content
+  - [ ] correct version numbers
+
 - [ ] Create references to:
   - [x] Iris Technical Reference (if reader wishes to see the relevant technical definitions)
   - [x] Iris from the ground up (As a somewhat gentle introduction to concepts used for the Coq code)
   - [ ] Iris Lecture Notes (see todos in report)
 
-- [x] If time permits, use hocap spec to prove a spec of a non-trivial client. Fx a client like the one in the java code. (No Time)
+- [ ] If time permits, use hocap spec to prove a spec of a trivial client.
