@@ -12,7 +12,7 @@ To compile the project, make sure the following packages are installed.
 
 Installation instructions can be found at [coq.inria.fr/download](https://coq.inria.fr/download) and [The Iris Repository](https://gitlab.mpi-sws.org/iris/iris/blob/master/README.md).
 
-## Compilation instructions
+## Compilation Instructions
 
 Clone the repository and navigate to `/thesis`. To generate a make file, run:
 
