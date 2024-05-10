@@ -97,6 +97,10 @@
 - [x] Give an overview of Coq files and how they refer to sections in report. Perhaps mention it at beginning/end of each section, or just have an overview in a section (on the coq formalisation)
 - [x] Mention how to compile the files (via _CoqProject and make)
 
+- [ ] Fix notation overload in Coq. Maybe just use the Q_g.g_abst => xs notation everywhere
+- [ ] Make Twolock Hocap a hocap queue
+- [ ] Make derivations of concurrent and sequential independent of implementation
+
 - [ ] Create better notation of nIn, nOut and nVal
 - [ ] Write macros for many of the predicates (queue_invariant isLast, etc.)
 - [x] Wrap proofs of initialise, enqueue, and dequeue in begin{proof}
