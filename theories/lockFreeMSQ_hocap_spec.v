@@ -4,8 +4,8 @@ From iris.bi Require Import fixpoint big_op.
 From iris.bi Require Import derived_laws.
 From iris.heap_lang Require Import lang proofmode notation primitive_laws.
 From iris.base_logic.lib Require Import invariants.
-From MSQueue Require Import lockFreeMSQ_impl.
 From MSQueue Require Import MSQ_common.
+From MSQueue Require Import lockFreeMSQ_impl.
 
 Section proofs.
 
@@ -1007,29 +1007,12 @@ Notation "Q_γ ⤇◯ xs_v" := (own Q_γ.(γ_Abst) (◯F (to_agree xs_v)))
 Notation "Q_γ ⤇[ q ] xs_v" := (own Q_γ.(γ_Abst) (◯F{ q } (to_agree xs_v)))
   (at level 20, format "Q_γ  ⤇[ q ]  xs_v") : bi_scope.
 
-
-Print queue.
-Locate Qgnames.
-About is_queue.
-
 (* todo: change init to MSQ_common.initialise... *)
-Definition LFqueue : queue := 
+Program Definition LFqueue : queue :=
 {|
-  init := initialize;
-  enq := enqueue;
-  deq := dequeue;
-
-  queueG Σ := inG Σ (authR (gsetUR nodeO));
-
-  MSQ_common.Qgnames := Qgnames;
-  MSQ_common.γ_Abst Q_γ := Q_γ.(γ_Abst);
-
-  N := nroot.@"lock-free-MSQ";
-
-  MSQ_common.is_queue Σ _ L _  v_q Q_γ := @is_queue Σ _ _ _ (nroot.@"lock-free-MSQ") v_q Q_γ;
-
+  MSQ_common.is_queue Σ _ (_ : inG Σ (authR (gsetUR nodeO))) _ :=
+    is_queue (nroot.@"lock-free-MSQ");
+  MSQ_common.initialize_spec _ _ _ _ := initialize_spec (nroot.@"lock-free-MSQ");
+  MSQ_common.enqueue_spec _ _ _ _ := enqueue_spec (nroot.@"lock-free-MSQ");
+  MSQ_common.dequeue_spec _ _ _ _ := dequeue_spec (nroot.@"lock-free-MSQ");
 |}.
-
-  MSQ_common.initialize_spec := initialize_spec;
-  MSQ_common.enqueue_spec := enqueue_spec;
-  MSQ_common.dequeue_spec := dequeue_spec
