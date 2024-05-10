@@ -125,6 +125,7 @@
 - [ ] Create references to:
   - [x] Iris Technical Reference (if reader wishes to see the relevant technical definitions)
   - [x] Iris from the ground up (As a somewhat gentle introduction to concepts used for the Coq code)
-  - [ ] Iris Lecture Notes (see todos in report)
+  - [x] Iris Lecture Notes (see todos in report)
+  - [ ] M P Herlihy : Linearizability. #5 in MSQ paper
 
 - [ ] If time permits, use hocap spec to prove a spec of a client

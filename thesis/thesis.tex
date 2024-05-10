@@ -323,15 +323,15 @@
 \section{\heaplang}
 \label{Pre:section:heaplang}
 
-\todo{Write about heaplang}
-\todo{Talk about Syntactic sugar: i.e. e1 ;; e2 = (lam v, e2) e1 where v is fresh, and CAS ... as Snd (CMPXHG ...), and derived rules for them.}
-\todo{also mention prophecies and refer to section talking about them}
+\todo{Write about heaplang language: ml like, with a heap, Cas}
+\todo{Refer to ILN for specification}
+\todo{Talk about Syntactic sugar: i.e. e1 ;; e2 = (lam v, e2) e1 where v is fresh, and CAS ... as Snd (CMPXHG ...), and derived rules for them}
+\todo{also mention prophecies and refer to the section talking about them}
 
-\todo{Question: should formal definition of heaplang be in section, appendix, or reference to ILN?}
 
 \section{The Iris Program Logic Framework}
 \label{Pre:section:iris}
-In this section, we give a brief introduction to Iris -- the logic we use to reason about the M\&S-queues. Iris is quite expressive and supports a myriad of features and derived rules, many of which have been utilised in this project. As such, it will be impossible to cover all facets of Iris in detail, so we limit ourselves to give an overview of the main aspects of Iris. If the reader wishes a more thorough introduction, or wants to see further details of the topics covered, please consult the Iris Lecture Notes \todo{cite ILN}.
+In this section, we give a brief introduction to Iris -- the logic we use to reason about the M\&S-queues. Iris is quite expressive and supports a myriad of features and derived rules, many of which have been utilised in this project. As such, it will be impossible to cover all facets of Iris in detail, so we limit ourselves to give an overview of the main aspects of Iris. If the reader wishes a more thorough introduction, or wants to see further details of the topics covered, please consult the Iris Lecture Notes \cite{gentleiris}.
 
 \todo{FOCUS IN THIS SECTION is on explaining the basic ideas of the concepts and showing the notation used. Assume the reader is somewhat familiar with program verification. }
 
@@ -347,7 +347,9 @@ In this section, we give a brief introduction to Iris -- the logic we use to rea
 \todo{derivation rules examples...}
 
 \subsection{Hoare Triples and Weakest Pre-Condition}
-\todo{explain them}
+\todo{explain hoare triples}
+\todo{talk about Partial correctness and Adequacy}
+\todo{explain weakest pre-conditions}
 \todo{show how they are related}
 
 \subsection{Later Modality}
@@ -375,11 +377,11 @@ The later modality adds a notion of step indexing to Iris propositions. This ste
 \section{Formalisation in Coq}
 \label{Pre:section:coq}
 
-Iris has been mechanised in the Coq proof assistant\footnote{The mechanisation can be found at \url{https://gitlab.mpi-sws.org/iris/iris/}} -- a tool to machine-check proofs of mathematical assertions. All results in this project have been completely machine-verified in the Iris mechanisation in Coq, or Coq-Iris for short \todo{correct short-form?}. In Coq-Iris, specifications are usually written in terms of hoare-triples, but their proofs first convert the hoare-triples to equivalent weakest-preconditions, as this is usually easier to work with. The proofs presented in this report will follow suit and give specifications using hoare-triples, but prove them assuming they are weakest-preconditions. The proofs presented in the report thus follow the mechanised proofs very closely, making it possible to ``step-through'' the mechanised proofs in tandem with reading the paper-proofs presented in this report.
+Iris has been mechanised in the Coq proof assistant\footnote{The mechanisation can be found at \url{https://gitlab.mpi-sws.org/iris/iris/}} -- a tool to machine-check proofs of mathematical assertions. All results in this project have been completely machine-verified in the Iris mechanisation in Coq. Specifications in the Coq formalisation of Iris are usually written in terms of hoare-triples but proved by first converting the hoare-triples to equivalent weakest-preconditions, as this is usually easier to work with. The proofs presented in this report will follow suit and give specifications using hoare-triples, but prove them assuming they are weakest-preconditions. The proofs presented in the report thus follow the mechanised proofs very closely, making it possible to ``step-through'' the mechanised proofs in tandem with reading the paper-proofs presented in this report.
 
-One caveat is that, although the theory discussed in the previous section remain valid, the underlying model of Iris is somewhat more complex than the section presented it to be. Working with the Iris mechanisation in Coq, or Coq-Iris for short, thus requires a bit deeper understanding of the model of Iris. \cite{DBLP:journals/jfp/JungKJBBD18} explains the underlying model of an older version of Iris, but many of the concepts discussed are still relevant\footnote{For an up-to-date presentation, please consult the Technical Reference at \url{https://iris-project.org/}}. 
+One caveat is that, although the theory discussed in the previous section remain valid, the underlying model of Iris is somewhat more complex than the section presented it to be. Working with the Coq formalisation of Iris thus requires a bit deeper understanding of the model of Iris. \cite{DBLP:journals/jfp/JungKJBBD18} explains the underlying model of an older version of Iris, but many of the concepts discussed are still relevant\footnote{For an up-to-date presentation, please consult the Technical Reference at \url{https://iris-project.org/}}.
 
-Table \ref{Pre:files-table} gives an overview over the files developed in the project and how they relate to this report. All the files can be found at \url{https://github.com/MatteP1/thesis}.
+Table \ref{Pre:files-table} gives an overview over the files developed in the project and how they relate to this report. All files related to the project are available at \url{https://github.com/MatteP1/thesis}.
 
 \begin{table}[h]
 \begin{adjustbox}{center}
@@ -442,7 +444,7 @@ The reader may wonder why there is an extra, intermediary ``in'' pointer, betwee
 \section{Implementation}
 \label{TLMSQ:section:implementation}
 
-The queue consists of 3 functions: $\initialise$, $\enqueue$, and $\dequeue$, and as the name of the data structure suggests, the functions rely on two locks. To this end, we shall assume that we have some lock implementation given. In the accompanying Coq mechanisation, a ``spin-lock'' is used, but the only part we really care about is its specification; this can be found in Example 8.38 in \todo{Cite Iris Lecture Notes}.
+The queue consists of 3 functions: $\initialise$, $\enqueue$, and $\dequeue$, and as the name of the data structure suggests, the functions rely on two locks. To this end, we shall assume that we have some lock implementation given. In the accompanying Coq mechanisation, a ``spin-lock'' is used, but the only part we really care about is its specification; this can be found in \cite{gentleiris} (Example 8.38 at the time of writing).
 
 \subsection[Initialise]{$\initialise$}
 
@@ -1210,9 +1212,9 @@ To derive the \textbf{concurrent dequeue spec}, we pick $P \eqdef \TRUE$ and $Q(
 \section{Introduction}
 \label{LFMSQ:section:introduction}
 
-In this chapter we will study the Lock-Free Michael Scott Queue. As with the two-lock version, the original implementation can be found in \cite{DBLP:conf/podc/MichaelS96}. As the name ``Lock-Free'' suggests, the implementation doesn't rely on locks to achieve correct behaviour. Instead, it uses the atomic operation: $\CAS$ which we discussed in section \ref{Pre:section:heaplang} \todo{Make sure you have discussed it}.
+In this chapter we will study the \lfmsq. As with the two-lock version, the original implementation can be found in \cite{DBLP:conf/podc/MichaelS96}. As the name ``Lock-Free'' suggests, the implementation doesn't rely on locks to achieve correct behaviour. Instead, it uses the atomic operation: $\CAS$ which we discussed in section \ref{Pre:section:heaplang}.
 
-\todo{Introduce what we will go through in the chapter}
+Section \ref{LFMSQ:section:implementation} implements the \lfmsq in \heaplang. Next, we move towards proving a hocap-style specification for it. Section \ref{LFMSQ:section:reachability} introduces the notion of \textit{Reachability} which we will need in the proofs. In section \ref{LFMSQ:section:spec} we discuss the specification we will be proving, and in sections \ref{LFMSQ:section:hocap-queue-pred} and \ref{LFMSQ:section:proof-outline} we give the proofs. Finally, in section \ref{LFMSQ:section:discussion}, we discuss a simplification to the \lfmsq algorithm and it's implications.
 
 \section{Implementation}
 \label{LFMSQ:section:implementation}
@@ -1300,10 +1302,7 @@ We say that a node $\nodeM{n}$ in a linked list can concretely reach a node $\no
   $\reach{\nodeM{n}}{\nodeM{m}} \eqdef \isNode{\nodeM{n}} \star (\nodeM{n} = \nodeM{m} \lor \Exists \nodeM{p} . \nOut{\nodeM{n}} \mapsto^{\persistently} \nIn{\nodeM{p}} \star \reach{\nodeM{p}}{\nodeM{m}})$
 \end{definition}
 This definition firstly states that $\nodeM{n}$ is a node: $\isNode{\nodeM{n}}$. Secondly, $\nodeM{n}$ is either the node to be reached $\nodeM{m}$, or it has a succeeding node $\nodeM{p}$, which can reach $\nodeM{m}$.
-Note that the points-to propositions are all persistent, which mimics the fact that the linked list is only ever changed by appending new nodes to the end.
-\todo{decide which of the following two sentences makes more sense. Persistent predicate makes sense}
-This in turn makes concrete reachability a persistent predicate.
-This in turn makes $\reach{\nodeM{n}}{\nodeM{m}}$ persistent for all $\nodeM{n}$ and $\nodeM{m}$.
+Note that the points-to propositions are all persistent, which mimics the fact that the linked list is only ever changed by appending new nodes to the end. This in turn makes concrete reachability a persistent predicate.
 
 We proceed to prove some useful lemmas about concrete reachability.
 \begin{lemma}[reach-reflexive]\label{lemma:reach-reflexive}
@@ -1367,8 +1366,7 @@ The authoritative set is existentially quantified as it can change over time, bu
 
 Firstly, if we have a node, we may allocate some ghost variable $\gname$ which points to it and assert that the node can reach $\gname$.
 \begin{lemma}[Abs-Reach-Alloc]\label{lemma:abs-reach-alloc}
-  \todo{change it to proves pvs in the other places for (==*)}
-  $\reach{\node}{\node} \proves \pvs (\Exists \gname . \ap{\gname}{\node} \star \ar{\node}{\gname})$
+  $\reach{\node}{\node} \vs (\Exists \gname . \ap{\gname}{\node} \star \ar{\node}{\gname})$
 \end{lemma}
 \begin{proof}
   We assume $\reach{\node}{\node}$ and must show $\pvs \Exists \gname' . \ap{\gname'}{\node} \star \ar{\node}{\gname'}$. By definition or the authoritative RA, the element $\authfull \{\node\} \mtimes \authfrag \{\node\}$ is valid. Hence by the Ghost-alloc rule, we may get $\pvs \Exists \gname . \ownGhost{\gname}{\authfull \{\node\} \mtimes \authfrag \{\node\}}$. By Upd-mono, we may strip away the update modality on the goal and the previous assertion. Thus, we must prove $\Exists \gname' . \ap{\gname'}{\node} \star \ar{\node}{\gname'}$, and we have that $\Exists \gname . \ownGhost{\gname}{\authfull \{\node\} \mtimes \authfrag \{\node\}}$. We use $\gname$ as the witness in the goal meaning we must prove  $\ap{\gname}{\node} \star \ar{\node}{\gname}$. We can split the ownership of the authoritative and fragmental parts up using Own-op, giving us $\ownGhost{\gname}{\authfull \{\node\}}$ and $\ownGhost{\gname}{\authfrag \{\node\}}$. The latter assertion is equivalent to $\ar{\node}{\gname}$, which matches the second obligation in the goal. To prove the first obligation, we must give some set as witness, and show that all nodes in the set can reach $\node$. We of course choose $\{\node\}$ as the witness, and must then prove that $\reach{\node}{\node}$, which we assumed in the beginning.
