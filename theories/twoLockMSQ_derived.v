@@ -5,6 +5,7 @@ From iris.heap_lang Require Import lang proofmode notation.
 From iris.heap_lang.lib Require Import lock spin_lock.
 From iris.base_logic.lib Require Import invariants token.
 From MSQueue Require Import MSQ_common.
+From MSQueue Require Import queue_specs.
 From MSQueue Require Import twoLockMSQ_impl.
 From MSQueue Require Import twoLockMSQ_hocap_spec.
 
@@ -34,7 +35,7 @@ Definition is_queue_seq (v_q : val) (xs_v: list val) (Q_γS: SeqQgnames) : iProp
   ∃ Q_γH : Qgnames,
   ⌜proj_Qgnames_seq Q_γH = Q_γS⌝ ∗
   is_queue N v_q Q_γH ∗
-  Q_γH ⤇◯ xs_v.
+  Q_γH.(γ_Abst) ⤇◯ xs_v.
 
 Lemma initialize_spec_seq :
   {{{ True }}}
@@ -56,8 +57,8 @@ Lemma enqueue_spec_seq v_q (v : val) (xs_v : list val) (Q_γS : SeqQgnames) :
   {{{w, RET w; is_queue_seq v_q (v :: xs_v) Q_γS }}}.
 Proof.
   iIntros (Φ) "(%Q_γH & %Heq & #His_queue & Hfrag) HΦ".
-  set (P := (Q_γH ⤇◯ xs_v)%I).
-  set (Q := (Q_γH ⤇◯ (v :: xs_v))%I).
+  set (P := (Q_γH.(γ_Abst) ⤇◯ xs_v)%I).
+  set (Q := (Q_γH.(γ_Abst) ⤇◯ (v :: xs_v))%I).
   wp_apply (enqueue_spec N v_q v Q_γH P Q with "[] [Hfrag]").
   (* Proving viewshift *)
   {
@@ -83,10 +84,10 @@ Lemma dequeue_spec_seq v_q (xs_v : list val) (Q_γS : SeqQgnames) :
                     ⌜w = SOMEV v⌝ ∗ is_queue_seq v_q xs_v' Q_γS) }}}.
 Proof.
   iIntros (Φ) "(%Q_γH & %Heq & #His_queue & Hfrag) HΦ".
-  set (P := (Q_γH ⤇◯ xs_v)%I).
-  set (Q := λ w, ((⌜xs_v = []⌝ ∗ ⌜w = NONEV⌝ ∗ Q_γH ⤇◯ xs_v) ∨
+  set (P := (Q_γH.(γ_Abst) ⤇◯ xs_v)%I).
+  set (Q := λ w, ((⌜xs_v = []⌝ ∗ ⌜w = NONEV⌝ ∗ Q_γH.(γ_Abst) ⤇◯ xs_v) ∨
                   (∃v xs_v', ⌜xs_v = xs_v' ++ [v]⌝ ∗
-                    ⌜w = SOMEV v⌝ ∗ Q_γH ⤇◯ xs_v'))%I).
+                    ⌜w = SOMEV v⌝ ∗ Q_γH.(γ_Abst) ⤇◯ xs_v'))%I).
   wp_apply (dequeue_spec N v_q Q_γH P Q with "[] [Hfrag]" ).
   (* Proving viewshift *)
   {
@@ -169,7 +170,7 @@ Definition is_queue_conc (Ψ : val -> iProp Σ) (v_q : val) (Q_γC: ConcQgnames)
   ∃ Q_γH : Qgnames,
   ⌜proj_Qgnames_conc Q_γH = Q_γC⌝ ∗
   is_queue N v_q Q_γH ∗
-  inv NC (∃xs_v, Q_γH ⤇◯ xs_v ∗ All xs_v Ψ).
+  inv NC (∃xs_v, Q_γH.(γ_Abst) ⤇◯ xs_v ∗ All xs_v Ψ).
 
 (* is_queue_conc is persistent *)
 Global Instance is_queue_conc_persistent Ψ v_q Q_γC : Persistent (is_queue_conc Ψ v_q Q_γC).
@@ -187,7 +188,7 @@ Proof.
   set (Q_γC := proj_Qgnames_conc Q_γH).
   iApply ("HΦ" $! v_q Q_γC).
   iExists Q_γH.
-  iMod (inv_alloc NC _ (∃xs_v, Q_γH ⤇◯ xs_v ∗ All xs_v Ψ) with "[Habst_frag]") as "HInv"; first (iExists []; auto).
+  iMod (inv_alloc NC _ (∃xs_v, Q_γH.(γ_Abst) ⤇◯ xs_v ∗ All xs_v Ψ) with "[Habst_frag]") as "HInv"; first (iExists []; auto).
   by iFrame.
 Qed.
 

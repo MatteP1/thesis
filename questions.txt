@@ -1,8 +1,7 @@
+Answered:
+
 - should formal definition of heaplang be in section, appendix, or reference to ILN?
   Refer to ILN for specification. Just mention basics of language in section: ml like, with a heap, Cas, prophecies.
-
-- Overall structure of report?
-  it is fine.
 
 - Any place I can see formally what linearisation points are, and refer to it in my section?
   M P Herlihy Linearizability. no 5 MSQ paper
@@ -13,10 +12,16 @@
 - How to refer to the mechanisation of Iris in Coq. Coq-Iris?
   Just use Coq formalisation of Iris
 
-- Should applications of predicates be curried?
-  i.e. \isqueue v_q \ xs_v \ Q_g
-  vs   \isqueue(v_q, xs_v, Q_g)
-  Doesn't have to be curried.
-  For applications in curry style, use ~ instead of \
+- initialize vs initialise
+  Could change to initialise.
 
-Could change initialize to initialise
+
+Unanswered:
+
+- name/notation for Qgnames (including SeqQgnames and ConcQgnames). Maybe \mathcal(G)_{\text{seq}}?
+
+
+- What should L be for the Two-Lock MSQ Hocap? There are two RA, both lock and token.
+
+
+- How do I derive the sequential and concurrent specs from the queue class?

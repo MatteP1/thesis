@@ -1,28 +1,129 @@
-From stdpp Require Import sets countable.
-From iris.algebra Require Import list agree gset lib.frac_auth.
-From iris.bi Require Import fixpoint big_op.
-From iris.bi Require Import derived_laws.
-From iris.heap_lang Require Import lang proofmode notation primitive_laws.
-From iris.base_logic.lib Require Import invariants.
-From MSQueue Require Import MSQ_common.
-From MSQueue Require Import queue_specs.
-From MSQueue Require Import lockFreeMSQ_impl.
-From MSQueue Require Import lockFreeMSQ_hocap_spec.
+From iris.algebra Require Import list agree lib.frac_auth.
+From iris.heap_lang Require Import lang proofmode notation.
 
-(* NOTE: This file is very similar to twoLockMSQ_derived. They differ in the following ways:
-  - This file imports the lock-free implementations
-  - The resource algebras used are different
-  - This file uses the Qgnames of the lock-free hocap spec directly. *)
 
-Section sequential_proofs.
+(* ===== Defining the RA for the Abstract State of the Queue ===== *)
+Section queue_contents.
 
-Context `{!heapGS Σ}.
-Context `{!inG Σ (authR (gsetUR nodeO))}.
 Context `{!inG Σ (frac_authR (agreeR (listO val)))}.
 
-Variable N : namespace.
+(* ------ Abstract State of Queue ------ *)
+Notation "γ ⤇● xs_v" := (own γ (●F (to_agree xs_v)))
+  (at level 20, format "γ  ⤇●  xs_v") : bi_scope.
+Notation "γ ⤇◯ xs_v" := (own γ (◯F (to_agree xs_v)))
+  (at level 20, format "γ  ⤇◯  xs_v") : bi_scope.
+Notation "γ ⤇[ q ] xs_v" := (own γ (◯F{ q } (to_agree xs_v)))
+  (at level 20, format "γ  ⤇[ q ]  xs_v") : bi_scope.
 
-(* ===== Sequential Specification for Lock-Free M&S Queue ===== *)
+Lemma queue_contents_frag_agree γ xs_v xs_v' p q :
+  γ ⤇[p] xs_v -∗ γ ⤇[q] xs_v' -∗ ⌜xs_v = xs_v'⌝.
+Proof.
+  iIntros "Hp Hq".
+  iCombine "Hp Hq" as "Hpq" gives "%HValid".
+  iPureIntro.
+  rewrite <- frac_auth_frag_op in HValid.
+  rewrite frac_auth_frag_valid in HValid.
+  destruct HValid as [_ HAgree].
+  by apply to_agree_op_inv_L.
+Qed.
+
+Lemma queue_contents_auth_frag_agree γ xs_v xs_v' p :
+  γ ⤇● xs_v' -∗ γ ⤇[p] xs_v -∗ ⌜xs_v = xs_v'⌝.
+Proof.
+  iIntros "Hp Hq".
+  iCombine "Hp Hq" as "Hpq" gives "%HValid".
+  iPureIntro.
+  apply frac_auth_included_total in HValid.
+  by apply to_agree_included_L.
+Qed.
+
+Lemma queue_contents_op γ xs_v p q :
+  γ ⤇[p] xs_v ∗ γ ⤇[q] xs_v ∗-∗ γ ⤇[p + q] xs_v.
+Proof.
+  iSplit.
+  - iIntros "[Hp Hq]".
+    by iCombine "Hp Hq" as "Hpq".
+  - iIntros "Hpq".
+    iApply own_op.
+    rewrite <- frac_auth_frag_op.
+    by rewrite agree_idemp.
+Qed.
+
+Lemma queue_contents_update γ xs_v xs_v' xs_v'' :
+  γ ⤇● xs_v' -∗ γ ⤇◯ xs_v ==∗ γ ⤇● xs_v'' ∗ γ ⤇◯ xs_v''.
+Proof.
+  iIntros "Hauth Hfrag".
+  iCombine "Hauth Hfrag" as "Hcombined".
+  rewrite <- own_op.
+  iApply (own_update with "Hcombined").
+  by apply frac_auth_update_1.
+Qed.
+
+End queue_contents.
+
+Notation "γ ⤇● xs_v" := (own γ (●F (to_agree xs_v)))
+  (at level 20, format "γ  ⤇●  xs_v") : bi_scope.
+Notation "γ ⤇◯ xs_v" := (own γ (◯F (to_agree xs_v)))
+  (at level 20, format "γ  ⤇◯  xs_v") : bi_scope.
+Notation "γ ⤇[ q ] xs_v" := (own γ (◯F{ q } (to_agree xs_v)))
+  (at level 20, format "γ  ⤇[ q ]  xs_v") : bi_scope.
+
+
+(* ===== Hocap-Style Queue Specification ===== *)
+Class queue := Queue {
+  initialize : val;
+  enqueue : val;
+  dequeue : val;
+
+  (* The Resource Algebra used by the queue *)
+  queueG : gFunctors → Type;
+
+  (* The ghost names used by the queue *)
+  Qgnames : Type;
+  (* It must contain a ghost name for the abstract state *)
+  γ_Abst : Qgnames → gname;
+
+  N : namespace;
+  Ni := (N .@ "internal");
+
+  (* The is_queue predicate *)
+  is_queue `{!heapGS Σ} {L : queueG Σ} `{!inG Σ (frac_authR (agreeR (listO val)))} (v_q : val) (Q_γ: Qgnames) : iProp Σ;
+
+  (* is_queue must be persistent *)
+  #[global] is_queue_persistent `{!heapGS Σ} {L : queueG Σ} `{!inG Σ (frac_authR (agreeR (listO val)))} v_q Q_γ :: Persistent (is_queue (L:=L) v_q Q_γ);
+
+  (* Hocap-Style Initialise Specifictaion *)
+  initialize_spec `{!heapGS Σ} {L : queueG Σ} `{!inG Σ (frac_authR (agreeR (listO val)))} :
+  {{{ True }}}
+    initialize #()
+  {{{ v_q Q_γ, RET v_q; is_queue (L:=L) v_q Q_γ ∗ Q_γ.(γ_Abst) ⤇◯ [] }}};
+
+  (* Hocap-Style Enqueue Specifictaion *)
+  enqueue_spec `{!heapGS Σ} {L : queueG Σ} `{!inG Σ (frac_authR (agreeR (listO val)))} v_q (v : val) (Q_γ : Qgnames) (P Q : iProp Σ) :
+  □(∀xs_v, (Q_γ.(γ_Abst) ⤇● xs_v ∗ P ={⊤ ∖ ↑Ni}=∗ ▷ (Q_γ.(γ_Abst) ⤇● (v :: xs_v) ∗ Q))) -∗
+  {{{ is_queue (L:=L) v_q Q_γ ∗ P}}}
+    enqueue v_q v
+  {{{ w, RET w; Q }}};
+
+  (* Hocap-Style Dequeue Specifictaion *)
+  dequeue_spec `{!heapGS Σ} {L : queueG Σ} `{!inG Σ (frac_authR (agreeR (listO val)))} v_q (Q_γ : Qgnames) (P : iProp Σ) (Q : val -> iProp Σ):
+  □(∀xs_v, (Q_γ.(γ_Abst) ⤇● xs_v ∗ P
+              ={⊤ ∖ ↑Ni}=∗
+              ▷ (( ⌜xs_v = []⌝ ∗ Q_γ.(γ_Abst) ⤇● xs_v ∗ Q NONEV) ∨
+              (∃v xs_v', ⌜xs_v = xs_v' ++ [v]⌝ ∗ Q_γ.(γ_Abst) ⤇● xs_v' ∗ Q (SOMEV v)))
+            )
+   )
+  -∗
+  {{{ is_queue (L:=L) v_q Q_γ ∗ P }}}
+    dequeue v_q
+  {{{ w, RET w; Q w }}}
+}.
+
+
+(* ===== Sequential Specification for Queue ===== *)
+Section sequential_proofs.
+
+(* Variable N : namespace.
 
 Definition is_queue_seq (v_q : val) (xs_v: list val) (Q_γH: Qgnames) : iProp Σ :=
   is_queue N v_q Q_γH ∗
@@ -111,21 +212,16 @@ Proof.
   - iRight.
     iExists v, xs_v'.
     by repeat iSplit.
-Qed.
+Qed. *)
 
 End sequential_proofs.
 
 
+
+(* ===== Concurrent Specification for Queue ===== *)
 Section concurrent_proofs.
 
-Context `{!heapGS Σ}.
-Context `{!inG Σ (authR (gsetUR nodeO))}.
-Context `{!inG Σ (frac_authR (agreeR (listO val)))}.
-
-Variable N : namespace.
-Notation NC := (N .@ "concurrent").
-
-(* ===== Concurrent Specification for Lock-Free M&S Queue ===== *)
+(* Notation NC := (N .@ "concurrent").
 
 Definition is_queue_conc (Ψ : val -> iProp Σ) (v_q : val) (Q_γH: Qgnames) : iProp Σ :=
   is_queue N v_q Q_γH ∗
@@ -225,6 +321,6 @@ Proof.
   iApply ("HΦ" $! w).
   unfold Q.
   done.
-Qed.
+Qed. *)
 
 End concurrent_proofs.

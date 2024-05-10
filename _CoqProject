@@ -1,6 +1,7 @@
 -Q theories MSQueue
 
 theories/MSQ_common.v
+theories/queue_specs.v
 theories/twoLockMSQ_impl.v
 theories/twoLockMSQ_sequential_spec.v
 theories/twoLockMSQ_concurrent_spec.v

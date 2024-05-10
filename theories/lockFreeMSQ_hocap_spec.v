@@ -5,6 +5,7 @@ From iris.bi Require Import derived_laws.
 From iris.heap_lang Require Import lang proofmode notation primitive_laws.
 From iris.base_logic.lib Require Import invariants.
 From MSQueue Require Import MSQ_common.
+From MSQueue Require Import queue_specs.
 From MSQueue Require Import lockFreeMSQ_impl.
 
 Section proofs.
@@ -26,14 +27,6 @@ Record Qgnames := { γ_Abst : gname;
                     γ_Tail : gname;
                     γ_Last : gname;
                   }.
-
-(* ------ Notation for Abstract State of Queue ------ *)
-Notation "Q_γ ⤇● xs_v" := (own Q_γ.(γ_Abst) (●F (to_agree xs_v)))
-  (at level 20, format "Q_γ  ⤇●  xs_v") : bi_scope.
-Notation "Q_γ ⤇◯ xs_v" := (own Q_γ.(γ_Abst) (◯F (to_agree xs_v)))
-  (at level 20, format "Q_γ  ⤇◯  xs_v") : bi_scope.
-Notation "Q_γ ⤇[ q ] xs_v" := (own Q_γ.(γ_Abst) (◯F{ q } (to_agree xs_v)))
-  (at level 20, format "Q_γ  ⤇[ q ]  xs_v") : bi_scope.
 
 (* ------ Concrete Reachability ------ *)
 Definition Reach (Φ : node -> node -> iProp Σ) (x_n x_m : node) : iProp Σ:=
@@ -307,7 +300,7 @@ Qed.
 
 (* ----- Queue Invariant ------ *)
 Definition queue_invariant (l_head l_tail : loc) (Q_γ : Qgnames) : iProp Σ :=
-  ∃ xs_v, Q_γ ⤇● xs_v ∗ (* Abstract state *)
+  ∃ xs_v, Q_γ.(γ_Abst) ⤇● xs_v ∗ (* Abstract state *)
   ∃ xs xs_queue (x_head x_tail x_last: node), (* Concrete state *)
   ⌜xs = xs_queue ++ [x_head]⌝ ∗
   isLL xs ∗
@@ -336,7 +329,7 @@ Proof. apply _. Qed.
 Lemma initialize_spec:
   {{{ True }}}
     initialize #()
-  {{{ v_q Q_γ, RET v_q; is_queue v_q Q_γ ∗ Q_γ ⤇◯ [] }}}.
+  {{{ v_q Q_γ, RET v_q; is_queue v_q Q_γ ∗ Q_γ.(γ_Abst) ⤇◯ [] }}}.
 Proof.
   iIntros (Φ) "_ HΦ".
   wp_lam.
@@ -429,7 +422,7 @@ Qed.
 
 (* ----- Specification for Enqueue ----- *)
 Lemma enqueue_spec v_q (v : val) (Q_γ : Qgnames) (P Q : iProp Σ) :
-  □(∀xs_v, (Q_γ ⤇● xs_v ∗ P ={⊤ ∖ ↑Ni}=∗ ▷ (Q_γ ⤇● (v :: xs_v) ∗ Q))) -∗
+  □(∀xs_v, (Q_γ.(γ_Abst) ⤇● xs_v ∗ P ={⊤ ∖ ↑Ni}=∗ ▷ (Q_γ.(γ_Abst) ⤇● (v :: xs_v) ∗ Q))) -∗
   {{{ is_queue v_q Q_γ ∗ P}}}
     enqueue v_q v
   {{{ w, RET w; Q }}}.
@@ -643,10 +636,10 @@ Qed.
 
 (* ----- Specification for Dequeue ----- *)
 Lemma dequeue_spec v_q (Q_γ : Qgnames) (P : iProp Σ) (Q : val -> iProp Σ):
-  □(∀xs_v, (Q_γ ⤇● xs_v ∗ P
+  □(∀xs_v, (Q_γ.(γ_Abst) ⤇● xs_v ∗ P
               ={⊤ ∖ ↑Ni}=∗
-              ▷ (( ⌜xs_v = []⌝ ∗ Q_γ ⤇● xs_v ∗ Q NONEV) ∨
-              (∃v xs_v', ⌜xs_v = xs_v' ++ [v]⌝ ∗ Q_γ ⤇● xs_v' ∗ Q (SOMEV v)))
+              ▷ (( ⌜xs_v = []⌝ ∗ Q_γ.(γ_Abst) ⤇● xs_v ∗ Q NONEV) ∨
+              (∃v xs_v', ⌜xs_v = xs_v' ++ [v]⌝ ∗ Q_γ.(γ_Abst) ⤇● xs_v' ∗ Q (SOMEV v)))
             )
    )
   -∗
@@ -1000,18 +993,12 @@ Qed.
 
 End proofs.
 
-Notation "Q_γ ⤇● xs_v" := (own Q_γ.(γ_Abst) (●F (to_agree xs_v)))
-  (at level 20, format "Q_γ  ⤇●  xs_v") : bi_scope.
-Notation "Q_γ ⤇◯ xs_v" := (own Q_γ.(γ_Abst) (◯F (to_agree xs_v)))
-  (at level 20, format "Q_γ  ⤇◯  xs_v") : bi_scope.
-Notation "Q_γ ⤇[ q ] xs_v" := (own Q_γ.(γ_Abst) (◯F{ q } (to_agree xs_v)))
-  (at level 20, format "Q_γ  ⤇[ q ]  xs_v") : bi_scope.
 
-Program Definition LFqueue : queue :=
+Definition lockFreeMSQ : queue :=
 {|
-  MSQ_common.is_queue Σ _ (_ : inG Σ (authR (gsetUR nodeO))) _ :=
+  queue_specs.is_queue Σ _ (_ : inG Σ (authR (gsetUR nodeO))) _ :=
     is_queue (nroot.@"lock-free-MSQ");
-  MSQ_common.initialize_spec _ _ _ _ := initialize_spec (nroot.@"lock-free-MSQ");
-  MSQ_common.enqueue_spec _ _ _ _ := enqueue_spec (nroot.@"lock-free-MSQ");
-  MSQ_common.dequeue_spec _ _ _ _ := dequeue_spec (nroot.@"lock-free-MSQ");
+  queue_specs.initialize_spec _ _ _ _ := initialize_spec (nroot.@"lock-free-MSQ");
+  queue_specs.enqueue_spec _ _ _ _ := enqueue_spec (nroot.@"lock-free-MSQ");
+  queue_specs.dequeue_spec _ _ _ _ := dequeue_spec (nroot.@"lock-free-MSQ");
 |}.

@@ -97,9 +97,10 @@
 - [x] Give an overview of Coq files and how they refer to sections in report. Perhaps mention it at beginning/end of each section, or just have an overview in a section (on the coq formalisation)
 - [x] Mention how to compile the files (via _CoqProject and make)
 
-- [ ] Fix notation overload in Coq. Maybe just use the Q_g.g_abst => xs notation everywhere
+- [x] Fix notation overload in Coq. Maybe just use the Q_g.g_abst => xs notation everywhere
 - [ ] Make Twolock Hocap a hocap queue
 - [ ] Make derivations of concurrent and sequential independent of implementation
+  - [ ] Update overview of files in report
 
 - [ ] Create better notation of nIn, nOut and nVal
 - [ ] Write macros for many of the predicates (queue_invariant isLast, etc.)
@@ -126,4 +127,4 @@
   - [x] Iris from the ground up (As a somewhat gentle introduction to concepts used for the Coq code)
   - [ ] Iris Lecture Notes (see todos in report)
 
-- [ ] If time permits, use hocap spec to prove a spec of a trivial client
+- [ ] If time permits, use hocap spec to prove a spec of a client
