@@ -64,7 +64,9 @@
 \newcommand{\isqueue}{\operatorname{is\_queue}}
 \newcommand{\isqueueseq}{\operatorname{is\_queue\_seq}}
 \newcommand{\isqueueconc}{\operatorname{is\_queue\_conc}}
-\newcommand{\queueInvariant}{\operatorname{queue\_invariant}}
+\newcommand{\TLQueueInvariantConc}{\operatorname{I_{TLC}}}
+\newcommand{\TLQueueInvariantHocap}{\operatorname{I_{TLH}}}
+\newcommand{\LFQueueInvariantHocap}{\operatorname{I_{LFH}}}
 \newcommand{\SeqQgnames}{SeqQgnames}
 \newcommand{\ConcQgnames}{ConcQgnames}
 \newcommand{\Qgnames}{Qgnames}
@@ -97,9 +99,9 @@
 \newcommand{\nodeval}{\valB}
 \newcommand{\nodevalM}[1]{\nodeval_{#1}}
 
-\newcommand{\nIn}[1]{\operatorname{in} #1}
-\newcommand{\nVal}[1]{\operatorname{val} #1}
-\newcommand{\nOut}[1]{\operatorname{out} #1}
+\newcommand{\nIn}[1]{\operatorname{in}(#1)}
+\newcommand{\nVal}[1]{\operatorname{val}(#1)}
+\newcommand{\nOut}[1]{\operatorname{out}(#1)}
 
 \newcommand{\node}{x}
 \newcommand{\nodeM}[1]{\node_{#1}}
@@ -798,7 +800,7 @@ Observation \ref{TLMSQ:insights:tail} captures the fact that, while enqueueing, 
 
 Insight \ref{TLMSQ:insights:persistent} means that we can mark all pointers in the queue (except the pointer to the null node) as persistent. This is technically not needed in the sequential case, but we will incorporate it now, as we will need it in the concurrent setting anyway.
 
-\begin{definition}[\tlmsq{} - $\isqueueseq$ Predicate]\label{TLMSQ:spec:isqueueseq}
+\begin{definition}[\tlmsq{} - $\isqueueseq$ Predicate]\label{TLMSQ:spec:seq:isqueueseq}
 \begin{align*}
   \isqueueseq(\vq, \absvalueList, \Qg) \eqdef
   &\Exists \locqueue, \lochead, \loctail \in \Loc . \Exists \Hlock, \Tlock \in \Val . \\
@@ -806,8 +808,8 @@ Insight \ref{TLMSQ:insights:persistent} means that we can mark all pointers in t
   &\Exists \xsqueue \in \List ~ (\Loc \times \Val \times \Loc) . \Exists \nodehead, \nodetail \in (\Loc \times \Val \times \Loc) .\\
 	&\projval \xsqueue = \wrapsome \absvalueList \star\\
 	&\isLL (\xsqueue \catenate [\nodehead]) \star\\
-	&\lochead \mapsto (\nIn{\nodehead}) \star\\
-	&\loctail \mapsto (\nIn{\nodetail}) \star \isLast(\nodetail, (\xsqueue \catenate [\nodehead])) \star\\
+	&\lochead \mapsto \nIn{\nodehead} \star\\
+	&\loctail \mapsto \nIn{\nodetail} \star \isLast(\nodetail, (\xsqueue \catenate [\nodehead])) \star\\
 	&\isLock(\Qg.\ghlock, \Hlock, \TRUE) \star\\
 	&\isLock(\Qg.\gtlock, \Tlock, \TRUE)
 \end{align*}
@@ -941,26 +943,26 @@ Fortunately, this isn't an issue for safety, but a consequence of this possibili
 Observation \ref{TLMSQ:insights:states} is a simple consequence of the implementation using two locks.
 
 Since we want $\isqueueconc$ to be persistent, then we cannot directly state the points-to predicates as we did in the sequential case. However, we will still need all the same resources to be able to prove the specification. The solution is to have an invariant which describes the concrete state of the queue. In the proofs, when we need access to some resource, we shall then access it by opening the invariant. We now present the invariant and explain it afterwards.
-\begin{definition}[\tlmsq Concurrent Invariant]\label{TLMSQ:spec:invariant}
+\begin{definition}[\tlmsq Concurrent Invariant]\label{TLMSQ:spec:conc:invariant}
   \begin{align*}
-    &\queueInvariant(\Phi, \lochead, \loctail, \Qg) \eqdef\\
+    &\TLQueueInvariantConc(\Phi, \lochead, \loctail, \Qg) \eqdef\\
     &\Exists \absvalueList. \AllP(\absvalueList, \Phi) \star &&\text{(abstract state)}\\
     &\Exists \xsc, \xsqueue, \xsold, \nodehead, \nodetail . &&\text{(concrete state)}\\
     &\xsc = \xsqueue \catenate [\nodehead] \catenate \xsold \star\\
     &\isLL(\xsc) \star\\
     &\projval \xsqueue = \wrapsome \absvalueList \star\\
     &(\\
-    &\quad\quad\lochead \mapsto (\nIn{\nodehead}) \star \loctail \mapsto (\nIn{\nodetail}) \star \isLast(\nodetail, \xsc) \star &&\text{(\StaticState)}\\
+    &\quad\quad\lochead \mapsto \nIn{\nodehead} \star \loctail \mapsto \nIn{\nodetail} \star \isLast(\nodetail, \xsc) \star &&\text{(\StaticState)}\\
     &\quad\quad \ToknEQg \star \ToknDQg \star \TokUpdatedQg\\
     &\quad\lor\\
-    &\quad\quad\lochead \mapsto (\nIn{\nodehead}) \star \loctail \mapsto^{\frac{1}{2}} (\nIn{\nodetail}) \star &&\text{(\EnqueueState)}\\
+    &\quad\quad\lochead \mapsto \nIn{\nodehead} \star \loctail \mapsto^{\frac{1}{2}} \nIn{\nodetail} \star &&\text{(\EnqueueState)}\\
     &\quad\quad (\isLast(\nodetail, \xsc) \star \TokBeforeQg \lor \isSndLast(\nodetail, \xsc) \star \TokAfterQg) \star\\
     &\quad\quad \TokEQg \star \ToknDQg\\
     &\quad\lor\\
-    &\quad\quad\lochead \mapsto^{\frac{1}{2}} (\nIn{\nodehead}) \star \loctail \mapsto (\nIn{\nodetail}) \star \isLast(\nodetail, \xsc) \star &&\text{(\DequeueState)}\\
+    &\quad\quad\lochead \mapsto^{\frac{1}{2}} \nIn{\nodehead} \star \loctail \mapsto \nIn{\nodetail} \star \isLast(\nodetail, \xsc) \star &&\text{(\DequeueState)}\\
     &\quad\quad \ToknEQg \star \TokDQg \star \TokUpdatedQg\\
     &\quad\lor\\
-    &\quad\quad\lochead \mapsto^{\frac{1}{2}} (\nIn{\nodehead}) \star \loctail \mapsto^{\frac{1}{2}} (\nIn{\nodetail}) \star &&\text{(\BothState)}\\
+    &\quad\quad\lochead \mapsto^{\frac{1}{2}} \nIn{\nodehead} \star \loctail \mapsto^{\frac{1}{2}} \nIn{\nodetail} \star &&\text{(\BothState)}\\
     &\quad\quad (\isLast(\nodetail, \xsc) \star \TokBeforeQg \lor \isSndLast(\nodetail, \xsc) \star \TokAfterQg) \star \\
     &\quad\quad \TokEQg \star \TokDQg\\
     &)
@@ -988,16 +990,16 @@ We will use several tokens, each of which is the valid element of their own inst
 \end{itemize}
 
 
-\textbf{Note}: The concurrent specification for the \tlmsq \textit{can} be proven using the queue invariant \ref{TLMSQ:spec:invariant}, and the proof outline below will also be using this. However, a simpler (but arguably less intuitive) queue invariant was discovered. This simpler invariant is equivalent to \ref{TLMSQ:spec:invariant} and has the benefit of being easier to work with in the mechanised proofs. Thus, in the mechanised proofs, the simpler variant is used. The simpler variant can be found in the appendix \todo{add it to appendix}.
+\textbf{Note}: The concurrent specification for the \tlmsq \textit{can} be proven using the queue invariant \ref{TLMSQ:spec:conc:invariant}, and the proof outline below will also be using this. However, a simpler (but arguably less intuitive) queue invariant was discovered. This simpler invariant is equivalent to \ref{TLMSQ:spec:conc:invariant} and has the benefit of being easier to work with in the mechanised proofs. Thus, in the mechanised proofs, the simpler variant is used. The simpler variant can be found in the appendix (\ref{TLMSQ:spec:conc:invariant:simple}).
 
 With this, we can now give our definition of $\isqueueconc$. In the below, we let $\Nl$ be some namespace.
 
-\begin{definition}[\tlmsq - $\isqueueconc$ Predicate]\label{TLMSQ:spec:isqueueconc}
+\begin{definition}[\tlmsq - $\isqueueconc$ Predicate]\label{TLMSQ:spec:conc:isqueueconc}
 \begin{align*}
   \isqueueconc(\Psi, \vq, \Qg) \eqdef
   &\Exists \locqueue, \lochead, \loctail \in \Loc . \Exists \Hlock, \Tlock \in \Val . \\
   &\vq = \locqueue \star \locqueue \mapsto^{\persistently} ((\lochead, \loctail), (\Hlock, \Tlock)) \star\\
-	&\knowInv{\Nl.queue}{\queueInvariant(\Phi, \lochead, \loctail, \Qg)} \star\\
+	&\knowInv{\Nl.queue}{\TLQueueInvariantConc(\Phi, \lochead, \loctail, \Qg)} \star\\
 	&\isLock(\Qg.\ghlock, \Hlock, \TokDQg) \star\\
 	&\isLock(\Qg.\gtlock, \Tlock, \TokEQg).
 \end{align*}
@@ -1029,7 +1031,7 @@ The proofs structure for the specifications are largely similar to the sequentia
   \end{equation*}
 \end{lemma}
 \begin{proof}
-We first step through the first line which gives us the sentinel node of the linked list. Next, we must create the two locks. To create the two tokens that the locks must protect, we use the ghost-alloc rule twice, which gives us two ghost names, one for each of the tokens. We put the ghost names into a tuple $\Qg$, and write $\TokEQg$ and $\TokDQg$ for the two ghost resources created by the ghost-alloc rule. We then create the locks, giving up the two tokens. Following this, we create the $\locqueue$, $\lochead$, and $\loctail$ pointers. All that remains then is to prove the postcondition; the $\isqueueconc$ predicate. The persistent points-to predicate we got when we stepped through the code, and the $\isLock$ predicates we got when we created the locks. So all that remains is the invariant. We create the $\queueInvariant$ in the \StaticState{} state, most of which is analogous to the sequential specification. However, we will also need to supply the tokens required by the \StaticState{} state. Thus, we allocate the four tokens $\ToknEQg$, $\ToknDQg$, $\TokBeforeQg$, and $\TokAfterQg$ in the same way we allocated $\TokEQg$ and $\TokDQg$. We combine $\TokBeforeQg$ and $\TokAfterQg$ to get $\TokUpdatedQg$, and we now have all the tokens we need to create the $\queueInvariant$ in the \StaticState{} state. To create the invariant from $\queueInvariant$, we use the Inv-alloc rule (FUP).
+We first step through the first line which gives us the sentinel node of the linked list. Next, we must create the two locks. To create the two tokens that the locks must protect, we use the ghost-alloc rule twice, which gives us two ghost names, one for each of the tokens. We put the ghost names into a tuple $\Qg$, and write $\TokEQg$ and $\TokDQg$ for the two ghost resources created by the ghost-alloc rule. We then create the locks, giving up the two tokens. Following this, we create the $\locqueue$, $\lochead$, and $\loctail$ pointers. All that remains then is to prove the postcondition; the $\isqueueconc$ predicate. The persistent points-to predicate we got when we stepped through the code, and the $\isLock$ predicates we got when we created the locks. So all that remains is the invariant. We create $\TLQueueInvariantConc$ in the \StaticState{} state, most of which is analogous to the sequential specification. However, we will also need to supply the tokens required by the \StaticState{} state. Thus, we allocate the four tokens $\ToknEQg$, $\ToknDQg$, $\TokBeforeQg$, and $\TokAfterQg$ in the same way we allocated $\TokEQg$ and $\TokDQg$. We combine $\TokBeforeQg$ and $\TokAfterQg$ to get $\TokUpdatedQg$, and we now have all the tokens we need to create $\TLQueueInvariantConc$ in the \StaticState{} state. To create the invariant from $\TLQueueInvariantConc$, we use the Inv-alloc rule (FUP).
 \end{proof}
 
 \subsubsection{Enqueue}
@@ -1105,9 +1107,9 @@ Exactly how the client supplies the fragmental view depends on what the client w
 
 \section{Hocap-style Queue Predicate}
 \label{TLMSQHOCAP:section:hocap-queue-pred}
-Our definition of $\isqueue$ is almost the same as $\isqueueconc$, so we only mention the difference here. The full definition can be found in the appendix \todo{appendix}. The difference is that we no longer take the predicate $\Psi$, and the collection of ghost names is now of type $\Qgnames$. Similarly, the queue invariant, $\queueInvariant$, doesn't require the $\Psi$ any more. Finally, the assertion $\AllP(\absvalueList, \Psi)$ is changed to $\abstractstateauth{\Qg.\gabst}{\absvalueList}$.
+Our definition of $\isqueue$ is almost the same as $\isqueueconc$, so we only mention the differences here. The full definition can be found in the appendix (\ref{TLMSQ:spec:hocap:isqueue}). We no longer take the predicate $\Psi$, and the collection of ghost names is now of type $\Qgnames$. Similarly, the queue invariant, now denoted $\TLQueueInvariantHocap$, doesn't require the $\Psi$ any more and the assertion $\AllP(\absvalueList, \Psi)$ is changed to $\abstractstateauth{\Qg.\gabst}{\absvalueList}$.
 
-\section{Proof Sketch}
+\section{Proof Sketch}  
 \label{TLMSQHOCAP:proof-Sketch}
 The proofs are largely similar to the concurrent spec, but now, instead of having to handle the $\Psi$ predicate, we must work with the authoritative and fragmental views of the abstract state. For initialise, we must additionally get ownership of the authoritative and fragmental view of the empty abstract state, and for enqueue and dequeue, the only real changes happen at the linearisation points. We sketch these challenges below.
 
@@ -1158,7 +1160,7 @@ The second shows that, if we own both the authoritative and fragmental views, we
 
 \subsection{Deriving Sequential Specification}
 We define the $\isqueueseq$ predicate as follows.
-\begin{definition}[\tlmsq - $\isqueueseq$ Predicate (Derive)]\label{TLMSQ:spec:isqueueseq_derive}
+\begin{definition}[\tlmsq - $\isqueueseq$ Predicate (Derive)]\label{TLMSQ:spec:seq:isqueueseq_derive}
 \begin{align*}
   \isqueueseq(\vq, \absvalueList, \Qgseq) \eqdef
     &\Exists \Qghocap \in \Qgnames .\\
@@ -1187,7 +1189,7 @@ In the same way as above, the hoare triple we get matches the one we have to pro
 
 \subsection{Deriving Concurrent Specification}
 Remember that we need the $\isqueueconc$ predicate to be persistent, hence we cannot simply assert $\abstractstatefullfrag{\Qghocap.\gabst}{\absvalueList}$ as we did for $\isqueueseq$. Instead we will put it into an invariant. The predicate we will use looks as follows.
-\begin{definition}[\tlmsq - $\isqueueconc$ Predicate (Derive)]\label{TLMSQ:spec:isqueueconc_derive}
+\begin{definition}[\tlmsq - $\isqueueconc$ Predicate (Derive)]\label{TLMSQ:spec:conc:isqueueconc_derive}
 \begin{align*}
   \isqueueconc(\Psi, \vq, \Qgconc) \eqdef
   &\Exists \Qghocap \in \Qgnames .\\
@@ -1428,7 +1430,7 @@ In this way, $\nodehead$ is the first node, $\nodelast$ is the last node, and $\
 We proceed to define the invariant.
 \begin{definition}[\lfmsq Invariant]\label{LFMSQ:spec:invariant}
   \begin{align*}
-    &\queueInvariant(\lochead, \loctail, \Qg) \eqdef\\
+    &\LFQueueInvariantHocap(\lochead, \loctail, \Qg) \eqdef\\
     &\Exists \absvalueList. \abstractstateauth{\Qg.\gabst}{\absvalueList} \star &&\text{(abstract state)}\\
     &\Exists \xsc, \xsqueue, \nodehead, \nodetail \nodelast . &&\text{(concrete state)}\\
     &\xsc = \xsqueue \catenate [\nodehead] \star\\
@@ -1448,7 +1450,7 @@ The $\isqueue$ predicate is now quite simple: it states that the value represent
   \begin{align*}
     \isqueue(\vq, \Qg) \eqdef &\Exists \locqueue, \lochead, \loctail \in \Loc . \\
     &\vq = \locqueue \star \locqueue \mapsto^{\persistently} (\lochead, \loctail) \star\\
-    &\knowInv{\Nl.queue}{\queueInvariant(\lochead, \loctail, \Qg)}
+    &\knowInv{\Nl.queue}{\LFQueueInvariantHocap(\lochead, \loctail, \Qg)}
   \end{align*}
 \end{definition}
 
@@ -1477,7 +1479,7 @@ With the invariant allocated, proving the post-condition becomes straightforward
 The specification we wish to prove is the following.
 \begin{lemma}[Swing Tail]\label{LFMSQ:spec:swingtail}
   $\All \lochead, \loctail, \nodetail, \nodenewtail, \Qg .\\
-  \hoareV[t]{\knowInv{\Nl.queue}{\queueInvariant(\lochead, \loctail, \Qg)} \star \reach{\nodetail}{\nodenewtail} \star \ar{\nodenewtail}{\Qg.\glast}}{\CAS \ \loctail \ \nIn{\nodetail} \ \nIn{\nodenewtail}}{\valB . \valB = \True \lor \valB = \False}$
+  \hoareV[t]{\knowInv{\Nl.queue}{\LFQueueInvariantHocap(\lochead, \loctail, \Qg)} \star \reach{\nodetail}{\nodenewtail} \star \ar{\nodenewtail}{\Qg.\glast}}{\CAS \ \loctail \ \nIn{\nodetail} \ \nIn{\nodenewtail}}{\valB . \valB = \True \lor \valB = \False}$
 \end{lemma}
 \begin{proof}
   The rule for $\CAS$ demands that we have a points-to predicate for $\loctail$. This is available inside the invariant, so we proceed to open it. This tells us that there is some $\nodetail'$ so that $\loctail \mapsto \nodetail'$. We consider both cases of the CAS:
@@ -1502,7 +1504,7 @@ The specification we wish to prove is the following.
   We assume the viewshift and proceed to prove the hoare triple. By definition of $\isqueue$, we know that the queue $\vq$ is a location $\locqueue$ and there are locations $\lochead$ and $\loctail$ so that 
   \begin{equation}\label{LFMSQ:spec:proof:enqueue:isqueue}
     \locqueue \mapsto^{\persistently} (\lochead, \loctail) \star
-    \knowInv{\Nl.queue}{\queueInvariant(\lochead, \loctail, \Qg)}
+    \knowInv{\Nl.queue}{\LFQueueInvariantHocap(\lochead, \loctail, \Qg)}
   \end{equation}
   We first step through line \ref{LFE:nod} which creates a new node $\nodenew$, so that
   \begin{align}
@@ -1546,7 +1548,7 @@ The specification we wish to prove is the following.
   We assume the viewshift and must prove the hoare triple. As before, we know from $\isqueue$ that the queue $\vq$ is a location $\locqueue$ and there are locations $\lochead$ and $\loctail$ so that
   \begin{equation}\label{LFMSQ:spec:proof:dequeue:isqueue}
     \locqueue \mapsto^{\persistently} (\lochead, \loctail) \star
-    \knowInv{\Nl.queue}{\queueInvariant(\lochead, \loctail, \Qg)}
+    \knowInv{\Nl.queue}{\LFQueueInvariantHocap(\lochead, \loctail, \Qg)}
   \end{equation}
   The body of $\dequeue$ is the loop, so we immediately apply löb induction. We step through the function application, and into the looping function to line \ref{LFD:hed}. This line dereferences $\lochead$, so we open the invariant to access the associated points-to predicate. We obtain that $\lochead$ points to some $\nodehead$, meaning the load results to $\nIn{\nodehead}$. We also derive the following information
   \begin{align}
@@ -1649,11 +1651,64 @@ Indeed, in the Coq formalisations, we prove the Hocap-style specification for an
   \end{align*}
 \end{lemma}
 
-% \begin{definition}[Simplified \tlmsq Invariant]\label{TLMSQ:spec:invariant:simple}
-%   \todo{Write it in}
-% \end{definition}
+\begin{definition}[Simplified \tlmsq Invariant]\label{TLMSQ:spec:conc:invariant:simple}
+  \begin{align*}
+    &\TLQueueInvariantConc(\Phi, \lochead, \loctail, \Qg) \eqdef\\
+    &\Exists \absvalueList. \AllP(\absvalueList, \Phi) \star &&\text{(abstract state)}\\
+    &\Exists \xsc, \xsqueue, \xsold, \nodehead, \nodetail . &&\text{(concrete state)}\\
+    &\xsc = \xsqueue \catenate [\nodehead] \catenate \xsold \star\\
+    &\isLL(\xsc) \star\\
+    &\projval \xsqueue = \wrapsome \absvalueList \star\\
+    &((\lochead \mapsto \nIn{\nodehead} \star \ToknDQg) \lor (\loctail \mapsto^{\frac{1}{2}} \nIn{\nodetail} \star \TokDQg)) \star\\
+    &(\\
+    &\quad(\loctail \mapsto \nIn{\nodetail} \star \isLast(\nodetail, \xsc) \star \ToknEQg \star \TokUpdatedQg) \lor \\
+    &\quad(\\
+    &\quad\quad \loctail \mapsto^{\frac{1}{2}} \nIn{\nodetail} \star \TokEQg \star\\
+    &\quad\quad\left((\isLast(\nodetail, \xsc) \star \TokBeforeQg) \lor (\isSndLast(\nodetail, \xsc) \star \TokAfterQg)\right)\\
+    &\quad)\\
+    &)
+  \end{align*}
+\end{definition}
 
-\todo{\dots}
+
+\begin{definition}[\tlmsq Hocap Invariant]\label{TLMSQ:spec:hocap:invariant}
+  \begin{align*}
+    &\TLQueueInvariantHocap(\lochead, \loctail, \Qg) \eqdef\\
+    &\Exists \absvalueList. \abstractstateauth{\Qg.\gabst}{\absvalueList} \star &&\text{(abstract state)}\\
+    &\Exists \xsc, \xsqueue, \xsold, \nodehead, \nodetail . &&\text{(concrete state)}\\
+    &\xsc = \xsqueue \catenate [\nodehead] \catenate \xsold \star\\
+    &\isLL(\xsc) \star\\
+    &\projval \xsqueue = \wrapsome \absvalueList \star\\
+    &(\\
+    &\quad\quad\lochead \mapsto \nIn{\nodehead} \star \loctail \mapsto \nIn{\nodetail} \star \isLast(\nodetail, \xsc) \star &&\text{(\StaticState)}\\
+    &\quad\quad \ToknEQg \star \ToknDQg \star \TokUpdatedQg\\
+    &\quad\lor\\
+    &\quad\quad\lochead \mapsto \nIn{\nodehead} \star \loctail \mapsto^{\frac{1}{2}} \nIn{\nodetail} \star &&\text{(\EnqueueState)}\\
+    &\quad\quad (\isLast(\nodetail, \xsc) \star \TokBeforeQg \lor \isSndLast(\nodetail, \xsc) \star \TokAfterQg) \star\\
+    &\quad\quad \TokEQg \star \ToknDQg\\
+    &\quad\lor\\
+    &\quad\quad\lochead \mapsto^{\frac{1}{2}} \nIn{\nodehead} \star \loctail \mapsto \nIn{\nodetail} \star \isLast(\nodetail, \xsc) \star &&\text{(\DequeueState)}\\
+    &\quad\quad \ToknEQg \star \TokDQg \star \TokUpdatedQg\\
+    &\quad\lor\\
+    &\quad\quad\lochead \mapsto^{\frac{1}{2}} \nIn{\nodehead} \star \loctail \mapsto^{\frac{1}{2}} \nIn{\nodetail} \star &&\text{(\BothState)}\\
+    &\quad\quad (\isLast(\nodetail, \xsc) \star \TokBeforeQg \lor \isSndLast(\nodetail, \xsc) \star \TokAfterQg) \star \\
+    &\quad\quad \TokEQg \star \TokDQg\\
+    &)
+  \end{align*}
+\end{definition}
+
+
+\begin{definition}[\tlmsq - $\isqueue$ Predicate (Hocap)]\label{TLMSQ:spec:hocap:isqueue}
+  \begin{align*}
+    \isqueueconc(\vq, \Qg) \eqdef
+    &\Exists \locqueue, \lochead, \loctail \in \Loc . \Exists \Hlock, \Tlock \in \Val . \\
+    &\vq = \locqueue \star \locqueue \mapsto^{\persistently} ((\lochead, \loctail), (\Hlock, \Tlock)) \star\\
+    &\knowInv{\Nl.queue}{\TLQueueInvariantHocap(\Phi, \lochead, \loctail, \Qg)} \star\\
+    &\isLock(\Qg.\ghlock, \Hlock, \TokDQg) \star\\
+    &\isLock(\Qg.\gtlock, \Tlock, \TokEQg).
+  \end{align*}
+  \end{definition}
+
 
 \end{document}
 

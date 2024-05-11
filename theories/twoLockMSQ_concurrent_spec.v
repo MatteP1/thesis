@@ -91,18 +91,16 @@ Definition queue_invariant_simple (Ψ : val -> iProp Σ) (l_head l_tail : loc) (
   (* Relation between concrete and abstract state *)
   ⌜proj_val xs_queue = wrap_some xs_v⌝ ∗
   (
+    (l_head ↦ #(n_in x_head) ∗ ToknD Q_γ) ∨
+    (l_head ↦{#1/2} #(n_in x_head) ∗ TokD Q_γ)
+  ) ∗
+  (
+    (l_tail ↦ #(n_in x_tail) ∗ ⌜isLast x_tail xs⌝ ∗ ToknE Q_γ ∗ TokUpdated Q_γ) ∨
     (
-      (l_head ↦ #(n_in x_head) ∗ ToknD Q_γ) ∨
-      (l_head ↦{#1/2} #(n_in x_head) ∗ TokD Q_γ)
-    ) ∗
-    (
-      (l_tail ↦ #(n_in x_tail) ∗ ⌜isLast x_tail xs⌝ ∗ ToknE Q_γ ∗ TokUpdated Q_γ) ∨
+      l_tail ↦{#1/2} #(n_in x_tail) ∗ TokE Q_γ ∗
       (
-        l_tail ↦{#1/2} #(n_in x_tail) ∗ TokE Q_γ ∗
-        (
-          (⌜isLast x_tail xs⌝ ∗ TokBefore Q_γ) ∨
-          (⌜isSndLast x_tail xs⌝ ∗ TokAfter Q_γ)
-        )
+        (⌜isLast x_tail xs⌝ ∗ TokBefore Q_γ) ∨
+        (⌜isSndLast x_tail xs⌝ ∗ TokAfter Q_γ)
       )
     )
   ).

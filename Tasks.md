@@ -102,8 +102,8 @@
 - [ ] Make derivations of concurrent and sequential independent of implementation
   - [ ] Update overview of files in report
 
-- [ ] Create better notation of nIn, nOut and nVal
-- [ ] Write macros for many of the predicates (queue_invariant isLast, etc.)
+- [x] Create better notation of nIn, nOut and nVal
+- [x] Write macros for many of the predicates (queue_invariant isLast, etc.)
 - [x] Wrap proofs of initialise, enqueue, and dequeue in begin{proof}
 - [x] Add lemmas in sections when proving initialise, enqueue, and dequeue, showing exactly what we are proving (see lock-free proof outline).
 - [ ] Add isLL lemmas in appendix
@@ -122,10 +122,10 @@
   - [x] content
   - [x] correct version numbers
 
-- [ ] Create references to:
+- [x] Create references to:
   - [x] Iris Technical Reference (if reader wishes to see the relevant technical definitions)
   - [x] Iris from the ground up (As a somewhat gentle introduction to concepts used for the Coq code)
   - [x] Iris Lecture Notes (see todos in report)
-  - [ ] M P Herlihy : Linearizability. #5 in MSQ paper
+  - [x] Herlihy & Wing : Linearizability. #5 in MSQ paper
 
 - [ ] If time permits, use hocap spec to prove a spec of a client
