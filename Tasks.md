@@ -116,6 +116,7 @@
 - [x] Make sure all node values are 'w' and queue values are 'v'
 - [ ] Rewrite some of the proofs for two-lock
 - [ ] Refer to line numbers in proofs for two-lock
+- [ ] Format the forall intros in lemmas (and definitions) better.
 
 - [x] fix readme
   - [x] formatting

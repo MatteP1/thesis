@@ -366,6 +366,7 @@ The later modality adds a notion of step indexing to Iris propositions. This ste
 
 \subsection{Resource Algebra}
 \todo{Introduce the idea}
+\todo{introduce $\mtimes$ and $\mincl$}
 \todo{tying them into the logic (own-allocate own-op, ...)}
 \todo{mention that points-to predicate is also a resource algebra}
 \todo{composing resource algebras}
@@ -1080,10 +1081,10 @@ When proving the concurrent specification, we were quite careful with tracking t
 As before, we cannot simply parametrise the $\isqueue$ predicate with the abstract state of the queue, as we wish for it to be concurrent. So to allow clients to keep track of the contents of the queue, we will ``split'' the abstract state up in two parts, the authoritative view and the fragmental view. The client will then own the fragmental view, allowing them to keep track of the contents of the queue, whereas the $\isqueue$ predicate will own the authoritative view. We will in particular make sure that, if one has both the fragmental and authoritative views, then these agree on the abstract state of the queue. Further, it is only possible to update the abstract state of the queue (through the fup) if one possess both the authoritative and fragmental views.
 
 We shall use the resource algebra $\authm(\option{(\fracm \times \agm(\List ~ \Val))})$ to achieve the above. $\List ~ \Val$ is the abstract state. It is wrapped in the agreement RA, $\agm$, which ensures that if one owns two elements, then they agree on the abstract state. The fractional RA $\fracm$, denotes how much of the fragmental view is owned; the fragmental view can be split up, which is handled by the clients. We collect $\fracm$ and $\agm(\List ~ \Val)$ in the product RA, whose elements are then pairs of fractions and abstract states.
-The option RA $?$, makes the product RA unital which is required by the $\authm$ construction. $\authm$ is the authoritative resource algebra and gives us the authoritative and fragmental views, and governs that they can only be updated in unison.
+The option RA $?$, makes the product RA unital which is required by the $\authm$ construction. $\authm$ is the authoritative resource algebra. It gives us the authoritative and fragmental views and, together with the fractional RA, governs that they can only be updated in unison.
 
 As before, we collect the ghost names we will need in a tuple, this time of type $\Qgnames$. It is similar to $\ConcQgnames$, but with one additional ghost name: $\gabst$ which is used for elements in the resource algebra we constructed above.\\
-For an abstract state $\absvalueList$ and a tuple $\Qg$ of type $\Qgnames$, we shall use the notation $\abstractstateauth{\Qg.\gabst}{\absvalueList}$ for the ownership assertion $\ownGhost{\Qg.\gabst}{\authfull (1, \aginj ~ \absvalueList)}$, meaning that the authoritative view of the abstract state associated with $\Qg.\gabst$ is $\absvalueList$. Similarly we write $\abstractstatefullfrag{\Qg.\gabst}{\absvalueList}$ for the assertion $\ownGhost{\Qg.\gabst}{\authfrag (1, \aginj ~ \absvalueList)}$.
+For an abstract state $\absvalueList$ and a ghost name $\gname$, we shall use the notation $\abstractstateauth{\gname}{\absvalueList}$ for the ownership assertion $\ownGhost{\gname}{\authfull (1, \aginj ~ \absvalueList)}$, meaning that the authoritative view of the abstract state associated with $\gname$ is $\absvalueList$. Similarly we write $\abstractstatefullfrag{\gname}{\absvalueList}$ for the assertion $\ownGhost{\gname}{\authfrag (1, \aginj ~ \absvalueList)}$.
 
 With this, we now give the hocap-style specification, and explain it afterwards.
 \begin{lemma}[\tlmsq Hocap Specification]\label{TLMSQ:spec:hocap}
@@ -1147,16 +1148,24 @@ If the queue is not empty, then we do not apply the viewshift (as the abstract s
 
 In this section we show that we can derive the sequential and concurrent specifications from chapters \ref{ch:TLMSQSEQ} and \ref{ch:TLMSQCONC} from the Hocap-style specification. The derivations will need to show how to update the abstract state of the queue. To help with this, we use the following lemmas, both of which follow from the definitions of the involved resource algebras. The first shows that the authoritative and fragmental views of the abstract state agree.
 \begin{lemma}[Abstract state agree]\label{TLMSQ:hocap:abst:agree}
-  $\All \absvalueList, \absvalueList' .\\
-  \abstractstateauth{\Qghocap.\gabst}{\absvalueList} \star \abstractstatefullfrag{\Qghocap.\gabst}{\absvalueList'} \proves \absvalueList = \absvalueList'$
+  $\All \gname, \absvalueList, \absvalueList' .\\
+  \abstractstateauth{\gname}{\absvalueList'} \star \abstractstatefullfrag{\gname}{\absvalueList} \proves \absvalueList = \absvalueList'$
 \end{lemma}
-\todo{consider showing proof}
-The second shows that, if we own both the authoritative and fragmental views, we are allowed to update the abstract state to whatever we like.
+\begin{proof}
+  Since we own both $\abstractstateauth{\gname}{\absvalueList}$ and $\abstractstatefullfrag{\gname}{\absvalueList'}$, and they have the same ghost name, we can use rules own-op\todo{ref} and own-valid\todo{ref} to conclude that the element $\authfull (1, \aginj ~ \absvalueList) \mtimes \authfrag (1, \aginj ~ \absvalueList')$ is valid. By the authoritative RA, this means that $\aginj ~ \absvalueList' \mincl \aginj ~ \absvalueList$. By definition of the agreement RA, this means that $\absvalueList' = \absvalueList$, which is what we wanted.
+\end{proof}
+
+The second lemma shows that, if we own both the authoritative and fragmental views, we are allowed to update the abstract state to whatever we like.
 \begin{lemma}[Abstract state update]\label{TLMSQ:hocap:abst:update}
-  $\All \absvalueList, \absvalueList', \absvalueList'' .\\
-  \abstractstateauth{\Qghocap.\gabst}{\absvalueList} \star \abstractstatefullfrag{\Qghocap.\gabst}{\absvalueList'} \proves \abstractstateauth{\Qghocap.\gabst}{\absvalueList''} \star \abstractstatefullfrag{\Qghocap.\gabst}{\absvalueList''}$
+  $\All \gname, \absvalueList, \absvalueList', \absvalueList'' .\\
+  \abstractstateauth{\gname}{\absvalueList'} \star
+  \abstractstatefullfrag{\gname}{\absvalueList} \vs
+  \abstractstateauth{\gname}{\absvalueList''} \star
+  \abstractstatefullfrag{\gname}{\absvalueList''}$
 \end{lemma}
-\todo{consider showing proof}
+\begin{proof}
+  This time, we use own-op\todo{ref} to conclude $\ownGhost{\gname}{\authfull (1, \aginj ~ \absvalueList) \mtimes \authfrag (1, \aginj ~ \absvalueList')}$. Further, by own-op\todo{ref}, it suffices to prove $\pvs \ownGhost{\gname}{\authfull (1, \aginj ~ \absvalueList'') \mtimes \authfrag (1, \aginj ~ \absvalueList'')}$. We do this by applying the ghost-update\todo{ref} rule, which requires us to prove $\authfull (1, \aginj ~ \absvalueList) \mtimes \authfrag (1, \aginj ~ \absvalueList') \mupd \authfull (1, \aginj ~ \absvalueList'') \mtimes \authfrag (1, \aginj ~ \absvalueList'')$. Firstly by the product, fractional, and agreement RA, the element $(1, \aginj ~ \absvalueList'')$ is valid, so the product of the authoritative and fragmental parts of it is also valid. Next, note that we own the entire fraction of the fragmental element. Hence, there can be no other valid fragments. It hence follows that we can do the frame-preserving update.
+\end{proof}
 
 \subsection{Deriving Sequential Specification}
 We define the $\isqueueseq$ predicate as follows.
@@ -1362,7 +1371,7 @@ To define the abstract points-to predicate and the abstract reach predicate, we 
   $\ap{\gname}{\node} \eqdef \Exists s . \ownGhost{\gname}{\authfull s} \star \Sep_{\nodeM{m} \in s} \reach{\nodeM{m}}{\node}$
 \end{definition}
 
-One should think about sets $s \in \mathcal{P}(\Node)$ as specifying which nodes can abstractly reach a certain ghost variable. Due to how the authoritative resource algebra work, the assertion $\ownGhost{\gname}{\authfrag \{\node\}}$ essentially states that $\node$ is \textit{one} of the nodes that can reach the node that $\gname$ points to. This is because, when combining fragmental and authoritative elements, we get that the fragmental element is ``smaller'' than the authoritative. In this case, ``smaller'' amounts to ``subset''. Hence, $\ownGhost{\gname}{\authfrag \{\node\}}$ means that, whatever the authoritative set is, it will contain the node $\node$. 
+One should think of sets $s \in \mathcal{P}(\Node)$ as specifying which nodes can abstractly reach a certain ghost variable. Due to how the authoritative resource algebra work, the assertion $\ownGhost{\gname}{\authfrag \{\node\}}$ essentially states that $\node$ is \textit{one} of the nodes that can reach the node that $\gname$ points to. This is because, when combining a fragmental element $s$ and authoritative element $t$, we get that the fragmental element is ``smaller'' than the authoritative, $s \mincl t$. In this case, ``smaller'' amounts to ``subset''. Hence, $\ownGhost{\gname}{\authfrag \{\node\}}$ means that, whatever the authoritative set is, it will contain the node $\node$. 
 
 The authoritative set is existentially quantified as it can change over time, but whatever it is, we assert that all the nodes it contains \textit{can} concretely reach the node that the ghost name is currently pointing to. This choice of definitions enables us to prove the properties we desired of abstract reachability above. The four lemmas below are all we need for abstract reachability when we prove the specification for the \lfmsq later.
 
