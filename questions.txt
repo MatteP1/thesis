@@ -1,20 +1,11 @@
-Answered:
-
-- Any place I can see formally what linearisation points are, and refer to it in my section?
-  M P Herlihy Linearizability. no 5 MSQ paper
-
-- initialize vs initialise
-  Could change to initialise.
-
-
-Unanswered:
 
 - name/notation for Qgnames (including SeqQgnames and ConcQgnames). Maybe \mathcal(G)_{\text{seq}}?
+
 
 - If top level lemmas in Iris are persistent, then doesn't the ==∗ correspond to \vs (viewshift)
 
 
-- What should L be for the Two-Lock MSQ Hocap? There are two RA, both lock and token.
+- What should L be in the Two-Lock MSQ Hocap? There are two RA, both lock and token.
 
 
 - How do I derive the sequential and concurrent specs from the queue class?

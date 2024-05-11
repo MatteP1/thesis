@@ -1,11 +1,9 @@
 \documentclass[a4paper, 10pt]{report}
 
-% \usepackage[a4paper,left=1in,right=1in,top=1in,bottom=1in]{geometry}
 \usepackage{fullpage}
 \usepackage{minted}
 \usepackage[utf8]{inputenc}
 \usepackage[english]{babel}
-% \usepackage{a4}
 \usepackage{latexsym}
 \usepackage{amssymb}
 \usepackage{amsmath}
@@ -59,8 +57,9 @@
 \newcommand{\enqueue}{\operatorname{enqueue}}
 \newcommand{\dequeue}{\operatorname{dequeue}}
 
-\newcommand{\tlmsq}{Two-Lock M\&S-Queue\xspace}
-\newcommand{\lfmsq}{Lock-Free M\&S-Queue\xspace}
+\newcommand{\msq}{M\&S-Queue\xspace}
+\newcommand{\tlmsq}{Two-Lock \msq}
+\newcommand{\lfmsq}{Lock-Free \msq}
 
 \newcommand{\isqueue}{\operatorname{is\_queue}}
 \newcommand{\isqueueseq}{\operatorname{is\_queue\_seq}}
@@ -331,7 +330,7 @@
 
 \section{The Iris Program Logic Framework}
 \label{Pre:section:iris}
-In this section, we give a brief introduction to Iris -- the logic we use to reason about the M\&S-queues. Iris is quite expressive and supports a myriad of features and derived rules, many of which have been utilised in this project. As such, it will be impossible to cover all facets of Iris in detail, so we limit ourselves to give an overview of the main aspects of Iris. If the reader wishes a more thorough introduction, or wants to see further details of the topics covered, please consult the Iris Lecture Notes \cite{gentleiris}.
+In this section, we give a brief introduction to Iris -- the logic we use to reason about the \msq's. Iris is quite expressive and supports a myriad of features and derived rules, many of which have been utilised in this project. As such, it will be impossible to cover all facets of Iris in detail, so we limit ourselves to give an overview of the main aspects of Iris. If the reader wishes a more thorough introduction, or wants to see further details of the topics covered, please consult the Iris Lecture Notes \cite{gentleiris}.
 
 \todo{FOCUS IN THIS SECTION is on explaining the basic ideas of the concepts and showing the notation used. Assume the reader is somewhat familiar with program verification. }
 
@@ -391,17 +390,17 @@ Table \ref{Pre:files-table} gives an overview over the files developed in the pr
   \midrule
   \path{MSQ_common.v} & Chapters \ref{ch:TLMSQ} - \ref{ch:LFMSQ} & Common definitions and lemmas. \\
   \midrule
-  \path{twoLockMSQ_impl.v} & Chapter \ref{ch:TLMSQ} & \multirow{5}{\linewidth}{Two-Lock M\&S-queue implementation and proofs of three specifications. Two of them shown to be derivable from the third.} \\
+  \path{twoLockMSQ_impl.v} & Chapter \ref{ch:TLMSQ} & \multirow{5}{\linewidth}{\tlmsq implementation and proofs of three specifications. Two of them shown to be derivable from the third.} \\
   \path{twoLockMSQ_sequential_spec.v} & Chapter \ref{ch:TLMSQSEQ} & \\
   \path{twoLockMSQ_concurrent_spec.v} & Chapter \ref{ch:TLMSQCONC} & \\
   \path{twoLockMSQ_hocap_spec.v} & Chapter \ref{ch:TLMSQHOCAP}& \\
   \path{twoLockMSQ_derived.v} & Section \ref{TLMSQHOCAP:section:deriving-seq-and-conc} & \\
   \midrule
-  \path{lockFreeMSQ_impl.v} & Section \ref{LFMSQ:section:implementation} & \multirow{3}{\linewidth}{Lock-Free M\&S-queue implementation and Hocap-style + derived specifications.} \\
+  \path{lockFreeMSQ_impl.v} & Section \ref{LFMSQ:section:implementation} & \multirow{3}{\linewidth}{\lfmsq implementation and Hocap-style + derived specifications.} \\
   \path{lockFreeMSQ_hocap_spec.v} & Sections \ref{LFMSQ:section:reachability} - \ref{LFMSQ:section:proof-outline} & \\
   \path{lockFreeMSQ_derived.v} & Sections \ref{LFMSQ:section:spec} and \ref{TLMSQHOCAP:section:deriving-seq-and-conc} & \\
   \midrule
-  \path{lockAndCCFreeMSQ_impl.v} & Section \ref{LFMSQ:section:discussion} & \multirow{2}{\linewidth}{Consistency-Check-Free version of Lock-Free M\&S-queue.}\\
+  \path{lockAndCCFreeMSQ_impl.v} & Section \ref{LFMSQ:section:discussion} & \multirow{2}{\linewidth}{Consistency-Check-Free version of \lfmsq.}\\
   \path{lockAndCCFreeMSQ_hocap_spec.v} & Section \ref{LFMSQ:section:discussion}& \\
   \midrule
   \path{queue_specs.v} & N/A & Implementation-independent specs. \\
@@ -424,7 +423,7 @@ The project is known to compile with Coq version 8.19.0 and Iris version 4.2.0.
 \chapter{The Two-Lock Michael Scott Queue}
 \label{ch:TLMSQ}
 
-I present here an implementation of the \tlmsq in \heaplang. This implementation differs slightly from the original, presented in \cite{DBLP:conf/podc/MichaelS96}, but most changes simply reflect the differences in the two languages.
+In this chapter, we give an implementation of the blocking version of the \msq, the \tlmsq, in \heaplang. This implementation differs slightly from the original, presented in \cite{DBLP:conf/podc/MichaelS96}, but most changes simply reflect the differences in the two languages.
 
 
 \section{Introduction}
@@ -446,7 +445,7 @@ The reader may wonder why there is an extra, intermediary ``in'' pointer, betwee
 
 The queue consists of 3 functions: $\initialise$, $\enqueue$, and $\dequeue$, and as the name of the data structure suggests, the functions rely on two locks. To this end, we shall assume that we have some lock implementation given. In the accompanying Coq mechanisation, a ``spin-lock'' is used, but the only part we really care about is its specification; this can be found in \cite{gentleiris} (Example 8.38 at the time of writing).
 
-\subsection[Initialise]{$\initialise$}
+\subsection{Initialise}
 
 $\initialise$ will first create a single node -- the head node -- marking the start of the linked list. It then creates two locks, $\Hlock$ and $\Tlock$, protecting the head and tail pointers, respectively. Finally, it creates the head and tail pointers, both pointing to the head node. The queue is then a pointer to a structure containing the head and tail pointers, and the two locks.
 
@@ -454,8 +453,7 @@ Figure \ref{TLMSQ:impl:figure:init} illustrates the structure of the queue after
 
 Note that in the original specification, a queue is a pointer to a 4-tuple $(\lochead, \loctail, \Hlock, \Tlock)$. Since \heaplang doesn't support 4-tuples, we instead represent the queue as a pointer to a pair of pairs: $((\lochead, \loctail), (\Hlock, \Tlock))$.
 
-
-\subsection[Enqueue]{$\enqueue$}
+\subsection{Enqueue}
 
 To enqueue a value, we must create a new node, append it to the underlying linked-list, and swing the tail pointer to this new node. These three operations are depicted in figure \ref{TLMSQ:impl:figure:enqueue}.
 
@@ -463,7 +461,7 @@ $\enqueue$ takes as argument the value to be enqueued and creates a new node con
 
 Figure \ref{TLMSQ:impl:figure:enqueue} also illustrates when pointers become persistent; once the previous last node is updated to point to the newly inserted node, that pointer will never be updated again, hence becoming persistent.
 
-\subsection[Dequeue]{$\dequeue$}
+\subsection{Dequeue}
 
 It is of course only possible to dequeue an element from the queue if the queue contains at least one element. Hence, the first thing $\dequeue$ does is check if the queue is empty. We can detect an empty queue by checking if the head node is the last node in the linked list. Being the last node in the linked list corresponds to having the ``out'' node be $\None$. If this is the case, then the queue is empty and the function returns $\None$. Otherwise, there is a node just after the head node, which is the first node of the queue. To dequeue it, we first read the associated value, and next we swing the head pointer to it, making it the new head node. Finally, we return the value we read.
 
@@ -1009,12 +1007,14 @@ In contrast to the sequential specification, the locks now protect $\TokEQg$ and
 
 \section{Linearisation Points}
 \label{TLMSQCONC:section:lin-points}
-An important notion for concurrent algorithms is linearisability. One way to characterise linearisability is through the concept of linearisation points. We say that a function (such as $\enqueue$ or $\dequeue$) is linearisable, if all invocations of the function has a \textit{linearisation point} somewhere between the invocation and the response. Further, the effects of the function appear to occur instantaneously at the linearisation point; a single, atomic instruction performs the desired change that the function must carry out.
-\todo{cite source}
+An important notion for concurrent algorithms is \textit{linearisability} \cite{DBLP:journals/toplas/HerlihyW90}. Linearisability is a non-blocking property\footnote{Other properties, such as serialisability, inherently require implementations to be blocking. Linearisability does not require this, but linearisable algorithms can of course still be blocking.} that helps reason about which behaviours are possible. Both versions of the \msq are linearisable, which rules out undesired behaviours.
 
-For example, $\enqueue$ has a single linearisation point at the instruction that appends the newly created node to the linked list (the store on line \ref{TLE:add}). At exactly that point, the effect of the enqueue takes place. $\dequeue$ is slightly more complicated as it has multiple linearisation points. If the queue is empty when we read the head node's out pointer on line \ref{TLD:new}, then at that very read, the $\dequeue$ function is guaranteed to return $\None$, making that dereference the linearisation point. On the hand, if the queue was not empty at that point, then the linearisation point is at line \ref{TLD:shs}, when we swing the head pointer. At that very store operation, the effect of $\dequeue$ occurs.
+One way to characterise linearisability is through the concept of linearisation points. We say that a function (such as $\enqueue$ or $\dequeue$) is linearisable, if all invocations of the function have a \textit{linearisation point} somewhere between the invocation and the response. Further, the effects of the function appear to occur instantaneously at the linearisation point; a single, atomic instruction performs the desired change that the function must carry out.
 
-Linearisation points are closely tied to updates of the abstract state of the queue. The abstract state of the queue changes only at linearisation points. This is consistent with the notion that the effects of the function takes effect at the linearisation points -- updates to the abstract state appear to happen atomically. This link to the abstract state becomes even more prevalent when we introduce Hocap-style specifications in chapter \ref{ch:TLMSQHOCAP}.
+For example, $\enqueue$ has a single linearisation point at the instruction that appends the newly created node to the linked list (the store on line \ref{TLE:add}). At exactly that point, the effect of the enqueue takes place. $\dequeue$ is slightly more complicated as it has multiple linearisation points. If the queue is empty when we read the head node's out pointer on line \ref{TLD:new}, then at that read, the $\dequeue$ function is guaranteed to return $\None$, interpreting the queue as empty. In this case the $\dequeue$ doesn't change the queue but merely observes it, and the observation happens exactly at the read of the head node's out pointer, making it the linearisation point.\\
+On the hand, if the queue was not empty at that point, then the linearisation point is at line \ref{TLD:shs}, when we swing the head pointer. At that very store operation, the effect of $\dequeue$ occurs.
+
+Linearisation points are closely tied to updates of the abstract state of the queue. The abstract state of the queue changes only at linearisation points. This is consistent with the notion that the effects of the function takes effect at the linearisation points -- updates to the abstract state happen atomically as we would intuitively want it to. This link to the abstract state becomes even more prevalent when we introduce Hocap-style specifications in chapter \ref{ch:TLMSQHOCAP}.
 
 \section{Proof Outline}
 \label{TLMSQCONC:section:proof-outline}
@@ -1212,7 +1212,7 @@ To derive the \textbf{concurrent dequeue spec}, we pick $P \eqdef \TRUE$ and $Q(
 \section{Introduction}
 \label{LFMSQ:section:introduction}
 
-In this chapter we will study the \lfmsq. As with the two-lock version, the original implementation can be found in \cite{DBLP:conf/podc/MichaelS96}. As the name ``Lock-Free'' suggests, the implementation doesn't rely on locks to achieve correct behaviour. Instead, it uses the atomic operation: $\CAS$ which we discussed in section \ref{Pre:section:heaplang}.
+In this chapter we will study the non-blocking version of the \msq, the \lfmsq. As with the two-lock version, the original implementation can be found in \cite{DBLP:conf/podc/MichaelS96}. As the name ``Lock-Free'' suggests, the implementation doesn't rely on locks to achieve correct behaviour. Instead, it uses the atomic operation: $\CAS$ which we discussed in section \ref{Pre:section:heaplang}.
 
 Section \ref{LFMSQ:section:implementation} implements the \lfmsq in \heaplang. Next, we move towards proving a hocap-style specification for it. Section \ref{LFMSQ:section:reachability} introduces the notion of \textit{Reachability} which we will need in the proofs. In section \ref{LFMSQ:section:spec} we discuss the specification we will be proving, and in sections \ref{LFMSQ:section:hocap-queue-pred} and \ref{LFMSQ:section:proof-outline} we give the proofs. Finally, in section \ref{LFMSQ:section:discussion}, we discuss a simplification to the \lfmsq algorithm and it's implications.
 
@@ -1221,17 +1221,17 @@ Section \ref{LFMSQ:section:implementation} implements the \lfmsq in \heaplang. N
 
 The implementation shares many commonalities with the two-lock variant, most importantly, the underlying queue is still a linked list. The major differences are how we manipulate the linked list and the head and tail pointers.
 
-\subsection[Initialise]{$\initialise$}
+\subsection{Initialise}
 As the implementation doesn't use locks, the queue data structure is now just a pointer to a pair consisting of the head and tail pointers.
 
-\subsection[Enqueue]{$\enqueue$}
+\subsection{Enqueue}
 Enqueueing a node consists of the same two steps as before: add the newly created node to the linked list, and swing the tail pointer. In this way, figures \ref{TLMSQ:impl:figure:enqueue:a}, \ref{TLMSQ:impl:figure:enqueue:b}, and \ref{TLMSQ:impl:figure:enqueue:c} still accurately reflect the state changes that the queue goes through during an enqueue. However, one big difference is that swinging the tail pointer to the newly inserted node is not necessarily done by the thread that enqueued it. We discuss this below.\\
 Since other threads can work on the linked list at the same time, we must do some extra checks when enqueueing a new node.\\
 Firstly, we must ensure that the tail pointer is actually pointing to the last node. We ensure this on line \ref{LFE:nen}. If it isn't, that means that another enqueueing thread has added a new node to the linked list, but hasn't yet swung the tail pointer. So instead of waiting for it, we \textit{help} it by trying to swing the tail pointer for it. Afterwards, we try to enqueue our node again.\\
 Secondly, before we can add the node, we must ensure that no thread has performed an enqueue while we have been working, so that we don't overwrite another threads enqueue. This is ensured with the $\CAS$ instruction on line \ref{LFE:add} -- it adds the new node to the linked list only if our tail node is still the last, and hence points to $\None$. After adding the node, we attempt to swing the tail pointer to it. This may fail, but that simply means that another thread has already swung it for us.
 Finally, we have an additional \textit{consistency check} on line \ref{LFE:cct}. We discuss the purpose of this extra check in section \ref{LFMSQ:section:discussion}.
 
-\subsection[Dequeue]{$\dequeue$}
+\subsection{Dequeue}
 Fundamentally, a dequeue operation still consists of swinging the head pointer to the next node in the linked list. The original authors decided that the tail pointer shouldn't lag behind the head pointer, hence $\dequeue$ also accesses the tail node and checks ensures it won't lag behind as result of the dequeue. on line \ref{LFD:hte}, we check whether the head and tail nodes are the same. If this is the case, then the queue is either empty or the tail pointer is lagging behind. We distinguish between these two cases on line \ref{LFD:nen}. If the tail node is indeed lagging behind, then some thread has enqueued a node, but not yet swung the tail pointer, so we help it out by swinging the pointer.\\
 If the head and tail nodes are not the same, then it must be safe to dequeue, which we attempt in the else block on line \ref{LFD:el2}.
 
@@ -1609,7 +1609,7 @@ The specification we wish to prove is the following.
 \section{Discussion}
 \label{LFMSQ:section:discussion}
 
-It was shown in \cite{DBLP:conf/cpp/VindumB21} that a version of the lock free M\&S-queue with the consistency checks is contextually equivalent to a version without consistency checks. In the original presentation (\cite{DBLP:conf/podc/MichaelS96}) the implementation language was assumed to not have a garbage collector. This meant that the ABA problem was an issue; if a node is freed by a dequeue, and afterwards a new node is allocated at the same location with the same value through an enqueue, it will look as though it is the exact same node. This can cause inconsistencies for threads that read the original node, went to sleep, and continued after the new allocation. 
+It was shown in \cite{DBLP:conf/cpp/VindumB21} that a version of the \lfmsq with the consistency checks is contextually equivalent to a version without consistency checks. In the original presentation (\cite{DBLP:conf/podc/MichaelS96}) the implementation language was assumed to not have a garbage collector. This meant that the ABA problem was an issue; if a node is freed by a dequeue, and afterwards a new node is allocated at the same location with the same value through an enqueue, it will look as though it is the exact same node. This can cause inconsistencies for threads that read the original node, went to sleep, and continued after the new allocation. 
 To fix the issue, the authors added \textit{modification counters} to their pointers, which means that the pointer to the newly allocated node will have a higher counter, and we can hence tell that it isn't the same node as the original. The essence of the consistency checks is to ensure that previously read nodes are the exact same nodes as from before, by ensuring that the counter is the same.
 We do this check \textit{after} reading any ``next'' nodes to ensure that they are indeed the next of the node we originally read -- the original node and its next node are consistent.
 
