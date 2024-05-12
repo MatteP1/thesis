@@ -877,19 +877,19 @@ With this, we now have all the resources needed to prove the post-condition. Pro
 \begin{proof}
 We assume the pre-condition $\isqueueseq(\vq, \absvalueList, \Qg)$ which tells us that $\vq$ is some location $\locqueue$, and in particular, we have following:
 \begin{align}
-  &\locqueue \mapsto^{\persistently} ((\lochead, \loctail), (\Hlock, \Tlock))\label{TLMSQ:spec:seq:proof:queue}\\
-  &\projval(\xsqueue) = \wrapsome(\absvalueList)\label{TLMSQ:spec:seq:proof:rel}\\
-  &\nodetail \mapsto \None \star \isLLchain (\xsqueue \catenate [\nodehead])\label{TLMSQ:spec:seq:proof:isLL}\\
-  &\loctail \mapsto \nIn{\nodetail} \star \isLast(\nodetail, (\xsqueue \catenate [\nodehead]))\label{TLMSQ:spec:seq:proof:tail}\\
-  &\isLock(\Qg.\gtlock, \Tlock, \TRUE)\label{TLMSQ:spec:seq:proof:tlock}
+  &\locqueue \mapsto^{\persistently} ((\lochead, \loctail), (\Hlock, \Tlock))\label{TLMSQ:spec:seq:proof:enq:queue}\\
+  &\projval(\xsqueue) = \wrapsome(\absvalueList)\label{TLMSQ:spec:seq:proof:enq:rel}\\
+  &\nodetail \mapsto \None \star \isLLchain (\xsqueue \catenate [\nodehead])\label{TLMSQ:spec:seq:proof:enq:isLL}\\
+  &\loctail \mapsto \nIn{\nodetail} \star \isLast(\nodetail, (\xsqueue \catenate [\nodehead]))\label{TLMSQ:spec:seq:proof:enq:tail}\\
+  &\isLock(\Qg.\gtlock, \Tlock, \TRUE)\label{TLMSQ:spec:seq:proof:enq:tlock}
 \end{align} 
-We proceed to step into the enqueue function. Firstly, on line \ref{TLE:nod}, we create a new node $\nodenew$, with $\nVal{\nodenew} = \Some \absvalue$. Next, on line \ref{TLE:acq} we acquire the tail lock. We step through the dereference and the projections using \ref{TLMSQ:spec:seq:proof:queue}. To acquire the lock we use the $\acquire$ specification with \ref{TLMSQ:spec:seq:proof:tlock}. This gives us $\locked(Qg.\gtlock)$ and $\TRUE$.
+We proceed to step into the enqueue function. Firstly, on line \ref{TLE:nod}, we create a new node $\nodenew$, with $\nVal{\nodenew} = \Some \absvalue$. Next, on line \ref{TLE:acq} we acquire the tail lock. We step through the dereference and the projections using \ref{TLMSQ:spec:seq:proof:enq:queue}. To acquire the lock we use the $\acquire$ specification with \ref{TLMSQ:spec:seq:proof:enq:tlock}. This gives us $\locked(Qg.\gtlock)$ and $\TRUE$.
 
-Line \ref{TLE:add} adds node $\nodenew$ to the linked list. We first use \ref{TLMSQ:spec:seq:proof:queue} to step to the dereference of $\loctail$. From \ref{TLMSQ:spec:seq:proof:tail}, we know the dereference results in $\nIn{\nodetail}$. Because $\nodetail$ is in the linked list, we can use \ref{TLMSQ:spec:seq:proof:isLL} to conclude that $\nodetail$ is a node, and hence we can perform the load and the projection to get to the final store operation: $\nOut{\nodetail} \gets \nIn{\nodenew}$. Using the points-to proposition from \ref{TLMSQ:spec:seq:proof:isLL}, we perform the store, which in turn gives us $\nOut{\nodetail} \mapsto \nIn{\nodenew}$. We make this persistent and combine it with the $\isLLchain$ proposition from \ref{TLMSQ:spec:seq:proof:isLL} to conclude $\isLL(\nodenew :: \xsqueue \catenate [\nodehead])$.
+Line \ref{TLE:add} adds node $\nodenew$ to the linked list. We first use \ref{TLMSQ:spec:seq:proof:enq:queue} to step to the dereference of $\loctail$. From \ref{TLMSQ:spec:seq:proof:enq:tail}, we know the dereference results in $\nIn{\nodetail}$. Because $\nodetail$ is in the linked list, we can use \ref{TLMSQ:spec:seq:proof:enq:isLL} to conclude that $\nodetail$ is a node, and hence we can perform the load and the projection to get to the final store operation: $\nOut{\nodetail} \gets \nIn{\nodenew}$. Using the points-to proposition from \ref{TLMSQ:spec:seq:proof:enq:isLL}, we perform the store, which in turn gives us $\nOut{\nodetail} \mapsto \nIn{\nodenew}$. We make this persistent and combine it with the $\isLLchain$ proposition from \ref{TLMSQ:spec:seq:proof:enq:isLL} to conclude $\isLL(\nodenew :: \xsqueue \catenate [\nodehead])$.
 
-The next line (line \ref{TLE:sts}) swings the tail pointer to $\nodenew$. \ref{TLMSQ:spec:seq:proof:tail} and \ref{TLMSQ:spec:seq:proof:tail} gives us all the required resources to step through the code and perform the store. Afterwards, we get $\loctail \mapsto \nIn{\nodenew}$.
+The next line (line \ref{TLE:sts}) swings the tail pointer to $\nodenew$. \ref{TLMSQ:spec:seq:proof:enq:tail} and \ref{TLMSQ:spec:seq:proof:enq:tail} gives us all the required resources to step through the code and perform the store. Afterwards, we get $\loctail \mapsto \nIn{\nodenew}$.
 
-Finally, we get to line \ref{TLE:rel} which releases the lock. We use the specification for $\release$, giving up $\locked(Qg.\gtlock)$. The only thing left is to prove the postcondition: $\isqueueseq(\vq, (\absvalue :: \absvalueList), \Qg)$. For the existentials, we pick $\nodenew :: \xsqueue$ as the queue, and as the tail node, we chose $\nodenew$. The remaining choices are similar to those we got from the pre-condition. With these choices, the remaining proof obligations become straightforward; we already have the required pointers and the $\isLL$ proposition. The relationship between the abstract and concrete states follows from $\nVal{\nodenew} = \Some \absvalue$ and \ref{TLMSQ:spec:seq:proof:rel}.
+Finally, we get to line \ref{TLE:rel} which releases the lock. We use the specification for $\release$, giving up $\locked(Qg.\gtlock)$. The only thing left is to prove the postcondition: $\isqueueseq(\vq, (\absvalue :: \absvalueList), \Qg)$. For the existentials, we pick $\nodenew :: \xsqueue$ as the queue, and as the tail node, we chose $\nodenew$. The remaining choices are similar to those we got from the pre-condition. With these choices, the remaining proof obligations become straightforward; we already have the required pointers and the $\isLL$ proposition. The relationship between the abstract and concrete states follows from $\nVal{\nodenew} = \Some \absvalue$ and \ref{TLMSQ:spec:seq:proof:enq:rel}.
 \end{proof}
 
 \subsubsection{Dequeue}
@@ -899,17 +899,34 @@ Finally, we get to line \ref{TLE:rel} which releases the lock. We use the specif
   \end{equation*}
 \end{lemma}
 \begin{proof}
-\todo{Rewrite and refer to lines}
-For $\dequeue \ \vq$, our precondition is $\isqueueseq(\vq, \absvalueList, \Qg)$, and our post condition states that either the queue is empty, or there is a tail element which is returned by the function, and removed from the queue.
+We assume the pre-condition $\isqueueseq(\vq, \absvalueList, \Qg)$ which gives us that $\vq$ is some location $\locqueue$, and the following propositions.
+\begin{align}
+  &\locqueue \mapsto^{\persistently} ((\lochead, \loctail), (\Hlock, \Tlock))\label{TLMSQ:spec:seq:proof:deq:queue}\\
+  &\projval(\xsqueue) = \wrapsome(\absvalueList)\label{TLMSQ:spec:seq:proof:deq:rel}\\
+  &\nodetail \mapsto \None \star \isLLchain (\xsqueue \catenate [\nodehead])\label{TLMSQ:spec:seq:proof:deq:isLL}\\
+  &\lochead \mapsto \nIn{\nodehead} \star\label{TLMSQ:spec:seq:proof:deq:head}\\
+  &\isLock(\Qg.\ghlock, \Hlock, \TRUE)\label{TLMSQ:spec:seq:proof:deq:hlock}
+\end{align}
+We perform the function application and step into the function. We first do the superfluous acquire on line \ref{TLD:acq} using the acquire spec and \ref{TLMSQ:spec:seq:proof:deq:hlock}. This gives us $\locked(\Qg.\ghlock)$.\\
+Next we step to line \ref{TLD:nod} which dereferences the head node. We perform the loads and projections using \ref{TLMSQ:spec:seq:proof:deq:queue} and \ref*{TLMSQ:spec:seq:proof:deq:head}, which tells us that the $node$ variable becomes $\nIn{\nodehead}$. From \ref{TLMSQ:spec:seq:proof:deq:isLL}, we know that $\nodehead$ is in the linked list, hence it must be a node.\\
+We step to line \ref{TLD:new} which finds out what $\nodehead$ points to. As $\nodehead$ is a node, we can step to the load: $\deref (\nOut{\nodehead})$. The result of this load is either $\None$ or another node $\nodeheadnext$, depending on whether or not $\xsqueue$ is empty. So we consider both cases.
 
-Stepping through the function, we first do the superfluous acquire. Next, we get the head node $\nodehead$ through the queue pointer $\locqueue$. As described above for Enqueue, we get the resource to do this through $\isqueueseq(\vq, \absvalueList, \Qg)$. The $\isqueueseq$ predicate also tells us that $\nodehead$ is a node in the linked list (described by the $\isLL$ predicate), hence we can step through the code in the next line, which finds the node that $\nodehead$ is pointing to. Now, depending on whether or not the queue is empty, $\nodehead$ either points to $\None$, or some node $\nodeheadnext$. Thus, we shall perform a case analysis on $\xsqueue$.
+\textbf{$\xsqueue$ is empty}: In this case, \ref{TLMSQ:spec:seq:proof:deq:isLL} simply asserts $\isLL [\nodehead]$, which by definition tells us that $\nodehead \mapsto \None$. Hence, the ``if'' on line \ref{TLD:ifn} will take the ``then'' branch, so we step to line \ref{TLD:re1}. Here we release the lock, giving up $\locked(\Qg.\ghlock)$, and return $\None$ on the next line. What remains is to prove the post-condition with $\valB = \None$. We can easily do this by proving the first disjunction. From \ref{TLMSQ:spec:seq:proof:deq:rel} with the fact that $\xsqueue = []$ we can conclude that $\absvalueList$ is empty, and since we haven't modified the queue, we can prove $\isqueueseq(\vq, \absvalueList, \Qg)$ using the same resources we got from the pre-condition.
 
-\textbf{$\xsqueue$ is empty}: In this case, we will have that $\isLL [\nodehead]$, which tells us that $\nodehead$ points to $\None$. Hence, the ``then'' branch of the ``if'' will be taken. This branch simply releases the lock and returns $\None$. In this case, we prove the first disjunction in the post-condition. Since $\absvalueList$ is reflected in $\xsqueue$, then we will be able to conclude that $\absvalueList$ is empty, and since we haven't modified the queue, we can create $\isqueueseq(\vq, \absvalueList, \Qg)$ using the same resources we got from the pre-condition.
-
-\textbf{$\xsqueue$ is not empty}: In this case, we can conclude that there must be some node $\nodeheadnext$, which is the first node in $\xsqueue$. I.e. $\xsqueue = \xsqueue' \catenate [\nodeheadnext]$. We can thus use the $\isLL$ predicate to conclude that $\nodehead$ must point to $\nodeheadnext$. Hence the else branch will be taken. Since $\nodeheadnext$ is part of the linked list, then $\isLL$ tells us it has the node-like structure, allowing us to extract its value in the first line of the else branch.\\
-In the next line, we make the head pointer, $\lochead$ point to $\nodeheadnext$, and we have the resource to do this through $\isqueueseq(\vq, \absvalueList, \Qg)$.\\
-Finally, we release the lock and return the value we got from $\nodeheadnext$. We must now prove the post-condition, and this time we prove the second disjunct. Since $\absvalueList$ is reflected in $\xsqueue$, then it must also be the case that $\absvalueList$ is non-empty, and it has a first element, $\absvalue$, which is related to the first element of $\xsqueue$, i.e. $\nodeheadnext$. This allows us to conclude that the returned value ($\nVal{\nodeheadnext}$) is exactly $\absvalue$, but wrapped in a $\Some$, as we had to prove.
-Finally, we must prove $\isqueueseq(\vq, \absvalueList', \Qg)$, where $\absvalueList'$ is $\absvalueList$ but with $\absvalue$ removed. For the existentials, we pick the same values we got from the precondition, with the exception of $\xsqueue$ and $\nodehead$. For $\xsqueue$ we pick the same $\xsqueue$ we got from the precondition, but with the first element, $\nodeheadnext$ removed. By doing this, $\xsqueue$ will be reflexed in $\absvalueList'$. We pick the $\nodeheadnext$ as the head node, which we have obtained that $\lochead$ points to. With these choices, we can prove the predicate.
+\textbf{$\xsqueue$ is not empty}: In this case, we can conclude that there must be some node $\nodeheadnext$, which is the first node in $\xsqueue$. I.e.
+\begin{equation}
+  \xsqueue = \xsqueue' \catenate [\nodeheadnext]\label{TLMSQ:spec:seq:proof:deq:xsqueue}
+\end{equation}
+We can thus use the $\isLL$ predicate to conclude that $\nodehead$ must point to $\nodeheadnext$. Hence the ``else'' branch will be taken, so we step to line \ref{TLD:val}. Since $\nodeheadnext$ is part of the linked list, it must be a node, allowing us to extract its value $\nVal{\nodeheadnext}$ in the first line of the else branch.\\
+We step to line \ref{TLD:shs} which swings the head pointer, $\lochead$ to $\nodeheadnext$. We perform these steps using \ref{TLMSQ:spec:seq:proof:deq:queue} and \ref{TLMSQ:spec:seq:proof:deq:head}, which then gives us $\lochead \mapsto \nIn{\nodeheadnext}$.\\
+Finally, we release the lock on line \ref{TLD:re2}, giving up $\locked(\Qg.\ghlock)$ and return the value: $\nVal{\nodeheadnext}$.\\
+We must now prove the post-condition with $\valB = \nVal{\nodeheadnext}$, and this time we prove the second disjunct. From \ref{TLMSQ:spec:seq:proof:deq:rel} and \ref{TLMSQ:spec:seq:proof:deq:xsqueue} we can deduce
+\begin{align}
+  &\absvalueList = \absvalueList' \catenate [\nodeval]\label{TLMSQ:spec:seq:proof:deq:absval}\\
+  &\projval(\xsqueue') = \wrapsome(\absvalueList')\label{TLMSQ:spec:seq:proof:deq:rel'}\\
+  &\nVal{\nodeheadnext} = \Some{\nodeval}\label{TLMSQ:spec:seq:proof:deq:val}
+\end{align}
+\ref{TLMSQ:spec:seq:proof:deq:absval} and \ref{TLMSQ:spec:seq:proof:deq:val} proves the first part of the post-condition. What remains is to show $\isqueueseq(\vq, \absvalueList', \Qg)$. For the existentials, we pick $\xsqueue'$ as the queue and $\nodeheadnext$ as the head node. The rest are similar to the variables we got from the pre-condition. With these choices, we can prove the predicate using the resources we have established.
 \end{proof}
 
 \chapter{Concurrent Specification}
