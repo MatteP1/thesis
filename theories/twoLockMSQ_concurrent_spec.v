@@ -286,7 +286,7 @@ Proof.
     by iApply n_in_equal.
   }
   iDestruct "HisLL_xs" as "[Hxtail_to_none _]".
-  wp_store.
+  wp_store. (* Linearisation Point *)
   iMod (pointsto_persist with "Hxtail_to_none") as "#Hxtail_to_xnew".
   iDestruct "Hl_tail" as "[Hl_tail1 Hl_tail2]".
   set xs_new := x_new :: xs.
@@ -424,7 +424,7 @@ Proof.
   destruct (ll_case_first xs_queue) as [->|[x_head_next [xs_queue' ->]]].
   - (* Queue is empty. *)
     iDestruct "HisLL_xs" as "[Hxhead_to_none _]".
-    wp_load.
+    wp_load. (* Linearisation Point *)
     iModIntro.
     (* Close in Static / Enqueue *)
     iSplitL "Hl_head HToknD Htail Hxhead_to_none".
@@ -486,13 +486,14 @@ Proof.
     iCombine "Hl_head1 Hl_head2" as "Hl_head" gives "[_ %Hhead_eq]".
     rewrite dfrac_op_own Qp.half_half.
     subst.
-    wp_store.
     iPoseProof (isLL_and_chain with "HisLL_xs") as "[HisLL_xs #HisLL_chain_xs]".
-    iAssert (⌜x_head'' = x_head⌝)%I as "->".
+    iAssert (▷⌜x_head'' = x_head⌝)%I as ">->".
     {
+      iNext.
       iPoseProof (isLL_chain_node xs_queue x_head'' xs_old with "[HisLL_chain_xs]") as "#Hxhead''_node"; first done.
       by iApply n_in_equal.
     }
+    wp_store. (* Linearisation Point *)
     (* Sync up xs_queue *)
     destruct (ll_case_first xs_queue) as [->|[x_head_next' [xs_queue' ->]]].
     { (* Impossible case. xs_queue must contain at least one element. *)
@@ -524,7 +525,7 @@ Proof.
       iNext.
       iApply queue_invariant_equiv_simple.
       iExists xs_v'; iFrame "HAll_xs_val_rest".
-      iExists (xs_queue' ++ [x_head_next] ++ [x_head] ++ xs_old), xs_queue', ([x_head] ++ xs_old), x_head_next, x_tail; iFrame.
+      iExists (xs_queue' ++ [x_head_next] ++ (x_head :: xs_old)), xs_queue', (x_head :: xs_old), x_head_next, x_tail; iFrame.
       do 2 (iSplit; first done).
       iLeft.
       iFrame.

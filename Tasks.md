@@ -98,7 +98,7 @@
 - [x] Mention how to compile the files (via _CoqProject and make)
 
 - [x] Fix notation overload in Coq. Maybe just use the Q_g.g_abst => xs notation everywhere
-- [ ] Make Twolock Hocap a hocap queue
+- [ ] Make Twolock Hocap a Hocap queue
 - [ ] Make derivations of concurrent and sequential independent of implementation
   - [ ] Update overview of files in report
 
@@ -108,8 +108,8 @@
 - [x] Add lemmas in sections when proving initialise, enqueue, and dequeue, showing exactly what we are proving (see lock-free proof outline).
 - [ ] Add isLL lemmas in appendix
 - [ ] Refer to nIn-equal lemma in proofs
-- [ ] change null / null node / ... to None
-- [ ] Consider not using the term "sentinel"
+- [x] change null / null node / ... to None
+- [x] Consider not using the term "sentinel"
 - [x] change "x" to ``x'', and similarly for 'x'
 - [ ] Decide on name/notation for Qgnames (including SeqQgnames and ConcQgnames). Maybe \mathcal(G)_{\text{seq}}?
 - [x] Center figures on page (not on line)
