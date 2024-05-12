@@ -117,6 +117,7 @@
 - [ ] Rewrite some of the proofs for two-lock
 - [ ] Refer to line numbers in proofs for two-lock
 - [ ] Format the forall intros in lemmas (and definitions) better.
+- [ ] Consider changing is_queue to isQueue (and similarly for is_queue_seq and is_queue_conc)
 
 - [x] fix readme
   - [x] formatting

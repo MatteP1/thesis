@@ -366,8 +366,11 @@ The later modality adds a notion of step indexing to Iris propositions. This ste
 
 \subsection{Resource Algebra}
 \todo{Introduce the idea}
+\todo{Validity}
 \todo{introduce $\mtimes$ and $\mincl$}
-\todo{tying them into the logic (own-allocate own-op, ...)}
+\todo{tying them into the logic}
+  \todo{also ghost names}
+  \todo{own-allocate own-op, own-valid...}
 \todo{mention that points-to predicate is also a resource algebra}
 \todo{composing resource algebras}
 \todo{we introduce the resource algebras we use at the point of use}
@@ -434,7 +437,7 @@ In this chapter, we give an implementation of the blocking version of the \msq, 
 
 The underlying data structure making up the queue is a singly-linked list. The linked-list will always contain at least one element, called the \emph{head} node, marking the beginning of the queue. Note that the head node is itself not part of the queue, but all nodes following it are. The queue keeps a head pointer ($\lochead$) which always points to the head node, and a tail pointer ($\loctail$) which points to some node in the linked list, denoted the tail node.
 
-In my implementation, a node is a triple $(\locinM{i}, \nodevalM{i}, \locoutM{i})$ satisfying that location $\locinM{i}$ points to the pair $(\nodevalM{i}, \locoutM{i})$. Here, $\nodevalM{i}$ either contains the value of the node $\absvalue_i$ wrapped in a $\Some$ (i.e. $\nodevalM{i} = \Some \absvalue_i$) or it contains $\None$. $\locoutM{i}$ either points to $\None$ which represents the null pointer, or to the next node in the linked list. When we say that a location $\loc$ points to a node $(\locinM{i}, \nodevalM{i}, \locoutM{i})$, we mean that $\loc \mapsto \locinM{i}$. Hence, if we have two adjacent nodes $(\locinM{i}, \nodevalM{i}, \locoutM{i})$, $(\locinM{i+1}, \nodevalM{i+1}, \locoutM{i+1})$ in the linked list, then we have the following structure: $\locinM{i} \mapsto (\nodevalM{i}, \locoutM{i})$, $\locoutM{i} \mapsto \locinM{i+1}$, and $\locinM{i+1} \mapsto \nodevalM{i+1}, \locoutM{i+1}$.
+In my implementation, a node is a triple $(\locinM{i}, \nodevalM{i}, \locoutM{i})$ satisfying that location $\locinM{i}$ points to the pair $(\nodevalM{i}, \locoutM{i})$. Here, $\nodevalM{i}$ either contains the value of the node $\absvalue_i$ wrapped in a $\Some$ (i.e. $\nodevalM{i} = \Some \absvalue_i$) or it is $\None$. $\locoutM{i}$ either points to $\None$ which represents the null pointer, or to the next node in the linked list. When we say that a location $\loc$ points to a node $(\locinM{i}, \nodevalM{i}, \locoutM{i})$, we mean that $\loc \mapsto \locinM{i}$. Hence, if we have two adjacent nodes $(\locinM{i}, \nodevalM{i}, \locoutM{i})$, $(\locinM{i+1}, \nodevalM{i+1}, \locoutM{i+1})$ in the linked list, then we have the following structure: $\locinM{i} \mapsto (\nodevalM{i}, \locoutM{i})$, $\locoutM{i} \mapsto \locinM{i+1}$, and $\locinM{i+1} \mapsto \nodevalM{i+1}, \locoutM{i+1}$.
 For a given triple $\node = (\locin, \nodeval, \locout)$, we introduce the following notation:
 \begin{align*}
   &\nIn{\node} = \locin& &\nVal{\node} = \nodeval& &\nOut{\node} = \locout
@@ -454,13 +457,13 @@ $\initialise$ will first create a single node -- the head node -- marking the st
 
 Figure \ref{TLMSQ:impl:figure:init} illustrates the structure of the queue after initialisation. Note that one of the pointers is coloured blue. This represents a \emph{persistent} pointer; a pointer that will never be updated again. All ``in'' pointers $\locinM{i}$, are persistent, meaning that, once created, they will only ever point to $(\nodevalM{i}, \locoutM{i})$. We shall use the notation $\loc \mapsto^{\persistently} \val$ (introduced in \cite{DBLP:conf/cpp/VindumB21}) to mean that $\loc$ points persistently to $\val$.
 
-Note that in the original specification, a queue is a pointer to a 4-tuple $(\lochead, \loctail, \Hlock, \Tlock)$. Since \heaplang doesn't support 4-tuples, we instead represent the queue as a pointer to a pair of pairs: $((\lochead, \loctail), (\Hlock, \Tlock))$.
+Note that in the original specification, a queue is a pointer to a 4-tuple $(\lochead, \loctail, \Hlock, \Tlock)$. Since \heaplang doesn't support 4-tuples, we instead represent the queue as a pointer to a pair of pairs: $\left((\lochead, \loctail), (\Hlock, \Tlock)\right)$.
 
 \subsection{Enqueue}
 
 To enqueue a value, we must create a new node, append it to the underlying linked-list, and swing the tail pointer to this new node. These three operations are depicted in figure \ref{TLMSQ:impl:figure:enqueue}.
 
-$\enqueue$ takes as argument the value to be enqueued and creates a new node containing this value (corresponding to figure \ref{TLMSQ:impl:figure:enqueue:a}). This creation doesn't interact with the underlying queue data-structure, hence why we don't acquire $\Tlock$ first. After creating the new node, we must make the last node in the linked list point to it. Since this operation interacts with the queue, we first acquire $\Tlock$. Once we obtain the lock, we make the last node in the linked list point to our new node (figure \ref{TLMSQ:impl:figure:enqueue:b}). Following this, we swing $\loctail$ to the new last node in the linked list (figure \ref{TLMSQ:impl:figure:enqueue:c}).
+$\enqueue$ takes as argument the value to be enqueued and creates a new node containing this value (corresponding to figure \ref{TLMSQ:impl:figure:enqueue:a}). This creation doesn't interact with the underlying queue data-structure, hence why we don't acquire $\Tlock$ first. After creating the new node, we must make the last node in the linked list point to it. Since this operation interacts with the queue, we first acquire $\Tlock$. Once we obtain the lock, we make the last node in the linked list point to our new node (figure \ref{TLMSQ:impl:figure:enqueue:b}). Following this, we swing $\loctail$ to the newly inserted node (figure \ref{TLMSQ:impl:figure:enqueue:c}).
 
 Figure \ref{TLMSQ:impl:figure:enqueue} also illustrates when pointers become persistent; once the previous last node is updated to point to the newly inserted node, that pointer will never be updated again, hence becoming persistent.
 
@@ -472,7 +475,7 @@ Since all of these operations interact with the queue, we shall only perform the
 
 Figure \ref{TLMSQ:impl:figure:dequeue} illustrates running dequeue on a non-empty queue. Note that the only change is that the head pointer is swung to the next node in the linked list; the old head node is not deleted, it just becomes unreachable from the head pointer. In this way, the linked list only ever grows.
 
-\begin{figure}[h]
+\begin{figure}
   \centering
   \begin{adjustbox}{center}
   \begin{tikzpicture}[
@@ -519,7 +522,7 @@ Figure \ref{TLMSQ:impl:figure:dequeue} illustrates running dequeue on a non-empt
 \end{figure}
 
 
-\begin{figure}[h]
+\begin{figure}
   \centering
   \begin{subfigure}{\textwidth}
     \begin{adjustbox}{center}
@@ -681,7 +684,7 @@ Figure \ref{TLMSQ:impl:figure:dequeue} illustrates running dequeue on a non-empt
 \end{figure}
 
 
-\begin{figure}[h]
+\begin{figure}
   \centering
   \begin{adjustbox}{center}
   \begin{tikzpicture}[
@@ -735,8 +738,8 @@ Figure \ref{TLMSQ:impl:figure:dequeue} illustrates running dequeue on a non-empt
 \begin{minted}[linenos=true, escapeinside=||,mathescape=true]{ocaml}
 |$\label{TLI:fun}$|  |$ \initialise \eqdef $|
 |$\label{TLI:nod}$|    |$ \Let node = \Ref(\None, \Ref(\None)) in $|
-|$\label{TLI:hlo}$|    |$ \Let \Hlockvar = newlock \TT in $|
-|$\label{TLI:tlo}$|    |$ \Let \Tlockvar = newlock \TT in $|
+|$\label{TLI:hlo}$|    |$ \Let \Hlockvar = \newLock \TT in $|
+|$\label{TLI:tlo}$|    |$ \Let \Tlockvar = \newLock \TT in $|
 |$\label{TLI:que}$|    |$ \Ref((\Ref(node), \Ref(node)), (\Hlockvar, \Tlockvar)) $|
 \end{minted}
 
@@ -771,7 +774,7 @@ Figure \ref{TLMSQ:impl:figure:dequeue} illustrates running dequeue on a non-empt
 \section{Defining a Sequential Specification}
 \label{TLMSQSEQ:section:sequential-spec}
 
-Let us first prove a specification for the \tlmsq in the simple case where we don't allows for concurrency. In this case, we know that only a single thread will interact with the queue at any given point in a sequential manner. The specification we give will track the exact contents of the queue. To this end, we shall define the abstract state of the queue, denoted $\absvalueList$ as a list of \heaplang values. I.e. $\absvalueList : \List ~ \Val$. We adopt the convention that enqueueing an element is done by adding it to the front of the list, and dequeueing removes the last element of the list (if such an element exists). The reason for this choice is purely technical.
+Let us first prove a specification for the \tlmsq in the simple case where we don't allow for concurrency. In this case, we know that only a single thread will interact with the queue at any given point in a sequential manner. The specification we give will track the exact contents of the queue. To this end, we shall define the abstract state of the queue, denoted $\absvalueList$ as a list of \heaplang values. I.e. $\absvalueList : \List ~ \Val$. We adopt the convention that enqueueing an element is done by adding it to the front of the list, and dequeueing removes the last element of the list (if such an element exists). The reason for this choice is purely technical.
 
 Since the queue uses two locks, we will need two ghost names; one for each lock (see specification of lock). For this specification, these are the only two ghost names we will need. However, for the later specifications, we will use more resource algebra, and will need more ghost names. Thus, to ease notation, we shall define the type ``$\SeqQgnames$'' whose purpose is to keep track of the ghost names used for a specific queue. Since we only have two ghost names for this specification, elements of $\SeqQgnames$ will simply be pairs of ghost names. For an element $\Qg \in \SeqQgnames$, the first element of the pair, written $\Qg.\ghlock$, will contain the ghost name for the head lock, and the second element, $\Qg.\gtlock$, the ghost name for the tail lock.
 
@@ -790,7 +793,7 @@ The proposition $\isqueueseq(\vq, \absvalueList, \Qg)$ captures that the value $
 \section{Sequential Queue Predicate}
 \label{TLMSQSEQ:section:seq-queue-pred}
 
-To prove the specification we must give a specific $\isqueueseq$ predicate. To help guide us in designing this, we give the following observations about the behaviour of the implementation.
+To prove the specification, we must give a specific $\isqueueseq$ predicate. To help guide us in designing this, we give the following observations about the behaviour of the implementation.
 \begin{enumerate}
   \item\label{TLMSQ:insights:head} The head node always points to the first node in the queue (or $\None$ if the queue is empty).
   \item\label{TLMSQ:insights:tail} The tail node is always either the last or second last node in the linked list.
@@ -799,15 +802,16 @@ To prove the specification we must give a specific $\isqueueseq$ predicate. To h
 
 Observation \ref{TLMSQ:insights:tail} captures the fact that, while enqueueing, a new node is first added to the linked list, and then later the tail pointer is updated to point to the newly added node. Since only one thread can enqueue a node at a time (due to the lock), then the tail pointer will only ever point to the last or second last node. However, in a sequential setting, the tail will always appear to point to the last node, as no one can inspect the queue while the tail points to the second last.
 
-Insight \ref{TLMSQ:insights:persistent} means that we can mark all pointers in the queue (except the pointer to the null node) as persistent. This is technically not needed in the sequential case, but we will incorporate it now, as we will need it in the concurrent setting anyway.
+Insight \ref{TLMSQ:insights:persistent} means that we can mark all pointers in the queue, except the pointer to $\None$, as persistent. This is technically not needed in the sequential case, but we will incorporate it now, as we will need it in the concurrent setting anyway.
 
+With these points in mind, we give our definition of the queue predicate for the sequential specification and explain it afterwards.
 \begin{definition}[\tlmsq{} - $\isqueueseq$ Predicate]\label{TLMSQ:spec:seq:isqueueseq}
 \begin{align*}
   \isqueueseq(\vq, \absvalueList, \Qg) \eqdef
   &\Exists \locqueue, \lochead, \loctail \in \Loc . \Exists \Hlock, \Tlock \in \Val . \\
   &\vq = \locqueue \star \locqueue \mapsto^{\persistently} ((\lochead, \loctail), (\Hlock, \Tlock)) \star\\
   &\Exists \xsqueue \in \List ~ (\Loc \times \Val \times \Loc) . \Exists \nodehead, \nodetail \in (\Loc \times \Val \times \Loc) .\\
-	&\projval \xsqueue = \wrapsome \absvalueList \star\\
+	&\projval(\xsqueue) = \wrapsome(\absvalueList) \star\\
 	&\isLL (\xsqueue \catenate [\nodehead]) \star\\
 	&\lochead \mapsto \nIn{\nodehead} \star\\
 	&\loctail \mapsto \nIn{\nodetail} \star \isLast(\nodetail, (\xsqueue \catenate [\nodehead])) \star\\
@@ -816,8 +820,10 @@ Insight \ref{TLMSQ:insights:persistent} means that we can mark all pointers in t
 \end{align*}
 \end{definition}
 
-This $\isqueueseq$ predicate states that the value $\vq$ is a location, which persistently points to the structure containing the head and tail pointers, and the two locks. It also connects the abstract state $\absvalueList$ with the concrete state by stating that if you strip away the locations in $\xsqueue$ (achieved by $\projval$) and wrap the values in the abstract state $\absvalueList$ in $\Some$ (achieved by $\wrapsome$), then the lists become equal.\\
-Next, the predicate specifies the concrete state. There is some head node $\nodehead$, which the head points to. This head node and the nodes in $\xsqueue$ form the underlying linked list (specified using the $\isLL$ predicate below). There is also a tail node, which is the last node in the linked list, and the tail points to this node. The proposition $\isLast(\node, \xsc)$ simply asserts the existence of some $\xsc'$, so that $\xsc = \node :: \xsc'$.\\
+This $\isqueueseq$ predicate states that the value $\vq$ is a location, which persistently points to the structure containing the head and tail pointers, and the two locks. It also connects the abstract state $\absvalueList$ with the concrete state by stating that if you strip away the locations in $\xsqueue$ (achieved by $\projval$) and wrap the values in the abstract state $\absvalueList$ in $\Some$ (achieved by $\wrapsome$), then the lists become equal.
+
+Next, the predicate specifies the concrete state. There is some head node $\nodehead$, which the head points to. This head node and the nodes in $\xsqueue$ form the underlying linked list (specified using the $\isLL$ predicate below). There is also a tail node, which is the last node in the linked list, and the tail points to this node. The proposition $\isLast(\node, \xsc)$ simply asserts the existence of some $\xsc'$, so that $\xsc = \node :: \xsc'$. 
+
 Next, we have the $\isLock$ predicate for our two locks. Since we are in a sequential setting, the locks are superfluous, hence they simply protect $\TRUE$.
 
 The $\isLL$ predicate essentially creates the structure seen in the examples of section \ref{TLMSQ:section:implementation}. It is defined in two steps. Firstly, we create all the persistent pointers in the linked list using the $\isLLchain$ predicate. Note that this in effect makes $\isLLchain(\xsc)$ persistent for all $\xsc$.
@@ -845,7 +851,7 @@ For instance, if we wanted to capture the linked list in figure \ref{TLMSQ:impl:
 \end{align*}
 Note how this matches the structure of the linked list in figure \ref{TLMSQ:impl:figure:enqueue:c}.
 
-The proofs require us manipulate specific $\isLL$ predicates quite a bit -- appendix \todo{Add appendix and refer to it} shows the specific lemmas we will use, but the proof outlines will generally not mention the lemmas explicitly.
+The proofs require us manipulate specific $\isLL$ propositions quite a bit -- appendix \todo{Add appendix and refer to it} shows the specific lemmas we will use, but the proof outlines will generally not mention the lemmas explicitly.
 
 \section{Proof Outline}
 \label{TLMSQSEQ:section:proof-outline}
@@ -857,9 +863,9 @@ The proofs require us manipulate specific $\isLL$ predicates quite a bit -- appe
   \end{equation*}
 \end{lemma}
 \begin{proof}
-Proving the initialise spec amounts to stepping through the code, giving us the required resources, and then using these to create an instance of $\isqueueseq$ with the obtained resources. To begin with, we step through the lines creating the first node $\nodeM{1}$, giving us locations $\locinM{1}$, $\locoutM{1}$ with $\locoutM{1} \mapsto \None$ and $\locinM{1} \mapsto (\None, \locoutM{1})$. We can then update the latter points-to predicate to become persistent, giving us $\locinM{1} \mapsto^{\persistently} (\None, \locoutM{1})$. We then step to the creation of the two locks, where we shall use the newlock specification asserting that the locks should protect $\TRUE$. This gives us two ghost names, $\gtlock$, $\gtlock$, which we will collect in a $\SeqQgnames$ pair, $\Qg$.
-Next, we step through the allocations of the head, tail, and queue, which gives us locations $\lochead$, $\loctail$, $\locqueue$, such that both $\lochead$ and $\loctail$ point to node $\nodeM{1}$, and such that $\locqueue$ points to the structure containing the head, tail, and two locks. This last points to predicate we update to become persistent.
-With this, we now have all the resources needed to prove the post-condition: $\Exists \Qg . \isqueueseq(\locqueue, [], \Qg)$. Proving this follows by a sequence of framing away the resources we obtained and instantiating existentials with the values we got above. Most noteworthy, we pick the empty list for $\xsqueue$, and node $\nodeM{1}$ for $\nodehead$ and $\nodetail$.
+Proving the initialise specification amounts to stepping through the code, giving us the required resources, and then using these to create an instance of $\isqueueseq$ with the obtained resources. To begin with, we step through line \ref{TLI:nod} which creates the first node $\nodeM{1} = (\locinM{1}, \None, \locoutM{1})$ with $\locoutM{1} \mapsto \None$ and $\locinM{1} \mapsto (\None, \locoutM{1})$. We can then update the latter points-to proposition to become persistent, giving us $\locinM{1} \mapsto^{\persistently} (\None, \locoutM{1})$. Next, on lines \ref{TLI:hlo} and \ref{TLI:tlo}, we create the two locks. We use the specification for $\newLock$ for each of its invocations. Both times, we specify that the lock should protect $\TRUE$. This gives us two ghost names, $\ghlock$, $\gtlock$, which we will collect in a $\SeqQgnames$ pair, $\Qg$.
+Finally, we step through the allocations of the head, tail, and queue pointers on line \ref{TLI:que}. This gives us locations $\lochead$, $\loctail$, $\locqueue$, such that both $\lochead$ and $\loctail$ point to node $\nodeM{1}$, and such that $\locqueue$ points to the structure containing the head and tail pointers, and the two locks. This last points to predicate we update to become persistent.
+With this, we now have all the resources needed to prove the post-condition. Proving this follows by a sequence of framing away the resources we obtained and instantiating existentials with the values we got above. Most noteworthy, we pick the empty list for $\xsqueue$, and node $\nodeM{1}$ for $\nodehead$ and $\nodetail$.
 \end{proof}
 
 \subsubsection{Enqueue}
@@ -869,16 +875,21 @@ With this, we now have all the resources needed to prove the post-condition: $\E
   \end{equation*}
 \end{lemma}
 \begin{proof}
-\todo{add line numbers to code, and refer to them in proof}
-For enqueue, we get in our pre-condition $\isqueueseq(\vq, \absvalueList, \Qg)$, and we wish to show that, if we run $\enqueue \ \vq \ \absvalue$, then we will get $\isqueueseq(\vq, (\absvalue :: \absvalueList), \Qg)$. The proposition $\isqueueseq(\vq, \absvalueList, \Qg)$ gives us all the resources we will need to step through the code.
-Firstly, we create a new node, node $\nodenew$, with $\nVal{\nodenew} = \Some \absvalue$.
-We then have to acquire the lock, which will just give us $\TRUE$.
+We assume the pre-condition $\isqueueseq(\vq, \absvalueList, \Qg)$ which tells us that $\vq$ is some location $\locqueue$, and in particular, we have following:
+\begin{align}
+  &\locqueue \mapsto^{\persistently} ((\lochead, \loctail), (\Hlock, \Tlock))\label{TLMSQ:spec:seq:proof:queue}\\
+  &\projval(\xsqueue) = \wrapsome(\absvalueList)\label{TLMSQ:spec:seq:proof:rel}\\
+  &\nodetail \mapsto \None \star \isLLchain (\xsqueue \catenate [\nodehead])\label{TLMSQ:spec:seq:proof:isLL}\\
+  &\loctail \mapsto \nIn{\nodetail} \star \isLast(\nodetail, (\xsqueue \catenate [\nodehead]))\label{TLMSQ:spec:seq:proof:tail}\\
+  &\isLock(\Qg.\gtlock, \Tlock, \TRUE)\label{TLMSQ:spec:seq:proof:tlock}
+\end{align} 
+We proceed to step into the enqueue function. Firstly, on line \ref{TLE:nod}, we create a new node $\nodenew$, with $\nVal{\nodenew} = \Some \absvalue$. Next, on line \ref{TLE:acq} we acquire the tail lock. We step through the dereference and the projections using \ref{TLMSQ:spec:seq:proof:queue}. To acquire the lock we use the $\acquire$ specification with \ref{TLMSQ:spec:seq:proof:tlock}. This gives us $\locked(Qg.\gtlock)$ and $\TRUE$.
 
-The next line adds node $\nodenew$ to the linked list, by first finding the tail, from the queue pointer $\locqueue$, and then finding the node that the tail points to, denoted $\nodetail$, and finally writing updating the out location of $\nodetail$ to point to $\nodenew$. The resources needed to do this are all described in $\isqueueseq(\vq, \absvalueList, \Qg)$. Firstly, it tells us that $\locqueue$ points to the structure containing $\loctail$. Secondly, it tells us that $\loctail$ points to $\nodetail$, which is the last node in the linked list ($\xsqueue \catenate [\nodehead]$). Thirdly, since we know that $\nodetail$ is the last node in the linked list, then by the $\isLL$ predicate, we know that $\nodetail$ points to $\None$ and that it has the node-like structure described by $\isLLchain$. This is all we need to step through the line, adding $\nodenew$ to the linked list. After performing the write, we then get that $\nodetail$ points to $\nodenew$, instead of $\None$. We make this points-to predicate persistent.
+Line \ref{TLE:add} adds node $\nodenew$ to the linked list. We first use \ref{TLMSQ:spec:seq:proof:queue} to step to the dereference of $\loctail$. From \ref{TLMSQ:spec:seq:proof:tail}, we know the dereference results in $\nIn{\nodetail}$. Because $\nodetail$ is in the linked list, we can use \ref{TLMSQ:spec:seq:proof:isLL} to conclude that $\nodetail$ is a node, and hence we can perform the load and the projection to get to the final store operation: $\nOut{\nodetail} \gets \nIn{\nodenew}$. Using the points-to proposition from \ref{TLMSQ:spec:seq:proof:isLL}, we perform the store, which in turn gives us $\nOut{\nodetail} \mapsto \nIn{\nodenew}$. We make this persistent and combine it with the $\isLLchain$ proposition from \ref{TLMSQ:spec:seq:proof:isLL} to conclude $\isLL(\nodenew :: \xsqueue \catenate [\nodehead])$.
 
-The next line swings the tail to $\nodenew$. As describe above, we already know that $\loctail$ points to $\nodetail$, so we have the required resources to perform the write. Afterwards, we get that $\loctail$ points to $\nodenew$.
+The next line (line \ref{TLE:sts}) swings the tail pointer to $\nodenew$. \ref{TLMSQ:spec:seq:proof:tail} and \ref{TLMSQ:spec:seq:proof:tail} gives us all the required resources to step through the code and perform the store. Afterwards, we get $\loctail \mapsto \nIn{\nodenew}$.
 
-Finally, we release the lock using the release specification (and we simply give back $\TRUE$), and the only thing left is to prove the postcondition: $\isqueueseq(\vq, (\absvalue :: \absvalueList), \Qg)$. For the existentials, we shall pick the ones we got from the precondition, with the exception for $\xsqueue$ and $\nodetail$. For $\xsqueue$, we shall use the same $\xsqueue$ we got from the precondition, but with $\nodenew$ cons'ed to it, and for $\nodetail$, we chose the new tail node: $\nodenew$. With these choices, proving $\isqueueseq(\vq, (\absvalue :: \absvalueList), \Qg)$ is fairly straightforward.
+Finally, we get to line \ref{TLE:rel} which releases the lock. We use the specification for $\release$, giving up $\locked(Qg.\gtlock)$. The only thing left is to prove the postcondition: $\isqueueseq(\vq, (\absvalue :: \absvalueList), \Qg)$. For the existentials, we pick $\nodenew :: \xsqueue$ as the queue, and as the tail node, we chose $\nodenew$. The remaining choices are similar to those we got from the pre-condition. With these choices, the remaining proof obligations become straightforward; we already have the required pointers and the $\isLL$ proposition. The relationship between the abstract and concrete states follows from $\nVal{\nodenew} = \Some \absvalue$ and \ref{TLMSQ:spec:seq:proof:rel}.
 \end{proof}
 
 \subsubsection{Dequeue}
@@ -888,6 +899,7 @@ Finally, we release the lock using the release specification (and we simply give
   \end{equation*}
 \end{lemma}
 \begin{proof}
+\todo{Rewrite and refer to lines}
 For $\dequeue \ \vq$, our precondition is $\isqueueseq(\vq, \absvalueList, \Qg)$, and our post condition states that either the queue is empty, or there is a tail element which is returned by the function, and removed from the queue.
 
 Stepping through the function, we first do the superfluous acquire. Next, we get the head node $\nodehead$ through the queue pointer $\locqueue$. As described above for Enqueue, we get the resource to do this through $\isqueueseq(\vq, \absvalueList, \Qg)$. The $\isqueueseq$ predicate also tells us that $\nodehead$ is a node in the linked list (described by the $\isLL$ predicate), hence we can step through the code in the next line, which finds the node that $\nodehead$ is pointing to. Now, depending on whether or not the queue is empty, $\nodehead$ either points to $\None$, or some node $\nodeheadnext$. Thus, we shall perform a case analysis on $\xsqueue$.
@@ -951,7 +963,7 @@ Since we want $\isqueueconc$ to be persistent, then we cannot directly state the
     &\Exists \xsc, \xsqueue, \xsold, \nodehead, \nodetail . &&\text{(concrete state)}\\
     &\xsc = \xsqueue \catenate [\nodehead] \catenate \xsold \star\\
     &\isLL(\xsc) \star\\
-    &\projval \xsqueue = \wrapsome \absvalueList \star\\
+    &\projval(\xsqueue) = \wrapsome(\absvalueList) \star\\
     &(\\
     &\quad\quad\lochead \mapsto \nIn{\nodehead} \star \loctail \mapsto \nIn{\nodetail} \star \isLast(\nodetail, \xsc) \star &&\text{(\StaticState)}\\
     &\quad\quad \ToknEQg \star \ToknDQg \star \TokUpdatedQg\\
@@ -1445,7 +1457,7 @@ We proceed to define the invariant.
     &\xsc = \xsqueue \catenate [\nodehead] \star\\
     &\isLL(\xsc) \star\\
     &\isLast(\nodelast, \xsc)\\
-    &\projval \xsqueue = \wrapsome \absvalueList \star\\
+    &\projval(\xsqueue) = \wrapsome(\absvalueList) \star\\
     &\lochead \mapsto \nIn{\nodehead} \star\\
     &\loctail \mapsto \nIn{\nodetail} \star\\
     &\ap{\Qg.\ghead}{\nodehead} \star \ar{\nodehead}{\Qg.\gtail} \star\\
@@ -1667,7 +1679,7 @@ Indeed, in the Coq formalisations, we prove the Hocap-style specification for an
     &\Exists \xsc, \xsqueue, \xsold, \nodehead, \nodetail . &&\text{(concrete state)}\\
     &\xsc = \xsqueue \catenate [\nodehead] \catenate \xsold \star\\
     &\isLL(\xsc) \star\\
-    &\projval \xsqueue = \wrapsome \absvalueList \star\\
+    &\projval(\xsqueue) = \wrapsome(\absvalueList) \star\\
     &((\lochead \mapsto \nIn{\nodehead} \star \ToknDQg) \lor (\loctail \mapsto^{\frac{1}{2}} \nIn{\nodetail} \star \TokDQg)) \star\\
     &(\\
     &\quad(\loctail \mapsto \nIn{\nodetail} \star \isLast(\nodetail, \xsc) \star \ToknEQg \star \TokUpdatedQg) \lor \\
@@ -1687,7 +1699,7 @@ Indeed, in the Coq formalisations, we prove the Hocap-style specification for an
     &\Exists \xsc, \xsqueue, \xsold, \nodehead, \nodetail . &&\text{(concrete state)}\\
     &\xsc = \xsqueue \catenate [\nodehead] \catenate \xsold \star\\
     &\isLL(\xsc) \star\\
-    &\projval \xsqueue = \wrapsome \absvalueList \star\\
+    &\projval(\xsqueue) = \wrapsome(\absvalueList) \star\\
     &(\\
     &\quad\quad\lochead \mapsto \nIn{\nodehead} \star \loctail \mapsto \nIn{\nodetail} \star \isLast(\nodetail, \xsc) \star &&\text{(\StaticState)}\\
     &\quad\quad \ToknEQg \star \ToknDQg \star \TokUpdatedQg\\
