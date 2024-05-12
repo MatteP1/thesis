@@ -115,7 +115,9 @@
 - [x] Center figures on page (not on line)
 - [x] Make sure all node values are 'w' and queue values are 'v'
 - [ ] Rewrite some of the proofs for two-lock
-- [ ] Refer to line numbers in proofs for two-lock
+- [ ] Consider adding the specifications for the derivation proofs
+- [x] Refer to line numbers in proofs for two-lock
+- [ ] Check for correctness of line number references
 - [ ] Format the forall intros in lemmas (and definitions) better.
 - [ ] Consider changing is_queue to isQueue (and similarly for is_queue_seq and is_queue_conc)
 
