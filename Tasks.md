@@ -107,19 +107,20 @@
 - [x] Wrap proofs of initialise, enqueue, and dequeue in begin{proof}
 - [x] Add lemmas in sections when proving initialise, enqueue, and dequeue, showing exactly what we are proving (see lock-free proof outline).
 - [ ] Add isLL lemmas in appendix
-- [ ] Refer to nIn-equal lemma in proofs
+- [ ] Refer to nIn-equal lemma in lock-free proofs
 - [x] change null / null node / ... to None
 - [x] Consider not using the term "sentinel"
 - [x] change "x" to ``x'', and similarly for 'x'
 - [ ] Decide on name/notation for Qgnames (including SeqQgnames and ConcQgnames). Maybe \mathcal(G)_{\text{seq}}?
 - [x] Center figures on page (not on line)
 - [x] Make sure all node values are 'w' and queue values are 'v'
-- [ ] Rewrite some of the proofs for two-lock
-- [ ] Consider adding the specifications for the derivation proofs
+- [x] Rewrite some of the proofs for two-lock
+- [x] Consider adding the specifications for the derivation proofs
 - [x] Refer to line numbers in proofs for two-lock
 - [ ] Check for correctness of line number references
 - [ ] Format the forall intros in lemmas (and definitions) better.
 - [ ] Consider changing is_queue to isQueue (and similarly for is_queue_seq and is_queue_conc)
+- [ ] Proofread sequential and concurrent derivation section
 
 - [x] fix readme
   - [x] formatting
