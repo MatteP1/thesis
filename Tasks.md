@@ -118,9 +118,12 @@
 - [x] Consider adding the specifications for the derivation proofs
 - [x] Refer to line numbers in proofs for two-lock
 - [ ] Check for correctness of line number references
-- [ ] Format the forall intros in lemmas (and definitions) better.
+- [ ] Format the forall intros in lemmas (and definitions) better
 - [ ] Consider changing is_queue to isQueue (and similarly for is_queue_seq and is_queue_conc)
-- [ ] Proofread sequential and concurrent derivation section
+- [x] Proofread sequential and concurrent derivation section
+- [ ] refactor specification macros to take the forall quantified variables as input
+- [ ] Also make hocap viewshifts their own macros
+- [ ] Make the \Qg variables in derivations \Qgseq and \Qgconc
 
 - [x] fix readme
   - [x] formatting

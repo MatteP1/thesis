@@ -208,7 +208,7 @@
 
 \newcommand{\tlconcspecinit}{\hoare{\TRUE}{\initialise \ \TT}{\vq . \Exists \Qg. \isqueueconc(\Phi, \vq, \Qg)}}
 
-\newcommand{\tlconcspecenq}{\All \vq, \absvalue, \Qg. \hoare{\isqueueconc(\Phi,\vq,\Qg) \star \Phi(\absvalue)}{\enqueue \ \vq \ \absvalue}{\valB . \TRUE}}
+\newcommand{\tlconcspecenq}{\All \vq, \absvalue, \Qg. \hoare{\isqueueconc(\Phi, \vq, \Qg) \star \Phi(\absvalue)}{\enqueue \ \vq \ \absvalue}{\valB . \TRUE}}
 
 \newcommand{\tlconcspecdeq}{\All \vq, \Qg. \hoare{\isqueueconc(\Phi, \vq, \Qg)}{\dequeue \ \vq}{\nodeval . \nodeval = \None \lor (\Exists \absvalue. \nodeval = \Some \absvalue \star \Phi(\absvalue))}}
 
@@ -217,7 +217,7 @@
 
 \newcommand{\tlhocapspecenq}{\All \vq, \absvalue, \Qg, P, Q.
 \begin{array}[t]{l}
-\left(\All \absvalueList . \abstractstateauth{\Qg.\gabst}{\absvalueList} \star P \vs[\mask\setminus\Nl.i^\uparrow] \later \abstractstateauth{\Qg.\gabst}{\absvalue :: \absvalueList} \star Q \right)
+\left(\All \absvalueList . \abstractstateauth{\Qg.\gabst}{\absvalueList} \star P \vs[\mask\setminus\Nl.i^\uparrow] \later \abstractstateauth{\Qg.\gabst}{(\absvalue :: \absvalueList)} \star Q \right)
 \wand\\
 \hoare{\isqueue(\vq, \Qg) \star P}{\enqueue \ \vq \ \absvalue}{\valB . Q}
 \end{array}}
@@ -1102,7 +1102,7 @@ Following this, we step to line \ref{TLE:add}. Using \ref{TLMSQ:spec:conc:proof:
 As invariants can only be opened if the expression being considered is atomic, we use a bind rule to ``focus'' on the load of $\loctail$. We proceed to open the invariant, and since we have $\TokEQg$, we know that the queue is in state \StaticState or \DequeueState. In any case, we get that $\loctail \mapsto \nIn{\nodetail}$, for some $\nodetail$ which is the last node in the linked list. As $\nodetail$ is in the linked list, we further deduce that it is a node.\\
 We can now perform the load of $\loctail$ which results in $\nIn{\nodetail}$. We must now close the invariant. We split up the points-to predicate $\loctail \mapsto \nIn{\nodetail}$ in two, which leaves us with two of $\loctail \mapsto^{\frac{1}{2}} \nIn{\nodetail}$. We keep one of them, and use the other to close the invariant in the before case of state \EnqueueState or \BothState, depending on which state we opened the invariant into. By doing this, we give up $\TokEQg$, but we gain $\ToknEQg$ and $\TokAfterQg$.\\
 As $\nodetail$ was a node we can step to $\nOut{\nodetail} \gets \nIn{\nodenew}$. However, the points-to predicate concerning $\nOut{\nodetail}$ isn't persistent, and is hence inside the invariant. We thus have to open the invariant again. Since we have $\ToknEQg$ and $\TokAfterQg$, we know that we are in the before case of either state \EnqueueState or \BothState.\\
-The invariant hence gives us $\loctail \mapsto^{\frac{1}{2}} \nIn{\nodetail'}$ for some $\nodetail'$. However, since we kept $\loctail \mapsto^{\frac{1}{2}} \nIn{\nodetail}$, we can combine these, allowing us to conclude that $\nIn{\nodetail} = \nIn{\nodetail'}$. As both $\nodetail$ and $\nodetail$ are nodes, we apply \ref{lemma:nIn-equal} to conclude $\nodetail = \nodetail'$. This now gives us that $\nOut{\nodetail} \mapsto \None$, allowing us to perform the store. Thus, $\nodenew$ is added to the linked list, and this is a linearisation point. As such we must update the abstract state to reflect the change. We do this by closing the invariant with $\absvalue :: \absvalueList$ as the abstract state, where $\absvalueList$ is the abstract state we got when we opened the invariant. Note that we have $\Phi(\absvalue)$ (from \ref{TLMSQ:spec:conc:proof:enq:phiv}), hence we will be able to conclude $\AllP((\absvalue :: \absvalueList), \Phi)$. For the concrete state, we pick $\nodenew :: \xsc$, where $\xsc$ is the concrete state we got when we opened the invariant. We close the invariant in the after case of either state \EnqueueState or \BothState, giving up $\TokAfterQg$, and obtaining $\TokBeforeQg$.
+The invariant hence gives us $\loctail \mapsto^{\frac{1}{2}} \nIn{\nodetail'}$ for some $\nodetail'$. However, since we kept $\loctail \mapsto^{\frac{1}{2}} \nIn{\nodetail}$, we can combine these, allowing us to conclude that $\nIn{\nodetail} = \nIn{\nodetail'}$. As both $\nodetail$ and $\nodetail$ are nodes, we apply \ref{lemma:nIn-equal} to conclude $\nodetail = \nodetail'$. This now gives us that $\nOut{\nodetail} \mapsto \None$, allowing us to perform the store. Thus, $\nodenew$ is added to the linked list, and this is a linearisation point. As such we must update the abstract state to reflect the change. We do this by closing the invariant with $(\absvalue :: \absvalueList)$ as the abstract state, where $\absvalueList$ is the abstract state we got when we opened the invariant. Note that we have $\Phi(\absvalue)$ (from \ref{TLMSQ:spec:conc:proof:enq:phiv}), hence we will be able to conclude $\AllP((\absvalue :: \absvalueList), \Phi)$. For the concrete state, we pick $\nodenew :: \xsc$, where $\xsc$ is the concrete state we got when we opened the invariant. We close the invariant in the after case of either state \EnqueueState or \BothState, giving up $\TokAfterQg$, and obtaining $\TokBeforeQg$.
 
 We step to line \ref{TLE:sts}, which swings the tail pointer to $\nodenew$. Using \ref{TLMSQ:spec:conc:proof:enq:queue} we step to $\loctail \gets \nIn{\nodenew}$. However, to perform this store we must first know that $\loctail$ points to something. This resource is inside the invariant, so we open the invariant one last time. Due to having $\ToknEQg$ and $\TokBeforeQg$, we know that we are in the after case of state \EnqueueState or \BothState. This time we get $\loctail \mapsto^{\frac{1}{2}} \nodetail''$ for some $\nodetail''$, where $\nodetail''$ is the \textit{second} last node in the linked list. Hence there is some other node $\nodenew'$, which is the last node, with $\nodetail''$ pointing to it. As before, we use our half of the points-to predicate of $\loctail$ (i.e. $\loctail \mapsto^{\frac{1}{2}} \nIn{\nodetail}$) to get that $\nodetail'' = \nodetail$. Since $\nodetail$ points to $\nodenew$, and $\nodetail''$ points to $\nodenew'$, we can further conclude that $\nodenew = \nodenew'$. Thus, we can perform the store, which now gives us that $\loctail$ points to $\nodenew$; the last node in the linked list. With this, we can close the invariant in state \StaticState or \DequeueState, giving up $\ToknEQg$ and $\TokUpdatedQg$, and getting $\TokEQg$.\\
 Finally, on line \ref{TLE:rel}, we release the lock which we can do since we have $\TokEQg$ and $\locked(\Qg.\gtlock)$. The postcondition merely asserts $\TRUE$, so there is nothing left to prove.
@@ -1234,7 +1234,7 @@ As discussed, we must obtain $\abstractstateauth{\Qg.\gabst}{[]} \star \abstract
     \tlhocapspecenq
   \end{equation*}
 \end{lemma}
-We start by assuming the viewshift which allows us to update $P$ to $Q$ and $\abstractstateauth{\Qg.\gabst}{\absvalueList}$ to $\abstractstateauth{\Qg.\gabst}{\absvalue :: \absvalueList}$, for any $\absvalueList$. The only real change from the previous proof happens the second time we open the invariant; the first and third times, the abstract state doesn't change, hence we simply frame away the newly added authoritative fragment, and continue as we did before. The second time we open the invariant is on line \ref{TLE:add}, around the expression that adds the newly created node, $\nodenew$, to the linked list. When opening the invariant, we now get $\abstractstateauth{\Qg.\gabst}{\absvalueList}$. And as before, we also get all the resources to match up variables and step through the code, updating the concrete state. To close the invariant, we must make the same choice of abstract state as we did previously: $\absvalue :: \absvalueList$. This, however, requires us to obtain $\abstractstateauth{\Qg.\gabst}{\absvalue :: \absvalueList}$. However, since we have $\abstractstateauth{\Qg.\gabst}{\absvalueList}$ and $P$ (from the pre-condition), we can apply the viewshift to obtain it, along with $Q$. This then allows us to close the invariant, and the proof proceeds as previously. At the end, we must now additionally prove the post-condition $Q$, but this is no issue as we obtained that from the viewshift.
+We start by assuming the viewshift which allows us to update $P$ to $Q$ and $\abstractstateauth{\Qg.\gabst}{\absvalueList}$ to $\abstractstateauth{\Qg.\gabst}{(\absvalue :: \absvalueList)}$, for any $\absvalueList$. The only real change from the previous proof happens the second time we open the invariant; the first and third times, the abstract state doesn't change, hence we simply frame away the newly added authoritative fragment, and continue as we did before. The second time we open the invariant is on line \ref{TLE:add}, around the expression that adds the newly created node, $\nodenew$, to the linked list. When opening the invariant, we now get $\abstractstateauth{\Qg.\gabst}{\absvalueList}$. And as before, we also get all the resources to match up variables and step through the code, updating the concrete state. To close the invariant, we must make the same choice of abstract state as we did previously: $(\absvalue :: \absvalueList)$. This, however, requires us to obtain $\abstractstateauth{\Qg.\gabst}{(\absvalue :: \absvalueList)}$. However, since we have $\abstractstateauth{\Qg.\gabst}{\absvalueList}$ and $P$ (from the pre-condition), we can apply the viewshift to obtain it, along with $Q$. This then allows us to close the invariant, and the proof proceeds as previously. At the end, we must now additionally prove the post-condition $Q$, but this is no issue as we obtained that from the viewshift.
 
 \subsubsection{Dequeue}
 \begin{lemma}[\tlmsq Hocap Specification - Dequeue]\label{TLMSQ:spec:hocap:dequeue}
@@ -1278,7 +1278,7 @@ The second lemma shows that, if we own both the authoritative and fragmental vie
 \end{proof}
 
 \subsection{Deriving the Sequential Specification}
-Recall the sequential specification specified in lemma \ref{TLMSQ:spec:seq}. We must give a specific queue predicate, $\isqueueseq$. We here choose to define it as follows.
+Recall the sequential specification specified in lemma \ref{TLMSQ:spec:seq}. It demands a queue predicate, $\isqueueseq$. We here choose to define it as follows.
 \begin{definition}[\tlmsq{} - $\isqueueseq$ Predicate (Derive)]\label{TLMSQ:spec:seq:isqueueseq_derive}
 \begin{align*}
   \isqueueseq(\vq, \absvalueList, \Qgseq) \eqdef
@@ -1306,57 +1306,64 @@ This specification states:
 \begin{equation*}
   \tlseqspecenq
 \end{equation*}
-So assume some $\vq$, $\absvalue$, $\absvalueList$, and $\Qgseq$. To prove the Hoare-triple, we shall use the Hocap-style specification for enqueue. This however requires us to pick $P$ and $Q$, and prove the resulting viewshift.
+So assume some $\vq$, $\absvalue$, $\absvalueList$, and $\Qgseq$. Unfolding $\isqueueseq$, we additionally assume some $\Qghocap$ which projects to $\Qgseq$. Our goal thus becomes:
+\begin{equation*}
+  \hoare{\isqueue(\vq, \Qghocap) \star \abstractstatefullfrag{\Qghocap.\gabst}{\absvalueList}}{\enqueue \ \vq \ \absvalue}{\valB . \isqueueseq(\vq, (\absvalue :: \absvalueList), \Qgseq)}
+\end{equation*}
+To prove the Hoare-triple, we shall use the Hocap-style specification for enqueue. This however requires us to pick $P$ and $Q$, and prove the resulting viewshift.
 We choose
 \begin{align*}
   &P \eqdef \abstractstatefullfrag{\Qghocap.\gabst}{\absvalueList}& &Q \eqdef \abstractstatefullfrag{\Qghocap.\gabst}{(\absvalue :: \absvalueList)}
 \end{align*}
 The viewshift we must prove is then:
 \begin{equation*}
-  \All \absvalueList' . \abstractstateauth{\Qg.\gabst}{\absvalueList'} \star \abstractstatefullfrag{\Qghocap.\gabst}{\absvalueList} \vs[\mask\setminus\Nl.i^\uparrow] \later \abstractstateauth{\Qg.\gabst}{\absvalue :: \absvalueList'} \star \abstractstatefullfrag{\Qghocap.\gabst}{(\absvalue :: \absvalueList)}
+  \All \absvalueList' . \abstractstateauth{\Qghocap.\gabst}{\absvalueList'} \star \abstractstatefullfrag{\Qghocap.\gabst}{\absvalueList} \vs[\mask\setminus\Nl.i^\uparrow] \later \abstractstateauth{\Qghocap.\gabst}{(\absvalue :: \absvalueList')} \star \abstractstatefullfrag{\Qghocap.\gabst}{(\absvalue :: \absvalueList)}
 \end{equation*}
-So assume some $\absvalueList'$, $\abstractstateauth{\Qg.\gabst}{\absvalueList'}$ and $\abstractstatefullfrag{\Qghocap.\gabst}{\absvalueList}$. By property \ref{lemma:abst:agree}, $\absvalueList = \absvalueList'$, hence, we can apply property \ref{lemma:abst:agree} to update the authoritative and fragmental views to $(\absvalue :: \absvalueList)$, which gives us the consequent of the viewshift.
+So assume some $\absvalueList'$ such that $\abstractstateauth{\Qghocap.\gabst}{\absvalueList'}$ and $\abstractstatefullfrag{\Qghocap.\gabst}{\absvalueList}$. By lemma \ref{lemma:abst:agree}, $\absvalueList = \absvalueList'$, hence, we can apply lemma \ref{lemma:abst:update} to update the authoritative and fragmental views to $(\absvalue :: \absvalueList)$, which exactly proves the consequent of the viewshift.
 
 With this, we now get access to the following Hoare-triple:
 \begin{equation}
-  \hoare{\isqueue(\vq, \Qg) \star \abstractstatefullfrag{\Qghocap.\gabst}{\absvalueList}}{\enqueue \ \vq \ \absvalue}{\valB . \abstractstatefullfrag{\Qghocap.\gabst}{(\absvalue :: \absvalueList)}}\label{TLMSQ:spec:der:seq:proof:enq:hocap}
+  \hoare{\isqueue(\vq, \Qghocap) \star \abstractstatefullfrag{\Qghocap.\gabst}{\absvalueList}}{\enqueue \ \vq \ \absvalue}{\valB . \abstractstatefullfrag{\Qghocap.\gabst}{(\absvalue :: \absvalueList)}}\label{TLMSQ:spec:der:seq:proof:enq:hocap}
 \end{equation}
-Using the rule of consequence we easily massage the pre-condition of \ref{TLMSQ:spec:der:seq:proof:enq:hocap} into the pre-condition of the Hoare-triple we must prove. To get the post-conditions to match, we must get $\isqueue(\vq, \Qghocap)$ in the post-condition of \ref{TLMSQ:spec:der:seq:proof:enq:hocap}, but since is $\isqueue(\vq, \Qghocap)$ persistent and we have it in the pre-condition, we may also assume it in post-condition.
+The pre-condition already matches our goal, so we just have to get the post-condition to match. To do this, we must get $\isqueue(\vq, \Qghocap)$ in the post-condition of \ref{TLMSQ:spec:der:seq:proof:enq:hocap}, but since is $\isqueue(\vq, \Qghocap)$ persistent and we have it in the pre-condition, we may also assume it in post-condition.
 
 \subsubsection{Sequential Dequeue Specification}
 We use a similar approach to above to prove the sequential dequeue specification:
 \begin{equation*}
   \tlseqspecdeq
 \end{equation*}
-So we assume some $\vq$, $\absvalueList$, and $\Qgseq$. This time we instantiate the Hocap-style dequeue specification with the following choices: 
+So we assume some $\vq$, $\absvalueList$, $\Qgseq$, and $\Qghocap$ such that $\Qghocap$ projects to $\Qgseq$. Our goal is now:
+\begin{equation*}
+  \hoareV[t]{\isqueue(\vq, \Qghocap) \star \abstractstatefullfrag{\Qghocap.\gabst}{\absvalueList}}{\dequeue \ \vq}{\nodeval . \begin{array}{l}(\absvalueList = [] \star \nodeval = \None \star \isqueueseq(\vq, \absvalueList, \Qgseq)) ~ \lor\\ (\Exists \absvalue, \absvalueList' . \absvalueList = \absvalueList' \catenate [\absvalue] \star \nodeval = \Some \absvalue \star \isqueueseq(\vq, \absvalueList', \Qgseq)) \end{array}}
+\end{equation*}
+This time we instantiate the Hocap-style dequeue specification with the following choices: 
 \begin{align*}
   P &\eqdef \abstractstatefullfrag{\Qghocap.\gabst}{\absvalueList}\\
   Q(\nodeval) &\eqdef \begin{array}{l}(\absvalueList = [] \star \nodeval = \None \star \abstractstatefullfrag{\Qghocap.\gabst}{\absvalueList}) \ \lor\\ (\Exists \absvalue, \absvalueList'. \absvalueList = \absvalueList' \catenate [\absvalue] \star \nodeval = \Some{\absvalue} \star \abstractstatefullfrag{\Qghocap.\gabst}{\absvalueList'})\end{array}
 \end{align*}
 We must now prove the resulting viewshift to get the Hoare-triple (note that we haven't substituted in $P$ and $Q$ for the sake of readability).
 \begin{equation*}
-\left(\All \absvalueList' . \abstractstateauth{\Qg.\gabst}{\absvalueList'} \star P \vs[\mask\setminus\Nl.i^\uparrow] \later
+\All \absvalueList' . \abstractstateauth{\Qghocap.\gabst}{\absvalueList'} \star P \vs[\mask\setminus\Nl.i^\uparrow] \later
   \left(
     \begin{array}{l}
-      (\absvalueList' = [] \star \abstractstateauth{\Qg.\gabst}{\absvalueList'} \star Q(\None))\\
+      (\absvalueList' = [] \star \abstractstateauth{\Qghocap.\gabst}{\absvalueList'} \star Q(\None))\\
       \lor
       \left(
         \begin{array}{l}
           \Exists \absvalue, \absvalueList'' . \absvalueList' = \absvalueList'' \catenate [\absvalue] \star\\
-          \abstractstateauth{\Qg.\gabst}{\absvalueList''} \star Q(\Some{\absvalue})
+          \abstractstateauth{\Qghocap.\gabst}{\absvalueList''} \star Q(\Some{\absvalue})
         \end{array}
         \right)
     \end{array}
   \right)
-\right)
 \end{equation*}
 We assume some $\absvalueList'$, which by property \ref{lemma:abst:agree} must be equal to $\absvalueList$. We do a case analysis on $\absvalueList$. If $\absvalueList$ is empty, we prove the left disjunct in the consequent of the viewshift, \emph{without} updating the authoritative and fragmental views. If $\absvalueList$ is non-empty, i.e. $\absvalueList = \absvalueList'' \catenate [\absvalue]$ for some $\absvalueList''$ and $\absvalue$, then we prove the right-side of the consequent in the viewshift by using property \ref{lemma:abst:update} to update the authoritative and fragmental views to the new abstract state, $\absvalueList''$.
 
 With this, we get access to the Hoare-triple (this time with $P$ and $Q$ substituted in):
 \begin{equation}
-  \hoareV[t]{\isqueue(\vq, \Qg) \star \abstractstatefullfrag{\Qghocap.\gabst}{\absvalueList}}{\dequeue \ \vq}{\nodeval . \begin{array}{l}(\absvalueList = [] \star \nodeval = \None \star \abstractstatefullfrag{\Qghocap.\gabst}{\absvalueList}) \ \lor\\ (\Exists \absvalue, \absvalueList'. \absvalueList = \absvalueList' \catenate [\absvalue] \star \nodeval = \Some{\absvalue} \star \abstractstatefullfrag{\Qghocap.\gabst}{\absvalueList'})\end{array}}\label{TLMSQ:spec:der:seq:proof:deq:hocap}
+  \hoareV[t]{\isqueue(\vq, \Qghocap) \star \abstractstatefullfrag{\Qghocap.\gabst}{\absvalueList}}{\dequeue \ \vq}{\nodeval . \begin{array}{l}(\absvalueList = [] \star \nodeval = \None \star \abstractstatefullfrag{\Qghocap.\gabst}{\absvalueList}) \ \lor\\ (\Exists \absvalue, \absvalueList'. \absvalueList = \absvalueList' \catenate [\absvalue] \star \nodeval = \Some{\absvalue} \star \abstractstatefullfrag{\Qghocap.\gabst}{\absvalueList'})\end{array}}\label{TLMSQ:spec:der:seq:proof:deq:hocap}
 \end{equation}
-As before, this almost matches the Hoare-triple we have to prove. We use the rule of consequence to massage the pre- and post-conditions into the correct shape, which concludes the derivation.
+As before, this almost matches the Hoare-triple we have to prove. We use the rule of consequence to massage the post-condition into the correct shape, which concludes the derivation.
 
 \subsection{Deriving the Concurrent Specification}
 We prove the concurrent specification of lemma \ref{TLMSQ:spec:conc}. Remember that we need the $\isqueueconc$ predicate to be persistent, hence we cannot simply assert $\abstractstatefullfrag{\Qghocap.\gabst}{\absvalueList}$ as we did for $\isqueueseq$\footnote{The core of the fractional RA is always undefined, which means that the core of $\authm(\option{(\fracm \times \agm(\List ~ \Val))})$ is also undefined. Hence no elements of the RA can be persistent -- not even the fragmental ones.}. Instead, we will put it into an invariant. The queue predicate we will use looks as follows.
@@ -1376,7 +1383,7 @@ We have to derive the specification:
 \begin{equation*}
   \tlconcspecinit
 \end{equation*}
-As before, this specification only differs from the Hocap-style specification for initialise in the post-condition. We use the \emph{generalised} rule of consequence\todo{ref} and show that the post-condition of the Hocap-style specification, i.e. $\Exists \Qghocap . \isqueue(\vq, \Qghocap) \star \abstractstatefullfrag{\Qghocap.\gabst}{[]}$, implies the post-condition above but with an update modality, $\pvs$, in front. As before, we pick $\projqgnamesseq(\Qghocap)$ for $\Qg$, allowing us to proof all but the invariant:
+As before, this specification only differs from the Hocap-style specification for initialise in the post-condition. We use the \emph{generalised} rule of consequence\todo{ref} and show that the post-condition of the Hocap-style specification, i.e. $\Exists \Qghocap . \isqueue(\vq, \Qghocap) \star \abstractstatefullfrag{\Qghocap.\gabst}{[]}$, implies the post-condition above but with an update modality, $\pvs$, in front. As before, we pick $\projqgnamesseq(\Qghocap)$ for $\Qg$, allowing us to prove all but the invariant:
 \begin{equation*}
   \pvs \knowInv{\Nl.c}{\Exists \absvalueList. \abstractstatefullfrag{\Qghocap.\gabst}{\absvalueList} \star \AllP(\absvalueList, \Psi)}
 \end{equation*}
@@ -1388,52 +1395,53 @@ We must derive:
 \begin{equation*}
   \tlconcspecenq
 \end{equation*}
-Assume some $\vq$, $\absvalue$, and $\Qgconc$. We specialise the Hocap-style enqueue spec with $P \eqdef \Psi(\absvalue)$ and $Q \eqdef \TRUE$. With this choice, the Hoare-triple we get after proving the viewshift states:
+Assume some $\vq$, $\absvalue$, $\Qgconc$, $\Qghocap$ such that $\Qghocap$ projects to $\Qgseq$, and the invariant $\knowInv{\Nl.c}{\Exists \absvalueList. \abstractstatefullfrag{\Qghocap.\gabst}{\absvalueList}}$. Our goal becomes the following Hoare-triple:
 \begin{equation*}
-  \hoare{\isqueue(\vq, \Qg) \star \Psi(\absvalue)}{\enqueue \ \vq \ \absvalue}{\valB . \TRUE}
+  \hoare{\isqueue(\vq, \Qghocap) \star \Phi(\absvalue)}{\enqueue \ \vq \ \absvalue}{\valB . \TRUE}
 \end{equation*}
-The only difference between this, and the hoare triple we must prove is that the pre-condition is weaker. Hence, we are done by the rule of consequence.
 
-So all that remains is proving the viewshift:
+We specialise the Hocap-style enqueue specification with $P \eqdef \Psi(\absvalue)$ and $Q \eqdef \TRUE$. With this choice, the Hoare-triple we get after proving the viewshift exactly matches our goal. Hence, we are done if we can prove the viewshift.
+
+The viewshift looks as follows:
 \begin{equation*}
-  \left(\All \absvalueList' . \abstractstateauth{\Qg.\gabst}{\absvalueList'} \star \Psi(\absvalue) \vs[\mask\setminus\Nl.i^\uparrow] \later \abstractstateauth{\Qg.\gabst}{\absvalue :: \absvalueList'} \star \TRUE \right)
+  \All \absvalueList' . \abstractstateauth{\Qghocap.\gabst}{\absvalueList'} \star \Psi(\absvalue) \vs[\mask\setminus\Nl.i^\uparrow] \later \abstractstateauth{\Qghocap.\gabst}{(\absvalue :: \absvalueList')} \star \TRUE
 \end{equation*}
-We assume $\absvalueList'$, $\abstractstateauth{\Qg.\gabst}{\absvalueList'}$ and $\Psi(\absvalue)$. We open the invariant giving us $\abstractstatefullfrag{\Qghocap.\gabst}{\absvalueList}$ and $\AllP(\absvalueList, \Psi)$ for some $\absvalueList$. By lemma \ref{lemma:abst:agree} we know that $\absvalueList = \absvalueList'$. We now update the abstract state to $\absvalue :: \absvalueList$ using lemma \ref{lemma:abst:update}, obtaining $\abstractstateauth{\Qg.\gabst}{\absvalue :: \absvalueList}$ and $\abstractstatefullfrag{\Qghocap.\gabst}{\absvalue :: \absvalueList}$. We use the first to prove the consequent of the viewshift. Before we are done, we must close the invariant. We use the fragmental part together with $\AllP(\absvalueList, \Psi)$ and $\Psi(\absvalue)$ to do this.
+We assume $\absvalueList'$, $\abstractstateauth{\Qghocap.\gabst}{\absvalueList'}$ and $\Psi(\absvalue)$. We open the invariant giving us $\abstractstatefullfrag{\Qghocap.\gabst}{\absvalueList}$ and $\AllP(\absvalueList, \Psi)$ for some $\absvalueList$. By lemma \ref{lemma:abst:agree} we know that $\absvalueList = \absvalueList'$. We now update the abstract state to $(\absvalue :: \absvalueList)$ using lemma \ref{lemma:abst:update}, obtaining $\abstractstateauth{\Qghocap.\gabst}{(\absvalue :: \absvalueList)}$ and $\abstractstatefullfrag{\Qghocap.\gabst}{(\absvalue :: \absvalueList)}$. We use the first to prove the consequent of the viewshift. Before we are done, we must close the invariant. We use the fragmental part together with $\AllP(\absvalueList, \Psi)$ and $\Psi(\absvalue)$ to do this.
 
 \subsubsection{Concurrent Dequeue Specification}
 Finally, we derive the concurrent specification for $\dequeue$.
 \begin{equation*}
   \tlconcspecdeq
 \end{equation*}
-So we assume some $\vq$, $\absvalueList$, and $\Qgseq$. We make the following choices for $P$ and $Q$.  
+So we assume some $\vq$, $\absvalueList$, $\Qgseq$, $\Qghocap$ such that $\Qghocap$ projects to $\Qgseq$, and the invariant. Our goal is now:
+\begin{equation*}
+  \hoare{\isqueue(\vq, \Qghocap)}{\dequeue \ \vq}{\nodeval . \nodeval = \None \lor (\Exists \absvalue. \nodeval = \Some \absvalue \star \Phi(\absvalue))}
+\end{equation*}
+
+We make the following choices for $P$ and $Q$.
 \begin{align*}
   &P \eqdef \TRUE&  
   &Q(\nodeval) \eqdef \nodeval = \None \lor (\Exists \absvalue . \nodeval = \Some \absvalue \star \Psi(\absvalue))
 \end{align*}
-After proving the viewshift, we get the Hoare-triple:
-\begin{equation*}
-  \hoare{\isqueue(\vq, \Qg) \star \TRUE}{\dequeue \ \vq}{\nodeval . \nodeval = \None \lor (\Exists \absvalue . \nodeval = \Some \absvalue \star \Psi(\absvalue))}
-\end{equation*}
-As for the derivation of $\enqueue$, the only difference between this Hoare-triple and the one we have to prove, is that this pre-condition is weaker. So we are again done by the rule of consequence.
+Again, with this choice, the Hoare-triple we get after proving the viewshift exactly matches our goal.
 
 We finish by proving the viewshift (again, without substituting in $P$ and $Q$):
 \begin{equation*}
-  \left(\All \absvalueList' . \abstractstateauth{\Qg.\gabst}{\absvalueList'} \star P \vs[\mask\setminus\Nl.i^\uparrow] \later
+  \All \absvalueList' . \abstractstateauth{\Qghocap.\gabst}{\absvalueList'} \star P \vs[\mask\setminus\Nl.i^\uparrow] \later
     \left(
       \begin{array}{l}
-        (\absvalueList' = [] \star \abstractstateauth{\Qg.\gabst}{\absvalueList'} \star Q(\None))\\
+        (\absvalueList' = [] \star \abstractstateauth{\Qghocap.\gabst}{\absvalueList'} \star Q(\None))\\
         \lor
         \left(
           \begin{array}{l}
             \Exists \absvalue, \absvalueList'' . \absvalueList' = \absvalueList'' \catenate [\absvalue] \star\\
-            \abstractstateauth{\Qg.\gabst}{\absvalueList''} \star Q(\Some{\absvalue})
+            \abstractstateauth{\Qghocap.\gabst}{\absvalueList''} \star Q(\Some{\absvalue})
           \end{array}
           \right)
       \end{array}
     \right) 
-  \right)
 \end{equation*}
-We assume some $\absvalueList'$ with $\abstractstateauth{\Qg.\gabst}{\absvalueList'}$. Opening the invariant, we get $\AllP(\absvalueList, \Psi)$ and the fragmental part, $\abstractstatefullfrag{\Qghocap.\gabst}{\absvalueList}$, for some $\absvalueList$, which by lemma \ref{lemma:abst:agree} we know is equal to $\absvalueList'$. We proceed by case analysis on $\absvalueList$. If it is empty, we simply close the invariant again, and proceed to prove the first disjunct of the consequent. If it is not empty, then we have $\absvalueList = \absvalueList'' \catenate [\absvalue]$ for some $\absvalueList''$ and $\absvalue$. We use lemma \ref{lemma:abst:update} to update the abstract state to $\absvalueList''$, and split $\AllP(\absvalueList, \Psi)$ into $\Psi(\absvalue)$ and $\AllP(\absvalueList'', \Psi)$. Using this and the fragmental part, we close the invariant again. To finish, we prove the right disjunct of the consequent using the authoritative part and $\Psi(\absvalue)$\footnote{Note here the importance of the $\later$ in the consequent. From the invariant, we technically only have $\later\Psi(\absvalue)$. If we didn't have the later in the consequent, we would have to prove $\Psi(\absvalue)$ from $\later\Psi(\absvalue)$ which isn't possible.}. 
+We assume some $\absvalueList'$ with $\abstractstateauth{\Qghocap.\gabst}{\absvalueList'}$. Opening the invariant, we get $\AllP(\absvalueList, \Psi)$ and the fragmental part, $\abstractstatefullfrag{\Qghocap.\gabst}{\absvalueList}$, for some $\absvalueList$, which by lemma \ref{lemma:abst:agree} we know is equal to $\absvalueList'$. We proceed by case analysis on $\absvalueList$. If it is empty, we simply close the invariant again, and proceed to prove the first disjunct of the consequent. If it is not empty, then we have $\absvalueList = \absvalueList'' \catenate [\absvalue]$ for some $\absvalueList''$ and $\absvalue$. We use lemma \ref{lemma:abst:update} to update the abstract state to $\absvalueList''$, and split $\AllP(\absvalueList, \Psi)$ into $\Psi(\absvalue)$ and $\AllP(\absvalueList'', \Psi)$. Using this and the fragmental part, we close the invariant again. To finish, we prove the right disjunct of the consequent using the authoritative part and $\Psi(\absvalue)$\footnote{Note here the importance of the $\later$ in the consequent. From the invariant, we technically only have $\later\Psi(\absvalue)$. If we didn't have the later in the consequent, we would have to prove $\Psi(\absvalue)$ from $\later\Psi(\absvalue)$ which isn't possible.}. 
 
 
 \chapter{The Lock-Free Michael Scott Queue}
@@ -1754,8 +1762,8 @@ The specification we wish to prove is the following.
     If they are consistent, we take the ``then'' branch and step to line \ref{LFE:nen}. Here we check whether or not $next$ is $\None$. We already know this is the case, so we proceed to line \ref{LFE:add}. This consists of a $\CAS$ instruction which attempts to add $\nodenew$ to the linked list. The $\CAS$ will succeed if and only if $\loctail$ still points to $\None$. We open the invariant to gain access to the relevant points-to predicate. Similarly to what we did earlier, we apply lemma \ref{lemma:abs-reach-concr} to conclude $\reach{\nodetail}{\nodelast'}$, where $\nodelast'$ is the current last node of the linked list (according to the invariant). As before, we perform case analysis on $\reach{\nodetail}{\nodelast'}$.
     \begin{itemize}
       \item[\textbf{Case}]
-      $\nodetail = \nodelast'$. We now know that $\nodetail$ is still the last node in the linked list, hence $\nOut{\nodetail} \mapsto \None$, and the $\CAS$ will succeed. This instruction makes $\nodetail$ point to $\nodenew$, which essentially adds it to the linked list. Thus, the value in $\nodenew$ becomes enqueued. In other words, this is a linearisation point, so we must apply the viewshift. We instantiate the viewshift with the abstract state of the queue $\absvalueList$ from the invariant opening, and supply $\abstractstateauth{\Qg.\gabst}{\absvalueList}$ from the invariant and the $P$ from the pre-condition. We hence get $\abstractstateauth{\Qg.\gabst}{\absvalue :: \absvalueList}$ and $Q$.\\
-      When closing the invariant, we use $(\absvalue :: \absvalueList)$ for the abstract state, $(\nodenew :: \xsc)$ for the concrete state, $\nodenew :: \xsqueue$ for the queue, and we take $\nodenew$ to be the last node. The head and tail nodes remain the same. This means we give up $\abstractstateauth{\Qg.\gabst}{\absvalue :: \absvalueList}$ that we got from the viewshift, and the points-to predicate \ref{LFMSQ:spec:proof:xnew2} (used to assert $\isLL (\nodenew :: \xsc))$. The only thing left to prove is $\ap{\Qg.\glast}{\nodenew}$. From the invariant opening, we have $\ap{\Qg.\glast}{\nodetail}$. Since $\reach{\nodetail}{\nodenew}$, we may apply lemma \ref{lemma:abs-reach-advance} to update the abstract points-to resource to $\ap{\Qg.\glast}{\nodenew}$ and additionally obtain $\ar{\nodenew}{\Qg.\glast}$. With this, we can close the invariant, and step to line \ref{LFE:sts}. This line attempts to swing the tail, so we apply our swing-tail lemma (lemma \ref{LFMSQ:spec:swingtail}) by supplying our invariant, $\reach{\nodetail}{\nodenew}$, and $\ar{\nodenew}{\Qg.\glast}$. This tells us that the $\CAS$ is safe, and it either succeeds or fails. The resulting value is the returned value of the $\enqueue$ function, but since the post-condition is simply $Q$, which we own, we are done.
+      $\nodetail = \nodelast'$. We now know that $\nodetail$ is still the last node in the linked list, hence $\nOut{\nodetail} \mapsto \None$, and the $\CAS$ will succeed. This instruction makes $\nodetail$ point to $\nodenew$, which essentially adds it to the linked list. Thus, the value in $\nodenew$ becomes enqueued. In other words, this is a linearisation point, so we must apply the viewshift. We instantiate the viewshift with the abstract state of the queue $\absvalueList$ from the invariant opening, and supply $\abstractstateauth{\Qg.\gabst}{\absvalueList}$ from the invariant and the $P$ from the pre-condition. We hence get $\abstractstateauth{\Qg.\gabst}{(\absvalue :: \absvalueList)}$ and $Q$.\\
+      When closing the invariant, we use $(\absvalue :: \absvalueList)$ for the abstract state, $(\nodenew :: \xsc)$ for the concrete state, $\nodenew :: \xsqueue$ for the queue, and we take $\nodenew$ to be the last node. The head and tail nodes remain the same. This means we give up $\abstractstateauth{\Qg.\gabst}{(\absvalue :: \absvalueList)}$ that we got from the viewshift, and the points-to predicate \ref{LFMSQ:spec:proof:xnew2} (used to assert $\isLL (\nodenew :: \xsc))$. The only thing left to prove is $\ap{\Qg.\glast}{\nodenew}$. From the invariant opening, we have $\ap{\Qg.\glast}{\nodetail}$. Since $\reach{\nodetail}{\nodenew}$, we may apply lemma \ref{lemma:abs-reach-advance} to update the abstract points-to resource to $\ap{\Qg.\glast}{\nodenew}$ and additionally obtain $\ar{\nodenew}{\Qg.\glast}$. With this, we can close the invariant, and step to line \ref{LFE:sts}. This line attempts to swing the tail, so we apply our swing-tail lemma (lemma \ref{LFMSQ:spec:swingtail}) by supplying our invariant, $\reach{\nodetail}{\nodenew}$, and $\ar{\nodenew}{\Qg.\glast}$. This tells us that the $\CAS$ is safe, and it either succeeds or fails. The resulting value is the returned value of the $\enqueue$ function, but since the post-condition is simply $Q$, which we own, we are done.
 
       \item[\textbf{Case}]
       $\nOut{\nodetail} \mapsto^{\persistently} \nIn{\nodetailnext} \star \reach{\nodetailnext}{\nodelast}$. Since $\nodetail$ doesn't point to $\None$, the $\CAS$ will fail. We close the invariant and step to line \ref{LFE:re1}. We finish by applying the induction hypothesis.
