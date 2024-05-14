@@ -121,9 +121,9 @@
 - [ ] Format the forall intros in lemmas (and definitions) better
 - [ ] Consider changing is_queue to isQueue (and similarly for is_queue_seq and is_queue_conc)
 - [x] Proofread sequential and concurrent derivation section
-- [ ] refactor specification macros to take the forall quantified variables as input
-- [ ] Also make hocap viewshifts their own macros
-- [ ] Make the \Qg variables in derivations \Qgseq and \Qgconc
+- [x] refactor specification macros to take the forall quantified variables as input
+- [x] Also make hocap viewshifts their own macros
+- [x] Make the \Qg variables in derivations \Qgseq and \Qgconc
 
 - [x] fix readme
   - [x] formatting
