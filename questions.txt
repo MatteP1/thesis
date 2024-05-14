@@ -10,4 +10,8 @@
 
 - How do I derive the sequential and concurrent specs from the queue class?
 
+
+- Use is_queue or isQueue? and similarly for others. Any standards in literature?
+
+
 - Contributions?

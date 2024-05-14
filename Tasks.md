@@ -107,7 +107,7 @@
 - [x] Wrap proofs of initialise, enqueue, and dequeue in begin{proof}
 - [x] Add lemmas in sections when proving initialise, enqueue, and dequeue, showing exactly what we are proving (see lock-free proof outline).
 - [x] Add isLL lemmas in appendix
-- [ ] Refer to nIn-equal lemma in lock-free proofs
+- [x] Refer to nIn-equal lemma in lock-free proofs
 - [x] change null / null node / ... to None
 - [x] Consider not using the term "sentinel"
 - [x] change "x" to ``x'', and similarly for 'x'
@@ -126,6 +126,7 @@
 - [x] Make the \Qg variables in derivations \Qgseq and \Qgconc
 - [x] Refer to Appendix definitions when explaining isLast, All, Wrap_some, Proj_val, etc.
 - [x] Format Appendix
+- [ ] Correctly format "hoare triple" and "hocap style"
 
 - [x] fix readme
   - [x] formatting
