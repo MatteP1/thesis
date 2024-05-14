@@ -82,6 +82,7 @@
 \newcommand{\AllP}{\operatorname{All}}
 \newcommand{\projval}{\operatorname{proj\_val}}
 \newcommand{\wrapsome}{\operatorname{wrap\_some}}
+\newcommand{\isFirst}{\operatorname{isFirst}}
 \newcommand{\isLast}{\operatorname{isLast}}
 \newcommand{\isSndLast}{\operatorname{isSndLast}}
 \newcommand{\projqgnamesseq}{\operatorname{proj\_Qgnames\_seq}}
@@ -1912,6 +1913,68 @@ Indeed, in the Coq formalisations, we prove the Hocap-style specification for an
 \appendix
 \chapter{The Technical Details}
 
+\begin{definition}[First in Queue]\label{COMMON:Def:first-q}
+  $\isFirst(x, xs) \eqdef \Exists xs_{rest} . xs = xs_{rest} \catenate [x]$
+\end{definition}
+
+\begin{definition}[Last in Queue]\label{COMMON:Def:last-q}
+  $\isLast(x, xs) \eqdef \Exists xs_{rest} . xs = x :: xs_{rest}$
+\end{definition}
+
+\begin{definition}[Second Last in Queue]\label{COMMON:Def:sndlast-q}
+  $\isSndLast(x, xs) \eqdef \Exists x_{last}, xs_{rest} . xs = x_{last} :: x :: xs_{rest}$
+\end{definition}
+
+\begin{lemma}[Adding/Removing Non-Last]\label{lemma:isLast-remove}
+  $\All x, y, xs, ys.\\
+  \isLast(x, (xs \catenate [y] \catenate ys)) \iff \isLast(x, (xs \catenate [y]))$
+\end{lemma}
+
+\begin{lemma}[List Destruction Equality]\label{lemma:list-last-eq}
+  $\All xs_1, x_1, xs_2, x_2.\\
+  xs_1 \catenate [x_1] = xs_2 \catenate [x_2] \implies xs_1 = xs_2 \land x_1 = x_2$
+\end{lemma}
+
+
+\begin{definition}[Value Projection]\label{COMMON:Def:val-proj}
+  \begin{align*}
+    \projval([]) &\eqdef []\\
+    \projval(x :: xs) &\eqdef \nVal{x} :: \projval(xs)
+  \end{align*}
+\end{definition}
+
+\begin{lemma}[Value Projection Split]\label{lemma:value-proj-split}
+  $\All xs_1, xs_2.\\
+  \projval(xs_1 \catenate xs_2) = \projval(xs_1) \catenate \projval(xs_2)$
+\end{lemma}
+
+
+\begin{definition}[Wrap Some]\label{COMMON:Def:wrap-some}
+  \begin{align*}
+    \wrapsome([]) &\eqdef []\\
+    \wrapsome(x :: xs) &\eqdef \Some{x} :: \wrapsome(xs)
+  \end{align*}
+\end{definition}
+
+\begin{lemma}[Wrap Some Split]\label{lemma:wrap-some-split}
+  $\All xs_1, xs_2.\\
+  \wrapsome(xs_1 \catenate xs_2) = \wrapsome(xs_1) \catenate \wrapsome(xs_2)$
+\end{lemma}
+
+
+\begin{definition}[The ``All'' Predicate]\label{COMMON:Def:All}
+  \begin{align*}
+    \AllP([], \Phi) &\eqdef \TRUE\\
+    \AllP(x :: xs, \Phi) &\eqdef \Phi(x) \star \AllP(xs)
+  \end{align*}
+\end{definition}
+
+\begin{lemma}[All Split]\label{lemma:all-split}
+  $\All xs_1, xs_2, \Phi.\\
+  \AllP(xs_1 \catenate xs_2, \Phi) \wandIff \AllP(xs_1, \Phi) \catenate \AllP(xs_2, \Phi)$
+\end{lemma}
+
+
 \begin{lemma}[Node equality]\label{lemma:nIn-equal}
   \begin{align*}
     &\All x, y.\\
@@ -1921,6 +1984,27 @@ Indeed, in the Coq formalisations, we prove the Hocap-style specification for an
     &x = y
   \end{align*}
 \end{lemma}
+
+
+\begin{lemma}[Extract Chain from $\isLL$]\label{lemma:isLL-and-chain}
+  $\All xs. \isLL(xs) \wand \isLL(xs) \star \isLLchain(xs)$
+\end{lemma}
+
+\begin{lemma}[$\isLLchain$ Nodes]\label{lemma:isLL-chain-nodes}
+  $\All xs_1, x, xs_2.\\
+   \isLLchain(xs_1 \catenate [x] \catenate xs_2) \wand \isNode{x}$
+\end{lemma}
+
+\begin{lemma}[$\isLLchain$ Split]\label{lemma:isLL-chain-split}
+  $\All xs, ys.\\
+   \isLLchain(xs \catenate ys) \wand \isLLchain(xs) \star \isLLchain(ys)$
+\end{lemma}
+
+\begin{lemma}[$\isLL$ Split]\label{lemma:isLL-split}
+  $\All xs, ys.\\
+   \isLL(xs \catenate ys) \wand \isLL(xs) \star \isLLchain(ys)$
+\end{lemma}
+
 
 \begin{definition}[Simplified \tlmsq Invariant]\label{TLMSQ:spec:conc:invariant:simple}
   \begin{align*}

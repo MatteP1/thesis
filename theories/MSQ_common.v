@@ -16,7 +16,7 @@ Definition n_out {A B C} (x : A * B * C ) := (let '(a, b, c) := x in c).
 (* Fist and Last of lists *)
 Definition isFirst {A} (x : A) xs := ∃ xs_rest, xs = xs_rest ++ [x].
 Definition isLast {A} (x : A) xs := ∃ xs_rest, xs = x :: xs_rest.
-Definition isSndLast {A} (x : A) xs := ∃ x_first xs_rest, xs = x_first :: x :: xs_rest.
+Definition isSndLast {A} (x : A) xs := ∃ x_last xs_rest, xs = x_last :: x :: xs_rest.
 
 Lemma isLast_remove {A} : ∀ (x y : A) (xs ys : list A),
   isLast x (xs ++ [y] ++ ys) <->
