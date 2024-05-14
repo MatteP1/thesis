@@ -891,9 +891,9 @@ With these points in mind, we give our definition of the queue predicate for the
 \end{align*}
 \end{definition}
 
-This $\isqueueseq$ predicate states that the value $\vq$ is a location, which persistently points to the structure containing the head and tail pointers, and the two locks. It also connects the abstract state $\absvalueList$ with the concrete state by stating that if you strip away the locations in $\xsqueue$ (achieved by $\projval$) and wrap the values in the abstract state $\absvalueList$ in $\Some$ (achieved by $\wrapsome$), then the lists become equal.
+This $\isqueueseq$ predicate states that the value $\vq$ is a location, which persistently points to the structure containing the head and tail pointers, and the two locks. It also connects the abstract state $\absvalueList$ with the concrete state by stating that if you strip away the locations in $\xsqueue$ (achieved by $\projval$; see appendix \ref{COMMON:Def:val-proj}) and wrap the values in the abstract state $\absvalueList$ in $\Some$ (achieved by $\wrapsome$; see appendix \ref{COMMON:Def:wrap-some}), then the lists become equal.
 
-Next, the predicate specifies the concrete state. There is some head node $\nodehead$, which the head points to. This head node and the nodes in $\xsqueue$ form the underlying linked list (specified using the $\isLL$ predicate below). There is also a tail node, which is the last node in the linked list, and the tail points to this node. The proposition $\isLast(\node, \xsc)$ simply asserts the existence of some $\xsc'$, so that $\xsc = \node :: \xsc'$. 
+Next, the predicate specifies the concrete state. There is some head node $\nodehead$, which the head points to. This head node and the nodes in $\xsqueue$ form the underlying linked list (specified using the $\isLL$ predicate below). There is also a tail node, which is the last node in the linked list, and the tail points to this node. The proposition $\isLast(\node, \xsc)$ simply asserts the existence of some $\xsc'$, so that $\xsc = \node :: \xsc'$ (defined formally in Appendix \ref{COMMON:Def:last-q}).
 
 Next, we have the $\isLock$ predicate for our two locks. Since we are in a sequential setting, the locks are superfluous, hence they simply protect $\TRUE$.
 
@@ -922,7 +922,7 @@ For instance, if we wanted to capture the linked list in figure \ref{TLMSQ:impl:
 \end{align*}
 Note how this matches the structure of the linked list in figure \ref{TLMSQ:impl:figure:enqueue:c}.
 
-The proofs require us manipulate specific $\isLL$ propositions quite a bit -- appendix \todo{Add appendix and refer to it} shows the specific lemmas we will use, but the proof outlines will generally not mention the lemmas explicitly.
+The proofs require us manipulate specific $\isLL$ propositions quite a bit -- appendix \ref{appendix:common:section:isll} shows the specific lemmas we will use, but the proof outlines will generally not mention the lemmas explicitly.
 
 \section{Proof Outline}
 \label{TLMSQSEQ:section:proof-outline}
@@ -1072,12 +1072,12 @@ Since we want $\isqueueconc$ to be persistent, then we cannot directly state the
     &)
   \end{align*}
 \end{definition}
-In contrast to the sequential specification, the abstract state is now existentially quantified, hence the exact contents of the queue are not tracked. Instead, we have added the proposition $\AllP(\absvalueList, \Phi)$, which states that all values in $\absvalueList$ (i.e. the values currently in the queue) satisfy the predicate $\Phi$. This will allow us to conclude that dequeued values satisfy $\Phi$.\\
-The concrete state of the queue is still reflected in the abstract state through projecting out the values of the nodes ($\projval$), and wrapping the values in the queue in $\Some$ ($\wrapsome$). Another difference is that we now also keep track of an arbitrary number of ``old'' nodes; nodes that are behind the head node, $\nodehead$. As discussed above, this inclusion is due to observation \ref{TLMSQ:insights:lag}.\\
+In contrast to the sequential specification, the abstract state is now existentially quantified, hence the exact contents of the queue are not tracked. Instead, we have added the proposition $\AllP(\absvalueList, \Phi)$, which states that all values in $\absvalueList$ (i.e. the values currently in the queue) satisfy the predicate $\Phi$ (see appendix \ref{COMMON:Def:All} for formal definition). This will allow us to conclude that dequeued values satisfy $\Phi$.\\
+The concrete state of the queue is still reflected in the abstract state through projecting out the values of the nodes (via $\projval$), and wrapping the values in the queue in $\Some$ (via $\wrapsome$). Another difference is that we now also keep track of an arbitrary number of ``old'' nodes; nodes that are behind the head node, $\nodehead$. As discussed above, this inclusion is due to observation \ref{TLMSQ:insights:lag}.\\
 As before, we also assert that the concrete state forms a linked list, as described by the $\isLL$ predicate.\\
 The final part of the invariant describes the four possible states of the queue, as described in \ref{TLMSQ:insights:states}. Since the resources used by the queue are inside an invariant, and enqueueing/dequeueing threads need to access the resources of the queue multiple times (as shown in the sequential specification), then we will have to open and close the invariant multiple times. Each time we open the invariant, the existentially quantified variables will not be the same as those from early accesses of the invariant (as they are existentially quantified). Thus, the threads must be able to ``match up'' variables from previous accesses to later accesses. The way we shall achieve this is by allowing threads to keep a \textit{fraction} of the points-to predicate that it is using. For instance, an enqueuing thread will have to access the points-to predicate concerning $\loctail$ multiple times, and in between accesses of the invariant, it can get to keep half of the points-to predicate. Thus, when it opens the invariant later, it will have $\loctail \mapsto^{\frac{1}{2}} \nIn{\nodetail}$ from an earlier access, and it will obtain the existence of some new $\nodetail'$, such that $\loctail \mapsto^{\frac{1}{2}} \nIn{\nodetail'}$. Combining the two points-to predicates allows us to conclude that $\nIn{\nodetail} = \nIn{\nodetail'}$ and using lemma \ref{lemma:nIn-equal} we can further conclude $\nodetail = \nodetail'$. In this way, we can match up variables from earlier accesses to variables in later accesses.\\
 In the \StaticState state where no thread is interacting with the queue, the queue owns all of the points-to predicates concerning the head and tail.\\
-In the \EnqueueState state, the enqueueing thread owns half of the tail pointer, and we distinguish between two cases, as discussed in \ref{TLMSQ:insights:tail}: either the enqueueing thread has yet to add the new node to the linked list and $\nodetail$ is still the last node, or the new node has been added, but the tail pointer hasn't been updated, meaning that $\nodetail$ is the second last node ($\isSndLast$ is defined similarly to $\isLast$).\\
+In the \EnqueueState state, the enqueueing thread owns half of the tail pointer, and we distinguish between two cases, as discussed in \ref{TLMSQ:insights:tail}: either the enqueueing thread has yet to add the new node to the linked list and $\nodetail$ is still the last node, or the new node has been added, but the tail pointer hasn't been updated, meaning that $\nodetail$ is the second last node ($\isSndLast$ is defined similarly to $\isLast$; see appendix \ref{COMMON:Def:sndlast-q}).\\
 In the \DequeueState state, the dequeueing thread owns half of the head pointer, and the tail is as in the \StaticState state.\\
 Finally, the \BothState state is essentially a combination of the \EnqueueState and \DequeueState states.
 
@@ -1911,7 +1911,9 @@ Indeed, in the Coq formalisations, we prove the Hocap-style specification for an
 
 \cleardoublepage
 \appendix
-\chapter{The Technical Details}
+\chapter{Common Definitions and Lemmas}\label{ch:appendix:common}
+
+\section{Lists and Nodes}\label{appendix:common:section:ListsNodes}
 
 \begin{definition}[First in Queue]\label{COMMON:Def:first-q}
   $\isFirst(x, xs) \eqdef \Exists xs_{rest} . xs = xs_{rest} \catenate [x]$
@@ -1935,7 +1937,6 @@ Indeed, in the Coq formalisations, we prove the Hocap-style specification for an
   xs_1 \catenate [x_1] = xs_2 \catenate [x_2] \implies xs_1 = xs_2 \land x_1 = x_2$
 \end{lemma}
 
-
 \begin{definition}[Value Projection]\label{COMMON:Def:val-proj}
   \begin{align*}
     \projval([]) &\eqdef []\\
@@ -1947,7 +1948,6 @@ Indeed, in the Coq formalisations, we prove the Hocap-style specification for an
   $\All xs_1, xs_2.\\
   \projval(xs_1 \catenate xs_2) = \projval(xs_1) \catenate \projval(xs_2)$
 \end{lemma}
-
 
 \begin{definition}[Wrap Some]\label{COMMON:Def:wrap-some}
   \begin{align*}
@@ -1975,7 +1975,7 @@ Indeed, in the Coq formalisations, we prove the Hocap-style specification for an
 \end{lemma}
 
 
-\begin{lemma}[Node equality]\label{lemma:nIn-equal}
+\begin{lemma}[Node Equality]\label{lemma:nIn-equal}
   \begin{align*}
     &\All x, y.\\
     &\nIn{x} = \nIn{y} \wand\\
@@ -1985,7 +1985,7 @@ Indeed, in the Coq formalisations, we prove the Hocap-style specification for an
   \end{align*}
 \end{lemma}
 
-
+\section{Results About the isLL Predicate}\label{appendix:common:section:isll}
 \begin{lemma}[Extract Chain from $\isLL$]\label{lemma:isLL-and-chain}
   $\All xs. \isLL(xs) \wand \isLL(xs) \star \isLLchain(xs)$
 \end{lemma}
@@ -2006,6 +2006,9 @@ Indeed, in the Coq formalisations, we prove the Hocap-style specification for an
 \end{lemma}
 
 
+\chapter{Queue Predicates}\label{ch:appendix:predicates}
+
+\section{Alternative Concurrent Queue Invariant}\label{appendix:predicates:section:simplInv}
 \begin{definition}[Simplified \tlmsq Invariant]\label{TLMSQ:spec:conc:invariant:simple}
   \begin{align*}
     &\TLQueueInvariantConc(\Phi, \lochead, \loctail, \Qg) \eqdef\\
@@ -2025,7 +2028,7 @@ Indeed, in the Coq formalisations, we prove the Hocap-style specification for an
   \end{align*}
 \end{definition}
 
-
+\section{Hocap-Style Queue Predicate for \tlmsq}\label{appendix:predicates:section:hocapqueuepred}
 \begin{definition}[\tlmsq Hocap Invariant]\label{TLMSQ:spec:hocap:invariant}
   \begin{align*}
     &\TLQueueInvariantHocap(\lochead, \loctail, \Qg) \eqdef\\
@@ -2051,7 +2054,6 @@ Indeed, in the Coq formalisations, we prove the Hocap-style specification for an
     &)
   \end{align*}
 \end{definition}
-
 
 \begin{definition}[\tlmsq{} - $\isqueue$ Predicate (Hocap)]\label{TLMSQ:spec:hocap:isqueue}
   \begin{align*}

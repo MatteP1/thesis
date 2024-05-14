@@ -124,8 +124,8 @@
 - [x] refactor specification macros to take the forall quantified variables as input
 - [x] Also make hocap viewshifts their own macros
 - [x] Make the \Qg variables in derivations \Qgseq and \Qgconc
-- [ ] Refer to Appendix definitions when explaining isLast, All, Wrap_some, Proj_val, etc.
-- [ ] Format Appendix
+- [x] Refer to Appendix definitions when explaining isLast, All, Wrap_some, Proj_val, etc.
+- [x] Format Appendix
 
 - [x] fix readme
   - [x] formatting

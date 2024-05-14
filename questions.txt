@@ -9,3 +9,5 @@
 
 
 - How do I derive the sequential and concurrent specs from the queue class?
+
+- Contributions?
