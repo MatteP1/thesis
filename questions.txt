@@ -1,17 +1,20 @@
 
 - name/notation for Qgnames (including SeqQgnames and ConcQgnames). Maybe \mathcal(G)_{\text{seq}}?
-
+A: this is fine
 
 - If top level lemmas in Iris are persistent, then doesn't the ==∗ correspond to \vs (viewshift)
-
+A: no, but using viewshift in report for it is fine
 
 - What should L be in the Two-Lock MSQ Hocap? There are two RA, both lock and token.
-
+A: fixed
 
 - How do I derive the sequential and concurrent specs from the queue class?
-
+A: Derived.
 
 - Use is_queue or isQueue? and similarly for others. Any standards in literature?
-
+A: Change to e.g.
+  isQueue_{seq}
+  similarly for other predicates
 
 - Contributions?
+A: added.

@@ -9,10 +9,15 @@ From MSQueue Require Import twoLockMSQ_impl.
 
 Local Existing Instance spin_lock.
 
+Class queueG Σ := {
+  queueGlock :: lockG Σ;
+  queueGtoken :: tokenG Σ
+}.
+
 Section proofs.
 
 Context `{!heapGS Σ}.
-Context `{!lockG Σ}.
+Context `{!queueG Σ}.
 Context `{!tokenG Σ}.
 
 Notation N := (nroot .@ "twoLockMSQ_conc").

@@ -8,15 +8,19 @@ From MSQueue Require Import MSQ_common.
 From MSQueue Require Import queue_specs.
 From MSQueue Require Import twoLockMSQ_impl.
 
+(* NOTE: This file is very similar to twoLockMSQ_concurrent_spec. The main difference is that, instead of the 'All' predicate in the invariant, we have the abstract contents of the queue. The meaningful differences in the proofs have been highlighted with 'CHANGE' comments. *)
+
 Local Existing Instance spin_lock.
 
-(* NOTE: This file is very similar to twoLockMSQ_concurrent_spec. The main difference is that, instead of the 'All' predicate in the invariant, we have the abstract contents of the queue. The meaningful differences in the proofs have been highlighted with 'CHANGE' comments. *)
+Class queueG Σ := {
+  queueGlock :: lockG Σ;
+  queueGtoken :: tokenG Σ
+}.
 
 Section proofs.
 
 Context `{!heapGS Σ}.
-Context `{!lockG Σ}.
-Context `{!tokenG Σ}.
+Context `{!queueG Σ}.
 Context `{!inG Σ (frac_authR (agreeR (listO val)))}.
 
 Variable N : namespace.
@@ -578,12 +582,11 @@ Qed.
 
 End proofs.
 
-(* TODO: figure out what L should be
 Definition twoLockMSQ : queue :=
 {|
-  queue_specs.is_queue Σ _ (_ : ???) _ :=
+  queue_specs.is_queue Σ _ (_ : queueG Σ) _ :=
     is_queue (nroot.@"two-lock-MSQ");
   queue_specs.initialize_spec _ _ _ _ := initialize_spec (nroot.@"two-lock-MSQ");
   queue_specs.enqueue_spec _ _ _ _ := enqueue_spec (nroot.@"two-lock-MSQ");
   queue_specs.dequeue_spec _ _ _ _ := dequeue_spec (nroot.@"two-lock-MSQ");
-|}. *)
+|}.

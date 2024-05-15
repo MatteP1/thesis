@@ -14,8 +14,7 @@ Local Existing Instance spin_lock.
 Section sequential_proofs.
 
 Context `{!heapGS Σ}.
-Context `{!lockG Σ}.
-Context `{!tokenG Σ}.
+Context `{!queueG Σ}.
 Context `{!inG Σ (frac_authR (agreeR (listO val)))}.
 
 Variable N : namespace.
@@ -135,8 +134,7 @@ End sequential_proofs.
 Section concurrent_proofs.
 
 Context `{!heapGS Σ}.
-Context `{!lockG Σ}.
-Context `{!tokenG Σ}.
+Context `{!queueG Σ}.
 Context `{!inG Σ (frac_authR (agreeR (listO val)))}.
 
 Variable N : namespace.

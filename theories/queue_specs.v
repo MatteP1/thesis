@@ -1,5 +1,7 @@
 From iris.algebra Require Import list agree lib.frac_auth.
 From iris.heap_lang Require Import lang proofmode notation.
+From MSQueue Require Import MSQ_common.
+From iris.base_logic.lib Require Import invariants.
 
 
 (* ===== Defining the RA for the Abstract State of the Queue ===== *)
@@ -75,7 +77,7 @@ Class queue := Queue {
   enqueue : val;
   dequeue : val;
 
-  (* The Resource Algebra used by the queue *)
+  (* The Resource Algebras used by the queue *)
   queueG : gFunctors → Type;
 
   (* The ghost names used by the queue *)
@@ -119,15 +121,19 @@ Class queue := Queue {
   {{{ w, RET w; Q w }}}
 }.
 
+Existing Class queueG.
 
 (* ===== Sequential Specification for Queue ===== *)
 Section sequential_proofs.
 
-(* Variable N : namespace.
+Context `{!queue}.
+Context `{!queueG Σ}.
+Context `{!heapGS Σ}.
+Context `{!inG Σ (frac_authR (agreeR (listO val)))}.
 
 Definition is_queue_seq (v_q : val) (xs_v: list val) (Q_γH: Qgnames) : iProp Σ :=
-  is_queue N v_q Q_γH ∗
-  Q_γH.(γ_Abst) ⤇◯ xs_v.
+  is_queue v_q Q_γH ∗
+  γ_Abst Q_γH ⤇◯ xs_v.
 
 Lemma initialize_spec_seq :
   {{{ True }}}
@@ -135,7 +141,7 @@ Lemma initialize_spec_seq :
   {{{ v_q Q_γH, RET v_q; is_queue_seq v_q [] Q_γH }}}.
 Proof.
   iIntros (Φ _) "HΦ".
-  wp_apply (initialize_spec N); first done.
+  wp_apply (initialize_spec); first done.
   iIntros (v_q Q_γH) "[His_queue Habst_frag]".
   iApply ("HΦ" $! v_q Q_γH).
   by iFrame.
@@ -147,9 +153,9 @@ Lemma enqueue_spec_seq v_q (v : val) (xs_v : list val) (Q_γH : Qgnames) :
   {{{w, RET w; is_queue_seq v_q (v :: xs_v) Q_γH }}}.
 Proof.
   iIntros (Φ) "(#His_queue & Hfrag) HΦ".
-  set (P := (Q_γH.(γ_Abst) ⤇◯ xs_v)%I).
-  set (Q := (Q_γH.(γ_Abst) ⤇◯ (v :: xs_v))%I).
-  wp_apply (enqueue_spec N v_q v Q_γH P Q with "[] [Hfrag]").
+  set (P := ((γ_Abst Q_γH) ⤇◯ xs_v)%I).
+  set (Q := ((γ_Abst Q_γH) ⤇◯ (v :: xs_v))%I).
+  wp_apply (enqueue_spec v_q v Q_γH P Q with "[] [Hfrag]").
   (* Proving viewshift *)
   {
     iIntros (xs_v') "!>".
@@ -173,11 +179,11 @@ Lemma dequeue_spec_seq v_q (xs_v : list val) (Q_γH : Qgnames) :
                     ⌜w = SOMEV v⌝ ∗ is_queue_seq v_q xs_v' Q_γH) }}}.
 Proof.
   iIntros (Φ) "(#His_queue & Hfrag) HΦ".
-  set (P := (Q_γH.(γ_Abst) ⤇◯ xs_v)%I).
-  set (Q := λ w, ((⌜xs_v = []⌝ ∗ ⌜w = NONEV⌝ ∗ Q_γH.(γ_Abst) ⤇◯ xs_v) ∨
+  set (P := ((γ_Abst Q_γH) ⤇◯ xs_v)%I).
+  set (Q := λ w, ((⌜xs_v = []⌝ ∗ ⌜w = NONEV⌝ ∗ (γ_Abst Q_γH) ⤇◯ xs_v) ∨
                   (∃v xs_v', ⌜xs_v = xs_v' ++ [v]⌝ ∗
-                    ⌜w = SOMEV v⌝ ∗ Q_γH.(γ_Abst) ⤇◯ xs_v'))%I).
-  wp_apply (dequeue_spec N v_q Q_γH P Q with "[] [Hfrag]" ).
+                    ⌜w = SOMEV v⌝ ∗ (γ_Abst Q_γH) ⤇◯ xs_v'))%I).
+  wp_apply (dequeue_spec v_q Q_γH P Q with "[] [Hfrag]" ).
   (* Proving viewshift *)
   {
     iIntros (xs_v') "!>".
@@ -212,7 +218,7 @@ Proof.
   - iRight.
     iExists v, xs_v'.
     by repeat iSplit.
-Qed. *)
+Qed.
 
 End sequential_proofs.
 
@@ -221,11 +227,16 @@ End sequential_proofs.
 (* ===== Concurrent Specification for Queue ===== *)
 Section concurrent_proofs.
 
-(* Notation NC := (N .@ "concurrent").
+Notation NC := (N .@ "concurrent").
+
+Context `{!queue}.
+Context `{!queueG Σ}.
+Context `{!heapGS Σ}.
+Context `{!inG Σ (frac_authR (agreeR (listO val)))}.
 
 Definition is_queue_conc (Ψ : val -> iProp Σ) (v_q : val) (Q_γH: Qgnames) : iProp Σ :=
-  is_queue N v_q Q_γH ∗
-  inv NC (∃xs_v, Q_γH.(γ_Abst) ⤇◯ xs_v ∗ All xs_v Ψ).
+  is_queue v_q Q_γH ∗
+  inv NC (∃xs_v, (γ_Abst Q_γH) ⤇◯ xs_v ∗ All xs_v Ψ).
 
 (* is_queue_conc is persistent *)
 Global Instance is_queue_conc_persistent Ψ v_q Q_γH : Persistent (is_queue_conc Ψ v_q Q_γH).
@@ -238,10 +249,10 @@ Lemma initialize_spec_conc (Ψ : val -> iProp Σ):
 Proof.
   iIntros (Φ _) "HΦ".
   iApply wp_fupd.
-  wp_apply (initialize_spec N); first done.
+  wp_apply (initialize_spec); first done.
   iIntros (v_q Q_γH) "[His_queue Habst_frag]".
   iApply ("HΦ" $! v_q Q_γH).
-  iMod (inv_alloc NC _ (∃xs_v, Q_γH.(γ_Abst) ⤇◯ xs_v ∗ All xs_v Ψ) with "[Habst_frag]") as "HInv"; first (iExists []; auto).
+  iMod (inv_alloc NC _ (∃xs_v, (γ_Abst Q_γH) ⤇◯ xs_v ∗ All xs_v Ψ) with "[Habst_frag]") as "HInv"; first (iExists []; auto).
   by iFrame.
 Qed.
 
@@ -253,7 +264,7 @@ Proof.
   iIntros (Φ) "[(#His_queue & #HInv) HΨ] HΦ".
   set (P := Ψ v).
   set (Q := True%I).
-  wp_apply (enqueue_spec N v_q v Q_γH P Q with "[] [HΨ]").
+  wp_apply (enqueue_spec v_q v Q_γH P Q with "[] [HΨ]").
   (* Proving viewshift *)
   {
     iIntros (xs_v') "!>".
@@ -283,7 +294,7 @@ Proof.
   iIntros (Φ) "(#His_queue & #HInv) HΦ".
   set (P := True%I : iProp Σ).
   set (Q := λ w, (⌜w = NONEV⌝ ∨ (∃v, ⌜w = SOMEV v⌝ ∗ Ψ v))%I).
-  wp_apply (dequeue_spec N v_q Q_γH P Q).
+  wp_apply (dequeue_spec v_q Q_γH P Q).
   (* Proving viewshift *)
   {
     iIntros (xs_v') "!>".
@@ -321,6 +332,6 @@ Proof.
   iApply ("HΦ" $! w).
   unfold Q.
   done.
-Qed. *)
+Qed.
 
 End concurrent_proofs.

@@ -32,6 +32,7 @@
 \usepackage{multirow}
 \usepackage{adjustbox}
 \usepackage{csquotes}
+\usepackage{natbib}
 
 \renewcommand*\sfdefault{lmss}
 \renewcommand*\ttdefault{txtt}
@@ -58,9 +59,9 @@
 \newcommand{\enqueue}{\operatorname{enqueue}}
 \newcommand{\dequeue}{\operatorname{dequeue}}
 
-\newcommand{\msq}{M\&S-Queue\xspace}
-\newcommand{\tlmsq}{Two-Lock \msq}
-\newcommand{\lfmsq}{Lock-Free \msq}
+\newcommand{\msq}{M\&S Queue}
+\newcommand{\tlmsq}{Two-Lock \msq{}}
+\newcommand{\lfmsq}{Lock-Free \msq{}}
 
 \newcommand{\isqueue}{\operatorname{is\_queue}}
 \newcommand{\isqueueseq}{\operatorname{is\_queue\_seq}}
@@ -131,10 +132,10 @@
 \newcommand{\DequeueState}{\textbf{Dequeue}\xspace}
 \newcommand{\BothState}{\textbf{Both}\xspace}
 
-\newcommand{\Qg}{Q_\gname}
-\newcommand{\Qgseq}{Q_{\gname S}}
-\newcommand{\Qgconc}{Q_{\gname C}}
-\newcommand{\Qghocap}{Q_{\gname H}}
+\newcommand{\Qg}{G}
+\newcommand{\Qgseq}{G_{S}}
+\newcommand{\Qgconc}{G_{C}}
+\newcommand{\Qghocap}{G_{H}}
 
 \newcommand{\ghlock}{\gname_{\mathrm{Hlock}}}
 \newcommand{\gtlock}{\gname_{\mathrm{Tlock}}}
@@ -358,6 +359,37 @@
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+----- New report structure -----
+
+% Chapter Introduction
+
+% Chapter Preliminaries
+
+% Chapter Queue Specifications
+%   Section: Specifications for Queues
+%       Content: a queue consists of 3 functions. They should satisfy certain properties: init should create empty queue, enqueue should add the element to the queue. Dequeue should remove first element in queue if exists, otherwise None... There are several complications to give a good and accurate specification.
+%   Section: Sequentail
+%   Section: Conc
+%   Section: Hocap
+%   Section: Derivation
+%     For the reader, it might make more sense to read proofs of seq and conc before reading derivations
+
+% Chapter Two-lock impl
+
+% Chapter Two-lock Specs
+% Section: seq proof
+% Seciton: conc proof
+% Section: hocap proof
+
+% Chapter lock-Impl
+
+% Chapter lock-free Specs
+% Section: hocap proof
+
+% Chapter: conclusion
+
+
+
 \chapter{Introduction}
 \label{ch:intro}
 
@@ -366,11 +398,14 @@
 \todo{example of a citation: \cite{DBLP:conf/podc/MichaelS96}}
 \todo{get your bibtex entries from \url{https://dblp.org/}}
 \todo{Emphasise that specs for two-lock and lock-free are equivalent, with only the queue functions being different. This is even shown in the coq proofs}
-\todo{Have a bullet point list of contributions}
-
-
-\todo{direct specifications for TL and LF Queues (instead of refinement)}
-\todo{Add more contributions}
+\todo{Have a bullet point list of contributions:}
+\begin{itemize}
+  \item Giving direct specifications for TL and LF Queues
+  \item Prove that \msq{}s satisfy those specifications (instead of refinement)
+  \item Proven that TL and LF satisfy \emph{same} specification
+  \item Shown that Hocap implies sequential and concurrent
+  \item Mechanised everything presented in the paper in coq
+\end{itemize}
 
 
 
@@ -393,7 +428,7 @@
 
 \section{The Iris Program Logic Framework}
 \label{Pre:section:iris}
-In this section, we give a brief introduction to Iris -- the logic we use to reason about the \msq's. Iris is quite expressive and supports a myriad of features and derived rules, many of which have been utilised in this project. As such, it will be impossible to cover all facets of Iris in detail, so we limit ourselves to give an overview of the main aspects of Iris. If the reader wishes a more thorough introduction, or wants to see further details of the topics covered, please consult the Iris Lecture Notes \cite{gentleiris}.
+In this section, we give a brief introduction to Iris -- the logic we use to reason about the \msq{}s. Iris is quite expressive and supports a myriad of features and derived rules, many of which have been utilised in this project. As such, it will be impossible to cover all facets of Iris in detail, so we limit ourselves to give an overview of the main aspects of Iris. If the reader wishes a more thorough introduction, or wants to see further details of the topics covered, please consult the Iris Lecture Notes \cite{gentleiris}.
 
 \todo{FOCUS IN THIS SECTION is on explaining the basic ideas of the concepts and showing the notation used. Assume the reader is somewhat familiar with program verification. }
 
@@ -450,12 +485,16 @@ The later modality adds a notion of step indexing to Iris propositions. This ste
 \todo{frame preserving update}
 
 
+\subsection{Locks}\label{Pre:iris:locks}
+\todo{show and explain the lock specification}
+
+
 \section{Formalisation in Coq}
 \label{Pre:section:coq}
 
 Iris has been mechanised in the Coq proof assistant\footnote{The mechanisation can be found at \url{https://gitlab.mpi-sws.org/iris/iris/}} -- a tool to machine-check proofs of mathematical assertions. All results in this project have been completely machine-verified in the Iris mechanisation in Coq. Specifications in the Coq formalisation of Iris are usually written in terms of hoare-triples but proved by first converting the hoare-triples to equivalent weakest-preconditions, as this is usually easier to work with. The proofs presented in this report will follow suit and give specifications using hoare-triples, but prove them assuming they are weakest-preconditions. The proofs presented in the report thus follow the mechanised proofs very closely, making it possible to ``step-through'' the mechanised proofs in tandem with reading the paper-proofs presented in this report.
 
-One caveat is that, although the theory discussed in the previous section remain valid, the underlying model of Iris is somewhat more complex than the section presented it to be. Working with the Coq formalisation of Iris thus requires a bit deeper understanding of the model of Iris. \cite{DBLP:journals/jfp/JungKJBBD18} explains the underlying model of an older version of Iris, but many of the concepts discussed are still relevant.\footnote{For an up-to-date presentation, please consult the Technical Reference at \url{https://iris-project.org/}}
+One caveat is that there is somewhat of a discrepancy between iris on paper, and the Iris formalisation in coq. Working with the latter requires a bit deeper understanding of the model of Iris. \citet{DBLP:journals/jfp/JungKJBBD18} explains the underlying model of an older version of Iris, but many of the concepts discussed are still relevant.\footnote{For an up-to-date presentation, please consult the Technical Reference at \url{https://iris-project.org/}}
 
 Table \ref{Pre:files-table} gives an overview over the files developed in the project and how they relate to this report. All files related to the project are available at \url{https://github.com/MatteP1/thesis}.
 
@@ -500,7 +539,7 @@ The project is known to compile with Coq version 8.19.0 and Iris version 4.2.0.
 \chapter{The Two-Lock Michael-Scott Queue}
 \label{ch:TLMSQ}
 
-In this chapter, we give an implementation of the blocking version of the \msq, the \tlmsq, in \heaplang. This implementation differs slightly from the original, presented in \cite{DBLP:conf/podc/MichaelS96}, but most changes simply reflect the differences in the two languages.
+In this chapter, we give an implementation of the blocking version of the \msq{}, the \tlmsq, in \heaplang. This implementation differs slightly from the original, presented in \cite{DBLP:conf/podc/MichaelS96}, but most changes simply reflect the differences in the two languages.
 
 
 \section{Introduction}
@@ -514,19 +553,19 @@ For a given triple $\node = (\locin, \nodeval, \locout)$, we introduce the follo
   &\nIn{\node} = \locin& &\nVal{\node} = \nodeval& &\nOut{\node} = \locout
 \end{align*}
 
-The reader may wonder why there is an extra, intermediary ``in'' pointer, between the pairs of the linked list, and why the ``out'' pointer couldn't point directly to the next pair. In the original implementation \cite{DBLP:conf/podc/MichaelS96}, nodes are allocated on the heap. To simulate this in \heaplang, when creating a new node, we create a pointer to a pair making up the node. Now, in the C-like language used in the original specification, an assignment operator is available which is not present in \heaplang. So in order to mimic this behaviour, we model variables as pointers. In this way, we can model a variable $\lvarA$ as a location $\loc_{\lvarA}$, and the value stored at $\loc_{\lvarA}$ is the current value of $\lvarA$. This means that the variable ``next'' in the original implementation becomes a location $\locout$, and the value stored at the location is what it is currently assigned to. Since ``next'' is supposed to be a variable containing a pointer, then the value that $\locout$ points to will also be a pointer.
+The reader may wonder why there is an extra, intermediary ``in'' pointer, between the pairs of the linked list, and why the ``out'' pointer couldn't point directly to the next pair. This comes down to difference between \heaplang and the C-like language used in the original implementation \citep{DBLP:conf/podc/MichaelS96}. Variables in the C-like language are technically just locations, and the assignment operator for variables simply corresponds to a store operation. In \heaplang, variables are modelled directly as locations which gives us an apparent extra pointer indirection compared to the original implementation.
 
 
 \section{Implementation}
 \label{TLMSQ:section:implementation}
 
-The queue consists of 3 functions: $\initialise$, $\enqueue$, and $\dequeue$, and as the name of the data structure suggests, the functions rely on two locks. To this end, we shall assume that we have some lock implementation given. In the accompanying Coq mechanisation, a ``spin-lock'' is used, but the only part we really care about is its specification; this can be found in \cite{gentleiris} (Example 8.38 at the time of writing).
+The queue consists of 3 functions: $\initialise$, $\enqueue$, and $\dequeue$, and as the name of the data structure suggests, the functions rely on two locks. To this end, we shall assume that we have some lock implementation given. In the accompanying Coq mechanisation, a ``spin-lock'' is used, but the only part we really care about is its specification which we discussed in section \ref{Pre:iris:locks}.
 
 \subsection{Initialise}
 
 $\initialise$ will first create a single node -- the head node -- marking the start of the linked list. It then creates two locks, $\Hlock$ and $\Tlock$, protecting the head and tail pointers, respectively. Finally, it creates the head and tail pointers, both pointing to the head node. The queue is then a pointer to a structure containing the head and tail pointers, and the two locks.
 
-Figure \ref{TLMSQ:impl:figure:init} illustrates the structure of the queue after initialisation. Note that one of the pointers is coloured blue. This represents a \emph{persistent} pointer; a pointer that will never be updated again. All ``in'' pointers $\locinM{i}$, are persistent, meaning that, once created, they will only ever point to $(\nodevalM{i}, \locoutM{i})$. We shall use the notation $\loc \mapsto^{\persistently} \val$ (introduced in \cite{DBLP:conf/cpp/VindumB21}) to mean that $\loc$ points persistently to $\val$.
+Figure \ref{TLMSQ:impl:figure:init} illustrates the structure of the queue after initialisation. Note that one of the pointers is coloured blue. This represents a \emph{persistent} pointer; a pointer that will never be updated again. All ``in'' pointers $\locinM{i}$, are persistent, meaning that, once created, they will only ever point to $(\nodevalM{i}, \locoutM{i})$. We shall use the notation $\loc \mapsto^{\persistently} \val$ (introduced in \cite{DBLP:conf/cpp/VindumB21}) to mean that $\loc$ points to $\val$ persistently.
 
 Note that in the original specification, a queue is a pointer to a 4-tuple $(\lochead, \loctail, \Hlock, \Tlock)$. Since \heaplang doesn't support 4-tuples, we instead represent the queue as a pointer to a pair of pairs: $\left((\lochead, \loctail), (\Hlock, \Tlock)\right)$.
 
@@ -847,7 +886,8 @@ Figure \ref{TLMSQ:impl:figure:dequeue} illustrates running dequeue on a non-empt
 
 Let us first prove a specification for the \tlmsq in the simple case where we don't allow for concurrency. In this case, we know that only a single thread will interact with the queue at any given point in a sequential manner. The specification we give will track the exact contents of the queue. To this end, we shall define the abstract state of the queue, denoted $\absvalueList$ as a list of \heaplang values. I.e. $\absvalueList : \List ~ \Val$. We adopt the convention that enqueueing an element is done by adding it to the front of the list, and dequeueing removes the last element of the list (if such an element exists). The reason for this choice is purely technical.
 
-Since the queue uses two locks, we will need two ghost names; one for each lock (see specification of lock). For this specification, these are the only two ghost names we will need. However, for the later specifications, we will use more resource algebra, and will need more ghost names. Thus, to ease notation, we shall define the type ``$\SeqQgnames$'' whose purpose is to keep track of the ghost names used for a specific queue. Since we only have two ghost names for this specification, elements of $\SeqQgnames$ will simply be pairs of ghost names. For an element $\Qg \in \SeqQgnames$, the first element of the pair, written $\Qg.\ghlock$, will contain the ghost name for the head lock, and the second element, $\Qg.\gtlock$, the ghost name for the tail lock.
+\todo{rewrite and don't apologize for introducing SeqQgnames}
+Since the queue uses two locks, we will need two ghost names; one for each lock (see specification of lock). To ease notation, we shall define the type ``$\SeqQgnames$'' whose purpose is to keep track of the ghost names used for a specific queue. Since we only have two ghost names for this specification, elements of $\SeqQgnames$ will simply be pairs of ghost names. For an element $\Qg \in \SeqQgnames$, the first element of the pair, written $\Qg.\ghlock$, will contain the ghost name for the head lock, and the second element, $\Qg.\gtlock$, the ghost name for the tail lock.
 
 The sequential specification we wish to prove is the following.
 \begin{lemma}[\tlmsq Sequential Specification]\label{TLMSQ:spec:seq}
@@ -1038,7 +1078,7 @@ As we did for the sequential specification, we note here some useful observation
     \end{enumerate}
 \end{enumerate}
 
-Observation \ref{TLMSQ:insights:lag} might seem a little surprising, and indeed it stands in contrast to property 5 in \cite{DBLP:conf/podc/MichaelS96}, which states \enquote{Tail always points to a node in the linked list, because it never lags behind Head, so it can never point to a deleted node.}. I also didn't realise this possibility until a proof attempt using a model that ``forgot'' old nodes lead to an unprovable case (see section \ref{TLMSQ:Discussion:xs_old}). The situation can occur when the queue is empty, and a thread performs an incomplete enqueue; it attaches the new node to the end, but before it can swing the tail to this new node, another thread performs a dequeue, which dequeues this new node, swinging the head to it. Now the tail is lagging a node behind the head.
+Observation \ref{TLMSQ:insights:lag} might seem a little surprising, and indeed it stands in contrast to property 5 in \cite{DBLP:conf/podc/MichaelS96}, which states \enquote{Tail always points to a node in the linked list, because it never lags behind Head, so it can never point to a deleted node.}. I also didn't realise this possibility until a proof attempt using a model that ``forgot'' old nodes lead to an unprovable case (see section \ref{TLMSQ:Discussion:xs_old}). The situation can occur when the queue is empty, and a thread performs an incomplete enqueue; it attaches the new node to the end, but before it can swing the tail to this new node, another thread performs a dequeue, which dequeues this new node, swinging the head to it. Now the tail is lagging a node behind the head. \todo{add figure to illustrate the idea}
 
 It is not possible for the tail to point more than one node behind the head, as in order for this to happen, more nodes must be enqueued, but this can't happen before the current enqueue finishes, which will update the tail and bring it up to speed with the head.
 
@@ -1046,11 +1086,11 @@ Fortunately, this isn't an issue for safety, but a consequence of this possibili
 
 Observation \ref{TLMSQ:insights:states} is a simple consequence of the implementation using two locks.
 
-Since we want $\isqueueconc$ to be persistent, then we cannot directly state the points-to predicates as we did in the sequential case. However, we will still need all the same resources to be able to prove the specification. The solution is to have an \textit{invariant} which describes the concrete state of the queue. In the proofs, when we need access to some resource, we shall then access it by opening the invariant. We now present the invariant and explain it afterwards.
+Since we want $\isqueueconc$ to be persistent, then we cannot directly state the points-to predicates as we did in the sequential case. However, we will still need all the same resources to be able to prove the specification. The solution is to have an \textit{invariant} which describes the concrete state of the queue. In the proofs, when we need access to some resource, we shall then access it by opening the invariant. We now present the invariant and explain it afterwards.\todo{motivate the idea of an invariant better}
 \begin{definition}[\tlmsq Concurrent Invariant]\label{TLMSQ:spec:conc:invariant}
   \begin{align*}
     &\TLQueueInvariantConc(\Phi, \lochead, \loctail, \Qg) \eqdef\\
-    &\Exists \absvalueList. \AllP(\absvalueList, \Phi) \star &&\text{(abstract state)}\\
+    &\Exists \absvalueList. \AllP(\absvalueList, \Phi) \star{} &&\text{(abstract state)}\\
     &\Exists \xsc, \xsqueue, \xsold, \nodehead, \nodetail . &&\text{(concrete state)}\\
     &\xsc = \xsqueue \catenate [\nodehead] \catenate \xsold \star\\
     &\isLL(\xsc) \star\\
@@ -1113,9 +1153,9 @@ In contrast to the sequential specification, the locks now protect $\TokEQg$ and
 
 \section{Linearisation Points}
 \label{TLMSQCONC:section:lin-points}
-An important notion for concurrent algorithms is \textit{linearisability} \cite{DBLP:journals/toplas/HerlihyW90}. Linearisability is a non-blocking property\footnote{Other properties, such as serialisability, inherently require implementations to be blocking. Linearisability does not require this, but linearisable algorithms can of course still be blocking.} that helps reason about which behaviours are possible. Both versions of the \msq are linearisable, which rules out undesired behaviours.
+An important notion for concurrent algorithms is \textit{linearisability} \cite{DBLP:journals/toplas/HerlihyW90}. Linearisability is a non-blocking property\footnote{Other properties, such as serialisability, inherently require implementations to be blocking. Linearisability does not require this, but linearisable algorithms can of course still be blocking.} that helps reason about which behaviours are possible. Both versions of the \msq{} are linearisable, which rules out undesired behaviours.
 
-One way to characterise linearisability is through the concept of \textit{linearisation points}. We say that a function (such as $\enqueue$ or $\dequeue$) is linearisable, if all invocations of the function have a linearisation point somewhere between the invocation and the response. Further, the effects of the function appear to occur instantaneously at the linearisation point; a single, atomic instruction performs the desired change that the function must carry out.
+One way to characterise linearisability is through the concept of \textit{linearisation points}. We say that a function (such as $\enqueue$ or $\dequeue$) is linearisable, if for all invocations of the function, there is a specific point in time between the invocation and the response where the effect of the function appears to takes place; before that point, the effect hasn't taken place, and nothing needs to be done afterwards to complete the effect. We call such a point a linearisation point.
 
 For example, $\enqueue$ has a single linearisation point at the instruction that appends the newly created node to the linked list (the store on line \ref{TLE:add}). At exactly that point, the effect of the enqueue takes place. $\dequeue$ is slightly more complicated as it has multiple linearisation points. If the queue is empty when we read the head node's out pointer on line \ref{TLD:new}, then at that read, the $\dequeue$ function is guaranteed to return $\None$, interpreting the queue as empty. In this case the $\dequeue$ doesn't change the queue but merely observes it, and the observation happens exactly at the read of the head node's out pointer, making it the linearisation point.\\
 On the hand, if the queue was not empty at that point, then the linearisation point is at line \ref{TLD:shs}, when we swing the head pointer. At that very store operation, the effect of $\dequeue$ occurs.
@@ -1486,7 +1526,7 @@ Assume $\abstractstateauth{\Qghocap.\gabst}{\absvalueList'}$. Opening the invari
 \section{Introduction}
 \label{LFMSQ:section:introduction}
 
-In this chapter we will study the non-blocking version of the \msq, the \lfmsq. As with the two-lock version, the original implementation can be found in \cite{DBLP:conf/podc/MichaelS96}. As the name ``Lock-Free'' suggests, the implementation doesn't rely on locks to achieve correct behaviour. Instead, it uses the atomic operation: $\CAS$ which we discussed in section \ref{Pre:section:heaplang}.
+In this chapter we will study the non-blocking version of the \msq{}, the \lfmsq. As with the two-lock version, the original implementation can be found in \cite{DBLP:conf/podc/MichaelS96}. As the name ``Lock-Free'' suggests, the implementation doesn't rely on locks to achieve correct behaviour. Instead, it uses the atomic operation: $\CAS$ which we discussed in section \ref{Pre:section:heaplang}.
 
 In section \ref{LFMSQ:section:implementation} we implement the \lfmsq in \heaplang. Next, we move towards proving a Hocap-style specification for it. Section \ref{LFMSQ:section:reachability} introduces the notion of \textit{Reachability} which we will need in the proofs. In section \ref{LFMSQ:section:spec} we discuss the specification we will be proving, and in sections \ref{LFMSQ:section:hocap-queue-pred} and \ref{LFMSQ:section:proof-outline} we give the proofs. Finally, in section \ref{LFMSQ:section:discussion}, we discuss a simplification to the \lfmsq algorithm and its implications.
 
@@ -1511,6 +1551,8 @@ If the head and tail nodes are not the same, then it must be safe to dequeue, wh
 
 \subsection{Prophecies}
 On line \ref{LFD:pro} in $\dequeue$, we create a ``prophecy variable'' which is resolved on line \ref{LFD:cch}. Prophecies are a part of Iris and allow us to reason about the result of future expressions. They are only used in the logic and do not alter the semantics of the code. The reason we need it is because the load on line \ref{LFD:nex} is a possible linearisation point -- if the load resolves to $\None$ (i.e. the queue is empty) and the consistency check on the next line passes, the dequeue will conclude the queue is empty and return $\None$. So when we are at the load, we need to know whether or not the consistency check passes; if it does, we should apply the viewshift, and if it doesn't, we shouldn't apply it. The prophecy variable allows us to reason about the result of the consistency check already at the load, allowing us to make the correct choice.
+
+\todo{consider explaining the issue of finding the linearisation point first and then use that to motivate prophecies}
 
 \begin{minted}[linenos=true, escapeinside=||,mathescape=true]{ocaml}
 |$\label{LFI:fun}$|  |$ \initialise \eqdef $|
@@ -1896,6 +1938,14 @@ Indeed, in the Coq formalisations, we prove the Hocap-style specification for an
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+\chapter{On the Resource Algebras Used}
+\section{Tokens}
+
+\section{Abstract State}
+\section{Abstract Reachability}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 \chapter{Conclusion and Future Work}
 \label{ch:conclusion_fw}
 
@@ -1907,7 +1957,7 @@ Indeed, in the Coq formalisations, we prove the Hocap-style specification for an
 
 \cleardoublepage
 \addcontentsline{toc}{chapter}{Bibliography}
-\bibliographystyle{plain}
+\bibliographystyle{plainnat}
 \bibliography{refs}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

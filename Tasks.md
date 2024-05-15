@@ -98,8 +98,8 @@
 - [x] Mention how to compile the files (via _CoqProject and make)
 
 - [x] Fix notation overload in Coq. Maybe just use the Q_g.g_abst => xs notation everywhere
-- [ ] Make Twolock Hocap a Hocap queue
-- [ ] Make derivations of concurrent and sequential independent of implementation
+- [x] Make Twolock Hocap a Hocap queue
+- [x] Make derivations of concurrent and sequential independent of implementation
   - [ ] Update overview of files in report
 
 - [x] Create better notation of nIn, nOut and nVal
@@ -119,7 +119,9 @@
 - [x] Refer to line numbers in proofs for two-lock
 - [ ] Check for correctness of line number references
 - [ ] Format the forall intros in lemmas (and definitions) better
-- [ ] Consider changing is_queue to isQueue (and similarly for is_queue_seq and is_queue_conc)
+- [ ] Change is_queue to isQueue
+- [ ] Change is_queue_seq to isQueue_{seq} and similarly for conc
+- [ ] Use camelCase for predicates. (proj_val, wrap_some, proj_gnames...)
 - [x] Proofread sequential and concurrent derivation section
 - [x] refactor specification macros to take the forall quantified variables as input
 - [x] Also make hocap viewshifts their own macros
@@ -140,3 +142,24 @@
   - [x] Herlihy & Wing : Linearizability. #5 in MSQ paper
 
 - [ ] If time permits, use hocap spec to prove a spec of a client
+- [ ] change cite to citet or citep
+- [ ] Always start sentences with capital letter. Change sentences that start with variables to enforce this
+- [ ] only use "points to" for predicate
+- [ ] don't use future tense so much
+- [ ] Another way to mark persistent pointers in figures
+- [ ] Consider moving observations to the enqueue and dequeue functions. some inside sections and others after
+- [ ] Make line numbers continuous across functions. init start at 1, enq start at where init ended...
+- [ ] For figures, explain the assumption that the head doesn't change during the enqueue (no dequeue happens) (possibly in the figure text)
+- [ ] Change Q_γ to G in coq
+- [ ] add {} before \star and any other binary operators
+- [ ] move Resource Algebra specifics into chapter on resource algebra
+  - [ ] Definition of RA's, e.g. Ex()
+  - [ ] Show useful lemmas about the RA's in the sections where they are used
+- [ ] Change ToknE to TokNE. similarly for rest
+  - [ ] Tok_{NE}
+  - [ ] also change in coq
+- [ ] move definition of simpler concurrent queue invariant out of appendix, into report
+- [ ] Move definitions of hocap invariant and queue predicate out of appendix, into section
+- [ ] do not use contractions
+- [ ] Change "spec" to "specification"
+- [ ] Check if any extra todos from Amin's feedback
