@@ -8,6 +8,7 @@
 \usepackage{amssymb}
 \usepackage{amsmath}
 \usepackage{amsthm}
+\usepackage{thm-restate}
 \usepackage{mathpartir}
 \usepackage{epsfig}
 \usepackage[T1]{fontenc}
@@ -67,6 +68,7 @@
 \newcommand{\isqueueseq}{\operatorname{isQueue_{S}}}
 \newcommand{\isqueueconc}{\operatorname{isQueue_{C}}}
 \newcommand{\TLQueueInvariantConc}{\operatorname{I_{TLC}}}
+\newcommand{\TLQueueInvariantConcSimpl}{\operatorname{I^{\prime}_{TLC}}}
 \newcommand{\TLQueueInvariantHocap}{\operatorname{I_{TLH}}}
 \newcommand{\LFQueueInvariantHocap}{\operatorname{I_{LFH}}}
 \newcommand{\SeqQgnames}{SeqQgnames}
@@ -591,26 +593,21 @@ For the reader, it might make more sense to read proofs of seq and conc before r
 
 
 In this section we show that we can derive the sequential and concurrent specifications from chapters \ref{ch:TLMSQSEQ} and \ref{ch:TLMSQCONC} from the Hocap-style specification. That is, we assume that we have a persistent queue predicate, $\isqueue$, and the three Hocap-style specifications for $\initialise$, $\enqueue$, and $\dequeue$ as specified in lemma \ref{TLMSQ:spec:hocap}.\\
-The derivations will need to show how to update the abstract state of the queue. We introduce two lemmas to help with this. The first shows that the authoritative and fragmental views of the abstract state agree.
-\begin{lemma}[Abstract state agree]\label{lemma:abst:agree}
+The derivations will need to show how to update the abstract state of the queue. We introduce two lemmas to help with this. These are proved in section \ref{RA:sections:abstract-state}.\\
+The first shows that the authoritative and fragmental views of the abstract state agree.
+\begin{restatable}[Abstract state agree]{lemma}{abstagree}\label{lemma:abst:agree}
   $\All \gname, \absvalueList, \absvalueList' .\\
   \abstractstateauth{\gname}{\absvalueList'} \star{} \abstractstatefullfrag{\gname}{\absvalueList} \proves \absvalueList = \absvalueList'$
-\end{lemma}
-\begin{proof}
-  Since we own both $\abstractstateauth{\gname}{\absvalueList}$ and $\abstractstatefullfrag{\gname}{\absvalueList'}$, and they have the same ghost name, we can use rules own-op\todo{ref} and own-valid\todo{ref} to conclude that the element $\authfull (1, \aginj ~ \absvalueList) \mtimes \authfrag (1, \aginj ~ \absvalueList')$ is valid. By the authoritative RA, this means that $\aginj ~ \absvalueList' \mincl \aginj ~ \absvalueList$. By definition of the agreement RA, this means that $\absvalueList' = \absvalueList$, which is what we wanted.
-\end{proof}
+\end{restatable}
 
 The second lemma shows that, if we own both the authoritative and fragmental views, we are allowed to update the abstract state to whatever we like.
-\begin{lemma}[Abstract state update]\label{lemma:abst:update}
+\begin{restatable}[Abstract state update]{lemma}{abstupdate}\label{lemma:abst:update}
   $\All \gname, \absvalueList, \absvalueList', \absvalueList'' .\\
   \abstractstateauth{\gname}{\absvalueList'} \star{}
   \abstractstatefullfrag{\gname}{\absvalueList} \vs
   \abstractstateauth{\gname}{\absvalueList''} \star{}
   \abstractstatefullfrag{\gname}{\absvalueList''}$
-\end{lemma}
-\begin{proof}
-  This time, we use own-op\todo{ref} to conclude $\ownGhost{\gname}{\authfull (1, \aginj ~ \absvalueList) \mtimes \authfrag (1, \aginj ~ \absvalueList')}$. Further, by own-op\todo{ref}, it suffices to prove $\pvs \ownGhost{\gname}{\authfull (1, \aginj ~ \absvalueList'') \mtimes \authfrag (1, \aginj ~ \absvalueList'')}$. We do this by applying the ghost-update\todo{ref} rule, which requires us to prove $\authfull (1, \aginj ~ \absvalueList) \mtimes \authfrag (1, \aginj ~ \absvalueList') \mupd \authfull (1, \aginj ~ \absvalueList'') \mtimes \authfrag (1, \aginj ~ \absvalueList'')$. Firstly by the product, fractional, and agreement RA, the element $(1, \aginj ~ \absvalueList'')$ is valid, so the product of the authoritative and fragmental parts of it is also valid. Next, note that we own the entire fraction of the fragmental element. Hence, there can be no other valid fragments. It hence follows that we can do the frame-preserving update.
-\end{proof}
+\end{restatable}
 
 \subsection{Deriving the Sequential Specification}
 Recall the sequential specification specified in lemma \ref{TLMSQ:spec:seq}. It demands a queue predicate, $\isqueueseq$. We here choose to define it as follows.
@@ -1340,7 +1337,26 @@ We will use several tokens, each of which is the valid element of their own inst
 \end{itemize}
 
 
-\textbf{Note}: The concurrent specification for the \tlmsq{} \textit{can} be proven using queue invariant \ref{TLMSQ:spec:conc:invariant} directly, and the proof outline below will also be using this. However, a simpler (but arguably less intuitive) queue invariant was discovered. This simpler invariant is equivalent to \ref{TLMSQ:spec:conc:invariant} and has the benefit of being easier to work with in the mechanised proofs. Thus, in the mechanised proofs, we always rewrite to the simpler invariant when opening the invariant. The simpler invariant can be found in the appendix (\ref{TLMSQ:spec:conc:invariant:simple}).
+We note that the concurrent specification for the \tlmsq{} \textit{can} be proven using queue invariant \ref{TLMSQ:spec:conc:invariant} directly, and the proof outline below will also be using this. However, a simpler (but arguably less intuitive) queue invariant was discovered. This simpler invariant is equivalent to \ref{TLMSQ:spec:conc:invariant} and has the benefit of being easier to work with in the mechanised proofs. Thus, in the mechanised proofs, we always rewrite to the simpler invariant when opening the invariant. We define it as follows.
+\begin{definition}[Simplified \tlmsq{} Invariant]\label{TLMSQ:spec:conc:invariant:simple}
+  \begin{align*}
+    &\TLQueueInvariantConcSimpl(\Phi, \lochead, \loctail, \Qg) \eqdef\\
+    &\Exists \absvalueList. \AllP(\absvalueList, \Phi) \star{} &&\text{(abstract state)}\\
+    &\Exists \xsc, \xsqueue, \xsold, \nodehead, \nodetail . &&\text{(concrete state)}\\
+    &\xsc = \xsqueue \catenate [\nodehead] \catenate \xsold \star{}\\
+    &\isLL(\xsc) \star{}\\
+    &\projval(\xsqueue) = \wrapsome(\absvalueList) \star{}\\
+    &((\lochead \mapsto \nIn{\nodehead} \star{} \TokNDQg) \lor{} (\lochead \mapsto^{\frac{1}{2}} \nIn{\nodehead} \star{} \TokDQg)) \star{}\\
+    &(\\
+    &\quad(\loctail \mapsto \nIn{\nodetail} \star{} \isLast(\nodetail, \xsc) \star{} \TokNEQg \star{} \TokUpdatedQg) \lor{} \\
+    &\quad(\\
+    &\quad\quad \loctail \mapsto^{\frac{1}{2}} \nIn{\nodetail} \star{} \TokEQg \star{}\\
+    &\quad\quad\left((\isLast(\nodetail, \xsc) \star{} \TokBeforeQg) \lor{} (\isSndLast(\nodetail, \xsc) \star{} \TokAfterQg)\right)\\
+    &\quad)\\
+    &)
+  \end{align*}
+\end{definition}
+As is evident, it contains the same propositions as the original invariant, but simply in a different structure. This structure allows for more linear reasoning; the common propositions between the different queue states are now ``grouped'' together.
 
 With this, we can now give our definition of $\isqueueconc$. In the below, we let $\Nl$ be some namespace.
 
@@ -1484,7 +1500,45 @@ Had we not used an $\xsold$ and essentially just ``forgotten'' old nodes, we cou
 
 \subsection{Hocap-Style Queue Predicate}
 \label{TLMSQSPECS:hocap:sub:hocap-queue-pred}
-Our definition of $\isqueue$ is almost the same as $\isqueueconc$, so we only mention the differences here. The full definition can be found in the appendix (\ref{TLMSQ:spec:hocap:isqueue}). We no longer take the predicate $\Psi$, and the collection of ghost names is now of type $\Qgnames$. Similarly, the queue invariant, now denoted $\TLQueueInvariantHocap$, doesn't require the $\Psi$ any more and the assertion $\AllP(\absvalueList, \Psi)$ is changed to $\abstractstateauth{\Qg.\gabst}{\absvalueList}$.
+Our definition of $\isqueue$ is \emph{almost} the same as $\isqueueconc$. First and foremost, the collection of ghost names is now of type $\Qgnames$ which contains the additional ghost name: $\gabst$. For the queue invariant, the differences are that we no longer take the predicate $\Psi$, and we assert $\abstractstateauth{\Qg.\gabst}{\absvalueList}$ instead of $\AllP(\absvalueList, \Psi)$. That is, our queue invariant for the Hocap-style specification now looks as follows.
+\begin{definition}[\tlmsq{} Hocap Invariant]\label{TLMSQ:spec:hocap:invariant}
+  \begin{align*}
+    &\TLQueueInvariantHocap(\lochead, \loctail, \Qg) \eqdef\\
+    &\Exists \absvalueList. \abstractstateauth{\Qg.\gabst}{\absvalueList} \star{} &&\text{(abstract state)}\\
+    &\Exists \xsc, \xsqueue, \xsold, \nodehead, \nodetail . &&\text{(concrete state)}\\
+    &\xsc = \xsqueue \catenate [\nodehead] \catenate \xsold \star{}\\
+    &\isLL(\xsc) \star{}\\
+    &\projval(\xsqueue) = \wrapsome(\absvalueList) \star{}\\
+    &(\\
+    &\quad\quad\lochead \mapsto \nIn{\nodehead} \star{} \loctail \mapsto \nIn{\nodetail} \star{} \isLast(\nodetail, \xsc) \star{} &&\text{(\StaticState)}\\
+    &\quad\quad \TokNEQg \star{} \TokNDQg \star{} \TokUpdatedQg\\
+    &\quad\lor{}\\
+    &\quad\quad\lochead \mapsto \nIn{\nodehead} \star{} \loctail \mapsto^{\frac{1}{2}} \nIn{\nodetail} \star{} &&\text{(\EnqueueState)}\\
+    &\quad\quad (\isLast(\nodetail, \xsc) \star{} \TokBeforeQg \lor{} \isSndLast(\nodetail, \xsc) \star{} \TokAfterQg) \star{}\\
+    &\quad\quad \TokEQg \star{} \TokNDQg\\
+    &\quad\lor{}\\
+    &\quad\quad\lochead \mapsto^{\frac{1}{2}} \nIn{\nodehead} \star{} \loctail \mapsto \nIn{\nodetail} \star{} \isLast(\nodetail, \xsc) \star{} &&\text{(\DequeueState)}\\
+    &\quad\quad \TokNEQg \star{} \TokDQg \star{} \TokUpdatedQg\\
+    &\quad\lor{}\\
+    &\quad\quad\lochead \mapsto^{\frac{1}{2}} \nIn{\nodehead} \star{} \loctail \mapsto^{\frac{1}{2}} \nIn{\nodetail} \star{} &&\text{(\BothState)}\\
+    &\quad\quad (\isLast(\nodetail, \xsc) \star{} \TokBeforeQg \lor{} \isSndLast(\nodetail, \xsc) \star{} \TokAfterQg) \star{} \\
+    &\quad\quad \TokEQg \star{} \TokDQg\\
+    &)
+  \end{align*}
+\end{definition}
+
+For the queue predicate, the only real difference is that we no longer take the predicate $\Psi$. That is, our queue predicate is the following.
+\begin{definition}[\tlmsq{} - $\isqueue$ Predicate (Hocap)]\label{TLMSQ:spec:hocap:isqueue}
+  \begin{align*}
+    \isqueueconc(\vq, \Qg) \eqdef
+    &\Exists \locqueue, \lochead, \loctail \in \Loc . \Exists \Hlock, \Tlock \in \Val . \\
+    &\vq = \locqueue \star{} \locqueue \mapsto^{\persistently} ((\lochead, \loctail), (\Hlock, \Tlock)) \star{}\\
+    &\knowInv{\Nl.queue}{\TLQueueInvariantHocap(\Phi, \lochead, \loctail, \Qg)} \star{}\\
+    &\isLock(\Qg.\ghlock, \Hlock, \TokDQg) \star{}\\
+    &\isLock(\Qg.\gtlock, \Tlock, \TokEQg).
+  \end{align*}
+  \end{definition}
+
 
 \subsection{Proof Sketch}  
 \label{TLMSQSPECS:hocap:sub:proof-Sketch}
@@ -1553,9 +1607,10 @@ Fundamentally, a dequeue operation still consists of swinging the head pointer t
 If the head and tail nodes are not the same, then it must be safe to dequeue, which we attempt in the else block on line \ref{LFD:el2}.
 
 \subsection{Prophecies}
-On line \ref{LFD:pro} in $\dequeue$, we create a ``prophecy variable'' which is resolved on line \ref{LFD:cch}. Prophecies are a part of Iris and allow us to reason about the result of future expressions. They are only used in the logic and do not alter the semantics of the code. The reason we need it is because the load on line \ref{LFD:nex} is a possible linearisation point -- if the load resolves to $\None$ (i.e. the queue is empty) and the consistency check on the next line passes, the dequeue will conclude the queue is empty and return $\None$. So when we are at the load, we need to know whether or not the consistency check passes; if it does, we should apply the viewshift, and if it doesn't, we shouldn't apply it. The prophecy variable allows us to reason about the result of the consistency check already at the load, allowing us to make the correct choice.
+Notice that the load on line \ref{LFD:nex} is a possible linearisation point -- if the load resolves to $\None$ (i.e. the queue is empty) and the consistency check on the next line passes, the dequeue will conclude the queue is empty and return $\None$. That is, the point where we ``read'' the state of the queue is the load on line \ref{LFD:nex}, but we only conclude that the queue is empty if the consistency check on the next line succeeds. So when we are at the load, we need to know whether or not the consistency check passes; if it does, we should apply the viewshift, and if it doesn't, we shouldn't apply it. This is somewhat of a conundrum, as this requires us to reason about a future computation.
 
-\todo{consider explaining the issue of finding the linearisation point first and then use that to motivate prophecies}
+To solve this issue, we use a \textit{prophecy variable}. Prophecies are a part of Iris and allow us to reason about the result of future expressions. They are only used in the logic and do not alter the semantics of the code. On line \ref{LFD:pro} in $\dequeue$, we create one such prophecy variable, which is then ``resolved'' on line \ref{LFD:cch}. The prophecy variable allows us to reason about the result of the expression inside the $\langkw{Resolve}$ statement. In other words, we can reason about consistency check already at the load on line \ref{LFD:nex}, allowing us to make the correct choice. We will see exactly how this works when we prove the specification for the \lfmsq in chapter \ref{ch:LFMSQSPECS}.
+
 \begin{figure}
 \begin{minted}[linenos=true, escapeinside=||, mathescape=true, bgcolor=codebg, frame=lines]{ocaml}
 |$\label{LFI:fun}$|  |$ \initialise \eqdef $|
@@ -1673,62 +1728,34 @@ We proceed to prove some useful lemmas about concrete reachability.
 
 As discussed, we wish to capture that if a node can reach either the head or tail node at one point during the program, then it can reach any future head or tail nodes. To do this we introduce the notion of abstract reachability. The idea is to introduce ghost variables that can ``point'' to nodes in the linked list, just as the head and tail pointers do. We shall write $\ap{\gname}{x}$ to mean that the ghost variable $\gname$ \emph{abstractly points} to the node $x$. We shall construct the abstract points-to predicate so that we can update $\ap{\gname}{x}$ to $\ap{\gname}{y}$ only if $x$ can concretely reach $y$, i.e. $\reach{x}{y}$. This additional restriction compared to the normal points-to predicate is what allows us to capture the property described above. We write $\ar{x}{\gname}$ to mean that the node $x$ can \emph{abstractly reach} the ghost variable $\gname$. The idea is that, if we have established $\ar{x}{\gname}$, then no matter what node $\gname$ abstractly points to, for instance $\ap{\gname}{y}$, we can conclude $\reach{x}{y}$. This means that if we update $\ap{\gname}{y}$ in the future to, say $\ap{\gname}{z}$, then we can conclude that $\reach{x}{z}$.
 
-To define the abstract points-to predicate and the abstract reach predicate, we create the following resource algebra: $\authm(\mathcal{P}(\Node))$, where $\Node \eqdef (\Loc \times \Val) \times \Loc$. Here, the resource algebra $\mathcal{P}(\Node)$ denotes the set of subsets of $\Node$, with union as the operation. The empty set is the unit element, meaning that $\mathcal{P}(\Node)$ is unital. We may now define abstract reach and abstract points-to as follows.
-\begin{definition}[Abstract Reach]
-  $\ar{\node}{\gname} \eqdef \ownGhost{\gname}{\authfrag \{\node\}}$
-\end{definition}
-
-\begin{definition}[Abstract Points-to]
-  $\ap{\gname}{\node} \eqdef \Exists s . \ownGhost{\gname}{\authfull s} \star{} \Sep_{\nodeM{m} \in s} \reach{\nodeM{m}}{\node}$
-\end{definition}
-
-One should think of sets $s \in \mathcal{P}(\Node)$ as specifying which nodes can abstractly reach a certain ghost variable. Due to how the authoritative resource algebra work, the assertion $\ownGhost{\gname}{\authfrag \{\node\}}$ essentially states that $\node$ is \textit{one} of the nodes that can reach the node that $\gname$ points to. This is because, when combining a fragmental element $s$ and authoritative element $t$, we get that the fragmental element is ``smaller'' than the authoritative, $s \mincl t$. In this case, ``smaller'' amounts to ``subset''. Hence, $\ownGhost{\gname}{\authfrag \{\node\}}$ means that, whatever the authoritative set is, it will contain the node $\node$. 
-
-The authoritative set is existentially quantified as it can change over time, but whatever it is, we assert that all the nodes it contains can \textit{concretely} reach the node that the ghost name is currently pointing to. This choice of definitions enables us to prove the properties we desired of abstract reachability above. The four lemmas below are all we need for abstract reachability when we prove the specification for the \lfmsq{} later.
+We refer to section \ref{RA:sections:abstract-reach} for the definition of the resource algebra we use to formally define abstract points-to and abstract reachability. For our purposes, we only need to know the following four lemmas to work with the predicates in the proofs. These lemmas are also proved in section \ref{RA:sections:abstract-reach}.
 
 Firstly, if we have a node, we may allocate some ghost variable $\gname$ which points to it and assert that the node can reach $\gname$.
-\begin{lemma}[Abs-Reach-Alloc]\label{lemma:abs-reach-alloc}
+\begin{restatable}[Abs-Reach-Alloc]{lemma}{absreachalloc}\label{lemma:abs-reach-alloc}
   $\reach{\node}{\node} \vs (\Exists \gname . \ap{\gname}{\node} \star{} \ar{\node}{\gname})$
-\end{lemma}
-\begin{proof}
-  We assume $\reach{\node}{\node}$ and must show $\pvs \Exists \gname' . \ap{\gname'}{\node} \star{} \ar{\node}{\gname'}$. By definition or the authoritative RA, the element $\authfull \{\node\} \mtimes \authfrag \{\node\}$ is valid. Hence by the Ghost-alloc rule\todo{ref}, we may get $\pvs \Exists \gname . \ownGhost{\gname}{\authfull \{\node\} \mtimes \authfrag \{\node\}}$. By Upd-mono\todo{ref}, we may strip away the update modality on the goal and the previous assertion. Thus, we must prove $\Exists \gname' . \ap{\gname'}{\node} \star{} \ar{\node}{\gname'}$, and we have that $\Exists \gname . \ownGhost{\gname}{\authfull \{\node\} \mtimes \authfrag \{\node\}}$. We use $\gname$ as the witness in the goal meaning we must prove  $\ap{\gname}{\node} \star{} \ar{\node}{\gname}$. We can split the ownership of the authoritative and fragmental parts up using Own-op\todo{ref}, giving us $\ownGhost{\gname}{\authfull \{\node\}}$ and $\ownGhost{\gname}{\authfrag \{\node\}}$. The latter assertion is equivalent to $\ar{\node}{\gname}$, which matches the second obligation in the goal. To prove the first obligation, we must give some set as witness, and show that all nodes in the set can reach $\node$. We of course choose $\{\node\}$ as the witness, and must then prove that $\reach{\node}{\node}$, which we assumed in the beginning.
-\end{proof}
+\end{restatable}
 
 The second lemma allows us to get a \textit{concrete} reachability predicate out of an abstract one. If a ghost name $\gname_m$ currently points abstractly to some node $\nodeM{m}$, then any node that can abstractly reach $\gname$, can also \textit{concretely} reach $\nodeM{m}$.
-\begin{lemma}[Abs-Reach-Concr]\label{lemma:abs-reach-concr}
+\begin{restatable}[Abs-Reach-Concr]{lemma}{absreachconcr}\label{lemma:abs-reach-concr}
   $\ar{\nodeM{n}}{\gname_m} \star{}
    \ap{\gname_m}{\nodeM{m}} \wand
    \reach{\nodeM{n}}{\nodeM{m}} \star{} \ap{\gname_m}{\nodeM{m}}$
-\end{lemma}
-\begin{proof}
-  Assuming $\ar{\nodeM{n}}{\gname_m}$ and $\ap{\gname_m}{\nodeM{m}}$, we must show $\reach{\nodeM{n}}{\nodeM{m}}$ without ``consuming'' $\ap{\gname_m}{\nodeM{m}}$. From $\ap{\gname_m}{\nodeM{m}}$ we can deduce that there is some set $s$ so that $\ownGhost{\gname_m}{\authfull s}$ and $\Sep_{\node' \in s} \reach{\node'}{\nodeM{m}}$. Since we own both $\ownGhost{\gname_m}{\authfull s}$ and $\ownGhost{\gname_m}{\authfrag \{\nodeM{n}\}}$ (from $\ar{\nodeM{n}}{\gname_m}$), we may conclude that their product is valid, which in our instantiation of the authoritative RA equates to $\nodeM{n} \in s$. We may now frame away the second part of the goal, $\ap{\gname_m}{\nodeM{m}}$, using $\ownGhost{\gname_m}{\authfull s}$ and $\Sep_{\node' \in s} \reach{\node'}{\nodeM{m}}$. Note that we get to keep $\ownGhost{\gname_m}{\authfull s}$ as we only used it to prove persistent facts. Thus, from that assertion and by $\nodeM{n} \in s$, we can deduce that $\reach{\nodeM{n}}{\nodeM{m}}$, which is what we had to prove.
-\end{proof}
+\end{restatable}
 
 We can also go the other way, and get an abstract reachability predicate out of a concrete one. If a ghost variable $\gname_m$ points abstractly to some node $\nodeM{m}$, and a node $\nodeM{n}$ can \textit{concretely} reach $\nodeM{m}$, then we may deduce that $\nodeM{n}$ can \textit{abstractly} reach $\gname_m$, meaning that $\nodeM{n}$ can reach any node that $\gname_m$ will ever point to in the future.
-\begin{lemma}[Abs-Reach-Abs]\label{lemma:abs-reach-abs}
+\begin{restatable}[Abs-Reach-Abs]{lemma}{absreachabs}\label{lemma:abs-reach-abs}
   $\reach{\nodeM{n}}{\nodeM{m}} \star{}
    \ap{\gname_m}{\nodeM{m}} \vs
    \ar{\nodeM{n}}{\gname_m} \star{} \ap{\gname_m}{\nodeM{m}}$
-\end{lemma}
-\begin{proof}
-  Assuming $\reach{\nodeM{n}}{\nodeM{m}}$ and $\ap{\gname_m}{\nodeM{m}}$ we must conclude $\pvs \ar{\nodeM{n}}{\gname_m}$. From $\ap{\gname_m}{\nodeM{m}}$ we know that there is some set $s$ so that $\ownGhost{\gname_m}{\authfull s}$ and $\Sep_{\node' \in s} \reach{\node'}{\nodeM{m}}$. There are now two cases to consider: either $\nodeM{n} \in s$ or $\nodeM{n} \notin s$.
-  \begin{itemize}
-    \item[$\nodeM{n} \in s$] By the definition of our authoritative RA, if a set $y$ is a subset of $s$, then we may update our ghost resources to obtain ownership of the fragment $y$. In our case, since $\nodeM{n} \in s$, we may update our resources to additionally get $\ownGhost{\gname_m}{\authfrag \{\nodeM{n}\}}$, which is exactly what we wanted. Since we still have $\ownGhost{\gname_m}{\authfull s}$, we can also prove $\ap{\gname_m}{\nodeM{m}}$.
-    \item[$\nodeM{n} \notin s$] In this case we may update $\ownGhost{\gname_m}{\authfull s}$ so that the set also includes $\nodeM{n}$. The reason we may do this, is because, according to the $\mathcal{P}(\Node)$ RA, we may update a set $X$ to $Y$, as long as $X \subseteq Y$. Thus, we can update our resource to get $\ownGhost{\gname_m}{\authfull \{\nodeM{n}\} \cup s}$. As in the previous case, we can further get $\ownGhost{\gname_m}{\authfrag \{\nodeM{n}\}}$ out of this, which we use to frame away the goal $\ar{\nodeM{n}}{\gname_m}$.\\
-    To prove $\ap{\gname_m}{\nodeM{m}}$, we use the set $\{\nodeM{n}\} \cup s$, and immediately frame away the authoritative part, which we owned. We are left with having to prove $\Sep_{\node' \in \{\nodeM{n}\} \cup s} \reach{\node'}{\nodeM{m}}$. However, by $\Sep_{\node' \in s} \reach{\node'}{\nodeM{m}}$ and our assumption that $\reach{\nodeM{n}}{\nodeM{m}}$, we can easily conclude this.
-  \end{itemize}
-\end{proof}
+\end{restatable}
 
 The final lemma allows us update abstract pointers. As discussed above, we will require that whatever node we update the pointer to is a successor of the current node. That is, if a ghost variable $\gname_m$ currently points to $\nodeM{m}$, then we must show that $\nodeM{m}$ can reach $\nodeM{o}$, before we can update $\gname$ to point abstractly to $\nodeM{o}$. After the update we additionally get that $\nodeM{o}$ can abstractly reach $\gname$.
-\begin{lemma}[Abs-Reach-Advance]\label{lemma:abs-reach-advance}
+\begin{restatable}[Abs-Reach-Advance]{lemma}{absreachadvance}\label{lemma:abs-reach-advance}
     $\ap{\gname_m}{\nodeM{m}} \star{}
      \reach{\nodeM{m}}{\nodeM{o}} \vs
      \ap{\gname_m}{\nodeM{o}} \star{} \ar{\nodeM{o}}{\gname_m}$
-\end{lemma}
-\begin{proof}
-  Assuming $\ap{\gname_m}{\nodeM{m}}$ and $\reach{\nodeM{m}}{\nodeM{o}}$ we must prove $\pvs \ap{\gname_m}{\nodeM{o}} \star{} \ar{\nodeM{o}}{\gname_m}$. From $\ap{\gname_m}{\nodeM{m}}$, we get some set $s$ so that $\ownGhost{\gname_m}{\authfull s}$ and $\Sep_{\node' \in s} \reach{\node'}{\nodeM{m}}$. As we did in the proof of lemma \ref{lemma:abs-reach-abs}, we update $\ownGhost{\gname_m}{\authfull s}$ so that the set additionally contains $\nodeM{o}$. Thus, we get $\ownGhost{\gname_m}{\authfull \{\nodeM{o}\} \cup s}$. From this, we may extract ownership of the fragmental part: $\ownGhost{\gname_m}{\authfrag \{\nodeM{o}\}}$, which we use to prove the second part of the goal.\\
-  We are thus left with proving $\ap{\gname_m}{\nodeM{o}}$. We use $\{\nodeM{o}\} \cup s$ as witness for the authoritative set, and immediately frame away the ownership assertion of the authoritative part. We are left with proving $\Sep_{\node' \in \{\nodeM{o}\} \cup s} \reach{\node'}{\nodeM{o}}$. We already know that $\Sep_{\node' \in s} \reach{\node'}{\nodeM{m}}$ and $\reach{\nodeM{m}}{\nodeM{o}}$. Thus, by transitivity of reach (lemma \ref{lemma:reach-transitive}), we may conclude $\Sep_{\node' \in \cup s} \reach{\node'}{\nodeM{o}}$. Thus, we are done if we can prove that $\reach{\nodeM{o}}{\nodeM{o}}$, which by lemma \ref{lemma:reach-reflexive} amount to showing that $\nodeM{o}$ is a node. However, since $\reach{\nodeM{m}}{\nodeM{o}}$, then, by lemma \ref{lemma:reach-to-is-node}, we know that this is the case.
-\end{proof}
+\end{restatable}
+
 
 \section{Specifications for \lfmsq{}}
 \label{LFMSQ:section:spec}
@@ -1942,10 +1969,96 @@ Indeed, in the Coq formalisations, we prove the Hocap-style specification for an
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \chapter{On the Resource Algebras Used}
+\label{ch:RA}
 \section{Tokens}
+\label{RA:sections:tokens}
+Tokens are defined using the exclusive resource algebra on the singleton set: $\exm{\TT}$. This resource algebra only has one valid element, which we here denote by $T$, and combining two elements will give the non-valid element $\bot$.
+
+We can always create new tokens, which will just give us ownership of $T$ with a fresh ghost name, $\gname$.
+\begin{lemma}
+  $\proves \pvs \Exists \gname . \ownGhost{\gname}{T}$
+\end{lemma}
+\begin{proof}
+  This follows directly from own-alloc\todo{ref} and the fact that $T$ is valid.
+\end{proof}
+
+Importantly, if we own a particular token, then we know that no one else can own the same token. Formally, we write this as:
+\begin{lemma}
+  $\ownGhost{\gname}{T} \star{} \ownGhost{\gname}{T} \proves \FALSE$
+\end{lemma}
+\begin{proof}
+  By own-op\todo{ref} we get ownership of $\ownGhost{\gname}{T \mtimes T}$. By the exclusive RA, this is equivalent to $\ownGhost{\gname}{\bot}$. We now own a non-valid element which proves $\FALSE$.
+\end{proof}
+
 
 \section{Abstract State}
-\section{Abstract Reachability}
+\label{RA:sections:abstract-state}
+
+We shall use the resource algebra $\authm(\option{(\fracm \times \agm(\List ~ \Val))})$ to define the abstract state predicate. $\List ~ \Val$ is the abstract state. It is wrapped in the agreement RA, $\agm$, which ensures that if one owns two elements, then they agree on the abstract state. The fractional RA, $\fracm$, denotes how much of the fragmental view is owned; the fragmental view can be split up, which is handled by the clients. We collect $\fracm$ and $\agm(\List ~ \Val)$ in the product RA, whose elements are then pairs of fractions and abstract states. The option RA $?$, makes the product RA unital which is required by the $\authm$ construction. $\authm$ is the authoritative resource algebra. It gives us the authoritative and fragmental views and, together with the fractional RA, governs that they can only be updated in unison.
+
+With this, we may now define $\abstractstateauth{\gname}{\absvalueList}$ and $\abstractstatefullfrag{\gname}{\absvalueList}$ formally.
+\begin{definition}[Authoritative Abstract State]
+  For an abstract state $\absvalueList$ and a ghost name $\gname$, we define: $\abstractstateauth{\gname}{\absvalueList} \eqdef \ownGhost{\gname}{\authfull (1, \aginj ~ \absvalueList)}$
+\end{definition}
+
+\begin{definition}[Fragmental Abstract State]
+  For an abstract state $\absvalueList$ and a ghost name $\gname$, we define:
+  $\abstractstatefullfrag{\gname}{\absvalueList} \eqdef \ownGhost{\gname}{\authfrag (1, \aginj ~ \absvalueList)}$
+\end{definition}
+
+In section \ref{QueueSpecs:section:deriving-seq-and-conc} we postulated two important lemmas which showed that the authoritative and fragmental states agree, and how to update the abstract state. We now proceed to prove these lemmas.
+\abstagree*
+\begin{proof}
+  Since we own both $\abstractstateauth{\gname}{\absvalueList}$ and $\abstractstatefullfrag{\gname}{\absvalueList'}$, and they have the same ghost name, we can use rules own-op\todo{ref} and own-valid\todo{ref} to conclude that the element $\authfull (1, \aginj ~ \absvalueList) \mtimes \authfrag (1, \aginj ~ \absvalueList')$ is valid. By the authoritative RA, this means that $\aginj ~ \absvalueList' \mincl \aginj ~ \absvalueList$. By definition of the agreement RA, this means that $\absvalueList' = \absvalueList$, which is what we wanted.
+\end{proof}
+
+\abstupdate*
+\begin{proof}
+  This time, we use own-op\todo{ref} to conclude $\ownGhost{\gname}{\authfull (1, \aginj ~ \absvalueList) \mtimes \authfrag (1, \aginj ~ \absvalueList')}$. Further, by own-op\todo{ref}, it suffices to prove $\pvs \ownGhost{\gname}{\authfull (1, \aginj ~ \absvalueList'') \mtimes \authfrag (1, \aginj ~ \absvalueList'')}$. We do this by applying the ghost-update\todo{ref} rule, which requires us to prove $\authfull (1, \aginj ~ \absvalueList) \mtimes \authfrag (1, \aginj ~ \absvalueList') \mupd \authfull (1, \aginj ~ \absvalueList'') \mtimes \authfrag (1, \aginj ~ \absvalueList'')$. Firstly by the product, fractional, and agreement RA, the element $(1, \aginj ~ \absvalueList'')$ is valid, so the product of the authoritative and fragmental parts of it is also valid. Next, note that we own the entire fraction of the fragmental element. Hence, there can be no other valid fragments. It hence follows that we can do the frame-preserving update.
+\end{proof}
+
+\section{Abstract Points-to and Reachability}
+\label{RA:sections:abstract-reach}
+
+To define the abstract points-to predicate and the abstract reach predicate, we create the following resource algebra: $\authm(\mathcal{P}(\Node))$, where $\Node \eqdef (\Loc \times \Val) \times \Loc$. Here, the resource algebra $\mathcal{P}(\Node)$ denotes the set of subsets of $\Node$, with union as the operation. The empty set is the unit element, meaning that $\mathcal{P}(\Node)$ is unital. We may now define abstract reach and abstract points-to as follows.
+\begin{definition}[Abstract Reach]
+  $\ar{\node}{\gname} \eqdef \ownGhost{\gname}{\authfrag \{\node\}}$
+\end{definition}
+
+\begin{definition}[Abstract Points-to]
+  $\ap{\gname}{\node} \eqdef \Exists s . \ownGhost{\gname}{\authfull s} \star{} \Sep_{\nodeM{m} \in s} \reach{\nodeM{m}}{\node}$
+\end{definition}
+
+One should think of sets $s \in \mathcal{P}(\Node)$ as specifying which nodes can abstractly reach a certain ghost variable. Due to how the authoritative resource algebra work, the assertion $\ownGhost{\gname}{\authfrag \{\node\}}$ essentially states that $\node$ is \textit{one} of the nodes that can reach the node that $\gname$ points to. This is because, when combining a fragmental element $s$ and authoritative element $t$, we get that the fragmental element is ``smaller'' than the authoritative, $s \mincl t$. In this case, ``smaller'' amounts to ``subset''. Hence, $\ownGhost{\gname}{\authfrag \{\node\}}$ means that, whatever the authoritative set is, it will contain the node $\node$.
+
+The authoritative set is existentially quantified as it can change over time, but whatever it is, we assert that all the nodes it contains can \textit{concretely} reach the node that the ghost name is currently pointing to. This choice of definitions enables us to prove the properties we desired of abstract reachability in section \ref{LFMSQ:section:reachability}. We proceed to prove the four essential lemmas on abstract points-to and reachability that we postulated in said section.
+
+\absreachalloc*
+\begin{proof}
+  We assume $\reach{\node}{\node}$ and must show $\pvs \Exists \gname' . \ap{\gname'}{\node} \star{} \ar{\node}{\gname'}$. By definition or the authoritative RA, the element $\authfull \{\node\} \mtimes \authfrag \{\node\}$ is valid. Hence by the Ghost-alloc rule\todo{ref}, we may get $\pvs \Exists \gname . \ownGhost{\gname}{\authfull \{\node\} \mtimes \authfrag \{\node\}}$. By Upd-mono\todo{ref}, we may strip away the update modality on the goal and the previous assertion. Thus, we must prove $\Exists \gname' . \ap{\gname'}{\node} \star{} \ar{\node}{\gname'}$, and we have that $\Exists \gname . \ownGhost{\gname}{\authfull \{\node\} \mtimes \authfrag \{\node\}}$. We use $\gname$ as the witness in the goal meaning we must prove  $\ap{\gname}{\node} \star{} \ar{\node}{\gname}$. We can split the ownership of the authoritative and fragmental parts up using Own-op\todo{ref}, giving us $\ownGhost{\gname}{\authfull \{\node\}}$ and $\ownGhost{\gname}{\authfrag \{\node\}}$. The latter assertion is equivalent to $\ar{\node}{\gname}$, which matches the second obligation in the goal. To prove the first obligation, we must give some set as witness, and show that all nodes in the set can reach $\node$. We of course choose $\{\node\}$ as the witness, and must then prove that $\reach{\node}{\node}$, which we assumed in the beginning.
+\end{proof}
+
+\absreachconcr*
+\begin{proof}
+  Assuming $\ar{\nodeM{n}}{\gname_m}$ and $\ap{\gname_m}{\nodeM{m}}$, we must show $\reach{\nodeM{n}}{\nodeM{m}}$ without ``consuming'' $\ap{\gname_m}{\nodeM{m}}$. From $\ap{\gname_m}{\nodeM{m}}$ we can deduce that there is some set $s$ so that $\ownGhost{\gname_m}{\authfull s}$ and $\Sep_{\node' \in s} \reach{\node'}{\nodeM{m}}$. Since we own both $\ownGhost{\gname_m}{\authfull s}$ and $\ownGhost{\gname_m}{\authfrag \{\nodeM{n}\}}$ (from $\ar{\nodeM{n}}{\gname_m}$), we may conclude that their product is valid, which in our instantiation of the authoritative RA equates to $\nodeM{n} \in s$. We may now frame away the second part of the goal, $\ap{\gname_m}{\nodeM{m}}$, using $\ownGhost{\gname_m}{\authfull s}$ and $\Sep_{\node' \in s} \reach{\node'}{\nodeM{m}}$. Note that we get to keep $\ownGhost{\gname_m}{\authfull s}$ as we only used it to prove persistent facts. Thus, from that assertion and by $\nodeM{n} \in s$, we can deduce that $\reach{\nodeM{n}}{\nodeM{m}}$, which is what we had to prove.
+\end{proof}
+
+\absreachabs*
+\begin{proof}
+  Assuming $\reach{\nodeM{n}}{\nodeM{m}}$ and $\ap{\gname_m}{\nodeM{m}}$ we must conclude $\pvs \ar{\nodeM{n}}{\gname_m}$. From $\ap{\gname_m}{\nodeM{m}}$ we know that there is some set $s$ so that $\ownGhost{\gname_m}{\authfull s}$ and $\Sep_{\node' \in s} \reach{\node'}{\nodeM{m}}$. There are now two cases to consider: either $\nodeM{n} \in s$ or $\nodeM{n} \notin s$.
+  \begin{itemize}
+    \item[$\nodeM{n} \in s$] By the definition of our authoritative RA, if a set $y$ is a subset of $s$, then we may update our ghost resources to obtain ownership of the fragment $y$. In our case, since $\nodeM{n} \in s$, we may update our resources to additionally get $\ownGhost{\gname_m}{\authfrag \{\nodeM{n}\}}$, which is exactly what we wanted. Since we still have $\ownGhost{\gname_m}{\authfull s}$, we can also prove $\ap{\gname_m}{\nodeM{m}}$.
+    \item[$\nodeM{n} \notin s$] In this case we may update $\ownGhost{\gname_m}{\authfull s}$ so that the set also includes $\nodeM{n}$. The reason we may do this, is because, according to the $\mathcal{P}(\Node)$ RA, we may update a set $X$ to $Y$, as long as $X \subseteq Y$. Thus, we can update our resource to get $\ownGhost{\gname_m}{\authfull \{\nodeM{n}\} \cup s}$. As in the previous case, we can further get $\ownGhost{\gname_m}{\authfrag \{\nodeM{n}\}}$ out of this, which we use to frame away the goal $\ar{\nodeM{n}}{\gname_m}$.\\
+    To prove $\ap{\gname_m}{\nodeM{m}}$, we use the set $\{\nodeM{n}\} \cup s$, and immediately frame away the authoritative part, which we owned. We are left with having to prove $\Sep_{\node' \in \{\nodeM{n}\} \cup s} \reach{\node'}{\nodeM{m}}$. However, by $\Sep_{\node' \in s} \reach{\node'}{\nodeM{m}}$ and our assumption that $\reach{\nodeM{n}}{\nodeM{m}}$, we can easily conclude this.
+  \end{itemize}
+\end{proof}
+
+\absreachadvance*
+\begin{proof}
+  Assuming $\ap{\gname_m}{\nodeM{m}}$ and $\reach{\nodeM{m}}{\nodeM{o}}$ we must prove $\pvs \ap{\gname_m}{\nodeM{o}} \star{} \ar{\nodeM{o}}{\gname_m}$. From $\ap{\gname_m}{\nodeM{m}}$, we get some set $s$ so that $\ownGhost{\gname_m}{\authfull s}$ and $\Sep_{\node' \in s} \reach{\node'}{\nodeM{m}}$. As we did in the proof of lemma \ref{lemma:abs-reach-abs}, we update $\ownGhost{\gname_m}{\authfull s}$ so that the set additionally contains $\nodeM{o}$. Thus, we get $\ownGhost{\gname_m}{\authfull \{\nodeM{o}\} \cup s}$. From this, we may extract ownership of the fragmental part: $\ownGhost{\gname_m}{\authfrag \{\nodeM{o}\}}$, which we use to prove the second part of the goal.\\
+  We are thus left with proving $\ap{\gname_m}{\nodeM{o}}$. We use $\{\nodeM{o}\} \cup s$ as witness for the authoritative set, and immediately frame away the ownership assertion of the authoritative part. We are left with proving $\Sep_{\node' \in \{\nodeM{o}\} \cup s} \reach{\node'}{\nodeM{o}}$. We already know that $\Sep_{\node' \in s} \reach{\node'}{\nodeM{m}}$ and $\reach{\nodeM{m}}{\nodeM{o}}$. Thus, by transitivity of reach (lemma \ref{lemma:reach-transitive}), we may conclude $\Sep_{\node' \in \cup s} \reach{\node'}{\nodeM{o}}$. Thus, we are done if we can prove that $\reach{\nodeM{o}}{\nodeM{o}}$, which by lemma \ref{lemma:reach-reflexive} amount to showing that $\nodeM{o}$ is a node. However, since $\reach{\nodeM{m}}{\nodeM{o}}$, then, by lemma \ref{lemma:reach-to-is-node}, we know that this is the case.
+\end{proof}
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -2060,67 +2173,6 @@ Indeed, in the Coq formalisations, we prove the Hocap-style specification for an
   $\All xs, ys.\\
    \isLL(xs \catenate ys) \wand \isLL(xs) \star{} \isLLchain(ys)$
 \end{lemma}
-
-
-\chapter{Queue Predicates}\label{ch:appendix:predicates}
-
-\section{Alternative Concurrent Queue Invariant}\label{appendix:predicates:section:simplInv}
-\begin{definition}[Simplified \tlmsq{} Invariant]\label{TLMSQ:spec:conc:invariant:simple}
-  \begin{align*}
-    &\TLQueueInvariantConc(\Phi, \lochead, \loctail, \Qg) \eqdef\\
-    &\Exists \absvalueList. \AllP(\absvalueList, \Phi) \star{} &&\text{(abstract state)}\\
-    &\Exists \xsc, \xsqueue, \xsold, \nodehead, \nodetail . &&\text{(concrete state)}\\
-    &\xsc = \xsqueue \catenate [\nodehead] \catenate \xsold \star{}\\
-    &\isLL(\xsc) \star{}\\
-    &\projval(\xsqueue) = \wrapsome(\absvalueList) \star{}\\
-    &((\lochead \mapsto \nIn{\nodehead} \star{} \TokNDQg) \lor{} (\lochead \mapsto^{\frac{1}{2}} \nIn{\nodehead} \star{} \TokDQg)) \star{}\\
-    &(\\
-    &\quad(\loctail \mapsto \nIn{\nodetail} \star{} \isLast(\nodetail, \xsc) \star{} \TokNEQg \star{} \TokUpdatedQg) \lor{} \\
-    &\quad(\\
-    &\quad\quad \loctail \mapsto^{\frac{1}{2}} \nIn{\nodetail} \star{} \TokEQg \star{}\\
-    &\quad\quad\left((\isLast(\nodetail, \xsc) \star{} \TokBeforeQg) \lor{} (\isSndLast(\nodetail, \xsc) \star{} \TokAfterQg)\right)\\
-    &\quad)\\
-    &)
-  \end{align*}
-\end{definition}
-
-\section{Hocap-Style Queue Predicate for \tlmsq{}}\label{appendix:predicates:section:hocapqueuepred}
-\begin{definition}[\tlmsq{} Hocap Invariant]\label{TLMSQ:spec:hocap:invariant}
-  \begin{align*}
-    &\TLQueueInvariantHocap(\lochead, \loctail, \Qg) \eqdef\\
-    &\Exists \absvalueList. \abstractstateauth{\Qg.\gabst}{\absvalueList} \star{} &&\text{(abstract state)}\\
-    &\Exists \xsc, \xsqueue, \xsold, \nodehead, \nodetail . &&\text{(concrete state)}\\
-    &\xsc = \xsqueue \catenate [\nodehead] \catenate \xsold \star{}\\
-    &\isLL(\xsc) \star{}\\
-    &\projval(\xsqueue) = \wrapsome(\absvalueList) \star{}\\
-    &(\\
-    &\quad\quad\lochead \mapsto \nIn{\nodehead} \star{} \loctail \mapsto \nIn{\nodetail} \star{} \isLast(\nodetail, \xsc) \star{} &&\text{(\StaticState)}\\
-    &\quad\quad \TokNEQg \star{} \TokNDQg \star{} \TokUpdatedQg\\
-    &\quad\lor{}\\
-    &\quad\quad\lochead \mapsto \nIn{\nodehead} \star{} \loctail \mapsto^{\frac{1}{2}} \nIn{\nodetail} \star{} &&\text{(\EnqueueState)}\\
-    &\quad\quad (\isLast(\nodetail, \xsc) \star{} \TokBeforeQg \lor{} \isSndLast(\nodetail, \xsc) \star{} \TokAfterQg) \star{}\\
-    &\quad\quad \TokEQg \star{} \TokNDQg\\
-    &\quad\lor{}\\
-    &\quad\quad\lochead \mapsto^{\frac{1}{2}} \nIn{\nodehead} \star{} \loctail \mapsto \nIn{\nodetail} \star{} \isLast(\nodetail, \xsc) \star{} &&\text{(\DequeueState)}\\
-    &\quad\quad \TokNEQg \star{} \TokDQg \star{} \TokUpdatedQg\\
-    &\quad\lor{}\\
-    &\quad\quad\lochead \mapsto^{\frac{1}{2}} \nIn{\nodehead} \star{} \loctail \mapsto^{\frac{1}{2}} \nIn{\nodetail} \star{} &&\text{(\BothState)}\\
-    &\quad\quad (\isLast(\nodetail, \xsc) \star{} \TokBeforeQg \lor{} \isSndLast(\nodetail, \xsc) \star{} \TokAfterQg) \star{} \\
-    &\quad\quad \TokEQg \star{} \TokDQg\\
-    &)
-  \end{align*}
-\end{definition}
-
-\begin{definition}[\tlmsq{} - $\isqueue$ Predicate (Hocap)]\label{TLMSQ:spec:hocap:isqueue}
-  \begin{align*}
-    \isqueueconc(\vq, \Qg) \eqdef
-    &\Exists \locqueue, \lochead, \loctail \in \Loc . \Exists \Hlock, \Tlock \in \Val . \\
-    &\vq = \locqueue \star{} \locqueue \mapsto^{\persistently} ((\lochead, \loctail), (\Hlock, \Tlock)) \star{}\\
-    &\knowInv{\Nl.queue}{\TLQueueInvariantHocap(\Phi, \lochead, \loctail, \Qg)} \star{}\\
-    &\isLock(\Qg.\ghlock, \Hlock, \TokDQg) \star{}\\
-    &\isLock(\Qg.\gtlock, \Tlock, \TokEQg).
-  \end{align*}
-  \end{definition}
 
 
 \end{document}

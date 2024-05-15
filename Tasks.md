@@ -143,27 +143,29 @@
 - [x] Change is_queue_seq to isQueue_{seq} and similarly for conc
 - [x] Use camelCase for predicates. (proj_val, wrap_some, proj_gnames...)
 - [x] change cite to citet or citep
-- [ ] Always start sentences with capital letter. Change sentences that start with variables to enforce this
-- [ ] only use "points to" for predicate
-- [ ] don't use future tense so much
 - [x] Use another way to mark persistent pointers in figures (maybe a square above or on it)
 - [ ] Consider moving observations to the enqueue and dequeue functions. some inside sections and others after
 - [x] Make line numbers continuous across functions. init start at 1, enq start at where init ended...
 - [x] For figures, explain the assumption that the head doesn't change during the enqueue (no dequeue happens) (possibly in the figure text)
 - [x] Change Q_γ to G in coq
 - [x] add {} before \star and any other binary operators
-- [ ] move Resource Algebra specifics into chapter on resource algebra
-  - [ ] Definition of RA's, e.g. Ex()
-  - [ ] Show useful lemmas about the RA's in the sections where they are used
+- [x] move Resource Algebra specifics into chapter on resource algebra
+  - [x] Definition of RA's, e.g. Ex()
+  - [x] Show useful lemmas about the RA's in the sections where they are used
 - [x] Change ToknE to TokNE. similarly for rest
   - [x] also change in coq
-- [ ] move definition of simpler concurrent queue invariant out of appendix, into report
-- [ ] Move definitions of hocap invariant and queue predicate out of appendix, into section
+- [x] move definition of simpler concurrent queue invariant out of appendix, into report
+- [x] Move definitions of hocap invariant and queue predicate out of appendix, into section
 - [ ] do not use contractions
 - [x] Change "spec" to "specification"
 - [ ] Consider removing 'tl' and 'lf' prefixes for latex macros for specifications
 - [ ] Rewrite moved sections and chapters to get a red line again
   - [ ] Update References
 - [ ] Check if any extra todos from Amin's feedback
+
+- [ ] Proof read report and fix the following:
+  - [ ] Always start sentences with capital letter. Change sentences that start with variables to enforce this
+  - [ ] only use "points to" for predicate
+  - [ ] don't use future tense so much
 
 - [ ] If time permits, use hocap spec to prove a spec of a client
