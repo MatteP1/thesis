@@ -25,24 +25,24 @@ Record SeqQgnames := { γ_Hlock : gname;
                      }.
 
 (* ----- The 'is_queue' Predicate for Sequential Spec ------ *)
-Definition is_queue_seq (v_q : val) (xs_v: list val) (Q_γ: SeqQgnames) : iProp Σ :=
+Definition isQueue_S (v_q : val) (xs_v: list val) (G: SeqQgnames) : iProp Σ :=
   ∃ l_queue l_head l_tail : loc, ∃ h_lock t_lock : val,
   ⌜v_q = #l_queue⌝ ∗
   l_queue ↦□ ((#l_head, #l_tail), (h_lock, t_lock)) ∗
   ∃ (xs_queue : list node), ∃x_head x_tail : node,
-  ⌜proj_val xs_queue = wrap_some xs_v⌝ ∗
+  ⌜projVal xs_queue = wrapSome xs_v⌝ ∗
   isLL (xs_queue ++ [x_head]) ∗
   l_head ↦ #(n_in x_head) ∗
   l_tail ↦ #(n_in x_tail) ∗ ⌜isLast x_tail (xs_queue ++ [x_head])⌝ ∗
-  is_lock Q_γ.(γ_Hlock) h_lock (True) ∗
-  is_lock Q_γ.(γ_Tlock) t_lock (True).
+  is_lock G.(γ_Hlock) h_lock (True) ∗
+  is_lock G.(γ_Tlock) t_lock (True).
 
 
 (* ----- Specification for Initialise ----- *)
 Lemma initialize_spec_seq :
   {{{ True }}}
     initialize #()
-  {{{ v_q Q_γ, RET v_q; is_queue_seq v_q [] Q_γ }}}.
+  {{{ v_q G, RET v_q; isQueue_S v_q [] G }}}.
 Proof.
   iIntros (Φ _) "HΦ".
   wp_lam.
@@ -80,10 +80,10 @@ Proof.
 Qed.
 
 (* ----- Specification for Enqueue ----- *)
-Lemma enqueue_spec_seq v_q (v : val) (xs_v : list val) (Q_γ : SeqQgnames) :
-  {{{ is_queue_seq v_q xs_v Q_γ }}}
+Lemma enqueue_spec_seq v_q (v : val) (xs_v : list val) (G : SeqQgnames) :
+  {{{ isQueue_S v_q xs_v G }}}
     enqueue v_q v
-  {{{w, RET w; is_queue_seq v_q (v :: xs_v) Q_γ }}}.
+  {{{w, RET w; isQueue_S v_q (v :: xs_v) G }}}.
 Proof.
   iIntros (Φ) "(%l_queue & %l_head & %l_tail & %h_lock & %t_lock & -> & #Hl_queue & %xs_queue & %x_head & %x_tail & %Hconc_abst_eq & HisLL_xs & Hl_head & Hl_tail & %HisLast_xtail & #Hh_lock & #Ht_lock) HΦ".
   destruct HisLast_xtail as [xs_rest Hxs_eq].
@@ -134,12 +134,12 @@ Proof.
 Qed.
 
 (* ----- Specification for Dequeue ----- *)
-Lemma dequeue_spec_seq v_q (xs_v : list val) (Q_γ : SeqQgnames) :
-  {{{ is_queue_seq v_q xs_v Q_γ }}}
+Lemma dequeue_spec_seq v_q (xs_v : list val) (G : SeqQgnames) :
+  {{{ isQueue_S v_q xs_v G }}}
     dequeue v_q
-  {{{ w, RET w; (⌜xs_v = []⌝ ∗ ⌜w = NONEV⌝ ∗ is_queue_seq v_q xs_v Q_γ) ∨
+  {{{ w, RET w; (⌜xs_v = []⌝ ∗ ⌜w = NONEV⌝ ∗ isQueue_S v_q xs_v G) ∨
                 (∃v xs_v', ⌜xs_v = xs_v' ++ [v]⌝ ∗
-                    ⌜w = SOMEV v⌝ ∗ is_queue_seq v_q xs_v' Q_γ) }}}.
+                    ⌜w = SOMEV v⌝ ∗ isQueue_S v_q xs_v' G) }}}.
 Proof.
   iIntros (Φ) "(%l_queue & %l_head & %l_tail & %h_lock & %t_lock & -> & #Hl_queue & %xs_queue & %x_head & %x_tail & %Hconc_abst_eq & HisLL_xs & Hl_head & Hl_tail & %HisLast_xtail & #Hh_lock & #Ht_lock) HΦ".
   iPoseProof (isLL_and_chain with "HisLL_xs") as "[HisLL_xs #HisLL_chain_xs]".
@@ -199,12 +199,12 @@ Proof.
     iRight.
     destruct (ll_case_first xs_v) as [->|[x_head_next_val [xs_val_rest ->]]].
     {
-      rewrite proj_val_split in Hconc_abst_eq.
+      rewrite projVal_split in Hconc_abst_eq.
       exfalso.
-      by apply (app_cons_not_nil (proj_val xs_queue') [] (n_val x_head_next)).
+      by apply (app_cons_not_nil (projVal xs_queue') [] (n_val x_head_next)).
     }
     iExists x_head_next_val, xs_val_rest.
-    rewrite proj_val_split wrap_some_split /= in Hconc_abst_eq.
+    rewrite projVal_split wrapSome_split /= in Hconc_abst_eq.
     apply list_last_eq in Hconc_abst_eq as [Hconc_abst_eq Hxheadnext_val_eq].
     repeat (iSplit; try done).
     iExists l_queue, l_head, l_tail, h_lock, t_lock.

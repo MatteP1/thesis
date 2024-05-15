@@ -88,28 +88,28 @@ Proof.
 Qed.
 
 (* ------ Projecting out the value (second element of triple) ------ *)
-Fixpoint proj_val {A B C} (xs: list (A * B * C)) :=
+Fixpoint projVal {A B C} (xs: list (A * B * C)) :=
 match xs with
 | [] => []
-| x :: xs' => n_val x :: proj_val xs'
+| x :: xs' => n_val x :: projVal xs'
 end.
 
-Lemma proj_val_split {A B C}: ∀ (xs_1 xs_2 : list (A * B * C)),
-  proj_val (xs_1 ++ xs_2) = proj_val xs_1 ++ proj_val xs_2.
+Lemma projVal_split {A B C}: ∀ (xs_1 xs_2 : list (A * B * C)),
+  projVal (xs_1 ++ xs_2) = projVal xs_1 ++ projVal xs_2.
 Proof.
   induction xs_1 as [| x xs'_1 IH]; intros xs_2.
   - done.
   - simpl. f_equal. apply IH.
 Qed.
 
-Fixpoint wrap_some (xs: list val) :=
+Fixpoint wrapSome (xs: list val) :=
 match xs with
 | [] => []
-| x :: xs' => (SOMEV x) :: wrap_some xs'
+| x :: xs' => (SOMEV x) :: wrapSome xs'
 end.
 
-Lemma wrap_some_split: ∀ xs_1 xs_2,
-  wrap_some (xs_1 ++ xs_2) = wrap_some xs_1 ++ wrap_some xs_2.
+Lemma wrapSome_split: ∀ xs_1 xs_2,
+  wrapSome (xs_1 ++ xs_2) = wrapSome xs_1 ++ wrapSome xs_2.
 Proof.
   induction xs_1 as [| x xs'_1 IH]; intros xs_2.
   - done.

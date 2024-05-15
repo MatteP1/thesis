@@ -88,35 +88,35 @@ Class queue := Queue {
   N : namespace;
   Ni := (N .@ "internal");
 
-  (* The is_queue predicate *)
-  is_queue `{!heapGS Σ} {L : queueG Σ} `{!inG Σ (frac_authR (agreeR (listO val)))} (v_q : val) (Q_γ: Qgnames) : iProp Σ;
+  (* The isQueue predicate *)
+  isQueue `{!heapGS Σ} {L : queueG Σ} `{!inG Σ (frac_authR (agreeR (listO val)))} (v_q : val) (G: Qgnames) : iProp Σ;
 
-  (* is_queue must be persistent *)
-  #[global] is_queue_persistent `{!heapGS Σ} {L : queueG Σ} `{!inG Σ (frac_authR (agreeR (listO val)))} v_q Q_γ :: Persistent (is_queue (L:=L) v_q Q_γ);
+  (* isQueue must be persistent *)
+  #[global] isQueue_persistent `{!heapGS Σ} {L : queueG Σ} `{!inG Σ (frac_authR (agreeR (listO val)))} v_q G :: Persistent (isQueue (L:=L) v_q G);
 
   (* Hocap-Style Initialise Specifictaion *)
   initialize_spec `{!heapGS Σ} {L : queueG Σ} `{!inG Σ (frac_authR (agreeR (listO val)))} :
   {{{ True }}}
     initialize #()
-  {{{ v_q Q_γ, RET v_q; is_queue (L:=L) v_q Q_γ ∗ Q_γ.(γ_Abst) ⤇◯ [] }}};
+  {{{ v_q G, RET v_q; isQueue (L:=L) v_q G ∗ G.(γ_Abst) ⤇◯ [] }}};
 
   (* Hocap-Style Enqueue Specifictaion *)
-  enqueue_spec `{!heapGS Σ} {L : queueG Σ} `{!inG Σ (frac_authR (agreeR (listO val)))} v_q (v : val) (Q_γ : Qgnames) (P Q : iProp Σ) :
-  □(∀xs_v, (Q_γ.(γ_Abst) ⤇● xs_v ∗ P ={⊤ ∖ ↑Ni}=∗ ▷ (Q_γ.(γ_Abst) ⤇● (v :: xs_v) ∗ Q))) -∗
-  {{{ is_queue (L:=L) v_q Q_γ ∗ P}}}
+  enqueue_spec `{!heapGS Σ} {L : queueG Σ} `{!inG Σ (frac_authR (agreeR (listO val)))} v_q (v : val) (G : Qgnames) (P Q : iProp Σ) :
+  □(∀xs_v, (G.(γ_Abst) ⤇● xs_v ∗ P ={⊤ ∖ ↑Ni}=∗ ▷ (G.(γ_Abst) ⤇● (v :: xs_v) ∗ Q))) -∗
+  {{{ isQueue (L:=L) v_q G ∗ P}}}
     enqueue v_q v
   {{{ w, RET w; Q }}};
 
   (* Hocap-Style Dequeue Specifictaion *)
-  dequeue_spec `{!heapGS Σ} {L : queueG Σ} `{!inG Σ (frac_authR (agreeR (listO val)))} v_q (Q_γ : Qgnames) (P : iProp Σ) (Q : val -> iProp Σ):
-  □(∀xs_v, (Q_γ.(γ_Abst) ⤇● xs_v ∗ P
+  dequeue_spec `{!heapGS Σ} {L : queueG Σ} `{!inG Σ (frac_authR (agreeR (listO val)))} v_q (G : Qgnames) (P : iProp Σ) (Q : val -> iProp Σ):
+  □(∀xs_v, (G.(γ_Abst) ⤇● xs_v ∗ P
               ={⊤ ∖ ↑Ni}=∗
-              ▷ (( ⌜xs_v = []⌝ ∗ Q_γ.(γ_Abst) ⤇● xs_v ∗ Q NONEV) ∨
-              (∃v xs_v', ⌜xs_v = xs_v' ++ [v]⌝ ∗ Q_γ.(γ_Abst) ⤇● xs_v' ∗ Q (SOMEV v)))
+              ▷ (( ⌜xs_v = []⌝ ∗ G.(γ_Abst) ⤇● xs_v ∗ Q NONEV) ∨
+              (∃v xs_v', ⌜xs_v = xs_v' ++ [v]⌝ ∗ G.(γ_Abst) ⤇● xs_v' ∗ Q (SOMEV v)))
             )
    )
   -∗
-  {{{ is_queue (L:=L) v_q Q_γ ∗ P }}}
+  {{{ isQueue (L:=L) v_q G ∗ P }}}
     dequeue v_q
   {{{ w, RET w; Q w }}}
 }.
@@ -131,31 +131,31 @@ Context `{!queueG Σ}.
 Context `{!heapGS Σ}.
 Context `{!inG Σ (frac_authR (agreeR (listO val)))}.
 
-Definition is_queue_seq (v_q : val) (xs_v: list val) (Q_γH: Qgnames) : iProp Σ :=
-  is_queue v_q Q_γH ∗
-  γ_Abst Q_γH ⤇◯ xs_v.
+Definition isQueue_seq (v_q : val) (xs_v: list val) (G: Qgnames) : iProp Σ :=
+  isQueue v_q G ∗
+  γ_Abst G ⤇◯ xs_v.
 
 Lemma initialize_spec_seq :
   {{{ True }}}
     initialize #()
-  {{{ v_q Q_γH, RET v_q; is_queue_seq v_q [] Q_γH }}}.
+  {{{ v_q G, RET v_q; isQueue_seq v_q [] G }}}.
 Proof.
   iIntros (Φ _) "HΦ".
   wp_apply (initialize_spec); first done.
-  iIntros (v_q Q_γH) "[His_queue Habst_frag]".
-  iApply ("HΦ" $! v_q Q_γH).
+  iIntros (v_q G) "[HisQueue Habst_frag]".
+  iApply ("HΦ" $! v_q G).
   by iFrame.
 Qed.
 
-Lemma enqueue_spec_seq v_q (v : val) (xs_v : list val) (Q_γH : Qgnames) :
-  {{{ is_queue_seq v_q xs_v Q_γH }}}
+Lemma enqueue_spec_seq v_q (v : val) (xs_v : list val) (G : Qgnames) :
+  {{{ isQueue_seq v_q xs_v G }}}
     enqueue v_q v
-  {{{w, RET w; is_queue_seq v_q (v :: xs_v) Q_γH }}}.
+  {{{w, RET w; isQueue_seq v_q (v :: xs_v) G }}}.
 Proof.
-  iIntros (Φ) "(#His_queue & Hfrag) HΦ".
-  set (P := ((γ_Abst Q_γH) ⤇◯ xs_v)%I).
-  set (Q := ((γ_Abst Q_γH) ⤇◯ (v :: xs_v))%I).
-  wp_apply (enqueue_spec v_q v Q_γH P Q with "[] [Hfrag]").
+  iIntros (Φ) "(#HisQueue & Hfrag) HΦ".
+  set (P := ((γ_Abst G) ⤇◯ xs_v)%I).
+  set (Q := ((γ_Abst G) ⤇◯ (v :: xs_v))%I).
+  wp_apply (enqueue_spec v_q v G P Q with "[] [Hfrag]").
   (* Proving viewshift *)
   {
     iIntros (xs_v') "!>".
@@ -171,19 +171,19 @@ Proof.
   by repeat iSplit.
 Qed.
 
-Lemma dequeue_spec_seq v_q (xs_v : list val) (Q_γH : Qgnames) :
-  {{{ is_queue_seq v_q xs_v Q_γH }}}
+Lemma dequeue_spec_seq v_q (xs_v : list val) (G : Qgnames) :
+  {{{ isQueue_seq v_q xs_v G }}}
     dequeue v_q
-  {{{ w, RET w; (⌜xs_v = []⌝ ∗ ⌜w = NONEV⌝ ∗ is_queue_seq v_q xs_v Q_γH) ∨
+  {{{ w, RET w; (⌜xs_v = []⌝ ∗ ⌜w = NONEV⌝ ∗ isQueue_seq v_q xs_v G) ∨
                 (∃v xs_v', ⌜xs_v = xs_v' ++ [v]⌝ ∗
-                    ⌜w = SOMEV v⌝ ∗ is_queue_seq v_q xs_v' Q_γH) }}}.
+                    ⌜w = SOMEV v⌝ ∗ isQueue_seq v_q xs_v' G) }}}.
 Proof.
-  iIntros (Φ) "(#His_queue & Hfrag) HΦ".
-  set (P := ((γ_Abst Q_γH) ⤇◯ xs_v)%I).
-  set (Q := λ w, ((⌜xs_v = []⌝ ∗ ⌜w = NONEV⌝ ∗ (γ_Abst Q_γH) ⤇◯ xs_v) ∨
+  iIntros (Φ) "(#HisQueue & Hfrag) HΦ".
+  set (P := ((γ_Abst G) ⤇◯ xs_v)%I).
+  set (Q := λ w, ((⌜xs_v = []⌝ ∗ ⌜w = NONEV⌝ ∗ (γ_Abst G) ⤇◯ xs_v) ∨
                   (∃v xs_v', ⌜xs_v = xs_v' ++ [v]⌝ ∗
-                    ⌜w = SOMEV v⌝ ∗ (γ_Abst Q_γH) ⤇◯ xs_v'))%I).
-  wp_apply (dequeue_spec v_q Q_γH P Q with "[] [Hfrag]" ).
+                    ⌜w = SOMEV v⌝ ∗ (γ_Abst G) ⤇◯ xs_v'))%I).
+  wp_apply (dequeue_spec v_q G P Q with "[] [Hfrag]" ).
   (* Proving viewshift *)
   {
     iIntros (xs_v') "!>".
@@ -234,37 +234,37 @@ Context `{!queueG Σ}.
 Context `{!heapGS Σ}.
 Context `{!inG Σ (frac_authR (agreeR (listO val)))}.
 
-Definition is_queue_conc (Ψ : val -> iProp Σ) (v_q : val) (Q_γH: Qgnames) : iProp Σ :=
-  is_queue v_q Q_γH ∗
-  inv NC (∃xs_v, (γ_Abst Q_γH) ⤇◯ xs_v ∗ All xs_v Ψ).
+Definition isQueue_C (Ψ : val -> iProp Σ) (v_q : val) (G: Qgnames) : iProp Σ :=
+  isQueue v_q G ∗
+  inv NC (∃xs_v, (γ_Abst G) ⤇◯ xs_v ∗ All xs_v Ψ).
 
-(* is_queue_conc is persistent *)
-Global Instance is_queue_conc_persistent Ψ v_q Q_γH : Persistent (is_queue_conc Ψ v_q Q_γH).
+(* isQueue_C is persistent *)
+Global Instance isQueue_C_persistent Ψ v_q G : Persistent (isQueue_C Ψ v_q G).
 Proof. apply _. Qed.
 
 Lemma initialize_spec_conc (Ψ : val -> iProp Σ):
   {{{ True }}}
     initialize #()
-  {{{ v_q Q_γH, RET v_q; is_queue_conc Ψ v_q Q_γH }}}.
+  {{{ v_q G, RET v_q; isQueue_C Ψ v_q G }}}.
 Proof.
   iIntros (Φ _) "HΦ".
   iApply wp_fupd.
   wp_apply (initialize_spec); first done.
-  iIntros (v_q Q_γH) "[His_queue Habst_frag]".
-  iApply ("HΦ" $! v_q Q_γH).
-  iMod (inv_alloc NC _ (∃xs_v, (γ_Abst Q_γH) ⤇◯ xs_v ∗ All xs_v Ψ) with "[Habst_frag]") as "HInv"; first (iExists []; auto).
+  iIntros (v_q G) "[HisQueue Habst_frag]".
+  iApply ("HΦ" $! v_q G).
+  iMod (inv_alloc NC _ (∃xs_v, (γ_Abst G) ⤇◯ xs_v ∗ All xs_v Ψ) with "[Habst_frag]") as "HInv"; first (iExists []; auto).
   by iFrame.
 Qed.
 
-Lemma enqueue_spec_conc v_q Ψ (v : val) (Q_γH : Qgnames) :
-  {{{ is_queue_conc Ψ v_q Q_γH ∗ Ψ v }}}
+Lemma enqueue_spec_conc v_q Ψ (v : val) (G : Qgnames) :
+  {{{ isQueue_C Ψ v_q G ∗ Ψ v }}}
     enqueue v_q v
   {{{ w, RET w; True }}}.
 Proof.
-  iIntros (Φ) "[(#His_queue & #HInv) HΨ] HΦ".
+  iIntros (Φ) "[(#HisQueue & #HInv) HΨ] HΦ".
   set (P := Ψ v).
   set (Q := True%I).
-  wp_apply (enqueue_spec v_q v Q_γH P Q with "[] [HΨ]").
+  wp_apply (enqueue_spec v_q v G P Q with "[] [HΨ]").
   (* Proving viewshift *)
   {
     iIntros (xs_v') "!>".
@@ -286,15 +286,15 @@ Proof.
   by iApply ("HΦ" $! w).
 Qed.
 
-Lemma dequeue_spec_conc v_q Ψ (Q_γH : Qgnames) :
-  {{{ is_queue_conc Ψ v_q Q_γH }}}
+Lemma dequeue_spec_conc v_q Ψ (G : Qgnames) :
+  {{{ isQueue_C Ψ v_q G }}}
     dequeue v_q
   {{{ w, RET w; ⌜w = NONEV⌝ ∨ (∃ v, ⌜w = SOMEV v⌝ ∗ Ψ v) }}}.
 Proof.
-  iIntros (Φ) "(#His_queue & #HInv) HΦ".
+  iIntros (Φ) "(#HisQueue & #HInv) HΦ".
   set (P := True%I : iProp Σ).
   set (Q := λ w, (⌜w = NONEV⌝ ∨ (∃v, ⌜w = SOMEV v⌝ ∗ Ψ v))%I).
-  wp_apply (dequeue_spec v_q Q_γH P Q).
+  wp_apply (dequeue_spec v_q G P Q).
   (* Proving viewshift *)
   {
     iIntros (xs_v') "!>".

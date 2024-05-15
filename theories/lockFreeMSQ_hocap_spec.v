@@ -299,29 +299,29 @@ Proof.
 Qed.
 
 (* ----- Queue Invariant ------ *)
-Definition queue_invariant (l_head l_tail : loc) (Q_γ : Qgnames) : iProp Σ :=
-  ∃ xs_v, Q_γ.(γ_Abst) ⤇● xs_v ∗ (* Abstract state *)
+Definition queue_invariant (l_head l_tail : loc) (G : Qgnames) : iProp Σ :=
+  ∃ xs_v, G.(γ_Abst) ⤇● xs_v ∗ (* Abstract state *)
   ∃ xs xs_queue (x_head x_tail x_last: node), (* Concrete state *)
   ⌜xs = xs_queue ++ [x_head]⌝ ∗
   isLL xs ∗
   ⌜isLast x_last xs⌝ ∗
   (* Relation between concrete and abstract state *)
-  ⌜proj_val xs_queue = wrap_some xs_v⌝ ∗
+  ⌜projVal xs_queue = wrapSome xs_v⌝ ∗
   l_head ↦ #(n_in x_head) ∗
   l_tail ↦ #(n_in x_tail) ∗
-  Q_γ.(γ_Head) ↣ x_head ∗ x_head ⤏ Q_γ.(γ_Tail) ∗
-  Q_γ.(γ_Tail) ↣ x_tail ∗ x_tail ⤏ Q_γ.(γ_Last) ∗
-  Q_γ.(γ_Last) ↣ x_last.
+  G.(γ_Head) ↣ x_head ∗ x_head ⤏ G.(γ_Tail) ∗
+  G.(γ_Tail) ↣ x_tail ∗ x_tail ⤏ G.(γ_Last) ∗
+  G.(γ_Last) ↣ x_last.
 
-(* ----- The 'is_queue' Predicate ------ *)
-Definition is_queue (v_q : val) (Q_γ: Qgnames) : iProp Σ :=
+(* ----- The 'isQueue' Predicate ------ *)
+Definition isQueue (v_q : val) (G: Qgnames) : iProp Σ :=
   ∃ l_queue l_head l_tail : loc,
   ⌜v_q = #l_queue⌝ ∗
   l_queue ↦□ (#l_head, #l_tail) ∗
-  inv Ni (queue_invariant l_head l_tail Q_γ).
+  inv Ni (queue_invariant l_head l_tail G).
 
-(* is_queue is persistent *)
-Global Instance is_queue_persistent v_q Q_γ : Persistent (is_queue v_q Q_γ).
+(* isQueue is persistent *)
+Global Instance isQueue_persistent v_q G : Persistent (isQueue v_q G).
 Proof. apply _. Qed.
 
 
@@ -329,7 +329,7 @@ Proof. apply _. Qed.
 Lemma initialize_spec:
   {{{ True }}}
     initialize #()
-  {{{ v_q Q_γ, RET v_q; is_queue v_q Q_γ ∗ Q_γ.(γ_Abst) ⤇◯ [] }}}.
+  {{{ v_q G, RET v_q; isQueue v_q G ∗ G.(γ_Abst) ⤇◯ [] }}}.
 Proof.
   iIntros (Φ) "_ HΦ".
   wp_lam.
@@ -374,8 +374,8 @@ Proof.
 Qed.
 
 (* ----- Lemma about swining tail (used in both Enqueue and Dequeue) ----- *)
-Lemma swing_tail (l_head l_tail : loc) (x_tail x_newtail : node) (Q_γ : Qgnames) :
-  {{{ inv Ni (queue_invariant l_head l_tail Q_γ) ∗ x_tail ⤳ x_newtail ∗ x_newtail ⤏ Q_γ.(γ_Last) }}}
+Lemma swing_tail (l_head l_tail : loc) (x_tail x_newtail : node) (G : Qgnames) :
+  {{{ inv Ni (queue_invariant l_head l_tail G) ∗ x_tail ⤳ x_newtail ∗ x_newtail ⤏ G.(γ_Last) }}}
     CAS #l_tail #(n_in x_tail) #(n_in x_newtail)
   {{{w, RET w; ⌜w = #true⌝ ∨ ⌜w = #false⌝ }}}.
 Proof.
@@ -421,9 +421,9 @@ Proof.
 Qed.
 
 (* ----- Specification for Enqueue ----- *)
-Lemma enqueue_spec v_q (v : val) (Q_γ : Qgnames) (P Q : iProp Σ) :
-  □(∀xs_v, (Q_γ.(γ_Abst) ⤇● xs_v ∗ P ={⊤ ∖ ↑Ni}=∗ ▷ (Q_γ.(γ_Abst) ⤇● (v :: xs_v) ∗ Q))) -∗
-  {{{ is_queue v_q Q_γ ∗ P}}}
+Lemma enqueue_spec v_q (v : val) (G : Qgnames) (P Q : iProp Σ) :
+  □(∀xs_v, (G.(γ_Abst) ⤇● xs_v ∗ P ={⊤ ∖ ↑Ni}=∗ ▷ (G.(γ_Abst) ⤇● (v :: xs_v) ∗ Q))) -∗
+  {{{ isQueue v_q G ∗ P}}}
     enqueue v_q v
   {{{ w, RET w; Q }}}.
 Proof.
@@ -476,7 +476,7 @@ Proof.
   wp_bind (! #(n_out x_tail))%E.
   (* Invariant Opening: 2 *)
   iInv "Hqueue_inv" as "(%xs_v & HAbst & %xs & %xs_queue & %x_head & %x_tail' & %x_last & >%Hxs_eq & HisLL_xs & >%HisLast_xlast & >%Hconc_abst_eq & >Hl_head & >Hl_tail & HγHead_ap_xhead & >#Hxhead_ar_γTail & HγTail_ap_xtail' & >#Hxtail'_ar_γLast & HγLast_ap_xlast)".
-  iPoseProof (Abs_Reach_Concr x_tail x_last (Q_γ.(γ_Last)) with "Hxtail_ar_γLast HγLast_ap_xlast") as "[#Hxtail_reach_xlast HγLast_ap_xlast]".
+  iPoseProof (Abs_Reach_Concr x_tail x_last (G.(γ_Last)) with "Hxtail_ar_γLast HγLast_ap_xlast") as "[#Hxtail_reach_xlast HγLast_ap_xlast]".
   (* CASE ANALYSIS: Is x_tail last? *)
   iDestruct (reach_case with "Hxtail_reach_xlast") as "[><- | (%x_tail_next & Hxtail_to_xtailnext & Hxtailnext_reach_xlast)]".
   - (* x_tail is last. i.e. x_tail = x_last *)
@@ -532,7 +532,7 @@ Proof.
     wp_bind (CmpXchg _ _ _).
     (* Invariant Opening: 4 *)
     iInv "Hqueue_inv" as "(%xs_v & HAbst & %xs & %xs_queue & %x_head & %x_tail' & %x_last & >%Hxs_eq & HisLL_xs & >%HisLast_xlast & >%Hconc_abst_eq & >Hl_head & >Hl_tail & HγHead_ap_xhead & >#Hxhead_ar_γTail & HγTail_ap_xtail' & >#Hxtail'_ar_γLast & HγLast_ap_xlast)".
-    iPoseProof (Abs_Reach_Concr x_tail x_last (Q_γ.(γ_Last)) with "Hxtail_ar_γLast HγLast_ap_xlast") as "[#Hxtail_reach_xlast HγLast_ap_xlast]".
+    iPoseProof (Abs_Reach_Concr x_tail x_last (G.(γ_Last)) with "Hxtail_ar_γLast HγLast_ap_xlast") as "[#Hxtail_reach_xlast HγLast_ap_xlast]".
     (* CASE ANALYSIS: Is tail still last? *)
     iDestruct (reach_case with "Hxtail_reach_xlast") as "[><- | (%x_tail_next & Hxtail_to_xtailnext & Hxtailnext_reach_xlast)]"; last first.
     + (* x_tail is no longer last, hence the CAS fails *)
@@ -635,15 +635,15 @@ Proof.
 Qed.
 
 (* ----- Specification for Dequeue ----- *)
-Lemma dequeue_spec v_q (Q_γ : Qgnames) (P : iProp Σ) (Q : val -> iProp Σ):
-  □(∀xs_v, (Q_γ.(γ_Abst) ⤇● xs_v ∗ P
+Lemma dequeue_spec v_q (G : Qgnames) (P : iProp Σ) (Q : val -> iProp Σ):
+  □(∀xs_v, (G.(γ_Abst) ⤇● xs_v ∗ P
               ={⊤ ∖ ↑Ni}=∗
-              ▷ (( ⌜xs_v = []⌝ ∗ Q_γ.(γ_Abst) ⤇● xs_v ∗ Q NONEV) ∨
-              (∃v xs_v', ⌜xs_v = xs_v' ++ [v]⌝ ∗ Q_γ.(γ_Abst) ⤇● xs_v' ∗ Q (SOMEV v)))
+              ▷ (( ⌜xs_v = []⌝ ∗ G.(γ_Abst) ⤇● xs_v ∗ Q NONEV) ∨
+              (∃v xs_v', ⌜xs_v = xs_v' ++ [v]⌝ ∗ G.(γ_Abst) ⤇● xs_v' ∗ Q (SOMEV v)))
             )
    )
   -∗
-  {{{ is_queue v_q Q_γ ∗ P }}}
+  {{{ isQueue v_q G ∗ P }}}
     dequeue v_q
   {{{ w, RET w; Q w }}}.
 Proof.
@@ -887,11 +887,11 @@ Proof.
           iMod ("Hvs" $! xs_v with "[HAbst HP]") as "[(>-> & HAbst & HQ) | (%v & %xs_v' & >%Hxs_v_eq & HAbst_new & HQ) ]";
           [ by iFrame |
             (* The abstract state cannot be empty. Hence the first disjunct is impossible *)
-            rewrite proj_val_split in Hconc_abst_eq;
+            rewrite projVal_split in Hconc_abst_eq;
             exfalso;
-            by apply (app_cons_not_nil (proj_val xs_queue_new) [] (n_val x_head_next)) |
+            by apply (app_cons_not_nil (projVal xs_queue_new) [] (n_val x_head_next)) |
           ].
-          rewrite Hxs_v_eq proj_val_split wrap_some_split in Hconc_abst_eq.
+          rewrite Hxs_v_eq projVal_split wrapSome_split in Hconc_abst_eq.
           apply list_last_eq in Hconc_abst_eq as [Hconc_abst_eq Hxheadnext_v_eq].
           rewrite Hxs_eq.
           iDestruct (isLL_split with "HisLL_xs") as "[HisLL_new _]".
@@ -996,8 +996,8 @@ End proofs.
 
 Definition lockFreeMSQ : queue :=
 {|
-  queue_specs.is_queue Σ _ (_ : inG Σ (authR (gsetUR nodeO))) _ :=
-    is_queue (nroot.@"lock-free-MSQ");
+  queue_specs.isQueue Σ _ (_ : inG Σ (authR (gsetUR nodeO))) _ :=
+    isQueue (nroot.@"lock-free-MSQ");
   queue_specs.initialize_spec _ _ _ _ := initialize_spec (nroot.@"lock-free-MSQ");
   queue_specs.enqueue_spec _ _ _ _ := enqueue_spec (nroot.@"lock-free-MSQ");
   queue_specs.dequeue_spec _ _ _ _ := dequeue_spec (nroot.@"lock-free-MSQ");
