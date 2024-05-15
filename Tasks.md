@@ -158,7 +158,7 @@
 - [x] Move definitions of hocap invariant and queue predicate out of appendix, into section
 - [ ] do not use contractions
 - [x] Change "spec" to "specification"
-- [ ] Consider removing 'tl' and 'lf' prefixes for latex macros for specifications
+- [ ] Remove 'tl' and 'lf' prefixes for latex macros for specifications
 - [ ] Rewrite moved sections and chapters to get a red line again
   - [ ] Update References
 - [ ] Check if any extra todos from Amin's feedback

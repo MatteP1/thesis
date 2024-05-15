@@ -512,18 +512,22 @@ The project is known to compile with Coq version 8.19.0 and Iris version 4.2.0.
 
 \section{Specifications for Queues}
 \label{QueueSpecs:section:specs}
-\todo{a queue consists of 3 functions. They should satisfy certain properties: init should create empty queue, enqueue should add the element to the queue. Dequeue should remove first element in queue if exists, otherwise None... There are several complications to give a good and accurate specification.}
+This chapter will discuss some possible specification for queue data structures in general. As such, we need to make some basic assumption about what we expect from a queue. Firstly, we adopt the convention that a queue consists of three functions: $\initialise$, $\enqueue$, and $\dequeue$. Exactly what these functions do will depend on the specific implementation of the queue, but we give some general pointers to what we expect them to do.\\
+The $\initialise$ function should create a queue which is initially empty. The functions $\enqueue$ and $\dequeue$ can the be invoked subsequently on said queue.\\
+In addition to being parametrised on the queue, the $\enqueue$ function should also take a value as input. When invoking $\enqueue$ with such a value, the function should add this value to the end of the queue.\\
+The $\dequeue$ function will attempt to dequeue an element from the queue. Since queues are allowed to be empty, the $\dequeue$ function is assumed to return an option value. If the queue is empty, then $\dequeue$ will return $\None$, and otherwise it will remove an element from the front of the queue, and return this wrapped in a $\Some$.
+
+Working in a concurrent setting often gets quite complicated quite fast, and proving that ones queue satisfies the above desirables can become quite tricky. In fact, even defining those qualities formally can become non-trivial. As such, we give three different specifications for queues. In section \ref{QueueSpecs:section:seq} we give a specification that assumes the queue is run in a sequential setting. Next, in section \ref{QueueSpecs:section:conc}, we give a specification that \textit{does} allow for concurrency but gives up on some of the above qualities. Primarily, it does not track the contents of the queue; invoking $\enqueue$ on a value doesn't guarantee that the value is added to the queue. Finally, in section \ref{QueueSpecs:section:hocap} we give a specification that allows for both concurrency \textit{and} tracking of the contents of the queue.
 
 \section{Defining a Sequential Specification}
 \label{QueueSpecs:section:seq}
 
-Let us first prove a specification for the \tlmsq{} in the simple case where we don't allow for concurrency. In this case, we know that only a single thread will interact with the queue at any given point in a sequential manner. The specification we give will track the exact contents of the queue. To this end, we shall define the abstract state of the queue, denoted $\absvalueList$ as a list of \heaplang values. I.e. $\absvalueList : \List ~ \Val$. We adopt the convention that enqueueing an element is done by adding it to the front of the list, and dequeueing removes the last element of the list (if such an element exists). The reason for this choice is purely technical.
+Let us first consider a specification in the simple case where we do not allow for concurrency. In this case, we know that only a single thread will interact with the queue at any given point in a sequential manner. The specification we give will track the exact contents of the queue. To this end, we shall define the \textit{abstract state} of the queue, denoted $\absvalueList$ as a list of \heaplang values. I.e. $\absvalueList : \List ~ \Val$. We adopt the convention that enqueueing an element is done by adding it to the front of the list, and dequeueing removes the last element of the list (if such an element exists). The reason for this choice is purely technical.
 
-\todo{rewrite and don't apologize for introducing SeqQgnames}
-Since the queue uses two locks, we will need two ghost names; one for each lock (see specification of lock). To ease notation, we shall define the type ``$\SeqQgnames$'' whose purpose is to keep track of the ghost names used for a specific queue. Since we only have two ghost names for this specification, elements of $\SeqQgnames$ will simply be pairs of ghost names. For an element $\Qg \in \SeqQgnames$, the first element of the pair, written $\Qg.\ghlock$, will contain the ghost name for the head lock, and the second element, $\Qg.\gtlock$, the ghost name for the tail lock.
+To allow queues to use whichever ghost names they like, we introduce the type ``$\SeqQgnames$'' whose purpose is to keep track of the ghost names used for a specific queue. One may simply think of $\SeqQgnames$ as a tuple of ghost names.
 
-The sequential specification we wish to prove is the following.
-\begin{lemma}[\tlmsq{} Sequential Specification]\label{TLMSQ:spec:seq}
+With this, we give our definition of a sequential specification for a queue.
+\begin{lemma}[Sequential Specification]\label{QueueSpecs:spec:seq}
 \begin{align*}
   &\Exists \isqueueseq : \Val \to \List ~ \Val \to \SeqQgnames \to \Prop.\\
   &\quad\quad\tlseqspecinit\\
@@ -532,13 +536,18 @@ The sequential specification we wish to prove is the following.
 \end{align*}
 \end{lemma}
 
-The proposition $\isqueueseq(\vq, \absvalueList, \Qg)$ captures that the value $\vq$ is a queue, whose content matches that of our abstract representation $\absvalueList$, and the queue uses the ghost names described by $\Qg$. Note that the $\isqueueseq$ predicate is not required to be persistent, hence it cannot be duplicated and given to multiple threads. This is the sense in which this specification is sequential.
+The proposition $\isqueueseq(\vq, \absvalueList, \Qg)$ captures that the value $\vq$ is a queue, whose contents matches that of our abstract representation $\absvalueList$, and the queue uses the ghost names described by $\Qg$. Clients of a queue satisfying this specification can then apply the three Hoare-triples at invocations for $\initialise$, $\enqueue$, and $\dequeue$, which tells them how the queue changes as a result of the invocation.\\
+Note that the $\isqueueseq$ predicate is not required to be persistent, hence it cannot be duplicated and given to multiple threads. Since this predicate is required to apply the Hoare-triples, then only a single thread can use the specification at a time. This is the sense in which the specification is sequential.
 
 \section{Defining a Concurrent Specification}
 \label{QueueSpecs:section:conc}
 
-For the concurrent specification, we will need the queue predicate (here denoted $\isqueueconc$) to be duplicable. To achieve this, we shall initially give up on tracking the abstract state of the queue, and instead add a predicate $\Phi$, which we will ensure holds for all elements in the queue. In this way, when dequeueing, we at least know that if we get some value, then $\Phi$ holds of this value. The specification we wish to prove is as follows.
-\begin{lemma}[\tlmsq{} Concurrent Specification]\label{TLMSQ:spec:conc}
+As discussed in the previous section, a concurrent specification will need the queue predicate to be duplicable to allow multiple threads to use the specification concurrently. For this specification, we denote the queue predicate by $\isqueueconc$.
+
+To achieve duplicability of $\isqueueconc$, we shall give up on tracking the abstract state of the queue. The reason for doing so is the following. Consider the case where we own the queue predicate and it states that the abstract state of queue is $\absvalueList$. We spawn two threads and give them both the queue predicate stating that the abstract value is $\absvalueList$. Now they both invoke $\enqueue$, one with value $\absvalue$ and the other with $\absvalue'$. This make one thread conclude that the abstract state of the queue is $\absvalue \catenate \absvalueList$, and the other that $\absvalue' \catenate \absvalueList$, whereas in reality, the queue contains both $\absvalue$ and $\absvalue'$. This is of course not desirable, and it is not immediately obvious how to solve this issue.
+
+We \textit{can} however make the queue guarantee that a given property holds of all the values in the queue. We do this by parametrising $\isqueueconc$ with a predicate, $\Phi$, which it will maintain holds for all elements in the queue. In this way, when dequeueing, we at least know that if we get some value, then $\Phi$ holds of this value. The specification we wish to prove is as follows.
+\begin{lemma}[Concurrent Specification]\label{QueueSpecs:spec:conc}
 \begin{align*}
   &\Exists \isqueueconc : (\Val \to \Prop) \to \Val \to \ConcQgnames \to \Prop.\\
   &\All \Phi : \Val \to \Prop.\\
@@ -548,25 +557,21 @@ For the concurrent specification, we will need the queue predicate (here denoted
   &\land{}\quad\tlconcspecdeq{\Phi}
 \end{align*}
 \end{lemma}
-Note that the type of the collection of ghost names here is $\ConcQgnames$, as we will require more ghost names than before. The new ghost names are used for ``tokens'' which are introduced in the following section.
-
+This specification additionally requires that $\isqueueconc$ is persistent, which means that it can be duplicated and given to multiple threads. We again use a collection of ghost names, which we here denote $\ConcQgnames$.
 
 \section{Defining a Hocap-style Specification}
 \label{QueueSpecs:section:hocap}
 
-When proving the concurrent specification, we were quite careful with tracking the state of the queue, and to some extent, even its contents. The contents may have been existentially quantified, but through saving half a pointer, we could match up the contents of the queue between invariant openings. Given this precision in the proof, the reader may wonder if it is possible to give a more precise specification: one which is both concurrent and allows tracking of the contents of the queue. Indeed, this is possible, and we will explore such a specification in this section. We shall refer to this specification as a hocap-style specification -- Higher Order Concurrent Abstract Predicate -- since the it will be concurrent and parametrised by abstract predicates. This specification is more general than both the sequential and concurrent specifications in the sense that they are derivable from the hocap-style specification. We prove this in section \ref{TLMSQHOCAP:section:deriving-seq-and-conc}.
+In this section we will explore our most general specification: one that allows for both concurrency and tracking of the contents of the queue. We shall refer to this specification as a Hocap-style specification -- Higher Order Concurrent Abstract Predicate -- since it will be concurrent and parametrised by abstract predicates. This specification is more general than both the sequential and concurrent specifications in the sense that they are derivable from the Hocap-style specification. We prove this in section \ref{QueueSpecs:section:deriving-seq-and-conc}.
 
-As before, we cannot simply parametrise the queue predicate (now denoted $\isqueue$) with the abstract state of the queue, as we wish for it to be concurrent. So to allow clients to keep track of the contents of the queue, we will ``split'' the abstract state into two parts, the authoritative view and the fragmental view. The client will then own the fragmental view, allowing them to keep track of the contents of the queue, whereas the $\isqueue$ predicate will own the authoritative view. We will in particular make sure that, if one has both the fragmental and authoritative views, then these agree on the abstract state of the queue. Further, it is only possible to update the abstract state of the queue if one possess both the authoritative and fragmental views.
+As with concurrent specification, we cannot simply parametrise the queue predicate (now denoted $\isqueue$) with the abstract state of the queue. So to allow clients to keep track of the contents of the queue, we will ``split'' the abstract state into two parts; the authoritative view and the fragmental view. The clients will then own the fragmental view, allowing them to keep track of the contents of the queue, whereas the $\isqueue$ predicate will own the authoritative view. We will in particular make sure that, if one has both the fragmental and authoritative views, then these agree on the abstract state of the queue. Further, it is only possible to update the abstract state of the queue if one possess both the authoritative and fragmental views. Hence, clients will have to supply the fragmental view to be able to apply the specifications for $\enqueue$ and $\dequeue$.
 
-We shall use the resource algebra $\authm(\option{(\fracm \times \agm(\List ~ \Val))})$ to achieve the above. $\List ~ \Val$ is the abstract state. It is wrapped in the agreement RA, $\agm$, which ensures that if one owns two elements, then they agree on the abstract state. The fractional RA, $\fracm$, denotes how much of the fragmental view is owned; the fragmental view can be split up, which is handled by the clients. We collect $\fracm$ and $\agm(\List ~ \Val)$ in the product RA, whose elements are then pairs of fractions and abstract states.
-The option RA $?$, makes the product RA unital which is required by the $\authm$ construction. $\authm$ is the authoritative resource algebra. It gives us the authoritative and fragmental views and, together with the fractional RA, governs that they can only be updated in unison.
+For an abstract state $\absvalueList$ and a ghost name $\gname$, we shall use the notation $\abstractstateauth{\gname}{\absvalueList}$ to mean that the authoritative view of the abstract state associated with $\gname$ is $\absvalueList$. Similarly we write $\abstractstatefullfrag{\gname}{\absvalueList}$ to mean that the fragmental view associated with $\gname$ is $\absvalueList$.
 
-For an abstract state $\absvalueList$ and a ghost name $\gname$, we shall use the notation $\abstractstateauth{\gname}{\absvalueList}$ for the ownership assertion $\ownGhost{\gname}{\authfull (1, \aginj ~ \absvalueList)}$, meaning that the authoritative view of the abstract state associated with $\gname$ is $\absvalueList$. Similarly we write $\abstractstatefullfrag{\gname}{\absvalueList}$ for the assertion $\ownGhost{\gname}{\authfrag (1, \aginj ~ \absvalueList)}$.
+The collection of ghost names is now denoted $\Qgnames$, but as all queues will have to deal with the ghost name keeping track of the abstract state as describe above, we require that any $\Qgnames$ will contain a ghost name used for this purpose. We shall refer to this ghost name as $\gabst$.
 
-As before, we collect the ghost names we will need in a tuple, this time of type $\Qgnames$. It is similar to $\ConcQgnames$, but has an additional ghost name: $\gabst$ which is used for elements in the resource algebra we constructed above.
-
-With this, we now give the hocap-style specification, and explain it afterwards.
-\begin{lemma}[\tlmsq{} Hocap Specification]\label{TLMSQ:spec:hocap}
+With this, we now give the Hocap-style specification, and explain the intricacies of it afterwards.
+\begin{lemma}[Hocap Specification]\label{QueueSpecs:spec:hocap}
 \begin{align*}
   &\Exists \isqueue : \Val \to \Qgnames \to \Prop.\\
   &\quad\quad \All \vq, \Qg . \isqueue(\vq, \Qg) \implies \persistently \isqueue(\vq, \Qg)\\
@@ -575,24 +580,24 @@ With this, we now give the hocap-style specification, and explain it afterwards.
   &\land{}\quad\tlhocapspecdeq
 \end{align*}
 \end{lemma}
-Firstly, we require $\isqueue$ to be persistent, giving us support for concurrent clients.
+As for the concurrent specification, we require that the queue predicate, $\isqueue$, is persistent, giving us support for concurrent clients.
 
 Next, the specification for $\initialise$ gives clients an additional resource in the postcondition: the ownership of the fragmental view of the empty list, $\abstractstatefullfrag{\Qg.\gabst}{[]}$. As discussed above, this allows them to keep track of the contents of the queue.
 
-Finally, the specifications for $\enqueue$ and $\dequeue$ have been parametrised by two predicates: $P$ and $Q$. The clients get to pick $P$ and $Q$, and the choice depends on what the client wishes to prove; $P$ describes those resources that the client has before $\enqueue$ or $\dequeue$, and $Q$ the resources it will have after. Hence $P$ is in the precondition and $Q$ in the postcondition of the associated Hoare-triples. However, before the client gets access to the hoare triple for $\enqueue$ or $\dequeue$ they must prove a viewshift. This viewshift states how the abstract state of the queue will change as a result of running $\enqueue$ or $\dequeue$, and further shows that $P$ can be updated to $Q$. Note that the consequent of the viewshift contains a $\later$. This signifies that the update in the abstract state is tied to a step in the code. The mask on the viewshift further disallows opening of invariants in the namespace $\Nl.i$. This is because, when proving the specifications, we will use an invariant within this namespace. Thus, to be able to use the viewshift while our invariant is open, we must make sure the viewshift doesn't use our invariant (since invariants can only be opened once, before being closed).
+The specifications for $\enqueue$ and $\dequeue$ have now been parametrised by two predicates: $P$ and $Q$. The clients get to pick $P$ and $Q$, and the choice depends on what the client wishes to prove; $P$ describes those resources that the client has before $\enqueue$ or $\dequeue$, and $Q$ the resources it will have after. Hence $P$ is in the precondition and $Q$ in the postcondition of the associated Hoare-triples. However, before the client gets access to the Hoare-triple for $\enqueue$ or $\dequeue$ they must prove a viewshift. This viewshift states how the abstract state of the queue will change as a result of running $\enqueue$ or $\dequeue$, and further shows that $P$ can be updated to $Q$. Note that the consequent of the viewshift contains a $\later$. This signifies that the update in the abstract state is tied to a step in the code. The mask on the viewshift further disallows opening of invariants in the namespace $\Nl.i$. This is to allow queues that use invariants to apply the viewshifts while their invariants are open (their invariants must of course be within the namespace $\Nl.i$).
 
-It might seem a bit strange that the client has to prove that the abstract state can be updated, but remember that the client owns the fragmental view, and that both this and the authoritative view, which is owned by the queue, is needed to update the abstract state. When proving the viewshift, clients aren't updating the abstract state of the queue, they are merely showing that they can supply the fragmental view, allowing the abstract state to be updated. This then enables the queue to update the authoritative view of the abstract state (using the proved viewshift) in conjunction with updating the concrete view.
+It might seem a bit strange that the client has to prove that the abstract state can be updated, but remember that the client owns the fragmental view, and that both this and the authoritative view, which is owned by the queue, is needed to update the abstract state. When proving the viewshift, clients are not updating the abstract state of the queue, they are merely showing that they can supply the fragmental view, allowing the abstract state to be updated. This then enables the queue to update the authoritative view of the abstract state (using the proved viewshift) in conjunction with updating the concrete view.
 
-Exactly how the client supplies the fragmental view depends on what the client wants to achieve. We will see two options, when we derive the sequential and concurrent specifications from this Hocap-style specification in the next section.
+Exactly how client supply the fragmental view depends on what the client wants to achieve. We will see two options, when we derive the sequential and concurrent specifications from this Hocap-style specification in the next section.
 
 
 \section{Deriving Sequential and Concurrent Specifications}
 \label{QueueSpecs:section:deriving-seq-and-conc}
 
-For the reader, it might make more sense to read proofs of seq and conc before reading derivations.
+It is technically possible to derive the sequential and concurrent specifications from the Hocap-style specification without having proven the Hocap-style specification for a specific queue. However, it might be beneficial for the reader to first see how we can prove each specification \textit{directly} for a specific queue, which we show in chapter \ref{ch:TLMSQSPECS}, and then return to this section.
 
 
-In this section we show that we can derive the sequential and concurrent specifications from chapters \ref{ch:TLMSQSEQ} and \ref{ch:TLMSQCONC} from the Hocap-style specification. That is, we assume that we have a persistent queue predicate, $\isqueue$, and the three Hocap-style specifications for $\initialise$, $\enqueue$, and $\dequeue$ as specified in lemma \ref{TLMSQ:spec:hocap}.\\
+In this section we show that we can derive the sequential and concurrent specifications from sections \ref{QueueSpecs:section:seq} and \ref{QueueSpecs:section:conc} from the Hocap-style specification we saw in the previous chapter. That is, we assume that we have a persistent queue predicate, $\isqueue$, and the three Hocap-style specifications for $\initialise$, $\enqueue$, and $\dequeue$ as specified in lemma \ref{QueueSpecs:spec:hocap}.\\
 The derivations will need to show how to update the abstract state of the queue. We introduce two lemmas to help with this. These are proved in section \ref{RA:sections:abstract-state}.\\
 The first shows that the authoritative and fragmental views of the abstract state agree.
 \begin{restatable}[Abstract state agree]{lemma}{abstagree}\label{lemma:abst:agree}
@@ -610,8 +615,8 @@ The second lemma shows that, if we own both the authoritative and fragmental vie
 \end{restatable}
 
 \subsection{Deriving the Sequential Specification}
-Recall the sequential specification specified in lemma \ref{TLMSQ:spec:seq}. It demands a queue predicate, $\isqueueseq$. We here choose to define it as follows.
-\begin{definition}[\tlmsq{} - $\isqueueseq$ Predicate (Derive)]\label{TLMSQ:spec:seq:isqueueseq_derive}
+Recall the sequential specification specified in lemma \ref{QueueSpecs:spec:seq}. It demands a queue predicate, $\isqueueseq$. We here choose to define it as follows.
+\begin{definition}[$\isqueueseq$ Predicate (Derive)]\label{QueueSpecs:spec:seq:isqueueseq_derive}
 \begin{align*}
   \isqueueseq(\vq, \absvalueList, \Qgseq) \eqdef
     &\Exists \Qghocap \in \Qgnames .\\
@@ -627,11 +632,11 @@ Recall the sequential specification for initialise:
 \begin{equation*}
   \tlseqspecinitGen{\vq}{\Qgseq}
 \end{equation*}
-This hoare-triple follows almost directly from the Hocap-style initialise specification -- they only differ in the post-condition. Recall that the post-condition in the Hocap-style specification (lemma \ref{TLMSQ:spec:hocap}) states $\Exists \Qghocap . \isqueue(\vq, \Qghocap) \star{} \abstractstatefullfrag{\Qghocap.\gabst}{[]}$. By the rule of consequence, we are done if we can show that this post-condition implies the sequential post-condition. So we assume we have some $\Qghocap$ such that 
+This Hoare-triple follows almost directly from the Hocap-style initialise specification -- they only differ in the post-condition. Recall that the post-condition in the Hocap-style specification (lemma \ref{QueueSpecs:spec:hocap}) states $\Exists \Qghocap . \isqueue(\vq, \Qghocap) \star{} \abstractstatefullfrag{\Qghocap.\gabst}{[]}$. By the rule of consequence, we are done if we can show that this post-condition implies the sequential post-condition. So we assume we have some $\Qghocap$ such that 
 \begin{equation}
-  \isqueue(\vq, \Qghocap) \star{} \abstractstatefullfrag{\Qghocap.\gabst}{[]}\label{TLMSQ:spec:der:seq:proof:init:hocap}
+  \isqueue(\vq, \Qghocap) \star{} \abstractstatefullfrag{\Qghocap.\gabst}{[]}\label{QueueSpecs:spec:der:seq:proof:init:hocap}
 \end{equation}
-Note that from \ref{TLMSQ:spec:der:seq:proof:init:hocap}, we can easily establish $\isqueueseq(\vq, [], \projqgnamesseq(\Qghocap))$. Hence, by choosing $\projqgnamesseq(\Qghocap)$ for $\Qgseq$, we are done.
+Note that from \ref{QueueSpecs:spec:der:seq:proof:init:hocap}, we can easily establish $\isqueueseq(\vq, [], \projqgnamesseq(\Qghocap))$. Hence, by choosing $\projqgnamesseq(\Qghocap)$ for $\Qgseq$, we are done.
 
 \subsubsection{Sequential Enqueue Specification}
 This specification states:
@@ -656,9 +661,9 @@ Assume $\abstractstateauth{\Qghocap.\gabst}{\absvalueList'}$ and $\abstractstate
 
 With this, we now get access to the following Hoare-triple:
 \begin{equation}
-  \tlhocapspecenqHT{\vq}{\absvalue}{\Qghocap}{\abstractstatefullfrag{\Qghocap.\gabst}{\absvalueList}}{\abstractstatefullfrag{\Qghocap.\gabst}{(\absvalue :: \absvalueList)}}\label{TLMSQ:spec:der:seq:proof:enq:hocap}
+  \tlhocapspecenqHT{\vq}{\absvalue}{\Qghocap}{\abstractstatefullfrag{\Qghocap.\gabst}{\absvalueList}}{\abstractstatefullfrag{\Qghocap.\gabst}{(\absvalue :: \absvalueList)}}\label{QueueSpecs:spec:der:seq:proof:enq:hocap}
 \end{equation}
-The pre-condition already matches our goal, so we just have to get the post-condition to match. To do this, we must get $\isqueue(\vq, \Qghocap)$ in the post-condition of \ref{TLMSQ:spec:der:seq:proof:enq:hocap}, but since is $\isqueue(\vq, \Qghocap)$ persistent and we have it in the pre-condition, we may also assume it in post-condition.
+The pre-condition already matches our goal, so we just have to get the post-condition to match. To do this, we must get $\isqueue(\vq, \Qghocap)$ in the post-condition of \ref{QueueSpecs:spec:der:seq:proof:enq:hocap}, but since is $\isqueue(\vq, \Qghocap)$ persistent and we have it in the pre-condition, we may also assume it in post-condition.
 
 \subsubsection{Sequential Dequeue Specification}
 We use a similar approach to above to prove the sequential dequeue specification:
@@ -682,13 +687,13 @@ By lemma \ref{lemma:abst:agree}, $\absvalueList'$ must be equal to $\absvalueLis
 
 With this, we get access to the Hoare-triple (now with $P$ and $Q$ substituted in):
 \begin{equation}
-  \hoareV[t]{\isqueue(\vq, \Qghocap) \star{} \abstractstatefullfrag{\Qghocap.\gabst}{\absvalueList}}{\dequeue \ \vq}{\nodeval . \begin{array}{l}(\absvalueList = [] \star{} \nodeval = \None \star{} \abstractstatefullfrag{\Qghocap.\gabst}{\absvalueList}) \lor{}\\ (\Exists \absvalue, \absvalueList'. \absvalueList = \absvalueList' \catenate [\absvalue] \star{} \nodeval = \Some{\absvalue} \star{} \abstractstatefullfrag{\Qghocap.\gabst}{\absvalueList'})\end{array}}\label{TLMSQ:spec:der:seq:proof:deq:hocap}
+  \hoareV[t]{\isqueue(\vq, \Qghocap) \star{} \abstractstatefullfrag{\Qghocap.\gabst}{\absvalueList}}{\dequeue \ \vq}{\nodeval . \begin{array}{l}(\absvalueList = [] \star{} \nodeval = \None \star{} \abstractstatefullfrag{\Qghocap.\gabst}{\absvalueList}) \lor{}\\ (\Exists \absvalue, \absvalueList'. \absvalueList = \absvalueList' \catenate [\absvalue] \star{} \nodeval = \Some{\absvalue} \star{} \abstractstatefullfrag{\Qghocap.\gabst}{\absvalueList'})\end{array}}\label{QueueSpecs:spec:der:seq:proof:deq:hocap}
 \end{equation}
 As before, this almost matches the Hoare-triple we have to prove. We use the rule of consequence to massage the post-condition into the correct shape, which concludes the derivation.
 
 \subsection{Deriving the Concurrent Specification}
-We prove the concurrent specification of lemma \ref{TLMSQ:spec:conc}. Remember that we need the $\isqueueconc$ predicate to be persistent, hence we cannot simply assert $\abstractstatefullfrag{\Qghocap.\gabst}{\absvalueList}$ as we did for $\isqueueseq$.\footnote{The core of the fractional RA is always undefined, which means that the core of $\authm(\option{(\fracm \times \agm(\List ~ \Val))})$ is also undefined. Hence no elements of the RA can be persistent -- not even the fragmental ones.} Instead, we will put it into an invariant. The queue predicate we will use looks as follows.
-\begin{definition}[\tlmsq{} - $\isqueueconc$ Predicate (Derive)]\label{TLMSQ:spec:conc:isqueueconc_derive}
+We prove the concurrent specification of lemma \ref{QueueSpecs:spec:conc}. Remember that we need the $\isqueueconc$ predicate to be persistent, hence we cannot simply assert $\abstractstatefullfrag{\Qghocap.\gabst}{\absvalueList}$ as we did for $\isqueueseq$.\footnote{As we explain in section \ref{RA:sections:abstract-state}, no elements of the abstract state resource algebra are persistent.} Instead, we will put it into an invariant. The queue predicate we will use looks as follows.
+\begin{definition}[$\isqueueconc$ Predicate (Derive)]\label{QueueSpecs:spec:conc:isqueueconc_derive}
 \begin{align*}
   \isqueueconc(\Psi, \vq, \Qgconc) \eqdef
   &\Exists \Qghocap \in \Qgnames .\\
@@ -1122,6 +1127,8 @@ Figure \ref{TLMSQ:impl:figure:dequeue} illustrates running dequeue on a non-empt
 \subsection{Sequential Queue Predicate}
 \label{TLMSQSEQ:sequential:sub:seq-queue-pred}
 
+Since the queue uses two locks, we will need two ghost names; one for each lock (cf. section \ref{Pre:iris:locks}). We thus let $\SeqQgnames$ be two-tuples, containing said ghost names. For an element $\Qg \in \SeqQgnames$, the first element of the pair, written $\Qg.\ghlock$, will contain the ghost name for the head lock, and the second element, $\Qg.\gtlock$, the ghost name for the tail lock.
+
 To prove the specification, we must give a specific $\isqueueseq$ predicate. To help guide us in designing this, we give the following observations about the behaviour of the implementation.
 \begin{enumerate}
   \item\label{TLMSQ:insights:head} The head node always points to the first node in the queue (or $\None$ if the queue is empty).
@@ -1324,8 +1331,9 @@ In the \EnqueueState state, the enqueueing thread owns half of the tail pointer,
 In the \DequeueState state, the dequeueing thread owns half of the head pointer, and the tail is as in the \StaticState state.\\
 Finally, the \BothState state is essentially a combination of the \EnqueueState and \DequeueState states.
 
-To track which state the queue is in, we use \textit{tokens}. Tokens are defined using the exclusive resource algebra on the singleton set: $\exm{\TT}$. This resource algebra only has one valid element, and combining two elements will give the non-valid element $\bot$. Thus, if we own a particular token, then, upon opening the invariant, we can rule out certain states simply because they mention the token we own.\\
-We will use several tokens, each of which is the valid element of their own instance of $\exm{\TT}$. Different instances are distinguish between using ghost names. Hence, each token will be represented by a ghost name. As we did for the sequential specification, we group these ghost names into a tuple $\Qg$, and write, for instance $\TokEQg$ to refer to the valid element of a particular instance. We proceed to explain the meaning of each of the tokens used in the invariant.
+To track which state the queue is in, we use \textit{tokens}. Importantly, tokens are non-duplicable and owning two of the same token allows us to deduce $\False$. Thus, if we own a particular token, then, upon opening the invariant, we can rule out certain states simply because they mention the token we own. We refer to section \ref{RA:sections:tokens} for a presentation of the resource algebra used to define tokens.\\
+We will use several tokens, each associated with their own ghost name. We collect all these new ghost names in $\ConcQgnames$, which then contains the ghost names for the two locks and the ghost names for the tokens.\\
+To refer to a specific token associated with a tuple $\Qg$, we write e.g. $\TokEQg$ which projects out the appropriate ghost name and asserts ownership of the token associated with it. We proceed to explain the meaning of each of the tokens used in the invariant.
 \begin{itemize}
   \item $\TokNEQg$ represents that no threads are enqueueing.
   \item $\TokEQg$ represents that a thread is enqueueing.
@@ -1358,8 +1366,7 @@ We note that the concurrent specification for the \tlmsq{} \textit{can} be prove
 \end{definition}
 As is evident, it contains the same propositions as the original invariant, but simply in a different structure. This structure allows for more linear reasoning; the common propositions between the different queue states are now ``grouped'' together.
 
-With this, we can now give our definition of $\isqueueconc$. In the below, we let $\Nl$ be some namespace.
-
+With this, we now give our definition of the queue predicate, $\isqueueconc$. In the below, we let $\Nl$ be some namespace.
 \begin{definition}[\tlmsq{} - $\isqueueconc$ Predicate]\label{TLMSQ:spec:conc:isqueueconc}
 \begin{align*}
   \isqueueconc(\Psi, \vq, \Qg) \eqdef
@@ -1371,7 +1378,7 @@ With this, we can now give our definition of $\isqueueconc$. In the below, we le
 \end{align*}
 \end{definition}
 
-In contrast to the sequential specification, the locks now protect $\TokEQg$ and $\TokDQg$. The idea is that, when an enqueueing thread obtains $\Tlock$, they will obtain the $\TokEQg$ token, which allows them to conclude that the queue state is either \StaticState or \DequeueState. Similarly for a dequeueing thread.
+In contrast to our definition of $\isqueueseq$, the locks now protect $\TokEQg$ and $\TokDQg$. The idea is that, when an enqueueing thread obtains $\Tlock$, they will obtain the $\TokEQg$ token, which allows them to conclude that the queue state is either \StaticState or \DequeueState. Similarly for a dequeueing thread.
 
 \subsection{Linearisation Points}
 \label{TLMSQSPECS:concurrent:sub:lin-points}
@@ -1498,9 +1505,13 @@ Had we not used an $\xsold$ and essentially just ``forgotten'' old nodes, we cou
 \section{Hocap-Style Specification}
 \label{TLMSQSPECS:section:hocap}
 
+\subsection{Introduction}
+When proving the concurrent specification in the previous section, we were quite careful with tracking the state of the queue, and to some extent, even its contents. The contents may have been existentially quantified, but through saving half a pointer, we could match up the contents of the queue between invariant openings. Given this precision in the proof, it should be no surprise that proving the Hocap-style specification will be very similar. This section will hence focus on the parts where the proof of the Hocap-style specification differs from that of the concurrent specification.
+
+
 \subsection{Hocap-Style Queue Predicate}
 \label{TLMSQSPECS:hocap:sub:hocap-queue-pred}
-Our definition of $\isqueue$ is \emph{almost} the same as $\isqueueconc$. First and foremost, the collection of ghost names is now of type $\Qgnames$ which contains the additional ghost name: $\gabst$. For the queue invariant, the differences are that we no longer take the predicate $\Psi$, and we assert $\abstractstateauth{\Qg.\gabst}{\absvalueList}$ instead of $\AllP(\absvalueList, \Psi)$. That is, our queue invariant for the Hocap-style specification now looks as follows.
+Our definition of the queue predicate, $\isqueue$, is \emph{almost} the same as $\isqueueconc$. First and foremost, the collection of ghost names, $\Qgnames$, now contains the additional ghost name: $\gabst$, as required. For the queue invariant, the differences are that we no longer take the predicate $\Psi$, and we assert $\abstractstateauth{\Qg.\gabst}{\absvalueList}$ instead of $\AllP(\absvalueList, \Psi)$. That is, our queue invariant for the Hocap-style specification now looks as follows.
 \begin{definition}[\tlmsq{} Hocap Invariant]\label{TLMSQ:spec:hocap:invariant}
   \begin{align*}
     &\TLQueueInvariantHocap(\lochead, \loctail, \Qg) \eqdef\\
@@ -1585,8 +1596,6 @@ We assume the viewshift and proceed as in the concurrent proof until we get to t
 
 In this chapter we will study the non-blocking version of the \msq{}, the \lfmsq{}. As with the two-lock version, the original implementation can be found in \citet{DBLP:conf/podc/MichaelS96}. As the name ``Lock-Free'' suggests, the implementation doesn't rely on locks to achieve correct behaviour. Instead, it uses the atomic operation: $\CAS$ which we discussed in section \ref{Pre:section:heaplang}.
 
-In section \ref{LFMSQ:section:implementation} we implement the \lfmsq{} in \heaplang. Next, we move towards proving a Hocap-style specification for it. Section \ref{LFMSQ:section:reachability} introduces the notion of \textit{Reachability} which we will need in the proofs. In section \ref{LFMSQ:section:spec} we discuss the specification we will be proving, and in sections \ref{LFMSQ:section:hocap-queue-pred} and \ref{LFMSQ:section:proof-outline} we give the proofs. Finally, in section \ref{LFMSQ:section:discussion}, we discuss a simplification to the \lfmsq{} algorithm and its implications.
-
 \section{Implementation}
 \label{LFMSQ:section:implementation}
 
@@ -1654,8 +1663,13 @@ To solve this issue, we use a \textit{prophecy variable}. Prophecies are a part 
 \caption{Implementation of \lfmsq{} in \heaplang}
 \end{figure}
 
+
 \chapter{Proving Hocap-style Specification for the Lock-Free Michael-Scott Queue}
 \label{ch:LFMSQSPECS}
+
+\section{Introduction}
+\label{LFMSQSPECS:section:introduction}
+In this chapter we prove that the \lfmsq{} satisfies the Hocap-style specification given in section \ref{QueueSpecs:section:hocap}. Section \ref{LFMSQ:section:reachability} introduces the notion of \textit{Reachability} which we will need in the proofs. In section \ref{LFMSQ:section:spec} we discuss the specification we will be proving, and in sections \ref{LFMSQ:section:hocap-queue-pred} and \ref{LFMSQ:section:proof-outline} we give the proofs. Finally, in section \ref{LFMSQ:section:discussion}, we discuss a simplification to the \lfmsq{} algorithm and its implications.
 
 \section{Reachability}
 \label{LFMSQ:section:reachability}
@@ -1994,7 +2008,8 @@ Importantly, if we own a particular token, then we know that no one else can own
 \section{Abstract State}
 \label{RA:sections:abstract-state}
 
-We shall use the resource algebra $\authm(\option{(\fracm \times \agm(\List ~ \Val))})$ to define the abstract state predicate. $\List ~ \Val$ is the abstract state. It is wrapped in the agreement RA, $\agm$, which ensures that if one owns two elements, then they agree on the abstract state. The fractional RA, $\fracm$, denotes how much of the fragmental view is owned; the fragmental view can be split up, which is handled by the clients. We collect $\fracm$ and $\agm(\List ~ \Val)$ in the product RA, whose elements are then pairs of fractions and abstract states. The option RA $?$, makes the product RA unital which is required by the $\authm$ construction. $\authm$ is the authoritative resource algebra. It gives us the authoritative and fragmental views and, together with the fractional RA, governs that they can only be updated in unison.
+We shall use the resource algebra $\authm(\option{(\fracm \times \agm(\List ~ \Val))})$ to define the abstract state predicate. $\List ~ \Val$ is the abstract state. It is wrapped in the agreement RA, $\agm$, which ensures that if one owns two elements, then they agree on the abstract state. The fractional RA, $\fracm$, denotes how much of the fragmental view is owned; the fragmental view can be split up, which is handled by the clients. We collect $\fracm$ and $\agm(\List ~ \Val)$ in the product RA, whose elements are then pairs of fractions and abstract states. The option RA $?$, makes the product RA unital which is required by the $\authm$ construction. $\authm$ is the authoritative resource algebra. It gives us the authoritative and fragmental views and, together with the fractional RA, governs that they can only be updated in unison.\\
+We note that core of the fractional RA is always undefined, which means that the core of $\authm(\option{(\fracm \times \agm(\List ~ \Val))})$ is also undefined. Hence no elements of the RA can be persistent -- not even the fragmental ones.
 
 With this, we may now define $\abstractstateauth{\gname}{\absvalueList}$ and $\abstractstatefullfrag{\gname}{\absvalueList}$ formally.
 \begin{definition}[Authoritative Abstract State]
