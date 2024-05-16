@@ -339,6 +339,7 @@ native_compute_profile_*.data
 _CoqProject.*
 CoqMakefile
 *.conf
+*.coq
 
 # generated timing files
 *.timing.diff

@@ -14,10 +14,14 @@ Installation instructions can be found at [coq.inria.fr/download](https://coq.in
 
 ## Compilation Instructions
 
-Clone the repository and navigate to `/thesis`. To generate a make file, run:
+Clone the repository and navigate to `/thesis`. Running `make` here compiles the project; it will create a Coq Makefile for the project and immediately run it.
+
+Alternatively, one can generate the Coq Makefile manually using the following command:
 
 	coq_makefile -f _CoqProject -o CoqMakefile
 
-Then compile the project with:
+The project is then compiled the project with:
 
 	make -f CoqMakefile
+
+Note that some of the files can take a while to compile.
