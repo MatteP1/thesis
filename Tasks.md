@@ -144,7 +144,8 @@
 - [x] Use camelCase for predicates. (proj_val, wrap_some, proj_gnames...)
 - [x] change cite to citet or citep
 - [x] Use another way to mark persistent pointers in figures (maybe a square above or on it)
-- [ ] Consider moving observations to the enqueue and dequeue functions. some inside sections and others after
+- [x] Consider moving observations to the enqueue and dequeue functions. some inside sections and others after
+  - [x] Maybe have a section called "Observations on the TLMSQ"
 - [x] Make line numbers continuous across functions. init start at 1, enq start at where init ended...
 - [x] For figures, explain the assumption that the head doesn't change during the enqueue (no dequeue happens) (possibly in the figure text)
 - [x] Change Q_γ to G in coq
@@ -158,9 +159,10 @@
 - [x] Move definitions of hocap invariant and queue predicate out of appendix, into section
 - [ ] do not use contractions
 - [x] Change "spec" to "specification"
+- [ ] Make derivations in report not use the projections, hence following the derivation of queue_specs.v
 - [ ] Remove 'tl' and 'lf' prefixes for latex macros for specifications
-- [ ] Rewrite moved sections and chapters to get a red line again
-  - [ ] Update References
+- [x] Rewrite moved sections and chapters to get a red line again
+  - [x] Update References
 - [ ] Check if any extra todos from Amin's feedback
 
 - [ ] Proof read report and fix the following:

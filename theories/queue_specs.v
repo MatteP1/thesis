@@ -17,6 +17,16 @@ Notation "γ ⤇◯ xs_v" := (own γ (◯F (to_agree xs_v)))
 Notation "γ ⤇[ q ] xs_v" := (own γ (◯F{ q } (to_agree xs_v)))
   (at level 20, format "γ  ⤇[ q ]  xs_v") : bi_scope.
 
+Lemma queue_contents_alloc xs_v:
+  ⊢ |==> ∃ γ, (γ ⤇● xs_v ∗ γ ⤇◯ xs_v).
+Proof.
+  iStartProof.
+  iMod (own_alloc (●F (to_agree xs_v) ⋅ ◯F (to_agree xs_v))) as (γ) "[Hγ_auth Hγ_frac]"; first by apply frac_auth_valid.
+  iModIntro.
+  iExists γ.
+  iFrame.
+Qed.
+
 Lemma queue_contents_frag_agree γ xs_v xs_v' p q :
   γ ⤇[p] xs_v -∗ γ ⤇[q] xs_v' -∗ ⌜xs_v = xs_v'⌝.
 Proof.

@@ -346,7 +346,7 @@ Proof.
   iMod (pointsto_persist with "Hx1_node") as "#Hx1_node".
   wp_alloc l_tail as "Hl_tail".
   wp_alloc l_head as "Hl_head".
-  iMod (own_alloc (●F (to_agree []) ⋅ ◯F (to_agree []))) as (γ_Abst) "[Hγ_Abst_auth Hγ_Abst_frac]"; first by apply frac_auth_valid.
+  iMod (queue_contents_alloc []) as (γ_Abst) "[Hγ_Abst_auth Hγ_Abst_frac]".
   iAssert (x_1 ⤳ x_1)%I as "Hx1_reach_x1"; first by iApply reach_refl.
   iMod (Abs_Reach_Alloc x_1 with "Hx1_reach_x1") as (γ_Head) "[HγHead_ap_x1 _]".
   iMod (Abs_Reach_Alloc x_1 with "Hx1_reach_x1") as (γ_Tail) "[HγTail_ap_x1 #Hx1_ar_γTail]".

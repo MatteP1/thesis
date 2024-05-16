@@ -198,7 +198,7 @@ Proof.
   iMod token_alloc as (γ_Before) "Hγ_Before".
   iMod token_alloc as (γ_After) "Hγ_After".
   (* CHANGE: allocate the abstract state of the queue as empty *)
-  iMod (own_alloc (●F (to_agree []) ⋅ ◯F (to_agree []))) as (γ_Abst) "[Hγ_Abst_auth Hγ_Abst_frac]"; first by apply frac_auth_valid.
+  iMod (queue_contents_alloc []) as (γ_Abst) "[Hγ_Abst_auth Hγ_Abst_frac]".
   set (Queue_gnames := {| γ_Abst := γ_Abst;
                           γ_Hlock := γ_Hlock;
                           γ_Tlock := γ_Tlock;
