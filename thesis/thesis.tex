@@ -375,16 +375,19 @@
 \chapter{Preliminaries}
 \label{ch:preliminaries}
 
-\todo{Mention that the project uses heaplang and the program logic iris, and hence we need to know about them}
+This chapter covers some of the background topics that are required to understand the main parts of the project. Specifically, section \ref{Pre:section:heaplang} covers the basics of the language we use to implement the \msq{}s. Section \ref{Pre:section:iris} gives an overview of the program logic we use to reason about the queues. Finally, section \ref{Pre:section:coq} introduces the files containing the mechanisations of the work presented in this report.
 
 %=====================================================================
 \section{\heaplang}
 \label{Pre:section:heaplang}
 
-\todo{Write about heaplang language: ml like, with a heap, Cas}
-\todo{Refer to ILN for specification}
-\todo{Talk about Syntactic sugar: i.e. e1 ;; e2 = (lam v, e2) e1 where v is fresh, and CAS ... as Snd (CMPXHG ...), and derived rules for them}
-\todo{also mention prophecies and refer to the section talking about them}
+This project uses ``\heaplang'' as the implementation language. The main reason for this choice is that \heaplang is very well supported by the program logic Iris, which we introduce in the next section. However, \heaplang is still a quite suitable language for this project, as it has features to support faithful implementations of the \msq{}s. In particular, \heaplang is an untyped ML-style language. Notably, \heaplang supports recursion, references, and concurrency. References are handled with \textit{heap}, hence the name of the language. Only reference to values can be created. The instruction $\Ref(\val)$ will allocate a spot on the heap containing $\val$ and return the location, $\loc$, of the $\val$. This location can then later be read using $\deref \loc$, or updated using $\loc \gets \val'$.
+
+Concurrency is supported by the $\Fork{\expr}$ instruction. This instruction creates a new thread which executes $\expr$. Multiple threads can communicate through the heap, and to allow for synchronisation, \heaplang supports a compare-and-swap instruction. The instruction $\CAS \ \loc \ \val \ \val'$ atomically reads $\loc$, compares the contents with $\val$, and if similar, stores $\val'$ at $\loc$. If $\loc$ doesn't contain $\val$, no change occurs.
+
+For the basic constructs, \heaplang supports basic arithmetic on integers, comparisons, conditionals, pairs and projections, and injections and pattern matching. To achieve many of the other usual constructions expected of similar languages, \heaplang uses Syntactic sugar. For instance, we define the $\langkw{let}$ construction as $\Let \var = \expr_1 in \expr_2 \eqdef (\lambda{} \var . \expr_2) ~ \expr_1$. Similarly, we can support sequences of instructions by defining $\expr_1 ; \expr_2 \eqdef (\lambda{} \var . \expr_2) \expr_1$, but where $\var$ is fresh.
+
+The full specification of the language language can be found in \citet{gentleiris} (section 2 at time of writing).
 
 %=====================================================================
 \section{The Iris Program Logic Framework}
