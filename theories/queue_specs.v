@@ -152,9 +152,7 @@ Lemma initialize_spec_seq :
 Proof.
   iIntros (Φ _) "HΦ".
   wp_apply (initialize_spec); first done.
-  iIntros (v_q G) "[HisQueue Habst_frag]".
-  iApply ("HΦ" $! v_q G).
-  by iFrame.
+  done.
 Qed.
 
 Lemma enqueue_spec_seq v_q (v : val) (xs_v : list val) (G : Qgnames) :
