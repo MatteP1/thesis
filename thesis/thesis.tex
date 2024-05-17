@@ -146,6 +146,7 @@
 \newcommand{\gtail}{\gname_{\mathrm{Tail}}}
 \newcommand{\glast}{\gname_{\mathrm{Last}}}
 
+\newcommand{\Token}[1]{\operatorname{Token}(#1)}
 \newcommand{\TokE}[1]{\operatorname{TokE} ~ #1}
 \newcommand{\TokEQg}{\TokE{\Qg}}
 \newcommand{\TokNE}[1]{\operatorname{TokNE} ~ #1}
@@ -206,74 +207,74 @@
 % ------ Sequential Specification ------
 % Initialise
 
-\newcommand{\tlseqspecinitHTGen}[2]{\hoare{\TRUE}{\initialise \ \TT}{#1 . \Exists #2. \isqueueseq(#1, [], #2)}}
+\newcommand{\seqspecinitHTGen}[2]{\hoare{\TRUE}{\initialise \ \TT}{#1 . \Exists #2. \isqueueseq(#1, [], #2)}}
 
-\newcommand{\tlseqspecinitGen}[2]{\tlseqspecinitHTGen{#1}{#2}}
+\newcommand{\seqspecinitGen}[2]{\seqspecinitHTGen{#1}{#2}}
 
-\newcommand{\tlseqspecinit}{\tlseqspecinitGen{\vq}{\Qg}}
+\newcommand{\seqspecinit}{\seqspecinitGen{\vq}{\Qg}}
 
 % Enqueue
-\newcommand{\tlseqspecenqHT}[4]{\hoare{\isqueueseq(#1, #3, #4)}{\enqueue \ #1 \ #2}{\valB . \isqueueseq(#1, (#2 :: #3), #4)}}
+\newcommand{\seqspecenqHT}[4]{\hoare{\isqueueseq(#1, #3, #4)}{\enqueue \ #1 \ #2}{\valB . \isqueueseq(#1, (#2 :: #3), #4)}}
 
-\newcommand{\tlseqspecenqGen}[4]{\All #1, #2, #3, #4. \tlseqspecenqHT{#1}{#2}{#3}{#4}}
+\newcommand{\seqspecenqGen}[4]{\All #1, #2, #3, #4. \seqspecenqHT{#1}{#2}{#3}{#4}}
 
-\newcommand{\tlseqspecenq}{\tlseqspecenqGen{\vq}{\absvalue}{\absvalueList}{\Qg}}
+\newcommand{\seqspecenq}{\seqspecenqGen{\vq}{\absvalue}{\absvalueList}{\Qg}}
 
 % Dequeue
-\newcommand{\tlseqspecdeqHT}[3]{\hoareV[t]{\isqueueseq(#1, #2, #3)}{\dequeue \ #1}{\nodeval . \begin{array}{l}(#2 = [] \star{} \nodeval = \None \star{} \isqueueseq(#1, #2, #3)) \lor{}\\ (\Exists \absvalue, #2' . #2 = #2' \catenate [\absvalue] \star{} \nodeval = \Some \absvalue \star{} \isqueueseq(#1, #2', #3)) \end{array}}}
+\newcommand{\seqspecdeqHT}[3]{\hoareV[t]{\isqueueseq(#1, #2, #3)}{\dequeue \ #1}{\nodeval . \begin{array}{l}(#2 = [] \star{} \nodeval = \None \star{} \isqueueseq(#1, #2, #3)) \lor{}\\ (\Exists \absvalue, #2' . #2 = #2' \catenate [\absvalue] \star{} \nodeval = \Some \absvalue \star{} \isqueueseq(#1, #2', #3)) \end{array}}}
 
-\newcommand{\tlseqspecdeqGen}[3]{\All #1, #2, #3. \tlseqspecdeqHT{#1}{#2}{#3}}
+\newcommand{\seqspecdeqGen}[3]{\All #1, #2, #3. \seqspecdeqHT{#1}{#2}{#3}}
 
-\newcommand{\tlseqspecdeq}{\tlseqspecdeqGen{\vq}{\absvalueList}{\Qg}}
+\newcommand{\seqspecdeq}{\seqspecdeqGen{\vq}{\absvalueList}{\Qg}}
 
 
 % ------ Concurrent Specification ------
 % Initialise
-\newcommand{\tlconcspecinitHTGen}[3]{\hoare{\TRUE}{\initialise \ \TT}{#2 . \Exists #3. \isqueueconc(#1, #2, #3)}}
+\newcommand{\concspecinitHTGen}[3]{\hoare{\TRUE}{\initialise \ \TT}{#2 . \Exists #3. \isqueueconc(#1, #2, #3)}}
 
-\newcommand{\tlconcspecinitGen}[3]{\tlconcspecinitHTGen{#1}{#2}{#3}}
+\newcommand{\concspecinitGen}[3]{\concspecinitHTGen{#1}{#2}{#3}}
 
-\newcommand{\tlconcspecinit}[1]{\tlconcspecinitGen{#1}{\vq}{\Qg}}
+\newcommand{\concspecinit}[1]{\concspecinitGen{#1}{\vq}{\Qg}}
 
 % Enqueue
-\newcommand{\tlconcspecenqHT}[4]{\hoare{\isqueueconc(#1, #2, #4) \star{} #1(#3)}{\enqueue \ #2 \ #3}{\valB . \TRUE}}
+\newcommand{\concspecenqHT}[4]{\hoare{\isqueueconc(#1, #2, #4) \star{} #1(#3)}{\enqueue \ #2 \ #3}{\valB . \TRUE}}
 
-\newcommand{\tlconcspecenqGen}[4]{\All #2, #3, #4. \tlconcspecenqHT{#1}{#2}{#3}{#4}}
+\newcommand{\concspecenqGen}[4]{\All #2, #3, #4. \concspecenqHT{#1}{#2}{#3}{#4}}
 
-\newcommand{\tlconcspecenq}[1]{\tlconcspecenqGen{#1}{\vq}{\absvalue}{\Qg}}
+\newcommand{\concspecenq}[1]{\concspecenqGen{#1}{\vq}{\absvalue}{\Qg}}
 
 % Dequeue
-\newcommand{\tlconcspecdeqHT}[3]{\hoare{\isqueueconc(#1, #2, #3)}{\dequeue \ #2}{\nodeval . \nodeval = \None \lor{} (\Exists \absvalue . \nodeval = \Some \absvalue \star{} #1(\absvalue))}}
+\newcommand{\concspecdeqHT}[3]{\hoare{\isqueueconc(#1, #2, #3)}{\dequeue \ #2}{\nodeval . \nodeval = \None \lor{} (\Exists \absvalue . \nodeval = \Some \absvalue \star{} #1(\absvalue))}}
 
-\newcommand{\tlconcspecdeqGen}[3]{\All #2, #3. \tlconcspecdeqHT{#1}{#2}{#3}}
+\newcommand{\concspecdeqGen}[3]{\All #2, #3. \concspecdeqHT{#1}{#2}{#3}}
 
-\newcommand{\tlconcspecdeq}[1]{\tlconcspecdeqGen{#1}{\vq}{\Qg}}
+\newcommand{\concspecdeq}[1]{\concspecdeqGen{#1}{\vq}{\Qg}}
 
 
 % ------ Hocap Specification ------
 % Initialise
-\newcommand{\tlhocapspecinitHTGen}[2]{\hoare{\TRUE}{\initialise \ \TT}{#1 . \Exists #2 . \isqueue(#1, #2) \star{} \abstractstatefullfrag{#2.\gabst}{[]}}}
+\newcommand{\hocapspecinitHTGen}[2]{\hoare{\TRUE}{\initialise \ \TT}{#1 . \Exists #2 . \isqueue(#1, #2) \star{} \abstractstatefullfrag{#2.\gabst}{[]}}}
 
-\newcommand{\tlhocapspecinitGen}[2]{\tlhocapspecinitHTGen{#1}{#2}}
+\newcommand{\hocapspecinitGen}[2]{\hocapspecinitHTGen{#1}{#2}}
 
-\newcommand{\tlhocapspecinit}{\tlhocapspecinitGen{\vq}{\Qg}}
+\newcommand{\hocapspecinit}{\hocapspecinitGen{\vq}{\Qg}}
 
 % Enqueue
-\newcommand{\tlhocapspecenqVS}[5]{\abstractstateauth{#2.\gabst}{#5} \star{} #3 \vs[\mask\setminus\Nl.i^\uparrow] \later \abstractstateauth{#2.\gabst}{(#1 :: #5)} \star{} #4}
+\newcommand{\hocapspecenqVS}[5]{\abstractstateauth{#2.\gabst}{#5} \star{} #3 \vs[\mask\setminus\Nl.i^\uparrow] \later \abstractstateauth{#2.\gabst}{(#1 :: #5)} \star{} #4}
 
-\newcommand{\tlhocapspecenqHT}[5]{\hoare{\isqueue(#1, #3) \star{} #4}{\enqueue \ #1 \ #2}{\valB . #5}}
+\newcommand{\hocapspecenqHT}[5]{\hoare{\isqueue(#1, #3) \star{} #4}{\enqueue \ #1 \ #2}{\valB . #5}}
 
-\newcommand{\tlhocapspecenqGen}[6]{\All #1, #2, #3, #4, #5.
+\newcommand{\hocapspecenqGen}[6]{\All #1, #2, #3, #4, #5.
 \begin{array}[t]{l}
-\left(\All #6 . \tlhocapspecenqVS{#2}{#3}{#4}{#5}{#6} \right)
+\left(\All #6 . \hocapspecenqVS{#2}{#3}{#4}{#5}{#6} \right)
 \wand\\
-\tlhocapspecenqHT{#1}{#2}{#3}{#4}{#5}
+\hocapspecenqHT{#1}{#2}{#3}{#4}{#5}
 \end{array}}
 
-\newcommand{\tlhocapspecenq}{\tlhocapspecenqGen{\vq}{\absvalue}{\Qg}{P}{Q}{\absvalueList}}
+\newcommand{\hocapspecenq}{\hocapspecenqGen{\vq}{\absvalue}{\Qg}{P}{Q}{\absvalueList}}
 
 % Dequeue
-\newcommand{\tlhocapspecdeqVSGen}[6]{
+\newcommand{\hocapspecdeqVSGen}[6]{
   \abstractstateauth{#1.\gabst}{#4} \star{} #2 \vs[\mask\setminus\Nl.i^\uparrow] \later
   \left(
     \begin{array}{l}
@@ -288,28 +289,19 @@
     \end{array}
   \right)
 }
-\newcommand{\tlhocapspecdeqVS}[4]{\tlhocapspecdeqVSGen{#1}{#2}{#3}{#4}{\absvalue}{#4'}}
+\newcommand{\hocapspecdeqVS}[4]{\hocapspecdeqVSGen{#1}{#2}{#3}{#4}{\absvalue}{#4'}}
 
-\newcommand{\tlhocapspecdeqHT}[4]{\hoare{\isqueue(#1, #2) \star{} #3}{\dequeue \ #1}{\nodeval . #4(\nodeval)}}
+\newcommand{\hocapspecdeqHT}[4]{\hoare{\isqueue(#1, #2) \star{} #3}{\dequeue \ #1}{\nodeval . #4(\nodeval)}}
 
-\newcommand{\tlhocapspecdeqGen}[5]{\begin{array}[t]{l}
+\newcommand{\hocapspecdeqGen}[5]{\begin{array}[t]{l}
   \All #1, #2, #3, #4.\\
   \begin{array}[t]{l}
-  \quad\left(\All #5 . \tlhocapspecdeqVS{#2}{#3}{#4}{#5} \right) \wand\\
-  \quad\tlhocapspecdeqHT{#1}{#2}{#3}{#4}
+  \quad\left(\All #5 . \hocapspecdeqVS{#2}{#3}{#4}{#5} \right) \wand\\
+  \quad\hocapspecdeqHT{#1}{#2}{#3}{#4}
   \end{array}
 \end{array}}
 
-\newcommand{\tlhocapspecdeq}{\tlhocapspecdeqGen{\vq}{\Qg}{P}{Q}{\absvalueList}}
-
-
-% ------ Hocap Specification (lf) ------
-
-\newcommand{\lfhocapspecinit}{\tlhocapspecinit}
-
-\newcommand{\lfhocapspecenq}{\tlhocapspecenq}
-
-\newcommand{\lfhocapspecdeq}{\tlhocapspecdeq}
+\newcommand{\hocapspecdeq}{\hocapspecdeqGen{\vq}{\Qg}{P}{Q}{\absvalueList}}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -378,8 +370,6 @@
   \item Mechanised everything presented in the paper in coq
 \end{itemize}
 
-
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \chapter{Preliminaries}
@@ -387,7 +377,7 @@
 
 \todo{Mention that the project uses heaplang and the program logic iris, and hence we need to know about them}
 
-
+%=====================================================================
 \section{\heaplang}
 \label{Pre:section:heaplang}
 
@@ -396,9 +386,10 @@
 \todo{Talk about Syntactic sugar: i.e. e1 ;; e2 = (lam v, e2) e1 where v is fresh, and CAS ... as Snd (CMPXHG ...), and derived rules for them}
 \todo{also mention prophecies and refer to the section talking about them}
 
-
+%=====================================================================
 \section{The Iris Program Logic Framework}
 \label{Pre:section:iris}
+
 In this section, we give a brief introduction to Iris -- the logic we use to reason about the \msq{}s. Iris is quite expressive and supports a myriad of features and derived rules, many of which have been utilised in this project. As such, it will be impossible to cover all facets of Iris in detail, so we limit ourselves to give an overview of the main aspects of Iris. If the reader wishes a more thorough introduction, or wants to see further details of the topics covered, please consult the Iris Lecture Notes \citep{gentleiris}.
 
 \todo{FOCUS IN THIS SECTION is on explaining the basic ideas of the concepts and showing the notation used. Assume the reader is somewhat familiar with program verification. }
@@ -459,7 +450,7 @@ The later modality adds a notion of step indexing to Iris propositions. This ste
 \subsection{Locks}\label{Pre:iris:locks}
 \todo{show and explain the lock specification}
 
-
+%=====================================================================
 \section{Formalisation in Coq}
 \label{Pre:section:coq}
 
@@ -501,12 +492,15 @@ Table \ref{Pre:files-table} gives an overview over the files developed in the pr
 \subsection{Compiling the Project}
 Compiling the project requires both Coq and Iris to be installed. Once installed, open a terminal and navigate to the project folder, \path{/thesis/}, which contains the \path{_CoqProject} file. Here, run \mintinline{shell-session}{make}. This will both create a Coq Makefile and run it. The project is known to compile with Coq version 8.19.0 and Iris version 4.2.0.
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \chapter{Queue Specifications}
 \label{ch:QueueSpecs}
 
+%=====================================================================
 \section{Specifications for Queues}
 \label{QueueSpecs:section:specs}
+
 In this chapter we discuss some possible specifications for queue data structures in general. As such, we need to make some basic assumption about what we expect from a queue. Firstly, we adopt the convention that a queue consists of three functions: $\initialise$, $\enqueue$, and $\dequeue$. Exactly what these functions do will depend on the specific implementation of the queue, but we give some general pointers to what we expect of them.\\
 The $\initialise$ function should create a queue which is initially empty. The functions $\enqueue$ and $\dequeue$ can then be invoked subsequently on said queue.\\
 In addition to being parametrised on the queue, the $\enqueue$ function should also take a value as input. When invoking $\enqueue$ with such a value, the function should add this value to the end of the queue.\\
@@ -514,6 +508,7 @@ The $\dequeue$ function will attempt to dequeue an element from the queue. Since
 
 Working in a concurrent setting often gets quite complicated quite fast, and proving that ones queue satisfies the above desirables can become quite tricky. In fact, even defining those qualities formally can become non-trivial. As such, we give three different specifications for queues. In section \ref{QueueSpecs:section:seq} we give a specification that assumes the queue is run in a sequential setting. Next, in section \ref{QueueSpecs:section:conc}, we give a specification that \textit{does} allow for concurrency but gives up on some of the above qualities. Primarily, it does not track the contents of the queue; invoking $\enqueue$ on a value doesn't guarantee that the value is added to the queue. Finally, in section \ref{QueueSpecs:section:hocap} we give a specification that allows for both concurrency \textit{and} tracking of the contents of the queue.
 
+%=====================================================================
 \section{Defining a Sequential Specification}
 \label{QueueSpecs:section:seq}
 
@@ -525,15 +520,16 @@ With this, we give our definition of a sequential specification for a queue.
 \begin{definition}[Sequential Specification]\label{QueueSpecs:spec:seq}
 \begin{align*}
   &\Exists \isqueueseq : \Val \to \List ~ \Val \to \SeqQgnames \to \Prop.\\
-  &\quad\quad\tlseqspecinit\\
-  &\land{}\quad\tlseqspecenq\\
-  &\land{}\quad\tlseqspecdeq
+  &\quad\quad\seqspecinit\\
+  &\land{}\quad\seqspecenq\\
+  &\land{}\quad\seqspecdeq
 \end{align*}
 \end{definition}
 
 The proposition $\isqueueseq(\vq, \absvalueList, \Qg)$ captures that the value $\vq$ is a queue, whose contents matches that of our abstract representation $\absvalueList$, and the queue uses the ghost names described by $\Qg$. Clients of a queue satisfying this specification can then apply the three Hoare-triples at invocations for $\initialise$, $\enqueue$, and $\dequeue$, which tells them how the queue changes as a result of the invocation.\\
 Note that the $\isqueueseq$ predicate is not required to be persistent, hence it cannot be duplicated and given to multiple threads. Since this predicate is required to apply the Hoare-triples, then only a single thread can use the specification at a time. This is the sense in which the specification is sequential.
 
+%=====================================================================
 \section{Defining a Concurrent Specification}
 \label{QueueSpecs:section:conc}
 
@@ -547,13 +543,14 @@ We \textit{can} however make the queue guarantee that a given property holds of 
   &\Exists \isqueueconc : (\Val \to \Prop) \to \Val \to \ConcQgnames \to \Prop.\\
   &\All \Phi : \Val \to \Prop.\\
   &\quad\quad \All \vq, \Qg . \isqueueconc(\Phi, \vq, \Qg) \implies \persistently \isqueueconc(\Phi, \vq, \Qg)\\
-  &\land{}\quad\tlconcspecinit{\Phi}\\
-  &\land{}\quad\tlconcspecenq{\Phi}\\
-  &\land{}\quad\tlconcspecdeq{\Phi}
+  &\land{}\quad\concspecinit{\Phi}\\
+  &\land{}\quad\concspecenq{\Phi}\\
+  &\land{}\quad\concspecdeq{\Phi}
 \end{align*}
 \end{definition}
 This specification additionally requires that $\isqueueconc$ is persistent, which means that it can be duplicated and given to multiple threads. We again use a collection of ghost names, which we here denote $\ConcQgnames$.
 
+%=====================================================================
 \section{Defining a Hocap-style Specification}
 \label{QueueSpecs:section:hocap}
 
@@ -565,23 +562,31 @@ For an abstract state $\absvalueList$ and a ghost name $\gname$, we shall use th
 
 We introduce three lemmas to help working with these predicates. These are proved in section \ref{RA:sections:abstract-state}. The first lemma shows that we can create fresh authoritative and fragmental views for any abstract state. The abstract state will usually be empty when allocating.
 \begin{restatable}[Abstract State Alloc]{lemma}{abstalloc}\label{lemma:abst:alloc}
-  $\All \absvalueList .\\
-  \proves \pvs \Exists \gname . \abstractstateauth{\gname}{\absvalueList} \star{} \abstractstatefullfrag{\gname}{\absvalueList}$
+  For any abstract state $\absvalueList$, we have
+  \begin{equation*}
+    \proves \pvs \Exists \gname . \abstractstateauth{\gname}{\absvalueList} \star{} \abstractstatefullfrag{\gname}{\absvalueList}
+  \end{equation*}
 \end{restatable}
 
 The second shows that the authoritative and fragmental views of the abstract state agree.
 \begin{restatable}[Abstract State Agree]{lemma}{abstagree}\label{lemma:abst:agree}
-  $\All \gname, \absvalueList, \absvalueList' .\\
-  \abstractstateauth{\gname}{\absvalueList'} \star{} \abstractstatefullfrag{\gname}{\absvalueList} \proves \absvalueList = \absvalueList'$
+  For a ghost name $\gname$ and abstract states $\absvalueList$ and $\absvalueList'$, we have
+  \begin{equation*}
+    \abstractstateauth{\gname}{\absvalueList'} \star{}
+    \abstractstatefullfrag{\gname}{\absvalueList} \proves
+    \absvalueList = \absvalueList'
+  \end{equation*}
 \end{restatable}
 
 The final lemma shows that, if we own both the authoritative and fragmental views, we are allowed to update the abstract state to whatever we like.
 \begin{restatable}[Abstract State Update]{lemma}{abstupdate}\label{lemma:abst:update}
-  $\All \gname, \absvalueList, \absvalueList', \absvalueList'' .\\
-  \abstractstateauth{\gname}{\absvalueList'} \star{}
-  \abstractstatefullfrag{\gname}{\absvalueList} \vs
-  \abstractstateauth{\gname}{\absvalueList''} \star{}
-  \abstractstatefullfrag{\gname}{\absvalueList''}$
+  For any ghost name $\gname$, and abstract values $\absvalueList$, $\absvalueList'$, and $\absvalueList''$, we have
+  \begin{equation*}
+    \abstractstateauth{\gname}{\absvalueList'} \star{}
+    \abstractstatefullfrag{\gname}{\absvalueList} \vs
+    \abstractstateauth{\gname}{\absvalueList''} \star{}
+    \abstractstatefullfrag{\gname}{\absvalueList''}
+  \end{equation*}
 \end{restatable}
 
 The collection of ghost names is now denoted $\Qgnames$, but as all queues will have to deal with the ghost name keeping track of the abstract state as describe above, we require that any $\Qgnames$ will contain a ghost name used for this purpose. We shall refer to this ghost name as $\gabst$.
@@ -591,9 +596,9 @@ With this, we now give the Hocap-style specification, and explain the intricacie
 \begin{align*}
   &\Exists \isqueue : \Val \to \Qgnames \to \Prop.\\
   &\quad\quad \All \vq, \Qg . \isqueue(\vq, \Qg) \implies \persistently \isqueue(\vq, \Qg)\\
-  &\land{}\quad\tlhocapspecinit\\
-  &\land{}\quad\tlhocapspecenq\\
-  &\land{}\quad\tlhocapspecdeq
+  &\land{}\quad\hocapspecinit\\
+  &\land{}\quad\hocapspecenq\\
+  &\land{}\quad\hocapspecdeq
 \end{align*}
 \end{definition}
 As for the concurrent specification, we require that the queue predicate, $\isqueue$, is persistent, giving us support for concurrent clients.
@@ -606,7 +611,7 @@ It might seem a bit strange that the client has to prove that the abstract state
 
 Exactly how client supply the fragmental view depends on what the client wants to achieve. We will see two options, when we derive the sequential and concurrent specifications from this Hocap-style specification in the next section.
 
-
+%=====================================================================
 \section{Deriving Sequential and Concurrent Specifications}
 \label{QueueSpecs:section:deriving-seq-and-conc}
 
@@ -631,9 +636,9 @@ Here, $\projqgnamesseq(\Qghocap)$ simply creates an element of $\SeqQgnames$, wi
 \subsubsection{Sequential Initialise Specification}
 Recall the sequential specification for initialise:
 \begin{equation*}
-  \tlseqspecinitGen{\vq}{\Qgseq}
+  \seqspecinitGen{\vq}{\Qgseq}
 \end{equation*}
-This Hoare-triple follows almost directly from the Hocap-style initialise specification -- they only differ in the post-condition. Recall that the post-condition in the Hocap-style specification (lemma \ref{QueueSpecs:spec:hocap}) states $\Exists \Qghocap . \isqueue(\vq, \Qghocap) \star{} \abstractstatefullfrag{\Qghocap.\gabst}{[]}$. By the rule of consequence, we are done if we can show that this post-condition implies the sequential post-condition. So we assume we have some $\Qghocap$ such that 
+This Hoare-triple follows almost directly from the Hocap-style initialise specification -- they only differ in the post-condition. Recall that the post-condition in the Hocap-style specification (lemma \ref{QueueSpecs:spec:hocap}) states $\Exists \Qghocap . \isqueue(\vq, \Qghocap) \star{} \abstractstatefullfrag{\Qghocap.\gabst}{[]}$. By the rule of consequence, we are done if we can show that this post-condition implies the sequential post-condition. So we assume we have some $\Qghocap$ such that
 \begin{equation}
   \isqueue(\vq, \Qghocap) \star{} \abstractstatefullfrag{\Qghocap.\gabst}{[]}\label{QueueSpecs:spec:der:seq:proof:init:hocap}
 \end{equation}
@@ -642,7 +647,7 @@ Note that from \ref{QueueSpecs:spec:der:seq:proof:init:hocap}, we can easily est
 \subsubsection{Sequential Enqueue Specification}
 This specification states:
 \begin{equation*}
-  \tlseqspecenqGen{\vq}{\absvalue}{\absvalueList}{\Qgseq}
+  \seqspecenqGen{\vq}{\absvalue}{\absvalueList}{\Qgseq}
 \end{equation*}
 So assume some $\vq$, $\absvalue$, $\absvalueList$, and $\Qgseq$. Unfolding $\isqueueseq$, we additionally assume some $\Qghocap$ which projects to $\Qgseq$. Our goal thus becomes:
 \begin{equation*}
@@ -656,33 +661,33 @@ We choose
 \end{align*}
 and assume some $\absvalueList'$. We must then prove the viewshift:
 \begin{equation*}
-  \tlhocapspecenqVS{\absvalue}{\Qghocap}{\abstractstatefullfrag{\Qghocap.\gabst}{\absvalueList}}{\abstractstatefullfrag{\Qghocap.\gabst}{(\absvalue :: \absvalueList)}}{\absvalueList'}
+  \hocapspecenqVS{\absvalue}{\Qghocap}{\abstractstatefullfrag{\Qghocap.\gabst}{\absvalueList}}{\abstractstatefullfrag{\Qghocap.\gabst}{(\absvalue :: \absvalueList)}}{\absvalueList'}
 \end{equation*}
 Assume $\abstractstateauth{\Qghocap.\gabst}{\absvalueList'}$ and $\abstractstatefullfrag{\Qghocap.\gabst}{\absvalueList}$. By lemma \ref{lemma:abst:agree}, $\absvalueList = \absvalueList'$, hence, we can apply lemma \ref{lemma:abst:update} to update the authoritative and fragmental views to $(\absvalue :: \absvalueList)$, which exactly proves the consequent of the viewshift.\footnote{The consequent technically has a $\later$, but proving something \emph{now} is stronger than proving it \emph{later}.}
 
 With this, we now get access to the following Hoare-triple:
 \begin{equation}
-  \tlhocapspecenqHT{\vq}{\absvalue}{\Qghocap}{\abstractstatefullfrag{\Qghocap.\gabst}{\absvalueList}}{\abstractstatefullfrag{\Qghocap.\gabst}{(\absvalue :: \absvalueList)}}\label{QueueSpecs:spec:der:seq:proof:enq:hocap}
+  \hocapspecenqHT{\vq}{\absvalue}{\Qghocap}{\abstractstatefullfrag{\Qghocap.\gabst}{\absvalueList}}{\abstractstatefullfrag{\Qghocap.\gabst}{(\absvalue :: \absvalueList)}}\label{QueueSpecs:spec:der:seq:proof:enq:hocap}
 \end{equation}
 The pre-condition already matches our goal, so we just have to get the post-condition to match. To do this, we must get $\isqueue(\vq, \Qghocap)$ in the post-condition of \ref{QueueSpecs:spec:der:seq:proof:enq:hocap}, but since is $\isqueue(\vq, \Qghocap)$ persistent and we have it in the pre-condition, we may also assume it in post-condition.
 
 \subsubsection{Sequential Dequeue Specification}
 We use a similar approach to above to prove the sequential dequeue specification:
 \begin{equation*}
-  \tlseqspecdeqGen{\vq}{\absvalueList}{\Qgconc}
+  \seqspecdeqGen{\vq}{\absvalueList}{\Qgconc}
 \end{equation*}
 So we assume some $\vq$, $\absvalueList$, $\Qgseq$, and $\Qghocap$ such that $\Qghocap$ projects to $\Qgseq$. Our goal is now:
 \begin{equation*}
   \hoareV[t]{\isqueue(\vq, \Qghocap) \star{} \abstractstatefullfrag{\Qghocap.\gabst}{\absvalueList}}{\dequeue \ \vq}{\nodeval . \begin{array}{l}(\absvalueList = [] \star{} \nodeval = \None \star{} \isqueueseq(\vq, \absvalueList, \Qgseq)) \lor{}\\ (\Exists \absvalue, \absvalueList' . \absvalueList = \absvalueList' \catenate [\absvalue] \star{} \nodeval = \Some \absvalue \star{} \isqueueseq(\vq, \absvalueList', \Qgseq)) \end{array}}
 \end{equation*}
-This time we instantiate the Hocap-style dequeue specification with the following choices: 
+This time we instantiate the Hocap-style dequeue specification with the following choices:
 \begin{align*}
   P &\eqdef \abstractstatefullfrag{\Qghocap.\gabst}{\absvalueList}\\
   Q(\nodeval) &\eqdef \begin{array}{l}(\absvalueList = [] \star{} \nodeval = \None \star{} \abstractstatefullfrag{\Qghocap.\gabst}{\absvalueList}) \lor{}\\ (\Exists \absvalue, \absvalueList'. \absvalueList = \absvalueList' \catenate [\absvalue] \star{} \nodeval = \Some{\absvalue} \star{} \abstractstatefullfrag{\Qghocap.\gabst}{\absvalueList'})\end{array}
 \end{align*}
 We must now prove the resulting viewshift to get the Hoare-triple (note that we haven't substituted in $P$ and $Q$ for the sake of readability). So assume some $\absvalueList'$. We must show:
 \begin{equation*}
-\tlhocapspecdeqVS{\Qghocap}{P}{Q}{\absvalueList'}
+\hocapspecdeqVS{\Qghocap}{P}{Q}{\absvalueList'}
 \end{equation*}
 By lemma \ref{lemma:abst:agree}, $\absvalueList'$ must be equal to $\absvalueList$. We do a case analysis on $\absvalueList$. If $\absvalueList$ is empty, we prove the left disjunct in the consequent of the viewshift, \emph{without} updating the authoritative and fragmental views. If $\absvalueList$ is non-empty, i.e. $\absvalueList = \absvalueList'' \catenate [\absvalue]$ for some $\absvalueList''$ and $\absvalue$, then we prove the right-side of the consequent in the viewshift by using lemma \ref{lemma:abst:update} to update the authoritative and fragmental views to the new abstract state, $\absvalueList''$.
 
@@ -703,12 +708,12 @@ We prove the concurrent specification of definition \ref{QueueSpecs:spec:conc}. 
   &\knowInv{\Nl.c}{\Exists \absvalueList. \abstractstatefullfrag{\Qghocap.\gabst}{\absvalueList} \star{} \AllP(\absvalueList, \Psi)}
 \end{align*}
 \end{definition}
-Persistency of $\isqueueconc$ follows by the persistency of $\isqueue$ and the fact that invariants and equalities are persistent. 
+Persistency of $\isqueueconc$ follows by the persistency of $\isqueue$ and the fact that invariants and equalities are persistent.
 
 \subsubsection{Concurrent Initialise Specification}
 We have to derive the specification:
 \begin{equation*}
-  \tlconcspecinitGen{\Phi}{\vq}{\Qgconc}
+  \concspecinitGen{\Phi}{\vq}{\Qgconc}
 \end{equation*}
 As before, this specification only differs from the Hocap-style specification for initialise in the post-condition. We use the \emph{generalised} rule of consequence\todo{ref} and show that the post-condition of the Hocap-style specification, i.e. $\Exists \Qghocap . \isqueue(\vq, \Qghocap) \star{} \abstractstatefullfrag{\Qghocap.\gabst}{[]}$, implies the post-condition above but with an update modality, $\pvs$, in front. As before, we pick $\projqgnamesseq(\Qghocap)$ for $\Qg$, allowing us to prove all but the invariant:
 \begin{equation*}
@@ -720,7 +725,7 @@ We have $\abstractstatefullfrag{\Qghocap.\gabst}{[]}$ from the Hocap-style post-
 \subsubsection{Concurrent Enqueue Specification}
 We must derive:
 \begin{equation*}
-  \tlconcspecenqGen{\Phi}{\vq}{\absvalue}{\Qgconc}
+  \concspecenqGen{\Phi}{\vq}{\absvalue}{\Qgconc}
 \end{equation*}
 Assume some $\vq$, $\absvalue$, $\Qgconc$, $\Qghocap$ such that $\Qghocap$ projects to $\Qgseq$, and the invariant $\knowInv{\Nl.c}{\Exists \absvalueList. \abstractstatefullfrag{\Qghocap.\gabst}{\absvalueList}}$. Our goal becomes the following Hoare-triple:
 \begin{equation*}
@@ -731,14 +736,14 @@ We specialise the Hocap-style enqueue specification with $P \eqdef \Psi(\absvalu
 
 We assume $\absvalueList'$, and prove the viewshift:
 \begin{equation*}
-  \tlhocapspecenqVS{\absvalue}{\Qghocap}{\Psi(\absvalue)}{\TRUE}{\absvalueList'}
+  \hocapspecenqVS{\absvalue}{\Qghocap}{\Psi(\absvalue)}{\TRUE}{\absvalueList'}
 \end{equation*}
 So assume $\abstractstateauth{\Qghocap.\gabst}{\absvalueList'}$ and $\Psi(\absvalue)$. We open the invariant giving us $\abstractstatefullfrag{\Qghocap.\gabst}{\absvalueList}$ and $\AllP(\absvalueList, \Psi)$ for some $\absvalueList$. By lemma \ref{lemma:abst:agree} we know that $\absvalueList = \absvalueList'$. We now update the abstract state to $(\absvalue :: \absvalueList)$ using lemma \ref{lemma:abst:update}, obtaining $\abstractstateauth{\Qghocap.\gabst}{(\absvalue :: \absvalueList)}$ and $\abstractstatefullfrag{\Qghocap.\gabst}{(\absvalue :: \absvalueList)}$. We use the first to prove the consequent of the viewshift. Before we are done, we must close the invariant. We use the fragmental part together with $\AllP(\absvalueList, \Psi)$ and $\Psi(\absvalue)$ to do this.
 
 \subsubsection{Concurrent Dequeue Specification}
 Finally, we derive the concurrent specification for $\dequeue$.
 \begin{equation*}
-  \tlconcspecdeqGen{\Phi}{\vq}{\Qgconc}
+  \concspecdeqGen{\Phi}{\vq}{\Qgconc}
 \end{equation*}
 So we assume some $\vq$, $\Qgseq$, $\Qghocap$ such that $\Qghocap$ projects to $\Qgseq$, and the invariant. Our goal is now:
 \begin{equation*}
@@ -754,16 +759,18 @@ Again, with this choice, the Hoare-triple we get after proving the viewshift exa
 
 We assume some $\absvalueList'$, and prove the viewshift (again, without substituting in $P$ and $Q$):
 \begin{equation*}
-  \tlhocapspecdeqVS{\Qghocap}{P}{Q}{\absvalueList'}
+  \hocapspecdeqVS{\Qghocap}{P}{Q}{\absvalueList'}
 \end{equation*}
 Assume $\abstractstateauth{\Qghocap.\gabst}{\absvalueList'}$. Opening the invariant, we get $\AllP(\absvalueList, \Psi)$ and the fragmental part, $\abstractstatefullfrag{\Qghocap.\gabst}{\absvalueList}$, for some $\absvalueList$, which by lemma \ref{lemma:abst:agree} we know is equal to $\absvalueList'$. We proceed by case analysis on $\absvalueList$. If it is empty, we simply close the invariant again, and proceed to prove the first disjunct of the consequent. If it is not empty, then we have $\absvalueList = \absvalueList'' \catenate [\absvalue]$ for some $\absvalueList''$ and $\absvalue$. We use lemma \ref{lemma:abst:update} to update the abstract state to $\absvalueList''$, and split $\AllP(\absvalueList, \Psi)$ into $\Psi(\absvalue)$ and $\AllP(\absvalueList'', \Psi)$. Using this and the fragmental part, we close the invariant again. To finish, we prove the right disjunct of the consequent using the authoritative part and $\Psi(\absvalue)$.\footnote{Note here the importance of the $\later$ in the consequent. From the invariant, we technically only have $\later\Psi(\absvalue)$. If we didn't have the later in the consequent, we would have to prove $\Psi(\absvalue)$ from $\later\Psi(\absvalue)$ which isn't possible.}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \chapter{The Two-Lock Michael-Scott Queue}
 \label{ch:TLMSQ}
 
 In this chapter, we give an implementation of the blocking version of the \msq{}, the \tlmsq{}, in \heaplang. This implementation differs slightly from the original, presented in \citet{DBLP:conf/podc/MichaelS96}, but most changes simply reflect the differences in the two languages.
 
+%=====================================================================
 \section{Introduction}
 \label{TLMSQ:section:introduction}
 
@@ -777,7 +784,7 @@ For a given triple $\node = (\locin, \nodeval, \locout)$, we introduce the follo
 
 The reader may wonder why there is an extra, intermediary ``in'' pointer, between the pairs of the linked list, and why the ``out'' pointer couldn't point directly to the next pair. This comes down to difference between \heaplang and the C-like language used in the original implementation \citep{DBLP:conf/podc/MichaelS96}. Variables in the C-like language are technically just locations, and the assignment operator for variables simply corresponds to a store operation. In \heaplang, variables are modelled directly as locations which gives us an apparent extra pointer indirection compared to the original implementation.
 
-
+%=====================================================================
 \section{Implementation}
 \label{TLMSQ:section:implementation}
 
@@ -1309,7 +1316,6 @@ Observation \ref{TLMSQ:insights:states} is a simple consequence of the implement
     \draw[->, dotted] (head) -- (l'1);
     \draw[->] (head) to [out=15, in=165] (l'2);
     \draw[->] (tail) -- (l'1);
-    
 
     \end{tikzpicture}
     \end{adjustbox}
@@ -1320,15 +1326,20 @@ Observation \ref{TLMSQ:insights:states} is a simple consequence of the implement
   \label{TLMSQ:impl:figure:lag}
 \end{figure}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \chapter{Proving Specifications for the Two-Lock Michael-Scott Queue}
 \label{ch:TLMSQSPECS}
 
+%=====================================================================
 \section{Introduction}
+\label{TLMSQSPECS:section:introduction}
+
 In this chapter we show that the \tlmsq{} satisfies the three queue specifications introduces in chapter \ref{ch:QueueSpecs}. Section \ref{QueueSpecs:section:deriving-seq-and-conc} of said chapter showed us that we get the sequential and concurrent specifications essentially for free, granted we can prove that \tlmsq{} satisfies the Hocap-style specification. However, for instructive purposes, we will in this chapter give the sequential and concurrent specifications directly, as the proof of the Hocap-style specification can get somewhat overwhelming.
 
 In section \ref{TLMSQSPECS:section:sequential} we prove that the \tlmsq satisfies the sequential specification. This also introduces some of the basic predicates we use for the queue. Next, in section \ref{TLMSQSPECS:section:concurrent}, we prove the concurrent specification, which introduces some more complexities, such as invariant, and shows us how we can work with concurrent programs. Finally, section \ref{TLMSQSPECS:section:hocap} shows how to modify the proof of the concurrent specification to prove the Hocap style specification.
 
+%=====================================================================
 \section{Sequential Specification}
 \label{TLMSQSPECS:section:sequential}
 
@@ -1392,7 +1403,7 @@ The proofs require us manipulate specific $\isLL$ propositions quite a bit -- ap
 \subsubsection{Initialise}
 \begin{lemma}[\tlmsq{} Sequential Specification - Initialise]\label{TLMSQ:spec:seq:init}
   \begin{equation*}
-    \tlseqspecinit
+    \seqspecinit
   \end{equation*}
 \end{lemma}
 \begin{proof}
@@ -1404,7 +1415,7 @@ With this, we now have all the resources needed to prove the post-condition. Pro
 \subsubsection{Enqueue}
 \begin{lemma}[\tlmsq{} Sequential Specification - Enqueue]\label{TLMSQ:spec:seq:enqueue}
   \begin{equation*}
-    \tlseqspecenq
+    \seqspecenq
   \end{equation*}
 \end{lemma}
 \begin{proof}
@@ -1415,7 +1426,7 @@ We assume the pre-condition $\isqueueseq(\vq, \absvalueList, \Qg)$ which tells u
   &\nodetail \mapsto \None \star{} \isLLchain (\xsqueue \catenate [\nodehead])\label{TLMSQ:spec:seq:proof:enq:isLL}\\
   &\loctail \mapsto \nIn{\nodetail} \star{} \isLast(\nodetail, (\xsqueue \catenate [\nodehead]))\label{TLMSQ:spec:seq:proof:enq:tail}\\
   &\isLock(\Qg.\gtlock, \Tlock, \TRUE)\label{TLMSQ:spec:seq:proof:enq:tlock}
-\end{align} 
+\end{align}
 We proceed to step into the enqueue function. Firstly, on line \ref{TLE:nod}, we create a new node $\nodenew$, with $\nVal{\nodenew} = \Some \absvalue$. Next, on line \ref{TLE:acq} we acquire the tail lock. We step through the dereference and the projections using \ref{TLMSQ:spec:seq:proof:enq:queue}. To acquire the lock we use the $\acquire$ specification with \ref{TLMSQ:spec:seq:proof:enq:tlock}. This gives us $\locked(Qg.\gtlock)$ and $\TRUE$.
 
 Line \ref{TLE:add} adds node $\nodenew$ to the linked list. We first use \ref{TLMSQ:spec:seq:proof:enq:queue} to step to the dereference of $\loctail$. From \ref{TLMSQ:spec:seq:proof:enq:tail}, we know the dereference results in $\nIn{\nodetail}$. Because $\nodetail$ is in the linked list, we can use \ref{TLMSQ:spec:seq:proof:enq:isLL} to conclude that $\nodetail$ is a node, and hence we can perform the load and the projection to get to the final store operation: $\nOut{\nodetail} \gets \nIn{\nodenew}$. Using the points-to proposition from \ref{TLMSQ:spec:seq:proof:enq:isLL}, we perform the store, which in turn gives us $\nOut{\nodetail} \mapsto \nIn{\nodenew}$. We make this persistent and combine it with the $\isLLchain$ proposition from \ref{TLMSQ:spec:seq:proof:enq:isLL} to conclude $\isLL(\nodenew :: \xsqueue \catenate [\nodehead])$.
@@ -1428,7 +1439,7 @@ Finally, we get to line \ref{TLE:rel} which releases the lock. We use the specif
 \subsubsection{Dequeue}
 \begin{lemma}[\tlmsq{} Sequential Specification - Dequeue]\label{TLMSQ:spec:seq:dequeue}
   \begin{equation*}
-    \tlseqspecdeq
+    \seqspecdeq
   \end{equation*}
 \end{lemma}
 \begin{proof}
@@ -1446,8 +1457,8 @@ We step to line \ref{TLD:new} which finds out what $\nodehead$ points to. As $\n
 \begin{itemize}
   \item[\textbf{Case}] \textbf{$\xsqueue$ is empty}:
   In this case, \ref{TLMSQ:spec:seq:proof:deq:isLL} simply asserts $\isLL [\nodehead]$, which by definition tells us that $\nodehead \mapsto \None$. Hence, the ``if'' on line \ref{TLD:ifn} will take the ``then'' branch, so we step to line \ref{TLD:re1}. Here we release the lock, giving up $\locked(\Qg.\ghlock)$, and return $\None$ on the next line. What remains is to prove the post-condition with $\nodeval = \None$. We can easily do this by proving the first disjunction. From \ref{TLMSQ:spec:seq:proof:deq:rel} with the fact that $\xsqueue = []$ we can conclude that $\absvalueList$ is empty, and since we haven't modified the queue, we can prove $\isqueueseq(\vq, \absvalueList, \Qg)$ using the same resources we got from the pre-condition.
-  
-  \item[\textbf{Case}] \textbf{$\xsqueue$ is not empty}: 
+
+  \item[\textbf{Case}] \textbf{$\xsqueue$ is not empty}:
   In this case, we can conclude that there must be some node $\nodeheadnext$, which is the first node in $\xsqueue$. I.e.
   \begin{equation}
     \xsqueue = \xsqueue' \catenate [\nodeheadnext]\label{TLMSQ:spec:seq:proof:deq:xsqueue}
@@ -1465,7 +1476,7 @@ We step to line \ref{TLD:new} which finds out what $\nodehead$ points to. As $\n
 \end{itemize}
 \end{proof}
 
-
+%=====================================================================
 \section{Concurrent Specification}
 \label{TLMSQSPECS:section:concurrent}
 
@@ -1507,9 +1518,18 @@ In the \EnqueueState state, the enqueueing thread owns half of the tail pointer,
 In the \DequeueState state, the dequeueing thread owns half of the head pointer, and the tail is as in the \StaticState state.\\
 Finally, the \BothState state is essentially a combination of the \EnqueueState and \DequeueState states.
 
-To track which state the queue is in, we use \textit{tokens}. Importantly, tokens are non-duplicable and owning two of the same token allows us to deduce $\False$. Thus, if we own a particular token, then, upon opening the invariant, we can rule out certain states simply because they mention the token we own. We refer to section \ref{RA:sections:tokens} for a presentation of the resource algebra used to define tokens.\\
+To track which state the queue is in, we use \textit{tokens}. Importantly, tokens are non-duplicable and owning two of the same token allows us to deduce $\FALSE$. Thus, if we own a particular token, then, upon opening the invariant, we can rule out certain states simply because they mention the token we own. To distinguish between different tokens, we use ghost names. Each token is associated with a ghost name, $\gname$, and we write $\Token{\gname}$ for said token. We refer to section \ref{RA:sections:tokens} for a presentation of the resource algebra used to define tokens. The following two lemmas shows us that we can create new tokens and that they are exclusive, as explained above.
+
+\begin{restatable}[Token Alloc]{lemma}{tokalloc}\label{lemma:token:alloc}
+  $\proves \pvs \Exists \gname . \Token{\gname}$
+\end{restatable}
+
+\begin{restatable}[Token Exclusive]{lemma}{tokexclusive}\label{lemma:token:exclusive}
+  $\Token{\gname} \star{} \Token{\gname} \proves \FALSE$
+\end{restatable}
+
 We will use several tokens, each associated with their own ghost name. We collect all these new ghost names in $\ConcQgnames$, which then contains the ghost names for the two locks and the ghost names for the tokens.\\
-To refer to a specific token associated with a tuple $\Qg$, we write e.g. $\TokEQg$ which projects out the appropriate ghost name and asserts ownership of the token associated with it. We proceed to explain the meaning of each of the tokens used in the invariant.
+We introduce some notation to refer to specific tokens related to a tuple $\Qg$. For example, if we wish to refer to the token associate with $\Qg.\gname_E$, we write $\TokEQg$, which projects out $\gname_E$, and asserts ownership of the token associated with it. That is, $\TokEQg = \Token{\Qg.\gname_E}$. We proceed to explain the meaning of each of the tokens used in the invariant.
 \begin{itemize}
   \item $\TokNEQg$ represents that no threads are enqueueing.
   \item $\TokEQg$ represents that a thread is enqueueing.
@@ -1576,19 +1596,19 @@ The proofs of the three specifications largely have the same structure as the se
 \subsubsection{Initialise}
 \begin{lemma}[\tlmsq{} Concurrent Specification - Initialise]\label{TLMSQ:spec:conc:init}
   \begin{equation*}
-    \tlconcspecinit{\Phi}
+    \concspecinit{\Phi}
   \end{equation*}
 \end{lemma}
 \begin{proof}
-We first step through line \ref{TLI:nod} which gives us the head node of the linked list. Following this, we must create the two locks. As the locks had to protect tokens, we must first create these. To create the two tokens, we use the ghost-alloc\todo{ref} rule twice, which gives us two ghost names, one for each of the tokens. We put the ghost names into a tuple $\Qg$, and write $\TokEQg$ and $\TokDQg$ for the two ghost resources created by the ghost-alloc\todo{ref} rule. We then use the $\newLock$ specification to step through the code and create the locks, giving up the two tokens. Next, we step to line \ref{TLI:que} and create the $\locqueue$, $\lochead$, and $\loctail$ pointers with $\locqueue \mapsto ((\lochead, \loctail), (\Hlock, \Tlock))$. We make this persistent.\\
+We first step through line \ref{TLI:nod} which gives us the head node of the linked list. Following this, we must create the two locks. As the locks had to protect tokens, we must first create these. To create the two tokens, we use lemma \ref{lemma:token:alloc} twice, which gives us two ghost names, one for each of the tokens. We put the ghost names into a tuple $\Qg$, and write $\TokEQg$ and $\TokDQg$ for the two ghost resources created by the lemma. We then use the $\newLock$ specification to step through the code and create the locks, giving up the two tokens. Next, we step to line \ref{TLI:que} and create the $\locqueue$, $\lochead$, and $\loctail$ pointers with $\locqueue \mapsto ((\lochead, \loctail), (\Hlock, \Tlock))$. We make this persistent.\\
 All that remains then is to prove the postcondition; the $\isqueueconc$ predicate. We have both the points-to predicate of $\locqueue$ and the two $\isLock$ predicates (from the $\newLock$ specification). So all that remains is the invariant.\\
-We create $\TLQueueInvariantConc$ in the \StaticState state, most of which is analogous to the sequential specification. However, we will also need to supply the tokens required by the \StaticState state. Thus, we allocate the four tokens $\TokNEQg$, $\TokNDQg$, $\TokBeforeQg$, and $\TokAfterQg$ in the same way we allocated $\TokEQg$ and $\TokDQg$. We combine $\TokBeforeQg$ and $\TokAfterQg$ to get $\TokUpdatedQg$, and we now have all the tokens we need to create $\TLQueueInvariantConc$ in the \StaticState state. To create the invariant from $\TLQueueInvariantConc$, we use the Inv-alloc rule\todo{ref}.
+We create $\TLQueueInvariantConc$ in the \StaticState state, most of which is analogous to the sequential specification. However, we will also need to supply the tokens required by the \StaticState state. Thus, we allocate the four tokens $\TokNEQg$, $\TokNDQg$, $\TokBeforeQg$, and $\TokAfterQg$, again using lemma \ref{lemma:token:alloc}. We combine $\TokBeforeQg$ and $\TokAfterQg$ to get $\TokUpdatedQg$, and we now have all the tokens we need to create $\TLQueueInvariantConc$ in the \StaticState state. To create the invariant from $\TLQueueInvariantConc$, we use the Inv-alloc rule\todo{ref}.
 \end{proof}
 
 \subsubsection{Enqueue}
 \begin{lemma}[\tlmsq{} Concurrent Specification - Enqueue]\label{TLMSQ:spec:conc:enqueue}
   \begin{equation*}
-    \tlconcspecenq{\Phi}
+    \concspecenq{\Phi}
   \end{equation*}
 \end{lemma}
 \begin{proof}
@@ -1615,7 +1635,7 @@ Finally, on line \ref{TLE:rel}, we release the lock which we can do since we hav
 \subsubsection{Dequeue}
 \begin{lemma}[\tlmsq{} Concurrent Specification - Dequeue]\label{TLMSQ:spec:conc:dequeue}
   \begin{equation*}
-    \tlconcspecdeq{\Phi}
+    \concspecdeq{\Phi}
   \end{equation*}
 \end{lemma}
 \begin{proof}
@@ -1631,7 +1651,7 @@ Next, we step to line \ref{TLD:nod} and using \ref{TLMSQ:spec:conc:proof:deq:que
 
 We proceed to line \ref{TLD:new}, which finds out what $\nodehead$ is pointing to. As $\nodehead$ is a node we can step to $\deref (\nOut{\nodehead})$. To perform this dereference, we must open the invariant. As we own $\TokNDQg$, the queue must be in state \DequeueState or \BothState. In any case, we get that there is some $\nodehead'$ with $\lochead \mapsto^{\frac{1}{2}} \nodehead'$. Using the fractional points-to predicate we kept from earlier and lemma \ref{lemma:nIn-equal}, we can conclude that $\nodehead' = \nodehead$. We now perform a case analysis on the contents of the queue: $\xsqueue$, similarly to the sequential proof.
 \begin{itemize}
-  \item[\textbf{Case}] \textbf{$\xsqueue$ is empty}: 
+  \item[\textbf{Case}] \textbf{$\xsqueue$ is empty}:
   In this case, we use the $\isLL$ predicate to conclude $\nOut{\nodehead} \mapsto \None$. The expression $\deref (\nOut{\nodehead})$ hence resolves to $\None$. At this point, we know $\dequeue$ will decide that the queue is empty, so this is a linearisation point. We close the invariant in state \StaticState or \EnqueueState, giving up $\TokNDQg$ and obtaining $\TokDQg$.\\
   As $new\_head$ was set to $\None$, the ``if'' on line \ref{TLD:ifn} takes the ``then'' branch, so we step to line \ref{TLD:re1}. We release the lock, giving up $\TokDQg$ and $\locked(\Qg.\ghlock)$, and return $\None$. We must now prove the post-condition with $\nodeval = \None$. We easily prove the first disjunct.
 
@@ -1677,7 +1697,7 @@ As mentioned in the observations, it is possible for the tail to lag one node be
 
 Had we not used an $\xsold$ and essentially just ``forgotten'' old nodes, we couldn't have done this. Say we defined $\xsc$ as $\xsc = \xsqueue \catenate [\nodehead]$ instead. Then, once we have to close the invariant, we cannot supply $\xsc$, which we got when we opened the invariant. Our only choice (due to the fact that $loc_{head}$ must point to $\nodeheadnext$) is to close the invariant with $\xsc' = \xsqueue = \xsqueue' \catenate [\nodeheadnext]$. However, clearly $\xsc' \neq \xsc$, so we cannot supply the same predicate concerning the location of $\nodetail$ that we got when opening the invariant, since this predicate talks about $\xsc$, not $\xsc'$. Now, if we opened the invariant in the state \DequeueState, then we could conclude $\isLast(\nodetail, \xsc')$ from $\isLast(\nodetail, \xsc)$, due to the relationship between $\xsc$ and $\xsc'$, and still be able close the invariant. However, if we opened the invariant in state \BothState, then we would need to assert $\isSndLast(\nodetail, \xsc')$ from $\isSndLast(\nodetail, \xsc)$. This is however not provable, since $\isSndLast(\nodetail, \xsc)$ allows for the case where $\xsqueue'$ is empty. In this case $\xsc' = [\nodeheadnext]$ which makes it impossible to prove $\isSndLast(\nodetail, \xsc')$, as it is impossible to the be the second last element in a list of size one.
 
-
+%=====================================================================
 \section{Hocap-Style Specification}
 \label{TLMSQSPECS:section:hocap}
 
@@ -1734,7 +1754,7 @@ The Hocap-style proofs are largely similar their concurrent counterparts. Howeve
 \subsubsection{Initialise}
 \begin{lemma}[\tlmsq{} Hocap Specification - Initialise]\label{TLMSQ:spec:hocap:initialise}
   \begin{equation*}
-    \tlhocapspecinit
+    \hocapspecinit
   \end{equation*}
 \end{lemma}
 As discussed, we must obtain $\abstractstateauth{\Qg.\gabst}{[]} \star{} \abstractstatefullfrag{\Qg.\gabst}{[]}$, for some ghost name $\Qg.\gabst$. We achieve this by applying lemma \ref{lemma:abst:alloc} instantiated with the empty state: $[]$. We use $\abstractstateauth{\Qg.\gabst}{[]}$ to establish the queue invariant, and $\abstractstatefullfrag{\Qg.\gabst}{[]}$ to prove the post-condition.
@@ -1743,7 +1763,7 @@ As discussed, we must obtain $\abstractstateauth{\Qg.\gabst}{[]} \star{} \abstra
 \subsubsection{Enqueue}
 \begin{lemma}[\tlmsq{} Hocap Specification - Enqueue]\label{TLMSQ:spec:hocap:enqueue}
   \begin{equation*}
-    \tlhocapspecenq
+    \hocapspecenq
   \end{equation*}
 \end{lemma}
 We start by assuming the viewshift which allows us to update $P$ to $Q$ and $\abstractstateauth{\Qg.\gabst}{\absvalueList}$ to $\abstractstateauth{\Qg.\gabst}{(\absvalue :: \absvalueList)}$, for any $\absvalueList$. The only real change from the previous proof happens the second time we open the invariant; the first and third times, the abstract state doesn't change, hence we simply frame away the newly added authoritative fragment, and continue as we did before. The second time we open the invariant is on line \ref{TLE:add}, around the expression that adds the newly created node, $\nodenew$, to the linked list. When opening the invariant, we now get $\abstractstateauth{\Qg.\gabst}{\absvalueList}$. And as before, we also get all the resources to match up variables and step through the code, updating the concrete state. To close the invariant, we must make the same choice of abstract state as we did previously: $(\absvalue :: \absvalueList)$. This, however, requires us to obtain $\abstractstateauth{\Qg.\gabst}{(\absvalue :: \absvalueList)}$. However, since we have $\abstractstateauth{\Qg.\gabst}{\absvalueList}$ and $P$ (from the pre-condition), we can apply the viewshift to obtain it, along with $Q$. This then allows us to close the invariant, and the proof proceeds as previously. At the end, we must now additionally prove the post-condition $Q$, but this is no issue as we obtained that from the viewshift.
@@ -1751,7 +1771,7 @@ We start by assuming the viewshift which allows us to update $P$ to $Q$ and $\ab
 \subsubsection{Dequeue}
 \begin{lemma}[\tlmsq{} Hocap Specification - Dequeue]\label{TLMSQ:spec:hocap:dequeue}
   \begin{equation*}
-    \tlhocapspecdeq
+    \hocapspecdeq
   \end{equation*}
 \end{lemma}
 We assume the viewshift and proceed as in the concurrent proof until we get to the second time we open the invariant. This invariant opening is on line \ref{TLD:new} around the expression that reads the head node's out pointer. It is here that we figure out whether or not the queue is empty by doing case analysis on $\xsqueue$. We open the invariant and do the same case analysis here.
@@ -1763,15 +1783,18 @@ We assume the viewshift and proceed as in the concurrent proof until we get to t
   If the queue is not empty, then we do not apply the viewshift (as the abstract state doesn't change within this invariant opening), and simply continue as we did previously. The next time we open the invariant is on line \ref{TLD:shs}, around the expression that swings $\lochead$ to $\nodeheadnext$. It is this store operation that updates the abstract state of the queue, so it is within this invariant opening that we apply the viewshift (again, we have $P$ from the pre-condition and $\abstractstateauth{\Qg.\gabst}{\absvalueList}$ from the invariant). As we did previously, we deduce that the current $\xsqueue$ is non-empty, and since $\absvalueList$ is reflected in $\xsqueue$, then we can conclude that the first disjunct is impossible, so the viewshift gives us $\Exists \absvalue, \absvalueList' . \absvalueList = \absvalueList' \catenate [\absvalue] \star{} \abstractstateauth{\Qg.\gabst}{\absvalueList'} \star{} Q(\Some{\absvalue})$. As before, we conclude that $\Some{\absvalue}$ is the return value (through the reflection between $\xsqueue$ and $\absvalueList$), and proceed to close the invariant, this time giving up $\abstractstateauth{\Qg.\gabst}{\absvalueList'}$. Stepping through the code, we end up having to prove the post-condition $Q(\Some{\absvalue})$, which we got from the viewshift.
 \end{itemize}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \chapter{The Lock-Free Michael-Scott Queue}
 \label{ch:LFMSQ}
 
+%=====================================================================
 \section{Introduction}
 \label{LFMSQ:section:introduction}
 
 In this chapter we will study the non-blocking version of the \msq{}, the \lfmsq{}. As with the two-lock version, the original implementation can be found in \citet{DBLP:conf/podc/MichaelS96}. As the name ``Lock-Free'' suggests, the implementation doesn't rely on locks to achieve correct behaviour. Instead, it uses the atomic operation: $\CAS$ which we discussed in section \ref{Pre:section:heaplang}.
 
+%=====================================================================
 \section{Implementation}
 \label{LFMSQ:section:implementation}
 
@@ -1839,14 +1862,18 @@ To solve this issue, we use a \textit{prophecy variable}. Prophecies are a part 
 \caption{Implementation of \lfmsq{} in \heaplang.}
 \end{figure}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \chapter{Proving Hocap-style Specification for the Lock-Free Michael-Scott Queue}
 \label{ch:LFMSQSPECS}
 
+%=====================================================================
 \section{Introduction}
 \label{LFMSQSPECS:section:introduction}
+
 In this chapter we prove that the \lfmsq{} satisfies the Hocap-style specification given in section \ref{QueueSpecs:section:hocap}. Section \ref{LFMSQSPECS:section:reachability} introduces the notion of \textit{Reachability} which we will need in the proofs. In section \ref{LFMSQSPECS:section:spec} we discuss the specification we will be proving, and in sections \ref{LFMSQSPECS:section:hocap-queue-pred} and \ref{LFMSQSPECS:section:proof-outline} we give the proofs. Finally, in section \ref{LFMSQSPECS:section:discussion}, we discuss a simplification to the \lfmsq{} algorithm and its implications.
 
+%=====================================================================
 \section{Reachability}
 \label{LFMSQSPECS:section:reachability}
 
@@ -1872,14 +1899,14 @@ This definition firstly states that $\nodeM{n}$ is a node: $\isNode{\nodeM{n}}$.
 Note that the points-to propositions are all persistent, which mimics the fact that the linked list is only ever changed by appending new nodes to the end. This in turn makes concrete reachability a persistent predicate.
 
 We proceed to prove some useful lemmas about concrete reachability.
-\begin{lemma}[reach-reflexive]\label{lemma:reach-reflexive}
+\begin{lemma}[Reach Reflexive]\label{lemma:reach-reflexive}
   $\reach{\nodeM{n}}{\nodeM{n}} \wandIff \isNode{\nodeM{n}}$
 \end{lemma}
 \begin{proof}
   The $\wand$ direction follows directly by the definition. To prove the $\wandby$ direction, it suffices to show $(\nodeM{n} = \nodeM{n} \lor{} \Exists \nodeM{p} . \nOut{\nodeM{n}} \mapsto^{\persistently} \nIn{\nodeM{p}} \star{} \reach{\nodeM{p}}{\nodeM{n}})$. Clearly, this follows as the left disjunction holds.
 \end{proof}
 
-\begin{lemma}[reach-transitive]\label{lemma:reach-transitive}
+\begin{lemma}[Reach Transitive]\label{lemma:reach-transitive}
   $\reach{\nodeM{n}}{\nodeM{m}} \wand \reach{\nodeM{m}}{\nodeM{o}} \wand \reach{\nodeM{n}}{\nodeM{o}}$
 \end{lemma}
 \begin{proof}
@@ -1891,21 +1918,21 @@ We proceed to prove some useful lemmas about concrete reachability.
   \end{itemize}
 \end{proof}
 
-\begin{lemma}[reach-from-is-node]\label{lemma:reach-from-is-node}
+\begin{lemma}[Reach From is Node]\label{lemma:reach-from-is-node}
   $\reach{\nodeM{n}}{\nodeM{m}} \wand \isNode{\nodeM{n}}$
 \end{lemma}
 \begin{proof}
   This follow immediately from the definition or concrete reachability.
 \end{proof}
 
-\begin{lemma}[reach-to-is-node]\label{lemma:reach-to-is-node}
+\begin{lemma}[Reach To is Node]\label{lemma:reach-to-is-node}
   $\reach{\nodeM{n}}{\nodeM{m}} \wand \isNode{\nodeM{m}}$
 \end{lemma}
 \begin{proof}
   We proceed by induction in $\reach{\nodeM{n}}{\nodeM{m}}$. The base case follows by lemma \ref{lemma:reach-from-is-node} above. In the inductive case, we assume that $\nodeM{n}$ points to some $\nodeM{p}$, which reaches $\nodeM{m}$. Our induction hypothesis is $\isNode{\nodeM{m}}$, which is also our proof obligation, so we are done.
 \end{proof}
 
-\begin{lemma}[reach-last]\label{lemma:reach-last}
+\begin{lemma}[Reach Last]\label{lemma:reach-last}
   $\reach{\nodeM{n}}{\nodeM{m}} \wand \nOut{\nodeM{n}} \mapsto \None \wand \nodeM{n} = \nodeM{m} \star{} \nOut{\nodeM{n}} \mapsto \None$
 \end{lemma}
 \begin{proof}
@@ -1921,39 +1948,52 @@ As discussed, we wish to capture that if a node can reach either the head or tai
 We refer to section \ref{RA:sections:abstract-reach} for the definition of the resource algebra we use to formally define abstract points-to and abstract reachability. For our purposes, we only need to know the following four lemmas to work with the predicates in the proofs. These lemmas are also proved in section \ref{RA:sections:abstract-reach}.
 
 Firstly, if we have a node, we may allocate some ghost variable $\gname$ which points to it and assert that the node can reach $\gname$.
-\begin{restatable}[Abs-Reach-Alloc]{lemma}{absreachalloc}\label{lemma:abs-reach-alloc}
-  $\reach{\node}{\node} \vs (\Exists \gname . \ap{\gname}{\node} \star{} \ar{\node}{\gname})$
+\begin{restatable}[Abs Reach Alloc]{lemma}{absreachalloc}\label{lemma:abs-reach-alloc}
+  For all nodes $\node$, we have
+  \begin{equation*}
+    \reach{\node}{\node} \vs (\Exists \gname . \ap{\gname}{\node} \star{} \ar{\node}{\gname})
+  \end{equation*}
 \end{restatable}
 
 The second lemma allows us to get a \textit{concrete} reachability predicate out of an abstract one. If a ghost name $\gname_m$ currently points abstractly to some node $\nodeM{m}$, then any node that can abstractly reach $\gname$, can also \textit{concretely} reach $\nodeM{m}$.
-\begin{restatable}[Abs-Reach-Concr]{lemma}{absreachconcr}\label{lemma:abs-reach-concr}
-  $\ar{\nodeM{n}}{\gname_m} \star{}
-   \ap{\gname_m}{\nodeM{m}} \wand
-   \reach{\nodeM{n}}{\nodeM{m}} \star{} \ap{\gname_m}{\nodeM{m}}$
+\begin{restatable}[Abs Reach Concr]{lemma}{absreachconcr}\label{lemma:abs-reach-concr}
+  For nodes $\nodeM{n}$ and $\nodeM{m}$ and ghost names $\gname_m$, we have
+  \begin{equation*}
+    \ar{\nodeM{n}}{\gname_m} \star{}
+    \ap{\gname_m}{\nodeM{m}} \wand
+    \reach{\nodeM{n}}{\nodeM{m}} \star{} \ap{\gname_m}{\nodeM{m}}
+  \end{equation*}
 \end{restatable}
 
 We can also go the other way, and get an abstract reachability predicate out of a concrete one. If a ghost variable $\gname_m$ points abstractly to some node $\nodeM{m}$, and a node $\nodeM{n}$ can \textit{concretely} reach $\nodeM{m}$, then we may deduce that $\nodeM{n}$ can \textit{abstractly} reach $\gname_m$, meaning that $\nodeM{n}$ can reach any node that $\gname_m$ will ever point to in the future.
-\begin{restatable}[Abs-Reach-Abs]{lemma}{absreachabs}\label{lemma:abs-reach-abs}
-  $\reach{\nodeM{n}}{\nodeM{m}} \star{}
-   \ap{\gname_m}{\nodeM{m}} \vs
-   \ar{\nodeM{n}}{\gname_m} \star{} \ap{\gname_m}{\nodeM{m}}$
+\begin{restatable}[Abs Reach Abs]{lemma}{absreachabs}\label{lemma:abs-reach-abs}
+  For nodes $\nodeM{n}$ and $\nodeM{m}$ and ghost names $\gname_m$, we have
+  \begin{equation*}
+    \reach{\nodeM{n}}{\nodeM{m}} \star{}
+    \ap{\gname_m}{\nodeM{m}} \vs
+    \ar{\nodeM{n}}{\gname_m} \star{} \ap{\gname_m}{\nodeM{m}}
+  \end{equation*}
 \end{restatable}
 
 The final lemma allows us update abstract pointers. As discussed above, we will require that whatever node we update the pointer to is a successor of the current node. That is, if a ghost variable $\gname_m$ currently points to $\nodeM{m}$, then we must show that $\nodeM{m}$ can reach $\nodeM{o}$, before we can update $\gname$ to point abstractly to $\nodeM{o}$. After the update we additionally get that $\nodeM{o}$ can abstractly reach $\gname$.
-\begin{restatable}[Abs-Reach-Advance]{lemma}{absreachadvance}\label{lemma:abs-reach-advance}
-    $\ap{\gname_m}{\nodeM{m}} \star{}
-     \reach{\nodeM{m}}{\nodeM{o}} \vs
-     \ap{\gname_m}{\nodeM{o}} \star{} \ar{\nodeM{o}}{\gname_m}$
+\begin{restatable}[Abs Reach Advance]{lemma}{absreachadvance}\label{lemma:abs-reach-advance}
+  For nodes $\nodeM{m}$ and $\nodeM{o}$ and ghost names $\gname_m$, we have
+  \begin{equation*}
+    \ap{\gname_m}{\nodeM{m}} \star{}
+    \reach{\nodeM{m}}{\nodeM{o}} \vs
+    \ap{\gname_m}{\nodeM{o}} \star{} \ar{\nodeM{o}}{\gname_m}
+  \end{equation*}
 \end{restatable}
 
-
+%=====================================================================
 \section{Specifications for \lfmsq{}}
 \label{LFMSQSPECS:section:spec}
 
 As we showed in section \ref{QueueSpecs:section:deriving-seq-and-conc}, the sequential and concurrent specifications can be derived from the Hocap-style specification \emph{without} referring to the actual implementation. Thus, in this chapter we focus only on proving the Hocap-style specification, and rely on the derivations to prove the concurrent and sequential specifications.
 
-We prove the Hocap-style specification for the $\initialise$, $\enqueue$, and $\dequeue$ functions introduced in chapter \ref{ch:LFMSQ}. We make the collection of ghost names, $\Qgnames$, be the set of four-tuples. Firstly, it contains the mandatory $\gabst$ whose purpose is the same as before; to keep track of the abstract state of the queue. Additionally, it contains $\ghead$, $\gtail$, and $\glast$, which will abstractly point to the head, tail, and last node, respectively. 
+We prove the Hocap-style specification for the $\initialise$, $\enqueue$, and $\dequeue$ functions introduced in chapter \ref{ch:LFMSQ}. We make the collection of ghost names, $\Qgnames$, be the set of four-tuples. Firstly, it contains the mandatory $\gabst$ whose purpose is the same as before; to keep track of the abstract state of the queue. Additionally, it contains $\ghead$, $\gtail$, and $\glast$, which will abstractly point to the head, tail, and last node, respectively.
 
+%=====================================================================
 \section{Hocap-style Queue Predicate}
 \label{LFMSQSPECS:section:hocap-queue-pred}
 
@@ -1962,7 +2002,7 @@ Since the queue predicate is required to be persistent and multiple threads need
 Unlike the two-lock variant, we assert the existence of an additional node $\nodelast$, which invariantly is the last (newest added) node in the linked list. This helps us reason about where the head and tail nodes are located; enqueue distinguishes between the cases where the tail is last and not last, and similarly for dequeue and head.\\
 In this way, $\nodehead$ is the first node, $\nodelast$ is the last node, and $\nodetail$ either lies somewhere in between, is one of them, or, in the case where the queue is empty, is both of them. To force this structure, we use our abstract reachability predicate from the previous section.\\
 We proceed to define the invariant.
-\begin{definition}[\lfmsq{} Invariant]\label{LFMSQ:spec:invariant}
+\begin{definition}[\lfmsq{} Invariant]\label{LFMSQSPECS:pred:invariant}
   \begin{align*}
     &\LFQueueInvariantHocap(\lochead, \loctail, \Qg) \eqdef\\
     &\Exists \absvalueList. \abstractstateauth{\Qg.\gabst}{\absvalueList} \star{} &&\text{(abstract state)}\\
@@ -1980,7 +2020,7 @@ We proceed to define the invariant.
 \end{definition}
 
 The $\isqueue$ predicate is now quite simple: it states that the value representing the queue is a location which points persistently to a pair of locations, the head and tail pointers, which satisfy the invariant we defined above.
-\begin{definition}[\lfmsq{} - $\isqueue$ Predicate]\label{LFMSQ:spec:isqueue}
+\begin{definition}[\lfmsq{} - $\isqueue$ Predicate]\label{LFMSQSPECS:pred:isqueue}
   \begin{align*}
     \isqueue(\vq, \Qg) \eqdef &\Exists \locqueue, \lochead, \loctail \in \Loc . \\
     &\vq = \locqueue \star{} \locqueue \mapsto^{\persistently} (\lochead, \loctail) \star{}\\
@@ -1988,15 +2028,16 @@ The $\isqueue$ predicate is now quite simple: it states that the value represent
   \end{align*}
 \end{definition}
 
+%=====================================================================
 \section{Proof Outline}
 \label{LFMSQSPECS:section:proof-outline}
 
-We instantiate the specification with our definition of $\isqueue$ (\ref{LFMSQ:spec:isqueue}). By the definition of $\isqueue$ we easily show that $\isqueue$ is persistent. What remains to be shown is the specifications for $\initialise$, $\enqueue$, and $\dequeue$. Both $\enqueue$ and $\dequeue$ has code that attempt to swing the tail pointer forward (for enqueue, lines \ref{LFE:sts} and \ref{LFE:stl}, and for dequeue, line \ref{LFD:stl}). These all behave similarly, so we additionally prove a specification for swinging the tail.
+We instantiate the specification with our definition of $\isqueue$ (\ref{LFMSQSPECS:pred:isqueue}). By the definition of $\isqueue$ we easily show that $\isqueue$ is persistent. What remains to be shown is the specifications for $\initialise$, $\enqueue$, and $\dequeue$. Both $\enqueue$ and $\dequeue$ has code that attempt to swing the tail pointer forward (for enqueue, lines \ref{LFE:sts} and \ref{LFE:stl}, and for dequeue, line \ref{LFD:stl}). These all behave similarly, so we additionally prove a specification for swinging the tail.
 
 \subsubsection{Initialise}
-\begin{lemma}[\lfmsq{} Specification - Initialise]\label{LFMSQ:spec:init}
+\begin{lemma}[\lfmsq{} Specification - Initialise]\label{LFMSQSPECS:spec:init}
   \begin{equation*}
-    \lfhocapspecinit
+    \hocapspecinit
   \end{equation*}
 \end{lemma}
 \begin{proof}
@@ -2009,9 +2050,9 @@ We now have all the resources we need to allocate the invariant with the head, t
 With the invariant allocated, proving the post-condition becomes straightforward.
 \end{proof}
 
-\subsubsection{Swing Tail}\label{LFMSQ:subsubsection:swingtail}
+\subsubsection{Swing Tail}\label{LFMSQSPECS:subsub:swingtail}
 The specification we wish to prove is the following.
-\begin{lemma}[Swing Tail]\label{LFMSQ:spec:swingtail}
+\begin{lemma}[Swing Tail]\label{LFMSQSPECS:spec:swingtail}
   $\All \lochead, \loctail, \nodetail, \nodenewtail, \Qg .\\
   \hoareV[t]{\knowInv{\Nl.queue}{\LFQueueInvariantHocap(\lochead, \loctail, \Qg)} \star{} \reach{\nodetail}{\nodenewtail} \star{} \ar{\nodenewtail}{\Qg.\glast}}{\CAS \ \loctail \ \nIn{\nodetail} \ \nIn{\nodenewtail}}{\valB . \valB = \True \lor{} \valB = \False}$
 \end{lemma}
@@ -2023,36 +2064,36 @@ The specification we wish to prove is the following.
     From the invariant, we additionally got that $\ap{\Qg.\gtail}{\nodetail'}$ and $\ar{\nodehead}{\Qg.\gtail}$, which by lemma \ref{lemma:abs-reach-concr} means that $\reach{\nodehead}{\nodetail'}$. We can thus also conclude that $\nodetail'$ is a node (lemma \ref{lemma:reach-to-is-node}). So since both $\nodetail$ and $\nodetail'$ are nodes, and $\nIn{\nodetail'} = \nIn{\nodetail}$, lemma \ref{lemma:nIn-equal} tells us that $\nodetail = \nodetail'$. In other words, we have that $\ap{\Qg.\gtail}{\nodetail}$.\\
     Since the $\CAS$ succeeded, we now have that $\loctail \mapsto \nIn{\nodenewtail}$. Since the invariant demands that $\Qg.\gtail$ and $\loctail$ agree on the node they point to, we must update $\ap{\Qg.\gtail}{\nodetail}$ to $\ap{\Qg.\gtail}{\nodenewtail}$. We can do this using lemma \ref{lemma:abs-reach-advance} as we assumed $\reach{\nodetail}{\nodenewtail}$. With this, we can close the invariant again, using $\nodenewtail$ as the tail node.\\
     The $\CAS$ evaluates to $\True$ which we use to prove the first disjunct of the post-condition.
-    
+
     \item[\textbf{Case}] $\CAS$ Fails. Since the $\CAS$ failed, nothing was updated, and we can close the invariant again with the same resources we got out of it. The $\CAS$ evaluates to $\False$, hence we can prove the second disjunct in the post-condition.
   \end{itemize}
 \end{proof}
 
 \subsubsection{Enqueue}
-\begin{lemma}[\lfmsq{} Specification - Enqueue]\label{LFMSQ:spec:enqueue}
+\begin{lemma}[\lfmsq{} Specification - Enqueue]\label{LFMSQSPECS:spec:enqueue}
 \begin{equation*}
-  \lfhocapspecenq
+  \hocapspecenq
 \end{equation*}
 \end{lemma}
 \begin{proof}
-  We assume the viewshift and proceed to prove the hoare triple. By definition of $\isqueue$, we know that $\vq$ is a location $\locqueue$ and there are locations $\lochead$ and $\loctail$ so that 
-  \begin{equation}\label{LFMSQ:spec:proof:enqueue:isqueue}
+  We assume the viewshift and proceed to prove the hoare triple. By definition of $\isqueue$, we know that $\vq$ is a location $\locqueue$ and there are locations $\lochead$ and $\loctail$ so that
+  \begin{equation}\label{LFMSQSPECS:enqueue:proof:isqueue}
     \locqueue \mapsto^{\persistently} (\lochead, \loctail) \star{}
     \knowInv{\Nl.queue}{\LFQueueInvariantHocap(\lochead, \loctail, \Qg)}
   \end{equation}
   We first step through line \ref{LFE:nod} which creates a new node $\nodenew$, so that
   \begin{align}
-    &\nIn{\nodenew} \mapsto^{\persistently} (\Some \absvalue, \nOut{\nodenew})\label{LFMSQ:spec:proof:xnew1}\\
-    &\nOut{\nodenew} \mapsto \None\label{LFMSQ:spec:proof:xnew2}
+    &\nIn{\nodenew} \mapsto^{\persistently} (\Some \absvalue, \nOut{\nodenew})\label{LFMSQSPECS:enqueue:proof:xnew1}\\
+    &\nOut{\nodenew} \mapsto \None\label{LFMSQSPECS:enqueue:proof:xnew2}
   \end{align}
   The next line is the beginning of the looping function. We proceed by löb induction, which allows us to assume the hoare triple we wish to prove \emph{later}. This means that, if we reach a recursive call, we will have the hoare triple that we must prove -- the later will be immediately stripped when we apply $\TT$ and ``step into'' the recursive function.\\
-  Line \ref{LFE:tal} first dereferences to the tail pointer $\loctail$ using the resources in \ref{LFMSQ:spec:proof:enqueue:isqueue}. We open the invariant to obtain the points-to predicate concerning $\loctail$. We get that $\loctail$ points to some $\nodetail$. Using the resources from the invariant, we may conclude the following persistent information:
+  Line \ref{LFE:tal} first dereferences to the tail pointer $\loctail$ using the resources in \ref{LFMSQSPECS:enqueue:proof:isqueue}. We open the invariant to obtain the points-to predicate concerning $\loctail$. We get that $\loctail$ points to some $\nodetail$. Using the resources from the invariant, we may conclude the following persistent information:
   \begin{align}
-    &\ar{\nodetail}{\Qg.\glast}\label{LFMSQ:spec:proof:enqueue:xtail_ar_last}\\
-    &\isNode{\nodetail}\label{LFMSQ:spec:proof:enqueue:xtail_node}
+    &\ar{\nodetail}{\Qg.\glast}\label{LFMSQSPECS:enqueue:proof:enqueue:xtail_ar_last}\\
+    &\isNode{\nodetail}\label{LFMSQSPECS:enqueue:proof:enqueue:xtail_node}
   \end{align}
   The first part is directly from the invariant, and the second we may derive using lemmas \ref{lemma:abs-reach-concr} and \ref{lemma:reach-to-is-node}. We perform the load, and close the invariant.\\
-  The next line (line \ref{LFE:nex}) finds out what $\nodetail$ points to. Using \ref{LFMSQ:spec:proof:enqueue:xtail_node} we step to $\deref (\nOut{\nodetail})$. The points-to predicate required to perform this dereference is owned by the invariant (as it might be non-persistent), so we open the invariant again. We get that there is some $\nodelast$, with $\ap{\Qg.\glast}{\nodelast}$. From this, \ref{LFMSQ:spec:proof:enqueue:xtail_ar_last}, and lemma \ref{lemma:abs-reach-concr} we conclude $\reach{\nodetail}{\nodelast}$. This gives us two cases to consider: either $\nodetail$ \textit{is} $\nodelast$ (meaning that $\nodetail$ is not lagging behind), or it points to some node $\nodetailnext$ which can reach $\nodelast$ (meaning that $\nodetail$ is lagging behind).
+  The next line (line \ref{LFE:nex}) finds out what $\nodetail$ points to. Using \ref{LFMSQSPECS:enqueue:proof:enqueue:xtail_node} we step to $\deref (\nOut{\nodetail})$. The points-to predicate required to perform this dereference is owned by the invariant (as it might be non-persistent), so we open the invariant again. We get that there is some $\nodelast$, with $\ap{\Qg.\glast}{\nodelast}$. From this, \ref{LFMSQSPECS:enqueue:proof:enqueue:xtail_ar_last}, and lemma \ref{lemma:abs-reach-concr} we conclude $\reach{\nodetail}{\nodelast}$. This gives us two cases to consider: either $\nodetail$ \textit{is} $\nodelast$ (meaning that $\nodetail$ is not lagging behind), or it points to some node $\nodetailnext$ which can reach $\nodelast$ (meaning that $\nodetail$ is lagging behind).
   \begin{itemize}
     \item[\textbf{Case}]
     $\nodetail = \nodelast$. Since we had $\isLast(\nodelast, \xsc)$, we know that $\nodetail$ is the last node in the linked list, hence it points to $\None$. We perform the load which sets $next$ to $\None$, and close the invariant.\\
@@ -2061,95 +2102,95 @@ The specification we wish to prove is the following.
     \begin{itemize}
       \item[\textbf{Case}]
       $\nodetail = \nodelast'$. We now know that $\nodetail$ is still the last node in the linked list, hence $\nOut{\nodetail} \mapsto \None$, and the $\CAS$ will succeed. This instruction makes $\nodetail$ point to $\nodenew$, which essentially adds it to the linked list. Thus, the value in $\nodenew$ becomes enqueued. In other words, this is a linearisation point, so we must apply the viewshift. We instantiate the viewshift with the abstract state of the queue $\absvalueList$ from the invariant opening, and supply $\abstractstateauth{\Qg.\gabst}{\absvalueList}$ from the invariant and the $P$ from the pre-condition. We hence get $\abstractstateauth{\Qg.\gabst}{(\absvalue :: \absvalueList)}$ and $Q$.\\
-      When closing the invariant, we use $(\absvalue :: \absvalueList)$ for the abstract state, $(\nodenew :: \xsc)$ for the concrete state, $\nodenew :: \xsqueue$ for the queue, and we take $\nodenew$ to be the last node. The head and tail nodes remain the same. This means we give up $\abstractstateauth{\Qg.\gabst}{(\absvalue :: \absvalueList)}$ that we got from the viewshift, and the points-to predicate \ref{LFMSQ:spec:proof:xnew2} (used to assert $\isLL (\nodenew :: \xsc))$. The only thing left to prove is $\ap{\Qg.\glast}{\nodenew}$. From the invariant opening, we have $\ap{\Qg.\glast}{\nodetail}$. Since $\reach{\nodetail}{\nodenew}$, we may apply lemma \ref{lemma:abs-reach-advance} to update the abstract points-to resource to $\ap{\Qg.\glast}{\nodenew}$ and additionally obtain $\ar{\nodenew}{\Qg.\glast}$. With this, we can close the invariant, and step to line \ref{LFE:sts}. This line attempts to swing the tail, so we apply our swing-tail lemma (lemma \ref{LFMSQ:spec:swingtail}) by supplying our invariant, $\reach{\nodetail}{\nodenew}$, and $\ar{\nodenew}{\Qg.\glast}$. This tells us that the $\CAS$ is safe, and it either succeeds or fails. The resulting value is the returned value of the $\enqueue$ function, but since the post-condition is simply $Q$, which we own, we are done.
+      When closing the invariant, we use $(\absvalue :: \absvalueList)$ for the abstract state, $(\nodenew :: \xsc)$ for the concrete state, $\nodenew :: \xsqueue$ for the queue, and we take $\nodenew$ to be the last node. The head and tail nodes remain the same. This means we give up $\abstractstateauth{\Qg.\gabst}{(\absvalue :: \absvalueList)}$ that we got from the viewshift, and the points-to predicate \ref{LFMSQSPECS:enqueue:proof:xnew2} (used to assert $\isLL (\nodenew :: \xsc))$. The only thing left to prove is $\ap{\Qg.\glast}{\nodenew}$. From the invariant opening, we have $\ap{\Qg.\glast}{\nodetail}$. Since $\reach{\nodetail}{\nodenew}$, we may apply lemma \ref{lemma:abs-reach-advance} to update the abstract points-to resource to $\ap{\Qg.\glast}{\nodenew}$ and additionally obtain $\ar{\nodenew}{\Qg.\glast}$. With this, we can close the invariant, and step to line \ref{LFE:sts}. This line attempts to swing the tail, so we apply our swing-tail lemma (lemma \ref{LFMSQSPECS:spec:swingtail}) by supplying our invariant, $\reach{\nodetail}{\nodenew}$, and $\ar{\nodenew}{\Qg.\glast}$. This tells us that the $\CAS$ is safe, and it either succeeds or fails. The resulting value is the returned value of the $\enqueue$ function, but since the post-condition is simply $Q$, which we own, we are done.
 
       \item[\textbf{Case}]
       $\nOut{\nodetail} \mapsto^{\persistently} \nIn{\nodetailnext} \star{} \reach{\nodetailnext}{\nodelast}$. Since $\nodetail$ doesn't point to $\None$, the $\CAS$ will fail. We close the invariant and step to line \ref{LFE:re1}. We finish by applying the induction hypothesis.
     \end{itemize}
 
     \item[\textbf{Case}]
-    $\nOut{\nodetail} \mapsto^{\persistently} \nIn{\nodetailnext} \star{} \reach{\nodetailnext}{\nodelast}$. Using this we perform the load, which sets $next$ to $\nIn{\nodetailnext}$. Before closing the invariant, we apply lemma \ref{lemma:abs-reach-abs} with $\reach{\nodetailnext}{\nodelast}$ and $\ap{\Qg.\glast}{\nodelast}$ to obtain $\ar{\nodetailnext}{\Qg.\glast}$. We now proceed to close the invariant. Next, we reach the consistency check. We handle it similarly to the previous case: open the invariant, get some $\nodetail'$, close the invariant, and in case of inconsistency, apply induction hypothesis. If the nodes are consistent, we step to line \ref{LFE:nen}. This time, the check will fail as $next$ is $\nIn{\nodetailnext}$ which is not $\None$. Hence we step to line \ref{LFE:stl} which attempts to swing the tail pointer. We here apply lemma \ref{LFMSQ:spec:swingtail} which we can do as we own the invariant, $\reach{\nodetail}{\nodetailnext}$, and $\ar{\nodetailnext}{\Qg.\glast}$. We step through to the recursive call and finish by applying the induction hypothesis.
+    $\nOut{\nodetail} \mapsto^{\persistently} \nIn{\nodetailnext} \star{} \reach{\nodetailnext}{\nodelast}$. Using this we perform the load, which sets $next$ to $\nIn{\nodetailnext}$. Before closing the invariant, we apply lemma \ref{lemma:abs-reach-abs} with $\reach{\nodetailnext}{\nodelast}$ and $\ap{\Qg.\glast}{\nodelast}$ to obtain $\ar{\nodetailnext}{\Qg.\glast}$. We now proceed to close the invariant. Next, we reach the consistency check. We handle it similarly to the previous case: open the invariant, get some $\nodetail'$, close the invariant, and in case of inconsistency, apply induction hypothesis. If the nodes are consistent, we step to line \ref{LFE:nen}. This time, the check will fail as $next$ is $\nIn{\nodetailnext}$ which is not $\None$. Hence we step to line \ref{LFE:stl} which attempts to swing the tail pointer. We here apply lemma \ref{LFMSQSPECS:spec:swingtail} which we can do as we own the invariant, $\reach{\nodetail}{\nodetailnext}$, and $\ar{\nodetailnext}{\Qg.\glast}$. We step through to the recursive call and finish by applying the induction hypothesis.
   \end{itemize}
 \end{proof}
 
 \subsubsection{Dequeue}
-\begin{lemma}[\lfmsq{} Specification - Dequeue]\label{LFMSQ:spec:dequeue}
+\begin{lemma}[\lfmsq{} Specification - Dequeue]\label{LFMSQSPECS:spec:dequeue}
   \begin{equation*}
-    \lfhocapspecdeq
+    \hocapspecdeq
   \end{equation*}
 \end{lemma}
 \begin{proof}
   We assume the viewshift and must prove the hoare triple. As before, we know from $\isqueue$ that the queue, $\vq$, is a location, $\locqueue$, and there are locations $\lochead$ and $\loctail$ so that
-  \begin{equation}\label{LFMSQ:spec:proof:dequeue:isqueue}
+  \begin{equation}\label{LFMSQSPECS:dequeue:proof:isqueue}
     \locqueue \mapsto^{\persistently} (\lochead, \loctail) \star{}
     \knowInv{\Nl.queue}{\LFQueueInvariantHocap(\lochead, \loctail, \Qg)}
   \end{equation}
   The body of $\dequeue$ is the loop, so we immediately apply löb induction. We step through the function application, and into the looping function to line \ref{LFD:hed}. This line dereferences $\lochead$, so we open the invariant to access the associated points-to predicate. We obtain that $\lochead$ points to some $\nodehead$, meaning the load results to $\nIn{\nodehead}$. We also derive the following information
   \begin{align}
-    &\isNode{\nodehead}\label{LFMSQ:spec:proof:dequeue:xhead_node}\\
-    &\ar{\nodehead}{\Qg.\ghead}\label{LFMSQ:spec:proof:dequeue:xhead_ghead}\\
-    &\ar{\nodehead}{\Qg.\gtail}\label{LFMSQ:spec:proof:dequeue:xhead_gtail}\\
-    &\ar{\nodehead}{\Qg.\glast}\label{LFMSQ:spec:proof:dequeue:xhead_glast}
+    &\isNode{\nodehead}\label{LFMSQSPECS:dequeue:proof:xhead_node}\\
+    &\ar{\nodehead}{\Qg.\ghead}\label{LFMSQSPECS:dequeue:proof:xhead_ghead}\\
+    &\ar{\nodehead}{\Qg.\gtail}\label{LFMSQSPECS:dequeue:proof:xhead_gtail}\\
+    &\ar{\nodehead}{\Qg.\glast}\label{LFMSQSPECS:dequeue:proof:xhead_glast}
   \end{align}
-  From the abstract points-to predicates from the invariant and lemma \ref{lemma:abs-reach-concr} we get that $\reach{\nodehead}{\nodetail}$, so by lemma \ref{lemma:reach-from-is-node}, we know that $\nodehead$ is a node. This shows \ref{LFMSQ:spec:proof:dequeue:xhead_node}. By reflexivity of reach (lemma \ref{lemma:reach-reflexive}) we additionally know that $\reach{\nodehead}{\nodehead}$. Lemma \ref{lemma:abs-reach-abs} then gives us \ref{LFMSQ:spec:proof:dequeue:xhead_ghead} and \ref{LFMSQ:spec:proof:dequeue:xhead_gtail}.\\
-  Lastly, we use lemma \ref{lemma:abs-reach-concr} to deduce that $\reach{\nodetail}{\nodelast}$. By transitivity of reach (lemma \ref{lemma:reach-transitive}) we have that $\reach{\nodehead}{\nodelast}$, which we use with lemma \ref{lemma:abs-reach-abs} to get \ref{LFMSQ:spec:proof:dequeue:xhead_glast}.\\
-  We now close the invariant and step to line \ref{LFD:tal} which attempts to read $\loctail$. We open the invariant, which tells us that $\loctail$ points to some $\nodetail$ (not necessarily the same as the previous invariant opening), and we perform the load. From the abstract points-to and reach predicates from the invariant together with \ref{LFMSQ:spec:proof:dequeue:xhead_gtail} and lemmas \ref{lemma:abs-reach-concr}, \ref{lemma:reach-to-is-node}, and \ref{lemma:abs-reach-abs} we get the following
+  From the abstract points-to predicates from the invariant and lemma \ref{lemma:abs-reach-concr} we get that $\reach{\nodehead}{\nodetail}$, so by lemma \ref{lemma:reach-from-is-node}, we know that $\nodehead$ is a node. This shows \ref{LFMSQSPECS:dequeue:proof:xhead_node}. By reflexivity of reach (lemma \ref{lemma:reach-reflexive}) we additionally know that $\reach{\nodehead}{\nodehead}$. Lemma \ref{lemma:abs-reach-abs} then gives us \ref{LFMSQSPECS:dequeue:proof:xhead_ghead} and \ref{LFMSQSPECS:dequeue:proof:xhead_gtail}.\\
+  Lastly, we use lemma \ref{lemma:abs-reach-concr} to deduce that $\reach{\nodetail}{\nodelast}$. By transitivity of reach (lemma \ref{lemma:reach-transitive}) we have that $\reach{\nodehead}{\nodelast}$, which we use with lemma \ref{lemma:abs-reach-abs} to get \ref{LFMSQSPECS:dequeue:proof:xhead_glast}.\\
+  We now close the invariant and step to line \ref{LFD:tal} which attempts to read $\loctail$. We open the invariant, which tells us that $\loctail$ points to some $\nodetail$ (not necessarily the same as the previous invariant opening), and we perform the load. From the abstract points-to and reach predicates from the invariant together with \ref{LFMSQSPECS:dequeue:proof:xhead_gtail} and lemmas \ref{lemma:abs-reach-concr}, \ref{lemma:reach-to-is-node}, and \ref{lemma:abs-reach-abs} we get the following
   \begin{align}
-    &\isNode{\nodetail}\label{LFMSQ:spec:proof:dequeue:xtail_node}\\
-    &\reach{\nodehead}{\nodetail}\label{LFMSQ:spec:proof:dequeue:xhead_r_xtail}\\
-    &\ar{\nodetail}{\Qg.\gtail}\label{LFMSQ:spec:proof:dequeue:xtail_gtail}\\
+    &\isNode{\nodetail}\label{LFMSQSPECS:dequeue:proof:xtail_node}\\
+    &\reach{\nodehead}{\nodetail}\label{LFMSQSPECS:dequeue:proof:xhead_r_xtail}\\
+    &\ar{\nodetail}{\Qg.\gtail}\label{LFMSQSPECS:dequeue:proof:xtail_gtail}\\
   \end{align}
   We close the invariant and step to line \ref{LFD:pro}. This line creates our \textit{prophecy variable}, $p$, which will be resolved on line \ref{LFD:cch}. This allows us to reason about the result of the consistency check: we will later show that the expression associated with $p$ (i.e. $\deref(\Fst (\deref Q))$) evaluates to some value $\prophval$, but we can already now case on whether $\prophval$ will be equal to $\nIn{\nodehead}$ -- the left hand side of the equality check on line \ref{LFD:cch}.
   \begin{itemize}
     \item[\textbf{Case}] $\nIn{\nodehead} = \prophval$.
-    We continue to line \ref{LFD:nex}, which finds out what $\nodehead$ points to. As $\nodehead$ could be the last node in the linked list, we don't have the relevant points-to predicate. We therefore open the invariant. We get the three nodes $\nodehead'$, $\nodetail'$, and $\nodelast$. Specifically, $\nodelast$ is the last node in the linked list, and 
-    \begin{equation}\label{LFMSQ:spec:proof:dequeue:glast_xlast}
+    We continue to line \ref{LFD:nex}, which finds out what $\nodehead$ points to. As $\nodehead$ could be the last node in the linked list, we don't have the relevant points-to predicate. We therefore open the invariant. We get the three nodes $\nodehead'$, $\nodetail'$, and $\nodelast$. Specifically, $\nodelast$ is the last node in the linked list, and
+    \begin{equation}\label{LFMSQSPECS:dequeue:proof:glast_xlast}
       \ap{\Qg.\glast}{\nodelast}
     \end{equation}
-    Combining this with \ref{LFMSQ:spec:proof:dequeue:xhead_glast} and lemma \ref{lemma:abs-reach-concr} we conclude $\reach{\nodehead}{\nodelast}$. This gives us two cases to consider: either $\nodehead = \nodelast$ or $\nodehead$ points to some $\nodeheadnext$, which reaches $\nodelast$.
+    Combining this with \ref{LFMSQSPECS:dequeue:proof:xhead_glast} and lemma \ref{lemma:abs-reach-concr} we conclude $\reach{\nodehead}{\nodelast}$. This gives us two cases to consider: either $\nodehead = \nodelast$ or $\nodehead$ points to some $\nodeheadnext$, which reaches $\nodelast$.
     \begin{itemize}
       \item[\textbf{Case}] $\nodehead = \nodelast$. This corresponds to the queue being empty, which we derive below.\\
-      As $\nodelast$ is the last node, we have that $\nOut{\nodehead} \mapsto \None$, hence the load resolves to $\None$. Using the abstract points-to predicates from the invariant together with \ref{LFMSQ:spec:proof:dequeue:xhead_ghead}, \ref{LFMSQ:spec:proof:dequeue:xhead_gtail}, and lemma \ref{lemma:abs-reach-concr} we get $\reach{\nodehead}{\nodehead'}$ and $\reach{\nodehead}{\nodetail'}$. We can now apply lemma \ref{lemma:reach-last} three times to conclude $\nodehead = \nodehead' = \nodetail' = \nodetail$. Since $\nodehead'$ points to $\None$, then $\xsqueue$ has to be empty (if it wasn't we could deduce that $\nodehead'$ pointed to a node). This also implies that abstract state of the queue $\absvalueList$, is empty, $\absvalueList = []$.\\
+      As $\nodelast$ is the last node, we have that $\nOut{\nodehead} \mapsto \None$, hence the load resolves to $\None$. Using the abstract points-to predicates from the invariant together with \ref{LFMSQSPECS:dequeue:proof:xhead_ghead}, \ref{LFMSQSPECS:dequeue:proof:xhead_gtail}, and lemma \ref{lemma:abs-reach-concr} we get $\reach{\nodehead}{\nodehead'}$ and $\reach{\nodehead}{\nodetail'}$. We can now apply lemma \ref{lemma:reach-last} three times to conclude $\nodehead = \nodehead' = \nodetail' = \nodetail$. Since $\nodehead'$ points to $\None$, then $\xsqueue$ has to be empty (if it wasn't we could deduce that $\nodehead'$ pointed to a node). This also implies that abstract state of the queue $\absvalueList$, is empty, $\absvalueList = []$.\\
       Because the load resolved to $\None$, then the variable $next$ in the code will be $\None$, and since we are in the case where the consistency check passes, and since we have derived that $\nodehead = \nodetail$, we know that $\dequeue$ will return $\None$. In other words, this is a linearisation point.\\
       Since $\absvalueList = []$, then our abstract state predicate from the invariant states $\abstractstateauth{\Qg.\gabst}{[]}$. We thus instantiate the viewshift with $[]$, and supply the $P$ from the pre-condition. As $\absvalueList = []$ we can conclude that the first disjunct must be true (the second contains a contradiction), so we get $Q(\None)$ and $\abstractstateauth{\Qg.\gabst}{[]}$. As we haven't changed any resources, we can close the invariant again.\\
-      We reach the consistency check on line \ref{LFD:cch}. By \ref{LFMSQ:spec:proof:dequeue:isqueue}, we know that $\deref(\Fst (\deref Q))$ steps to $\deref(\lochead)$, but to resolve the prophecy, we must first show what $\deref(\lochead)$ evaluates to. This resource is inside the invariant so we open it. We get that $\lochead \mapsto \nIn{\nodehead''}$ for some node $\nodehead''$. We close the invariant and resolve the prophecy: $\deref(\Fst (\deref Q))$ evaluated to $\nIn{\nodehead''}$. In other words, $\prophval = \nIn{\nodehead''}$, and therefore $\nIn{\nodehead} = \nIn{\nodehead''}$. Since the remaining if statement on line \ref{LFD:cch} compares $\nIn{\nodehead}$ to $\nIn{\nodehead''}$, we know that we will take the ``then'' branch, so we step to line \ref{LFD:hte}. Since $\nodehead = \nodetail$ and $next$ was set to $\None$, we step to line \ref{LFD:non} which returns $\None$. The post-condition thus requires us to prove $Q(\None)$, which we already have.
+      We reach the consistency check on line \ref{LFD:cch}. By \ref{LFMSQSPECS:dequeue:proof:isqueue}, we know that $\deref(\Fst (\deref Q))$ steps to $\deref(\lochead)$, but to resolve the prophecy, we must first show what $\deref(\lochead)$ evaluates to. This resource is inside the invariant so we open it. We get that $\lochead \mapsto \nIn{\nodehead''}$ for some node $\nodehead''$. We close the invariant and resolve the prophecy: $\deref(\Fst (\deref Q))$ evaluated to $\nIn{\nodehead''}$. In other words, $\prophval = \nIn{\nodehead''}$, and therefore $\nIn{\nodehead} = \nIn{\nodehead''}$. Since the remaining if statement on line \ref{LFD:cch} compares $\nIn{\nodehead}$ to $\nIn{\nodehead''}$, we know that we will take the ``then'' branch, so we step to line \ref{LFD:hte}. Since $\nodehead = \nodetail$ and $next$ was set to $\None$, we step to line \ref{LFD:non} which returns $\None$. The post-condition thus requires us to prove $Q(\None)$, which we already have.
 
-      \item[\textbf{Case}] $\nOut{\nodehead} \mapsto^{\persistently} \nIn{\nodeheadnext} \star{} \reach{\nodeheadnext}{\nodelast}$. This means that the queue is not empty, and there is an element to be dequeued: the value in $\nodeheadnext$. The load resolves to $\nIn{\nodeheadnext}$, and the program variable $next$ is set to this. Using lemmas \ref{lemma:reach-from-is-node} and \ref{lemma:abs-reach-abs} with \ref{LFMSQ:spec:proof:dequeue:glast_xlast} we get
+      \item[\textbf{Case}] $\nOut{\nodehead} \mapsto^{\persistently} \nIn{\nodeheadnext} \star{} \reach{\nodeheadnext}{\nodelast}$. This means that the queue is not empty, and there is an element to be dequeued: the value in $\nodeheadnext$. The load resolves to $\nIn{\nodeheadnext}$, and the program variable $next$ is set to this. Using lemmas \ref{lemma:reach-from-is-node} and \ref{lemma:abs-reach-abs} with \ref{LFMSQSPECS:dequeue:proof:glast_xlast} we get
       \begin{align}
-        &\isNode{\nodeheadnext}\label{LFMSQ:spec:proof:dequeue:x_headnext_node}\\
-        &\ar{\nodeheadnext}{\Qg.\glast}\label{LFMSQ:spec:proof:dequeue:x_headnext_glast}
+        &\isNode{\nodeheadnext}\label{LFMSQSPECS:dequeue:proof:x_headnext_node}\\
+        &\ar{\nodeheadnext}{\Qg.\glast}\label{LFMSQSPECS:dequeue:proof:x_headnext_glast}
       \end{align}
       We close the invariant and step to the consistency check on line \ref{LFD:cch}. We handle this similarly to the previous case and conclude that the consistency check succeeds, taking us to line \ref{LFD:hte} in the ``then'' branch. This line ensures that the dequeue will not make the tail node lag behind the head node. We can simply consider both cases of the check.\\
-      The case where the ``if'' succeeds takes us to the $\CAS$ on line \ref{LFD:stl}, which attempts to swing the tail, and try dequeueing again. We handle the $\CAS$ with our swing-tail lemma (lemma \ref{LFMSQ:spec:swingtail}), and the recursive call by the induction hypothesis.\\
+      The case where the ``if'' succeeds takes us to the $\CAS$ on line \ref{LFD:stl}, which attempts to swing the tail, and try dequeueing again. We handle the $\CAS$ with our swing-tail lemma (lemma \ref{LFMSQSPECS:spec:swingtail}), and the recursive call by the induction hypothesis.\\
       If the ``if'' fails, then the tail node will not lag behind as a result of the dequeue, so we step to the else block on line \ref{LFD:el2} which attempts to dequeue. We first read the value out of $\nodeheadnext$ on line \ref{LFD:vde}. Next, we attempt to swing the head pointer on line \ref{LFD:shs}. The rule for $\CAS$ demands a points-to predicate for $\lochead$, so we open the invariant which gives us fresh nodes $\nodehead'$, $\nodetail'$, and $\nodelast'$, so that $\lochead \mapsto \nIn{\nodehead'}$. The success of the $\CAS$ depends on whether $\nIn{\nodehead'}$ equals $\nIn{\nodehead}$. If they aren't equal, the $\CAS$ fails and nothing is updated. We can thus close the invariant and we step to the recursive call on line \ref{LFD:re1} and apply the induction hypothesis. So for the remainder, we assume they are equal and the $\CAS$ succeeds. Since the $\CAS$ moved the head pointer to $\nodeheadnext$, the queue data structure got updated, so this is a linearisation point.\\
-      Using the abstract points-to and reachability propositions from the invariant together with lemmas \ref{lemma:abs-reach-concr} and \ref{lemma:reach-from-is-node}, we may deduce that $\nodehead'$ is a node. As we already know that $\nodehead$ is a node (from \ref{LFMSQ:spec:proof:dequeue:xhead_node}), lemma \ref{lemma:nIn-equal} tells us that the nodes are equal: $\nodehead = \nodehead'$. From the invariant (specifically $\isLL(\xsc)$) we know that $\nodehead'$ points to the first element of $\xsqueue$. But since $\nodehead = \nodehead'$, then this element must be our $\nodeheadnext$. In other words, $\xsqueue = \xsqueue' \catenate [\nodeheadnext]$, for some $\xsqueue'$.
+      Using the abstract points-to and reachability propositions from the invariant together with lemmas \ref{lemma:abs-reach-concr} and \ref{lemma:reach-from-is-node}, we may deduce that $\nodehead'$ is a node. As we already know that $\nodehead$ is a node (from \ref{LFMSQSPECS:dequeue:proof:xhead_node}), lemma \ref{lemma:nIn-equal} tells us that the nodes are equal: $\nodehead = \nodehead'$. From the invariant (specifically $\isLL(\xsc)$) we know that $\nodehead'$ points to the first element of $\xsqueue$. But since $\nodehead = \nodehead'$, then this element must be our $\nodeheadnext$. In other words, $\xsqueue = \xsqueue' \catenate [\nodeheadnext]$, for some $\xsqueue'$.
       This means that, when we apply the viewshift (giving up $P$ and $\abstractstateauth{\Qg.\gabst}{\absvalueList}$ as usual), only the second case of the resulting disjunct is possible: $\absvalueList$ cannot be empty as $\xsqueue$ isn't. We therefore get that there are some $\absvalueList'$ and $\absvalue$ so that
       \begin{align}
         &\absvalueList = \absvalueList' \catenate [\absvalue]\\
         &\abstractstateauth{\Qg.\gabst}{\absvalueList'}\\
-        &Q(\Some \absvalue)\label{LFMSQ:spec:proof:dequeue:Qxv}
+        &Q(\Some \absvalue)\label{LFMSQSPECS:dequeue:proof:Qxv}
       \end{align}
       Since $\absvalueList$ is reflected in $\xsqueue$ (according to the invariant), we may additionally conclude that $\absvalueList'$ is reflected in $\xsqueue'$ and $\Some \absvalue = \nVal{\nodeheadnext}$.\\
       To close the invariant, we must update some of our resources. Since we now have $\lochead \mapsto \nIn{\nodeheadnext}$, we must pick $\nodeheadnext$ for the head node. But currently $\ap{\Qg.\ghead}{\nodehead}$. So we use lemma \ref{lemma:abs-reach-advance} to advance the pointer, and we get $\ap{\Qg.\ghead}{\nodeheadnext}$.\\
-      We are now required to show that $\ar{\nodeheadnext}{\Qg.\gtail}$. Since $\reach{\nodehead}{\nodetail}$, and $\nodehead \neq \nodetail$, then it must be the case that $\reach{\nodeheadnext}{\nodetail}$. Lemma \ref{lemma:abs-reach-concr} with \ref{LFMSQ:spec:proof:dequeue:xtail_gtail} now tells us that $\nodetail$ can reach the current tail node, $\nodetail'$. By transitivity (lemma \ref{lemma:reach-transitive}), we get $\reach{\nodeheadnext}{\nodetail'}$, and hence by lemma \ref{lemma:abs-reach-abs}, we get the desired $\ar{\nodeheadnext}{\Qg.\gtail}$. We now own all the resources required to close the invariant.\\
-      As the $\CAS$ succeed, we step to line \ref{LFD:val} which simply returns $\nVal{\nodeheadnext}$. Thus, we must prove the post-condition $Q(\nVal{\nodeheadnext})$. We can do this since we still own \ref{LFMSQ:spec:proof:dequeue:Qxv} and we deduced that $\Some \absvalue = \nVal{\nodeheadnext}$.
+      We are now required to show that $\ar{\nodeheadnext}{\Qg.\gtail}$. Since $\reach{\nodehead}{\nodetail}$, and $\nodehead \neq \nodetail$, then it must be the case that $\reach{\nodeheadnext}{\nodetail}$. Lemma \ref{lemma:abs-reach-concr} with \ref{LFMSQSPECS:dequeue:proof:xtail_gtail} now tells us that $\nodetail$ can reach the current tail node, $\nodetail'$. By transitivity (lemma \ref{lemma:reach-transitive}), we get $\reach{\nodeheadnext}{\nodetail'}$, and hence by lemma \ref{lemma:abs-reach-abs}, we get the desired $\ar{\nodeheadnext}{\Qg.\gtail}$. We now own all the resources required to close the invariant.\\
+      As the $\CAS$ succeed, we step to line \ref{LFD:val} which simply returns $\nVal{\nodeheadnext}$. Thus, we must prove the post-condition $Q(\nVal{\nodeheadnext})$. We can do this since we still own \ref{LFMSQSPECS:dequeue:proof:Qxv} and we deduced that $\Some \absvalue = \nVal{\nodeheadnext}$.
     \end{itemize}
 
     \item[\textbf{Case}] $\nIn{\nodehead} \neq \prophval$.
-    We step to line \ref{LFD:nex} which finds out what $\nodehead$ points to. To access the relevant points-to predicate, open the invariant. Importantly, we get that there is some last node of the linked list, $\nodelast$, with $\ap{\Qg.\glast}{\nodelast}$. By combining this with \ref{LFMSQ:spec:proof:dequeue:xhead_glast} and lemma \ref{lemma:abs-reach-concr} we deduce that $\reach{\nodehead}{\nodelast}$ which means that either $\nodehead$ \textit{is} the last node, and hence $\nOut{\nodehead} \mapsto \None$, or there is some other node $\nodeheadnext$ and $\nOut{\nodehead} \mapsto^{\persistently} \nodeheadnext$. This shows that the load is safe. The actual value that he load resolves to is unimportant, as it won't be used in this case. We thus perform the load, close the invariant and step to line \ref{LFD:cch}.\\
-    By \ref{LFMSQ:spec:proof:dequeue:isqueue}, we know that $\deref(\Fst (\deref Q))$ steps to $\deref(\lochead)$, so to resolve the prophecy, we show what $\deref(\lochead)$ evaluates to. We open the invariant, which gives us that $\lochead \mapsto \nIn{\nodehead'}$ for some node $\nodehead'$. We close the invariant again, and resolve the prophecy: $\deref(\Fst (\deref Q))$ evaluated to $\nIn{\nodehead'}$. That is, $\prophval = \nIn{\nodehead'}$, and therefore $\nIn{\nodehead} \neq \nIn{\nodehead'}$. We hence take the ``else'' branch and step to line \ref{LFD:re2}. This consists of a recursive call to the loop function and we are done by the induction hypothesis.
+    We step to line \ref{LFD:nex} which finds out what $\nodehead$ points to. To access the relevant points-to predicate, open the invariant. Importantly, we get that there is some last node of the linked list, $\nodelast$, with $\ap{\Qg.\glast}{\nodelast}$. By combining this with \ref{LFMSQSPECS:dequeue:proof:xhead_glast} and lemma \ref{lemma:abs-reach-concr} we deduce that $\reach{\nodehead}{\nodelast}$ which means that either $\nodehead$ \textit{is} the last node, and hence $\nOut{\nodehead} \mapsto \None$, or there is some other node $\nodeheadnext$ and $\nOut{\nodehead} \mapsto^{\persistently} \nodeheadnext$. This shows that the load is safe. The actual value that he load resolves to is unimportant, as it won't be used in this case. We thus perform the load, close the invariant and step to line \ref{LFD:cch}.\\
+    By \ref{LFMSQSPECS:dequeue:proof:isqueue}, we know that $\deref(\Fst (\deref Q))$ steps to $\deref(\lochead)$, so to resolve the prophecy, we show what $\deref(\lochead)$ evaluates to. We open the invariant, which gives us that $\lochead \mapsto \nIn{\nodehead'}$ for some node $\nodehead'$. We close the invariant again, and resolve the prophecy: $\deref(\Fst (\deref Q))$ evaluated to $\nIn{\nodehead'}$. That is, $\prophval = \nIn{\nodehead'}$, and therefore $\nIn{\nodehead} \neq \nIn{\nodehead'}$. We hence take the ``else'' branch and step to line \ref{LFD:re2}. This consists of a recursive call to the loop function and we are done by the induction hypothesis.
   \end{itemize}
 \end{proof}
 
-
+%=====================================================================
 \section{Discussion}
 \label{LFMSQSPECS:section:discussion}
 
-It was shown in \citet{DBLP:conf/cpp/VindumB21} that a version of the \lfmsq{} with the consistency checks is contextually equivalent to a version without consistency checks. In the original presentation \citep{DBLP:conf/podc/MichaelS96} the implementation language was assumed to not have a garbage collector. This meant that the ABA problem was an issue; if a node is freed by a dequeue, and afterwards a new node is allocated at the same location with the same value through an enqueue, it will look as though it is the exact same node. This can cause inconsistencies for threads that read the original node, went to sleep, and continued after the new allocation. 
+It was shown in \citet{DBLP:conf/cpp/VindumB21} that a version of the \lfmsq{} with the consistency checks is contextually equivalent to a version without consistency checks. In the original presentation \citep{DBLP:conf/podc/MichaelS96} the implementation language was assumed to not have a garbage collector. This meant that the ABA problem was an issue; if a node is freed by a dequeue, and afterwards a new node is allocated at the same location with the same value through an enqueue, it will look as though it is the exact same node. This can cause inconsistencies for threads that read the original node, went to sleep, and continued after the new allocation.
 To fix the issue, the authors added \textit{modification counters} to their pointers, which means that the pointer to the newly allocated node will have a higher counter, and we can hence tell that it isn't the same node as the original. The essence of the consistency checks is to ensure that previously read nodes are the exact same nodes as from before, by ensuring that the counter is the same.
 We do this check \textit{after} reading any ``next'' nodes to ensure that they are indeed the next of the node we originally read -- the original node and its next node are consistent.
 
-However, the language used in \citet{DBLP:conf/cpp/VindumB21} and this project, \heaplang, is a garbage-collected language. This means that we do not need to worry about freeing nodes, and the ABA problem doesn't occur. In other words, when we read the ``next'' of a node, we can be certain that it is the next of the node we originally read -- no one could have freed it in a dequeue it and subsequently allocated a similar looking node in an enqueue. This then means that the consistency checks are no longer needed. 
+However, the language used in \citet{DBLP:conf/cpp/VindumB21} and this project, \heaplang, is a garbage-collected language. This means that we do not need to worry about freeing nodes, and the ABA problem doesn't occur. In other words, when we read the ``next'' of a node, we can be certain that it is the next of the node we originally read -- no one could have freed it in a dequeue it and subsequently allocated a similar looking node in an enqueue. This then means that the consistency checks are no longer needed.
 
 Indeed, in the Coq formalisations, we prove the Hocap-style specification for an implementation that doesn't have the consistency checks. As an additional benefit, removing the consistency check means that in $\dequeue$, we know already when we read the ``next'' of the head node on line \ref{LFD:nex} whether or not the dequeue will conclude that the queue is empty, and hence whether or not the load is a linearisation point. The prophecy variable is thus not needed, which further simplifies the proof of the specification.
 
@@ -2157,27 +2198,29 @@ Indeed, in the Coq formalisations, we prove the Hocap-style specification for an
 
 \chapter{On the Resource Algebras Used}
 \label{ch:RA}
+
+%=====================================================================
 \section{Tokens}
 \label{RA:sections:tokens}
-Tokens are defined using the exclusive resource algebra on the singleton set: $\exm{\TT}$. This resource algebra only has one valid element, which we here denote by $T$, and combining two elements will give the non-valid element $\bot$.
+
+Tokens are defined using the exclusive resource algebra on the singleton set: $\exm{\TT}$. This resource algebra has only one valid element, which we here denote by $T$, and combining two elements will give the non-valid element $\bot$. The definition of tokens is then quite simple.
+\begin{definition}[Token]
+  $\Token{\gname} = \ownGhost{\gname}{T}$
+\end{definition}
 
 We can always create new tokens, which will just give us ownership of $T$ with a fresh ghost name, $\gname$.
-\begin{lemma}
-  $\proves \pvs \Exists \gname . \ownGhost{\gname}{T}$
-\end{lemma}
+\tokalloc*
 \begin{proof}
   This follows directly from ghost-alloc\todo{ref} and the fact that $T$ is valid.
 \end{proof}
 
 Importantly, if we own a particular token, then we know that no one else can own the same token. Formally, we write this as:
-\begin{lemma}
-  $\ownGhost{\gname}{T} \star{} \ownGhost{\gname}{T} \proves \FALSE$
-\end{lemma}
+\tokexclusive*
 \begin{proof}
   By own-op\todo{ref} we get ownership of $\ownGhost{\gname}{T \mtimes T}$. By the exclusive RA, this is equivalent to $\ownGhost{\gname}{\bot}$. We now own a non-valid element which proves $\FALSE$.
 \end{proof}
 
-
+%=====================================================================
 \section{Abstract State}
 \label{RA:sections:abstract-state}
 
@@ -2186,11 +2229,10 @@ We note that core of the fractional RA is always undefined, which means that the
 
 With this, we may now define $\abstractstateauth{\gname}{\absvalueList}$ and $\abstractstatefullfrag{\gname}{\absvalueList}$ formally.
 \begin{definition}[Authoritative Abstract State]
-  For an abstract state $\absvalueList$ and a ghost name $\gname$, we define: $\abstractstateauth{\gname}{\absvalueList} \eqdef \ownGhost{\gname}{\authfull (1, \aginj ~ \absvalueList)}$
+  $\abstractstateauth{\gname}{\absvalueList} \eqdef \ownGhost{\gname}{\authfull (1, \aginj ~ \absvalueList)}$
 \end{definition}
 
 \begin{definition}[Fragmental Abstract State]
-  For an abstract state $\absvalueList$ and a ghost name $\gname$, we define:
   $\abstractstatefullfrag{\gname}{\absvalueList} \eqdef \ownGhost{\gname}{\authfrag (1, \aginj ~ \absvalueList)}$
 \end{definition}
 
@@ -2210,6 +2252,7 @@ In section \ref{QueueSpecs:section:deriving-seq-and-conc} we postulated two impo
   This time, we use own-op\todo{ref} to conclude $\ownGhost{\gname}{\authfull (1, \aginj ~ \absvalueList) \mtimes \authfrag (1, \aginj ~ \absvalueList')}$. Further, by own-op\todo{ref}, it suffices to prove $\pvs \ownGhost{\gname}{\authfull (1, \aginj ~ \absvalueList'') \mtimes \authfrag (1, \aginj ~ \absvalueList'')}$. We do this by applying the ghost-update\todo{ref} rule, which requires us to prove $\authfull (1, \aginj ~ \absvalueList) \mtimes \authfrag (1, \aginj ~ \absvalueList') \mupd \authfull (1, \aginj ~ \absvalueList'') \mtimes \authfrag (1, \aginj ~ \absvalueList'')$. Firstly by the product, fractional, and agreement RA, the element $(1, \aginj ~ \absvalueList'')$ is valid, so the product of the authoritative and fragmental parts of it is also valid. Next, note that we own the entire fraction of the fragmental element. Hence, there can be no other valid fragments. It hence follows that we can do the frame-preserving update.
 \end{proof}
 
+%=====================================================================
 \section{Abstract Points-to and Reachability}
 \label{RA:sections:abstract-reach}
 
@@ -2233,7 +2276,7 @@ The authoritative set is existentially quantified as it can change over time, bu
 
 \absreachconcr*
 \begin{proof}
-  Assuming $\ar{\nodeM{n}}{\gname_m}$ and $\ap{\gname_m}{\nodeM{m}}$, we must show $\reach{\nodeM{n}}{\nodeM{m}}$ without ``consuming'' $\ap{\gname_m}{\nodeM{m}}$. From $\ap{\gname_m}{\nodeM{m}}$ we can deduce that there is some set $s$ so that $\ownGhost{\gname_m}{\authfull s}$ and $\Sep_{\node' \in s} \reach{\node'}{\nodeM{m}}$. Since we own both $\ownGhost{\gname_m}{\authfull s}$ and $\ownGhost{\gname_m}{\authfrag \{\nodeM{n}\}}$ (from $\ar{\nodeM{n}}{\gname_m}$), we may conclude that their product is valid, which in our instantiation of the authoritative RA equates to $\nodeM{n} \in s$. We may now frame away the second part of the goal, $\ap{\gname_m}{\nodeM{m}}$, using $\ownGhost{\gname_m}{\authfull s}$ and $\Sep_{\node' \in s} \reach{\node'}{\nodeM{m}}$. Note that we get to keep $\ownGhost{\gname_m}{\authfull s}$ as we only used it to prove persistent facts. Thus, from that assertion and by $\nodeM{n} \in s$, we can deduce that $\reach{\nodeM{n}}{\nodeM{m}}$, which is what we had to prove.
+  Assuming $\ar{\nodeM{n}}{\gname_m}$ and $\ap{\gname_m}{\nodeM{m}}$, we must show $\reach{\nodeM{n}}{\nodeM{m}}$ without ``consuming'' $\ap{\gname_m}{\nodeM{m}}$. From $\ap{\gname_m}{\nodeM{m}}$ we can deduce that there is some set $s$ so that $\ownGhost{\gname_m}{\authfull s}$ and $\Sep_{\node' \in s} \reach{\node'}{\nodeM{m}}$. Since we own both $\ownGhost{\gname_m}{\authfull s}$ and $\ownGhost{\gname_m}{\authfrag \{\nodeM{n}\}}$ (from $\ar{\nodeM{n}}{\gname_m}$), we may conclude that their product is valid, which in our instantiation of the authoritative RA equates to $\nodeM{n} \in s$. Note that this does not consume $\ownGhost{\gname_m}{\authfull s}$ as that assertion is persistent. This allows us to frame away the second part of the goal, $\ap{\gname_m}{\nodeM{m}}$, using $\ownGhost{\gname_m}{\authfull s}$ and $\Sep_{\node' \in s} \reach{\node'}{\nodeM{m}}$. As the latter of these assertions is persistent, we still own it. Thus, from that assertion and by $\nodeM{n} \in s$, we can deduce that $\reach{\nodeM{n}}{\nodeM{m}}$, which is what we had to prove.
 \end{proof}
 
 \absreachabs*
@@ -2251,7 +2294,6 @@ The authoritative set is existentially quantified as it can change over time, bu
   Assuming $\ap{\gname_m}{\nodeM{m}}$ and $\reach{\nodeM{m}}{\nodeM{o}}$ we must prove $\pvs \ap{\gname_m}{\nodeM{o}} \star{} \ar{\nodeM{o}}{\gname_m}$. From $\ap{\gname_m}{\nodeM{m}}$, we get some set $s$ so that $\ownGhost{\gname_m}{\authfull s}$ and $\Sep_{\node' \in s} \reach{\node'}{\nodeM{m}}$. As we did in the proof of lemma \ref{lemma:abs-reach-abs}, we update $\ownGhost{\gname_m}{\authfull s}$ so that the set additionally contains $\nodeM{o}$. Thus, we get $\ownGhost{\gname_m}{\authfull \{\nodeM{o}\} \cup s}$. From this, we may extract ownership of the fragmental part: $\ownGhost{\gname_m}{\authfrag \{\nodeM{o}\}}$, which we use to prove the second part of the goal.\\
   We are thus left with proving $\ap{\gname_m}{\nodeM{o}}$. We use $\{\nodeM{o}\} \cup s$ as witness for the authoritative set, and immediately frame away the ownership assertion of the authoritative part. We are left with proving $\Sep_{\node' \in \{\nodeM{o}\} \cup s} \reach{\node'}{\nodeM{o}}$. We already know that $\Sep_{\node' \in s} \reach{\node'}{\nodeM{m}}$ and $\reach{\nodeM{m}}{\nodeM{o}}$. Thus, by transitivity of reach (lemma \ref{lemma:reach-transitive}), we may conclude $\Sep_{\node' \in \cup s} \reach{\node'}{\nodeM{o}}$. Thus, we are done if we can prove that $\reach{\nodeM{o}}{\nodeM{o}}$, which by lemma \ref{lemma:reach-reflexive} amount to showing that $\nodeM{o}$ is a node. However, since $\reach{\nodeM{m}}{\nodeM{o}}$, then, by lemma \ref{lemma:reach-to-is-node}, we know that this is the case.
 \end{proof}
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -2275,7 +2317,9 @@ The authoritative set is existentially quantified as it can change over time, bu
 \appendix
 \chapter{Common Definitions and Lemmas}\label{ch:appendix:common}
 
-\section{Lists and Nodes}\label{appendix:common:section:ListsNodes}
+%=====================================================================
+\section{Lists and Nodes}
+\label{appendix:common:section:ListsNodes}
 
 \begin{definition}[First in Queue]\label{COMMON:Def:first-q}
   $\isFirst(x, xs) \eqdef \Exists xs_{rest} . xs = xs_{rest} \catenate [x]$
@@ -2347,7 +2391,10 @@ The authoritative set is existentially quantified as it can change over time, bu
   \end{align*}
 \end{lemma}
 
-\section{Results About the isLL Predicate}\label{appendix:common:section:isll}
+%=====================================================================
+\section{Results About the isLL Predicate}
+\label{appendix:common:section:isll}
+
 \begin{lemma}[Extract Chain from $\isLL$]\label{lemma:isLL-and-chain}
   $\All xs. \isLL(xs) \wand \isLL(xs) \star{} \isLLchain(xs)$
 \end{lemma}

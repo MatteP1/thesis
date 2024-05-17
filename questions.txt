@@ -1,0 +1,3 @@
+
+- In lemmas, should I write "For all nodes x, we have that x = x". Or should I just write "x = x".
+  I.e. style of Abs-reach-Concr vs style of reach-transitive

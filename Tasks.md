@@ -100,7 +100,7 @@
 - [x] Fix notation overload in Coq. Maybe just use the Q_g.g_abst => xs notation everywhere
 - [x] Make Twolock Hocap a Hocap queue
 - [x] Make derivations of concurrent and sequential independent of implementation
-  - [ ] Update overview of files in report
+  - [x] Update overview of files in report
 
 - [x] Create better notation of nIn, nOut and nVal
 - [x] Write macros for many of the predicates (queue_invariant isLast, etc.)
@@ -116,14 +116,12 @@
 - [x] Rewrite some of the proofs for two-lock
 - [x] Consider adding the specifications for the derivation proofs
 - [x] Refer to line numbers in proofs for two-lock
-- [ ] Check for correctness of line number references
 - [x] Proofread sequential and concurrent derivation section
 - [x] refactor specification macros to take the forall quantified variables as input
 - [x] Also make hocap viewshifts their own macros
 - [x] Make the \Qg variables in derivations \Qgseq and \Qgconc
 - [x] Refer to Appendix definitions when explaining isLast, All, Wrap_some, Proj_val, etc.
 - [x] Format Appendix
-- [ ] Correctly format "hoare triple" and "hocap style"
 
 - [x] fix readme
   - [x] formatting
@@ -137,8 +135,9 @@
   - [x] Herlihy & Wing : Linearizability. #5 in MSQ paper
 
 
-- [ ] Decide on name/notation for Qgnames (including SeqQgnames and ConcQgnames). Maybe \mathcal(G)_{\text{seq}}?
-- [ ] Format the forall intros in lemmas (and definitions) better
+- [x] Decide on name/notation for Qgnames (including SeqQgnames and ConcQgnames). Maybe \mathcal(G)_{\text{seq}}?
+- [x] Format the forall intros in lemmas (and definitions) better
+- [x] Remove end of line spaces.
 - [x] Change is_queue to isQueue
 - [x] Change is_queue_seq to isQueue_{seq} and similarly for conc
 - [x] Use camelCase for predicates. (proj_val, wrap_some, proj_gnames...)
@@ -157,17 +156,19 @@
   - [x] also change in coq
 - [x] move definition of simpler concurrent queue invariant out of appendix, into report
 - [x] Move definitions of hocap invariant and queue predicate out of appendix, into section
-- [ ] do not use contractions
 - [x] Change "spec" to "specification"
-- [ ] Make derivations in report not use the projections, hence following the derivation of queue_specs.v
-- [ ] Remove 'tl' and 'lf' prefixes for latex macros for specifications
+- [x] Remove 'tl' and 'lf' prefixes for latex macros for specifications
 - [x] Rewrite moved sections and chapters to get a red line again
   - [x] Update References
+- [ ] Make derivations in report not use the projections, hence following the derivation of queue_specs.v
+- [ ] Correctly format "hoare triple" and "hocap style"
 - [ ] Check if any extra todos from Amin's feedback
 
 - [ ] Proof read report and fix the following:
   - [ ] Always start sentences with capital letter. Change sentences that start with variables to enforce this
   - [ ] only use "points to" for predicate
   - [ ] don't use future tense so much
+  - [ ] do not use contractions
+  - [ ] Check for correctness of line number references
 
 - [ ] If time permits, use hocap spec to prove a spec of a client
