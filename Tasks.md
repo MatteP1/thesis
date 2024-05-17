@@ -161,7 +161,7 @@
 - [x] Rewrite moved sections and chapters to get a red line again
   - [x] Update References
 - [ ] Make derivations in report not use the projections, hence following the derivation of queue_specs.v
-- [ ] Correctly format "hoare triple" and "hocap style"
+- [x] Correctly format "hoare triple" and "hocap style"
 - [ ] Check if any extra todos from Amin's feedback
 
 - [ ] Proof read report and fix the following:

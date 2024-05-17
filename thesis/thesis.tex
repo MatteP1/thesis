@@ -406,7 +406,7 @@ In this section, we give a brief introduction to Iris -- the logic we use to rea
 \todo{derivation rules examples...}
 
 \subsection{Hoare Triples and Weakest Pre-Condition}
-\todo{explain hoare triples}
+\todo{explain Hoare triples}
 \todo{talk about Partial correctness and Adequacy}
 \todo{explain weakest pre-conditions}
 \todo{show how they are related}
@@ -414,9 +414,9 @@ In this section, we give a brief introduction to Iris -- the logic we use to rea
 \subsection{Later Modality}
 \todo{explain concept}
 \todo{ties propositions to program steps}
-\todo{Explain the löb induction rule, mention the intuition when P is hoare triple}
+\todo{Explain the löb induction rule, mention the intuition when P is Hoare triple}
 
-The later modality adds a notion of step indexing to Iris propositions. This step indexing is technically parallel to the notion of taking steps in the programs, but the way we define hoare-triples and weakest-preconditions tie program steps together with steps in the logic. In other words, a single Later corresponds to a single step in the program.
+The later modality adds a notion of step indexing to Iris propositions. This step indexing is technically parallel to the notion of taking steps in the programs, but the way we define Hoare triples and weakest-preconditions tie program steps together with steps in the logic. In other words, a single Later corresponds to a single step in the program.
 
 \subsection{Invariants}
 \todo{explain the idea}
@@ -454,7 +454,7 @@ The later modality adds a notion of step indexing to Iris propositions. This ste
 \section{Formalisation in Coq}
 \label{Pre:section:coq}
 
-Iris has been mechanised in the Coq proof assistant\footnote{The mechanisation can be found at \url{https://gitlab.mpi-sws.org/iris/iris/}} -- a tool to machine-check proofs of mathematical assertions. All results in this project have been completely machine-verified in the Iris mechanisation in Coq. Specifications in the Coq formalisation of Iris are usually written in terms of hoare-triples but proved by first converting the hoare-triples to equivalent weakest-preconditions, as this is usually easier to work with. The proofs presented in this report will follow suit and give specifications using hoare-triples, but prove them assuming they are weakest-preconditions. The proofs presented in the report thus follow the mechanised proofs very closely, making it possible to ``step-through'' the mechanised proofs in tandem with reading the paper-proofs presented in this report.
+Iris has been mechanised in the Coq proof assistant\footnote{The mechanisation can be found at \url{https://gitlab.mpi-sws.org/iris/iris/}} -- a tool to machine-check proofs of mathematical assertions. All results in this project have been completely machine-verified in the Iris mechanisation in Coq. Specifications in the Coq formalisation of Iris are usually written in terms of Hoare triples but proved by first converting the Hoare triples to equivalent weakest-preconditions, as this is usually easier to work with. The proofs presented in this report will follow suit and give specifications using Hoare triples, but prove them assuming they are weakest-preconditions. The proofs presented in the report thus follow the mechanised proofs very closely, making it possible to ``step-through'' the mechanised proofs in tandem with reading the paper-proofs presented in this report.
 
 One caveat is that there is somewhat of a discrepancy between iris on paper, and the Iris formalisation in coq. Working with the latter requires a bit deeper understanding of the model of Iris. \citet{DBLP:journals/jfp/JungKJBBD18} explains the underlying model of an older version of Iris, but many of the concepts discussed are still relevant.\footnote{For an up-to-date presentation, please consult the Technical Reference at \url{https://iris-project.org/}}
 
@@ -526,8 +526,8 @@ With this, we give our definition of a sequential specification for a queue.
 \end{align*}
 \end{definition}
 
-The proposition $\isqueueseq(\vq, \absvalueList, \Qg)$ captures that the value $\vq$ is a queue, whose contents matches that of our abstract representation $\absvalueList$, and the queue uses the ghost names described by $\Qg$. Clients of a queue satisfying this specification can then apply the three Hoare-triples at invocations for $\initialise$, $\enqueue$, and $\dequeue$, which tells them how the queue changes as a result of the invocation.\\
-Note that the $\isqueueseq$ predicate is not required to be persistent, hence it cannot be duplicated and given to multiple threads. Since this predicate is required to apply the Hoare-triples, then only a single thread can use the specification at a time. This is the sense in which the specification is sequential.
+The proposition $\isqueueseq(\vq, \absvalueList, \Qg)$ captures that the value $\vq$ is a queue, whose contents matches that of our abstract representation $\absvalueList$, and the queue uses the ghost names described by $\Qg$. Clients of a queue satisfying this specification can then apply the three Hoare triples at invocations for $\initialise$, $\enqueue$, and $\dequeue$, which tells them how the queue changes as a result of the invocation.\\
+Note that the $\isqueueseq$ predicate is not required to be persistent, hence it cannot be duplicated and given to multiple threads. Since this predicate is required to apply the Hoare triples, then only a single thread can use the specification at a time. This is the sense in which the specification is sequential.
 
 %=====================================================================
 \section{Defining a Concurrent Specification}
@@ -551,7 +551,7 @@ We \textit{can} however make the queue guarantee that a given property holds of 
 This specification additionally requires that $\isqueueconc$ is persistent, which means that it can be duplicated and given to multiple threads. We again use a collection of ghost names, which we here denote $\ConcQgnames$.
 
 %=====================================================================
-\section{Defining a Hocap-style Specification}
+\section{Defining a HOCAP-style Specification}
 \label{QueueSpecs:section:hocap}
 
 In this section we will explore our most general specification: one that allows for both concurrency and tracking of the contents of the queue. We shall refer to this specification as a Hocap-style specification -- Higher Order Concurrent Abstract Predicate -- since it will be concurrent and parametrised by abstract predicates. This specification is more general than both the sequential and concurrent specifications in the sense that they are derivable from the Hocap-style specification. We prove this in section \ref{QueueSpecs:section:deriving-seq-and-conc}.
@@ -605,7 +605,7 @@ As for the concurrent specification, we require that the queue predicate, $\isqu
 
 Next, the specification for $\initialise$ gives clients an additional resource in the postcondition: the ownership of the fragmental view of the empty list, $\abstractstatefullfrag{\Qg.\gabst}{[]}$. As discussed above, this allows them to keep track of the contents of the queue.
 
-The specifications for $\enqueue$ and $\dequeue$ have now been parametrised by two predicates: $P$ and $Q$. The clients get to pick $P$ and $Q$, and the choice depends on what the client wishes to prove; $P$ describes those resources that the client has before $\enqueue$ or $\dequeue$, and $Q$ the resources it will have after. Hence $P$ is in the precondition and $Q$ in the postcondition of the associated Hoare-triples. However, before the client gets access to the Hoare-triple for $\enqueue$ or $\dequeue$ they must prove a viewshift. This viewshift states how the abstract state of the queue will change as a result of running $\enqueue$ or $\dequeue$, and further shows that $P$ can be updated to $Q$. Note that the consequent of the viewshift contains a $\later$. This signifies that the update in the abstract state is tied to a step in the code. The mask on the viewshift further disallows opening of invariants in the namespace $\Nl.i$. This is to allow queues that use invariants to apply the viewshifts while their invariants are open (their invariants must of course be within the namespace $\Nl.i$).
+The specifications for $\enqueue$ and $\dequeue$ have now been parametrised by two predicates: $P$ and $Q$. The clients get to pick $P$ and $Q$, and the choice depends on what the client wishes to prove; $P$ describes those resources that the client has before $\enqueue$ or $\dequeue$, and $Q$ the resources it will have after. Hence $P$ is in the precondition and $Q$ in the postcondition of the associated Hoare triples. However, before the client gets access to the Hoare triple for $\enqueue$ or $\dequeue$ they must prove a viewshift. This viewshift states how the abstract state of the queue will change as a result of running $\enqueue$ or $\dequeue$, and further shows that $P$ can be updated to $Q$. Note that the consequent of the viewshift contains a $\later$. This signifies that the update in the abstract state is tied to a step in the code. The mask on the viewshift further disallows opening of invariants in the namespace $\Nl.i$. This is to allow queues that use invariants to apply the viewshifts while their invariants are open (their invariants must of course be within the namespace $\Nl.i$).
 
 It might seem a bit strange that the client has to prove that the abstract state can be updated, but remember that the client owns the fragmental view, and that both this and the authoritative view, which is owned by the queue, is needed to update the abstract state. When proving the viewshift, clients are not updating the abstract state of the queue, they are merely showing that they can supply the fragmental view, allowing the abstract state to be updated. This then enables the queue to update the authoritative view of the abstract state (using the proved viewshift) in conjunction with updating the concrete view.
 
@@ -638,7 +638,7 @@ Recall the sequential specification for initialise:
 \begin{equation*}
   \seqspecinitGen{\vq}{\Qgseq}
 \end{equation*}
-This Hoare-triple follows almost directly from the Hocap-style initialise specification -- they only differ in the post-condition. Recall that the post-condition in the Hocap-style specification (lemma \ref{QueueSpecs:spec:hocap}) states $\Exists \Qghocap . \isqueue(\vq, \Qghocap) \star{} \abstractstatefullfrag{\Qghocap.\gabst}{[]}$. By the rule of consequence, we are done if we can show that this post-condition implies the sequential post-condition. So we assume we have some $\Qghocap$ such that
+This Hoare triple follows almost directly from the Hocap-style initialise specification -- they only differ in the post-condition. Recall that the post-condition in the Hocap-style specification (lemma \ref{QueueSpecs:spec:hocap}) states $\Exists \Qghocap . \isqueue(\vq, \Qghocap) \star{} \abstractstatefullfrag{\Qghocap.\gabst}{[]}$. By the rule of consequence, we are done if we can show that this post-condition implies the sequential post-condition. So we assume we have some $\Qghocap$ such that
 \begin{equation}
   \isqueue(\vq, \Qghocap) \star{} \abstractstatefullfrag{\Qghocap.\gabst}{[]}\label{QueueSpecs:spec:der:seq:proof:init:hocap}
 \end{equation}
@@ -653,7 +653,7 @@ So assume some $\vq$, $\absvalue$, $\absvalueList$, and $\Qgseq$. Unfolding $\is
 \begin{equation*}
   \hoare{\isqueue(\vq, \Qghocap) \star{} \abstractstatefullfrag{\Qghocap.\gabst}{\absvalueList}}{\enqueue \ \vq \ \absvalue}{\valB . \isqueueseq(\vq, (\absvalue :: \absvalueList), \Qgseq)}
 \end{equation*}
-To prove the Hoare-triple, we shall use the Hocap-style specification for enqueue. This however requires us to pick $P$ and $Q$, and prove the resulting viewshift.
+To prove the Hoare triple, we shall use the Hocap-style specification for enqueue. This however requires us to pick $P$ and $Q$, and prove the resulting viewshift.
 We choose
 \begin{align*}
   &P \eqdef \abstractstatefullfrag{\Qghocap.\gabst}{\absvalueList}&
@@ -665,7 +665,7 @@ and assume some $\absvalueList'$. We must then prove the viewshift:
 \end{equation*}
 Assume $\abstractstateauth{\Qghocap.\gabst}{\absvalueList'}$ and $\abstractstatefullfrag{\Qghocap.\gabst}{\absvalueList}$. By lemma \ref{lemma:abst:agree}, $\absvalueList = \absvalueList'$, hence, we can apply lemma \ref{lemma:abst:update} to update the authoritative and fragmental views to $(\absvalue :: \absvalueList)$, which exactly proves the consequent of the viewshift.\footnote{The consequent technically has a $\later$, but proving something \emph{now} is stronger than proving it \emph{later}.}
 
-With this, we now get access to the following Hoare-triple:
+With this, we now get access to the following Hoare triple:
 \begin{equation}
   \hocapspecenqHT{\vq}{\absvalue}{\Qghocap}{\abstractstatefullfrag{\Qghocap.\gabst}{\absvalueList}}{\abstractstatefullfrag{\Qghocap.\gabst}{(\absvalue :: \absvalueList)}}\label{QueueSpecs:spec:der:seq:proof:enq:hocap}
 \end{equation}
@@ -685,17 +685,17 @@ This time we instantiate the Hocap-style dequeue specification with the followin
   P &\eqdef \abstractstatefullfrag{\Qghocap.\gabst}{\absvalueList}\\
   Q(\nodeval) &\eqdef \begin{array}{l}(\absvalueList = [] \star{} \nodeval = \None \star{} \abstractstatefullfrag{\Qghocap.\gabst}{\absvalueList}) \lor{}\\ (\Exists \absvalue, \absvalueList'. \absvalueList = \absvalueList' \catenate [\absvalue] \star{} \nodeval = \Some{\absvalue} \star{} \abstractstatefullfrag{\Qghocap.\gabst}{\absvalueList'})\end{array}
 \end{align*}
-We must now prove the resulting viewshift to get the Hoare-triple (note that we haven't substituted in $P$ and $Q$ for the sake of readability). So assume some $\absvalueList'$. We must show:
+We must now prove the resulting viewshift to get the Hoare triple (note that we haven't substituted in $P$ and $Q$ for the sake of readability). So assume some $\absvalueList'$. We must show:
 \begin{equation*}
 \hocapspecdeqVS{\Qghocap}{P}{Q}{\absvalueList'}
 \end{equation*}
 By lemma \ref{lemma:abst:agree}, $\absvalueList'$ must be equal to $\absvalueList$. We do a case analysis on $\absvalueList$. If $\absvalueList$ is empty, we prove the left disjunct in the consequent of the viewshift, \emph{without} updating the authoritative and fragmental views. If $\absvalueList$ is non-empty, i.e. $\absvalueList = \absvalueList'' \catenate [\absvalue]$ for some $\absvalueList''$ and $\absvalue$, then we prove the right-side of the consequent in the viewshift by using lemma \ref{lemma:abst:update} to update the authoritative and fragmental views to the new abstract state, $\absvalueList''$.
 
-With this, we get access to the Hoare-triple (now with $P$ and $Q$ substituted in):
+With this, we get access to the Hoare triple (now with $P$ and $Q$ substituted in):
 \begin{equation}
   \hoareV[t]{\isqueue(\vq, \Qghocap) \star{} \abstractstatefullfrag{\Qghocap.\gabst}{\absvalueList}}{\dequeue \ \vq}{\nodeval . \begin{array}{l}(\absvalueList = [] \star{} \nodeval = \None \star{} \abstractstatefullfrag{\Qghocap.\gabst}{\absvalueList}) \lor{}\\ (\Exists \absvalue, \absvalueList'. \absvalueList = \absvalueList' \catenate [\absvalue] \star{} \nodeval = \Some{\absvalue} \star{} \abstractstatefullfrag{\Qghocap.\gabst}{\absvalueList'})\end{array}}\label{QueueSpecs:spec:der:seq:proof:deq:hocap}
 \end{equation}
-As before, this almost matches the Hoare-triple we have to prove. We use the rule of consequence to massage the post-condition into the correct shape, which concludes the derivation.
+As before, this almost matches the Hoare triple we have to prove. We use the rule of consequence to massage the post-condition into the correct shape, which concludes the derivation.
 
 \subsection{Deriving the Concurrent Specification}
 We prove the concurrent specification of definition \ref{QueueSpecs:spec:conc}. Remember that we need the $\isqueueconc$ predicate to be persistent, hence we cannot simply assert $\abstractstatefullfrag{\Qghocap.\gabst}{\absvalueList}$ as we did for $\isqueueseq$.\footnote{As we explain in section \ref{RA:sections:abstract-state}, no elements of the abstract state resource algebra are persistent.} Instead, we will put it into an invariant. The queue predicate we will use looks as follows.
@@ -727,12 +727,12 @@ We must derive:
 \begin{equation*}
   \concspecenqGen{\Phi}{\vq}{\absvalue}{\Qgconc}
 \end{equation*}
-Assume some $\vq$, $\absvalue$, $\Qgconc$, $\Qghocap$ such that $\Qghocap$ projects to $\Qgseq$, and the invariant $\knowInv{\Nl.c}{\Exists \absvalueList. \abstractstatefullfrag{\Qghocap.\gabst}{\absvalueList}}$. Our goal becomes the following Hoare-triple:
+Assume some $\vq$, $\absvalue$, $\Qgconc$, $\Qghocap$ such that $\Qghocap$ projects to $\Qgseq$, and the invariant $\knowInv{\Nl.c}{\Exists \absvalueList. \abstractstatefullfrag{\Qghocap.\gabst}{\absvalueList}}$. Our goal becomes the following Hoare triple:
 \begin{equation*}
   \hoare{\isqueue(\vq, \Qghocap) \star{} \Phi(\absvalue)}{\enqueue \ \vq \ \absvalue}{\valB . \TRUE}
 \end{equation*}
 
-We specialise the Hocap-style enqueue specification with $P \eqdef \Psi(\absvalue)$ and $Q \eqdef \TRUE$. With this choice, the Hoare-triple we get after proving the viewshift exactly matches our goal. Hence, we are done if we can prove the viewshift.
+We specialise the Hocap-style enqueue specification with $P \eqdef \Psi(\absvalue)$ and $Q \eqdef \TRUE$. With this choice, the Hoare triple we get after proving the viewshift exactly matches our goal. Hence, we are done if we can prove the viewshift.
 
 We assume $\absvalueList'$, and prove the viewshift:
 \begin{equation*}
@@ -755,7 +755,7 @@ We make the following choices for $P$ and $Q$.
   &P \eqdef \TRUE&
   &Q(\nodeval) \eqdef \nodeval = \None \lor{} (\Exists \absvalue . \nodeval = \Some \absvalue \star{} \Psi(\absvalue))
 \end{align*}
-Again, with this choice, the Hoare-triple we get after proving the viewshift exactly matches our goal.
+Again, with this choice, the Hoare triple we get after proving the viewshift exactly matches our goal.
 
 We assume some $\absvalueList'$, and prove the viewshift (again, without substituting in $P$ and $Q$):
 \begin{equation*}
@@ -2076,7 +2076,7 @@ The specification we wish to prove is the following.
 \end{equation*}
 \end{lemma}
 \begin{proof}
-  We assume the viewshift and proceed to prove the hoare triple. By definition of $\isqueue$, we know that $\vq$ is a location $\locqueue$ and there are locations $\lochead$ and $\loctail$ so that
+  We assume the viewshift and proceed to prove the Hoare triple. By definition of $\isqueue$, we know that $\vq$ is a location $\locqueue$ and there are locations $\lochead$ and $\loctail$ so that
   \begin{equation}\label{LFMSQSPECS:enqueue:proof:isqueue}
     \locqueue \mapsto^{\persistently} (\lochead, \loctail) \star{}
     \knowInv{\Nl.queue}{\LFQueueInvariantHocap(\lochead, \loctail, \Qg)}
@@ -2086,7 +2086,7 @@ The specification we wish to prove is the following.
     &\nIn{\nodenew} \mapsto^{\persistently} (\Some \absvalue, \nOut{\nodenew})\label{LFMSQSPECS:enqueue:proof:xnew1}\\
     &\nOut{\nodenew} \mapsto \None\label{LFMSQSPECS:enqueue:proof:xnew2}
   \end{align}
-  The next line is the beginning of the looping function. We proceed by löb induction, which allows us to assume the hoare triple we wish to prove \emph{later}. This means that, if we reach a recursive call, we will have the hoare triple that we must prove -- the later will be immediately stripped when we apply $\TT$ and ``step into'' the recursive function.\\
+  The next line is the beginning of the looping function. We proceed by löb induction, which allows us to assume the Hoare triple we wish to prove \emph{later}. This means that, if we reach a recursive call, we will have the Hoare triple that we must prove -- the later will be immediately stripped when we apply $\TT$ and ``step into'' the recursive function.\\
   Line \ref{LFE:tal} first dereferences to the tail pointer $\loctail$ using the resources in \ref{LFMSQSPECS:enqueue:proof:isqueue}. We open the invariant to obtain the points-to predicate concerning $\loctail$. We get that $\loctail$ points to some $\nodetail$. Using the resources from the invariant, we may conclude the following persistent information:
   \begin{align}
     &\ar{\nodetail}{\Qg.\glast}\label{LFMSQSPECS:enqueue:proof:enqueue:xtail_ar_last}\\
@@ -2120,7 +2120,7 @@ The specification we wish to prove is the following.
   \end{equation*}
 \end{lemma}
 \begin{proof}
-  We assume the viewshift and must prove the hoare triple. As before, we know from $\isqueue$ that the queue, $\vq$, is a location, $\locqueue$, and there are locations $\lochead$ and $\loctail$ so that
+  We assume the viewshift and must prove the Hoare triple. As before, we know from $\isqueue$ that the queue, $\vq$, is a location, $\locqueue$, and there are locations $\lochead$ and $\loctail$ so that
   \begin{equation}\label{LFMSQSPECS:dequeue:proof:isqueue}
     \locqueue \mapsto^{\persistently} (\lochead, \loctail) \star{}
     \knowInv{\Nl.queue}{\LFQueueInvariantHocap(\lochead, \loctail, \Qg)}
