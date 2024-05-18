@@ -323,18 +323,69 @@
 \newcommand{\rulegenb}[4][]{\rulegenhrefb[#1]{#2}{#2}{#3}{#4}}
 
 %% Generic command for constructing variations of the consequence rule
-\newcommand{\htcsqgen}[4][]
-{\rulegen[#1]{Ht-csq#2}
+\newcommand{\htcsq}[1][]
+{ \rulegen[#1]{Ht-csq}
   { S \text{ persistent } \and
-  S \proves \prop #3 \prop' \and
-  S \proves \hoare{\prop'}{\expr}{\Ret\val.\propB'}[#4] \and
-  S \proves \All u. \propB'[u/v] #3 \propB[u/v]}
-  {S \proves \hoare{\prop}{\expr}{\Ret\val.\propB}[#4]}}
+  S \proves \prop \Rightarrow{} \prop' \and
+  S \proves \hoare{\prop'}{\expr}{\Ret\val.\propB'} \and
+  S \proves \All u. \propB'[u/v] \Rightarrow{} \propB[u/v]}
+  {S \proves \hoare{\prop}{\expr}{\Ret\val.\propB}}}
 
-\newcommand{\htcsq}[1][]{\htcsqgen[#1]{}{\Rightarrow}{}}
+\newcommand{\htcsqvsrule}[1][]
+{ \rulegen[#1]{Ht-csq-vs}
+  { S \proves \prop \vs \prop' \and
+    S \proves \hoare{\prop'}{\expr}{\Ret\val.\propB'} \and
+    S \proves \All u. \propB'[u/v] \vs \propB[u/v]}
+  {S \proves \hoare{\prop}{\expr}{\Ret\val.\propB}}}
 
-\newcommand{\htcsqvsrule}[1][]{\htcsqgen[-vs#1]{-vs}{\vs}{}}
+\newcommand{\updmonorule}[1][]
+{\rulegen[#1]{upd-mono}
+  {P \proves Q}
+  {\pvs P \proves \pvs Q}}
 
+\newcommand{\updintrorule}[1][]
+{\rulegen[#1]{upd-intro}{ }
+  {P \proves \pvs P}}
+
+\newcommand{\updidemprule}[1][]
+{\rulegen[#1]{upd-idemp}
+  { }
+  {\pvs \pvs P \proves \pvs P}}
+
+\newcommand{\updframerule}[1][]
+{\rulegen[#1]{upd-frame}
+  { }
+  {P \ast \pvs Q \proves \pvs (P \ast Q)}}
+
+\newcommand{\ghostallocrule}[1][]
+{\rulegen[#1]{Ghost-alloc}
+  {a \in \Vl}
+  {\TRUE \proves \pvs \Exists \gamma . \ownGhost{\gamma}{a}}}
+
+\newcommand{\ghostupdaterule}[1][]
+{\rulegen[#1]{Ghost-update}
+  {a \mupd b}
+  { \ownGhost{\gamma}{a} \proves \pvs \ownGhost{\gamma}{b}}}
+  
+\newcommand{\ownoprule}[1][]
+{ \rulegen[#1]{Own-op}
+  { }
+  {\ownGhost{\gamma}{a : \Ml_i} \ast \ownGhost{\gamma}{b : \Ml_i} \provesIff \ownGhost{\gamma}{a \cdot b : \Ml_i}}}
+
+\newcommand{\ownvalidrule}[1][]
+{ \rulegen[#1]{Own-valid}
+  { }
+  {\ownGhost{\gamma}{a : \Ml_i} \proves a \in \Vl_i}}
+
+\newcommand{\invalloc}
+{ \rulegen[]{Inv-alloc}
+  {\mask_1\ \infinite}
+  {\later P \proves \pvs[\mask_2][\mask_2]\Exists \iota \in \mask_1.\knowInv{\iota}{P}}}
+
+\newcommand{\invopen}
+{ \rulegen[]{Inv-open}
+  {\iota \in \mask}
+  {\knowInv{\iota}{P} \proves \pvs[\mask][\mask\setminus\{\iota\}]\left(\later P \ast \left(\later P \wand \pvs[\mask\setminus\{\iota\}][\mask]\TRUE\right)\right)}}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -458,14 +509,6 @@ A feature that makes Iris very powerful, is that it is a \textit{higher order lo
 
 The later modality adds a notion of step indexing to Iris propositions. This step indexing is technically parallel to the notion of taking steps in the programs, but the way we define Hoare triples and weakest-preconditions tie program steps together with steps in the logic. In other words, a single Later corresponds to a single step in the program.
 
-\subsection{Invariants}
-\todo{explain the idea}
-\todo{open around atomic expression}
-\todo{Exlplain that we technically only get the resources Later, when opening invariant, but since we are also only required to prove the invariant again, later, and many of the structural rules work with a later, we shall not worry about getting the resources later in the proof outlines, as it usually isn't an issue. We mention the later in the few cases where only getting the resources Later is important.}
-\todo{only one opening at a time}
-\todo{namespaces}
-\todo{Show the basic rules. Inv-alloc (FUP), ...}
-
 \subsection{Resource Algebra}
 \todo{Introduce the idea}
 \todo{Give the formal definition and explain the parts}
@@ -475,21 +518,54 @@ The later modality adds a notion of step indexing to Iris propositions. This ste
   \todo{Validity}
   \todo{Core and persistency}
 \todo{Unital}
-\todo{tying them into the logic}
-  \todo{also ghost names}
-  \todo{ghost-allocate own-op, own-valid...}
+\todo{updating resources: frame preserving update}
 \todo{mention that points-to predicate is also a resource algebra}
 \todo{composing resource algebras}
-\todo{we introduce the resource algebras we use at the point of use}
+\todo{we introduce the resource algebras we use in chapter \ref{ch:RA}}
 
-\subsection{Update modality and Viewshift}
+\subsection{RA in Iris: Update modality and Viewshift}
 \todo{explain the ideas}
-\todo{frame preserving update}
+\todo{tying RA into the logic}
+  \todo{also ghost names}
+  \todo{ghost-allocate own-op, own-valid...}
+
+\begin{mathpar}
+  \updmonorule
+  \and
+  \updintrorule
+  \and
+  \updidemprule
+  \and
+  \updframerule
+\end{mathpar}
+
+\begin{mathpar}
+  \ghostallocrule
+  \and
+  \ghostupdaterule
+  \and
+  \ownoprule
+  \and
+  \ownvalidrule
+\end{mathpar}
 
 \begin{mathpar}
   \htcsqvsrule
 \end{mathpar}
 
+\subsection{Invariants}
+\todo{explain the idea}
+\todo{open around atomic expression}
+\todo{Exlplain that we technically only get the resources Later, when opening invariant, but since we are also only required to prove the invariant again, later, and many of the structural rules work with a later, we shall not worry about getting the resources later in the proof outlines, as it usually isn't an issue. We mention the later in the few cases where only getting the resources Later is important.}
+\todo{only one opening at a time}
+\todo{namespaces}
+\todo{Show the basic rules. Inv-alloc (FUP), ...}
+
+\begin{mathpar}
+  \invalloc
+  \and
+  \invopen
+\end{mathpar}
 
 
 \subsection{Locks}\label{Pre:iris:locks}
@@ -748,11 +824,11 @@ We have to derive the specification:
 \begin{equation*}
   \concspecinit{\Psi}
 \end{equation*}
-As before, this specification only differs from the Hocap-style specification for initialise in the post-condition. We use the \emph{generalised} rule of consequence \ruleref{Ht-csq-vs-vs} and show that the post-condition of the Hocap-style specification, i.e. $\Exists \Qg . \isqueue(\vq, \Qg) \star{} \abstractstatefullfrag{\Qg.\gabst}{[]}$, implies the post-condition above but with an update modality, $\pvs$, in front. Both mention the queue predicates, $\isqueue(\vq, \Qg)$, so it suffices to prove the invariant:
+As before, this specification only differs from the Hocap-style specification for initialise in the post-condition. We use the \emph{generalised} rule of consequence \ruleref{Ht-csq-vs} and show that the post-condition of the Hocap-style specification, i.e. $\Exists \Qg . \isqueue(\vq, \Qg) \star{} \abstractstatefullfrag{\Qg.\gabst}{[]}$, implies the post-condition above but with an update modality, $\pvs$, in front. Both mention the queue predicates, $\isqueue(\vq, \Qg)$, so it suffices to prove the invariant:
 \begin{equation*}
   \pvs \knowInv{\Nl.c}{\Exists \absvalueList. \abstractstatefullfrag{\Qg.\gabst}{\absvalueList} \star{} \AllP(\absvalueList, \Psi)}
 \end{equation*}
-We have $\abstractstatefullfrag{\Qg.\gabst}{[]}$ from the Hocap-style post-condition, and $\AllP([], \Psi)$ is equivalent to $\TRUE$. Hence, we can deduce $\Exists \absvalueList. \abstractstatefullfrag{\Qg.\gabst}{\absvalueList} \star{} \AllP(\absvalueList, \Psi)$. The Inv-alloc\todo{ref} shows us that we can turn this into the above invariant, so we are done.
+We have $\abstractstatefullfrag{\Qg.\gabst}{[]}$ from the Hocap-style post-condition, and $\AllP([], \Psi)$ is equivalent to $\TRUE$. Hence, we can deduce $\Exists \absvalueList. \abstractstatefullfrag{\Qg.\gabst}{\absvalueList} \star{} \AllP(\absvalueList, \Psi)$. The rule \ruleref{Inv-alloc} shows us that we can turn this into the above invariant, so we are done.
 
 
 \subsubsection{Concurrent Enqueue Specification}
@@ -1637,7 +1713,7 @@ The proofs of the three specifications largely have the same structure as the se
 \begin{proof}
 We first step through line \ref{TLI:nod} which gives us the head node of the linked list. Following this, we must create the two locks. As the locks had to protect tokens, we must first create these. To create the two tokens, we use lemma \ref{lemma:token:alloc} twice, which gives us two ghost names, one for each of the tokens. We put the ghost names into a tuple $\Qg$, and write $\TokEQg$ and $\TokDQg$ for the two ghost resources created by the lemma. We then use the $\newLock$ specification to step through the code and create the locks, giving up the two tokens. Next, we step to line \ref{TLI:que} and create the $\locqueue$, $\lochead$, and $\loctail$ pointers with $\locqueue \mapsto ((\lochead, \loctail), (\Hlock, \Tlock))$. We make this persistent.\\
 All that remains then is to prove the postcondition; the $\isqueueconc$ predicate. We have both the points-to predicate of $\locqueue$ and the two $\isLock$ predicates (from the $\newLock$ specification). So all that remains is the invariant.\\
-We create $\TLQueueInvariantConc$ in the \StaticState state, most of which is analogous to the sequential specification. However, we will also need to supply the tokens required by the \StaticState state. Thus, we allocate the four tokens $\TokNEQg$, $\TokNDQg$, $\TokBeforeQg$, and $\TokAfterQg$, again using lemma \ref{lemma:token:alloc}. We combine $\TokBeforeQg$ and $\TokAfterQg$ to get $\TokUpdatedQg$, and we now have all the tokens we need to create $\TLQueueInvariantConc$ in the \StaticState state. To create the invariant from $\TLQueueInvariantConc$, we use the Inv-alloc rule\todo{ref}.
+We create $\TLQueueInvariantConc$ in the \StaticState state, most of which is analogous to the sequential specification. However, we will also need to supply the tokens required by the \StaticState state. Thus, we allocate the four tokens $\TokNEQg$, $\TokNDQg$, $\TokBeforeQg$, and $\TokAfterQg$, again using lemma \ref{lemma:token:alloc}. We combine $\TokBeforeQg$ and $\TokAfterQg$ to get $\TokUpdatedQg$, and we now have all the tokens we need to create $\TLQueueInvariantConc$ in the \StaticState state. To create the invariant from $\TLQueueInvariantConc$, we use the \ruleref{Inv-alloc} rule.
 \end{proof}
 
 \subsubsection{Enqueue}
@@ -2246,13 +2322,13 @@ Tokens are defined using the exclusive resource algebra on the singleton set: $\
 We can always create new tokens, which will just give us ownership of $T$ with a fresh ghost name, $\gname$.
 \tokalloc*
 \begin{proof}
-  This follows directly from ghost-alloc\todo{ref} and the fact that $T$ is valid.
+  This follows directly from rule \ruleref{Ghost-alloc} and the fact that $T$ is valid.
 \end{proof}
 
 Importantly, if we own a particular token, then we know that no one else can own the same token. Formally, we write this as:
 \tokexclusive*
 \begin{proof}
-  By own-op\todo{ref} we get ownership of $\ownGhost{\gname}{T \mtimes T}$. By the exclusive RA, this is equivalent to $\ownGhost{\gname}{\bot}$. We now own a non-valid element which proves $\FALSE$.
+  By \ruleref{Own-op} we get ownership of $\ownGhost{\gname}{T \mtimes T}$. By the exclusive RA, this is equivalent to $\ownGhost{\gname}{\bot}$. By rule \ruleref{Own-valid}, we must have that $\bot \in \Vl$. This is a contradiction as bot is a non-valid element.
 \end{proof}
 
 %=====================================================================
@@ -2273,18 +2349,18 @@ With this, we may now define $\abstractstateauth{\gname}{\absvalueList}$ and $\a
 
 \abstalloc*
 \begin{proof}
-  By own-op\todo{ref}, it suffices to show $\pvs \Exists \gname . \ownGhost{\gname}{\authfull (1, \aginj ~ \absvalueList) \mtimes \authfrag (1, \aginj ~ \absvalueList)}$. This follows by ghost-alloc\todo{ref} if we can show that the element is valid. That is, $\authfull (1, \aginj ~ \absvalueList) \mtimes \authfrag (1, \aginj ~ \absvalueList) \in \Vl$. However, this follows by the definitions of the involved resource algebras.
+  By \ruleref{Own-op}, it suffices to show $\pvs \Exists \gname . \ownGhost{\gname}{\authfull (1, \aginj ~ \absvalueList) \mtimes \authfrag (1, \aginj ~ \absvalueList)}$. This follows by \ruleref{Ghost-alloc} if we can show that the element is valid. That is, $\authfull (1, \aginj ~ \absvalueList) \mtimes \authfrag (1, \aginj ~ \absvalueList) \in \Vl$. However, this follows by the definitions of the involved resource algebras.
 \end{proof}
 
 In section \ref{QueueSpecs:section:deriving-seq-and-conc} we postulated two important lemmas which showed that the authoritative and fragmental states agree, and how to update the abstract state. We now proceed to prove these lemmas.
 \abstagree*
 \begin{proof}
-  Since we own both $\abstractstateauth{\gname}{\absvalueList}$ and $\abstractstatefullfrag{\gname}{\absvalueList'}$, and they have the same ghost name, we can use rules own-op\todo{ref} and own-valid\todo{ref} to conclude that the element $\authfull (1, \aginj ~ \absvalueList) \mtimes \authfrag (1, \aginj ~ \absvalueList')$ is valid. By the authoritative RA, this means that $\aginj ~ \absvalueList' \mincl \aginj ~ \absvalueList$. By definition of the agreement RA, this means that $\absvalueList' = \absvalueList$, which is what we wanted.
+  Since we own both $\abstractstateauth{\gname}{\absvalueList}$ and $\abstractstatefullfrag{\gname}{\absvalueList'}$, and they have the same ghost name, we can use rules \ruleref{Own-op} and \ruleref{Own-valid} to conclude that the element $\authfull (1, \aginj ~ \absvalueList) \mtimes \authfrag (1, \aginj ~ \absvalueList')$ is valid. By the authoritative RA, this means that $\aginj ~ \absvalueList' \mincl \aginj ~ \absvalueList$. By definition of the agreement RA, this means that $\absvalueList' = \absvalueList$, which is what we wanted.
 \end{proof}
 
 \abstupdate*
 \begin{proof}
-  This time, we use own-op\todo{ref} to conclude $\ownGhost{\gname}{\authfull (1, \aginj ~ \absvalueList) \mtimes \authfrag (1, \aginj ~ \absvalueList')}$. Further, by own-op\todo{ref}, it suffices to prove $\pvs \ownGhost{\gname}{\authfull (1, \aginj ~ \absvalueList'') \mtimes \authfrag (1, \aginj ~ \absvalueList'')}$. We do this by applying the ghost-update\todo{ref} rule, which requires us to prove $\authfull (1, \aginj ~ \absvalueList) \mtimes \authfrag (1, \aginj ~ \absvalueList') \mupd \authfull (1, \aginj ~ \absvalueList'') \mtimes \authfrag (1, \aginj ~ \absvalueList'')$. Firstly by the product, fractional, and agreement RA, the element $(1, \aginj ~ \absvalueList'')$ is valid, so the product of the authoritative and fragmental parts of it is also valid. Next, note that we own the entire fraction of the fragmental element. Hence, there can be no other valid fragments. It hence follows that we can do the frame-preserving update.
+  This time, we use rule \ruleref{Own-op} to conclude $\ownGhost{\gname}{\authfull (1, \aginj ~ \absvalueList) \mtimes \authfrag (1, \aginj ~ \absvalueList')}$. Further, by \ruleref{Own-op}, it suffices to prove $\pvs \ownGhost{\gname}{\authfull (1, \aginj ~ \absvalueList'') \mtimes \authfrag (1, \aginj ~ \absvalueList'')}$. We do this by applying the \ruleref{Ghost-update} rule, which requires us to prove $\authfull (1, \aginj ~ \absvalueList) \mtimes \authfrag (1, \aginj ~ \absvalueList') \mupd \authfull (1, \aginj ~ \absvalueList'') \mtimes \authfrag (1, \aginj ~ \absvalueList'')$. Firstly by the product, fractional, and agreement RA, the element $(1, \aginj ~ \absvalueList'')$ is valid, so the product of the authoritative and fragmental parts of it is also valid. Next, note that we own the entire fraction of the fragmental element. Hence, there can be no other valid fragments. It hence follows that we can do the frame-preserving update.
 \end{proof}
 
 %=====================================================================
@@ -2306,7 +2382,7 @@ The authoritative set is existentially quantified as it can change over time, bu
 
 \absreachalloc*
 \begin{proof}
-  We assume $\reach{\node}{\node}$ and must show $\pvs \Exists \gname' . \ap{\gname'}{\node} \star{} \ar{\node}{\gname'}$. By definition or the authoritative RA, the element $\authfull \{\node\} \mtimes \authfrag \{\node\}$ is valid. Hence by the Ghost-alloc rule\todo{ref}, we may get $\pvs \Exists \gname . \ownGhost{\gname}{\authfull \{\node\} \mtimes \authfrag \{\node\}}$. By Upd-mono\todo{ref}, we may strip away the update modality on the goal and the previous assertion. Thus, we must prove $\Exists \gname' . \ap{\gname'}{\node} \star{} \ar{\node}{\gname'}$, and we have that $\Exists \gname . \ownGhost{\gname}{\authfull \{\node\} \mtimes \authfrag \{\node\}}$. We use $\gname$ as the witness in the goal meaning we must prove  $\ap{\gname}{\node} \star{} \ar{\node}{\gname}$. We can split the ownership of the authoritative and fragmental parts up using Own-op\todo{ref}, giving us $\ownGhost{\gname}{\authfull \{\node\}}$ and $\ownGhost{\gname}{\authfrag \{\node\}}$. The latter assertion is equivalent to $\ar{\node}{\gname}$, which matches the second obligation in the goal. To prove the first obligation, we must give some set as witness, and show that all nodes in the set can reach $\node$. We of course choose $\{\node\}$ as the witness, and must then prove that $\reach{\node}{\node}$, which we assumed in the beginning.
+  We assume $\reach{\node}{\node}$ and must show $\pvs \Exists \gname' . \ap{\gname'}{\node} \star{} \ar{\node}{\gname'}$. By definition or the authoritative RA, the element $\authfull \{\node\} \mtimes \authfrag \{\node\}$ is valid. Hence by the \ruleref{Ghost-alloc} rule, we may get $\pvs \Exists \gname . \ownGhost{\gname}{\authfull \{\node\} \mtimes \authfrag \{\node\}}$. By the \ruleref{upd-mono} rule, we may strip away the update modality on the goal and the previous assertion. Thus, we must prove $\Exists \gname' . \ap{\gname'}{\node} \star{} \ar{\node}{\gname'}$, and we have that $\Exists \gname . \ownGhost{\gname}{\authfull \{\node\} \mtimes \authfrag \{\node\}}$. We use $\gname$ as the witness in the goal meaning we must prove  $\ap{\gname}{\node} \star{} \ar{\node}{\gname}$. We can split the ownership of the authoritative and fragmental parts up using rule \ruleref{Own-op}, giving us $\ownGhost{\gname}{\authfull \{\node\}}$ and $\ownGhost{\gname}{\authfrag \{\node\}}$. The latter assertion is equivalent to $\ar{\node}{\gname}$, which matches the second obligation in the goal. To prove the first obligation, we must give some set as witness, and show that all nodes in the set can reach $\node$. We of course choose $\{\node\}$ as the witness, and must then prove that $\reach{\node}{\node}$, which we assumed in the beginning.
 \end{proof}
 
 \absreachconcr*
