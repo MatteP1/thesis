@@ -5,3 +5,6 @@
 - Hocap-style specification vs 
   HOCAP-style specification vs
   HOCAP specification?
+
+- Is it okay that I use the macros from ILN repo to create the inference rules?
+  Includes locallabel.sty, pftools.sty, and "Inferences Rules" section in thesis.tex preamble.

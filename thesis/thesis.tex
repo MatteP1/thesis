@@ -22,6 +22,7 @@
 \usepackage{lipsum}
 \usepackage{caption}
 \usepackage{subcaption}
+\usepackage{pftools}
 \usepackage{iris}
 \usepackage{heaplang}
 \usepackage{tikz}
@@ -34,6 +35,7 @@
 \usepackage{adjustbox}
 \usepackage{csquotes}
 \usepackage{natbib}
+\usepackage{mathpartir}
 
 \renewcommand*\sfdefault{lmss}
 \renewcommand*\ttdefault{txtt}
@@ -305,6 +307,36 @@
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Inferences Rules
+% From https://github.com/logsem/iris-lecture-notes
+
+%% Macros for constructing iterated inference rules with similar labels
+% Constructs a rule with name #2, label #3 (with postfix #1; default empty),
+% hypotheses #4 and conclusion #5
+% ex: \rulegenhref[-app]{$\ast$-weak}{star-weak}{ }{P_1 \ast P_2 \proves P_1}
+\newcommand{\rulegenhref}[5][]{\inferhref{#2}{#3#1}{#4}{#5}}
+% Variant for constructing bi-inference rules
+\newcommand{\rulegenhrefb}[5][]{\inferhrefB{#2}{#3#1}{#4}{#5}}
+% Variant where name and label coincide
+\newcommand{\rulegen}[4][]{\rulegenhref[#1]{#2}{#2}{#3}{#4}}
+% Variant of bi-inference where name and label coincide
+\newcommand{\rulegenb}[4][]{\rulegenhrefb[#1]{#2}{#2}{#3}{#4}}
+
+%% Generic command for constructing variations of the consequence rule
+\newcommand{\htcsqgen}[4][]
+{\rulegen[#1]{Ht-csq#2}
+  { S \text{ persistent } \and
+  S \proves \prop #3 \prop' \and
+  S \proves \hoare{\prop'}{\expr}{\Ret\val.\propB'}[#4] \and
+  S \proves \All u. \propB'[u/v] #3 \propB[u/v]}
+  {S \proves \hoare{\prop}{\expr}{\Ret\val.\propB}[#4]}}
+
+\newcommand{\htcsq}[1][]{\htcsqgen[#1]{}{\Rightarrow}{}}
+
+\newcommand{\htcsqvsrule}[1][]{\htcsqgen[-vs#1]{-vs}{\vs}{}}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \newcommand{\todo}[1]{{\color[rgb]{.5,0,0}\textbf{$\blacktriangleright$#1$\blacktriangleleft$}}}
 
@@ -398,9 +430,10 @@ In this section, we give a brief introduction to Iris -- the logic we use to rea
 \todo{FOCUS IN THIS SECTION is on explaining the basic ideas of the concepts and showing the notation used. Assume the reader is somewhat familiar with program verification. }
 
 \subsection{Fundamentals of Iris}
-\todo{program logic framework}
-\todo{instantiate with a language, here heaplang}
-\todo{higher order logic}
+Briefly put, Iris is \enquote{A Higher-Order Concurrent Separation Logic Framework}. The framework part means that Iris is not tied to a single programming language; one may instantiate Iris with any programming language one sees fit. The ``concurrent'' part implies that Iris supports reasoning about language with concurrent features, such as \heaplang. In fact, \heaplang is a sort of ``default'' language which ships with Iris. As such some of the rules we present in this section will be programming language independent, while others will adhere to the semantics of \heaplang.
+
+A feature that makes Iris very powerful, is that it is a \textit{higher order logic}. This essentially means that we may quantify over propositions and predicates. This feature of Iris is essential to this project -- much of the work done relies on this capability.
+
 \todo{seperation logic}
 \todo{- exclusive ownership and duplicability}
 \todo{introduce persistent modality, duplicability}
@@ -413,6 +446,10 @@ In this section, we give a brief introduction to Iris -- the logic we use to rea
 \todo{talk about Partial correctness and Adequacy}
 \todo{explain weakest pre-conditions}
 \todo{show how they are related}
+
+\begin{mathpar}
+  \htcsq
+\end{mathpar}
 
 \subsection{Later Modality}
 \todo{explain concept}
@@ -448,6 +485,11 @@ The later modality adds a notion of step indexing to Iris propositions. This ste
 \subsection{Update modality and Viewshift}
 \todo{explain the ideas}
 \todo{frame preserving update}
+
+\begin{mathpar}
+  \htcsqvsrule
+\end{mathpar}
+
 
 
 \subsection{Locks}\label{Pre:iris:locks}
@@ -706,7 +748,7 @@ We have to derive the specification:
 \begin{equation*}
   \concspecinit{\Psi}
 \end{equation*}
-As before, this specification only differs from the Hocap-style specification for initialise in the post-condition. We use the \emph{generalised} rule of consequence\todo{ref} and show that the post-condition of the Hocap-style specification, i.e. $\Exists \Qg . \isqueue(\vq, \Qg) \star{} \abstractstatefullfrag{\Qg.\gabst}{[]}$, implies the post-condition above but with an update modality, $\pvs$, in front. Both mention the queue predicates, $\isqueue(\vq, \Qg)$, so it suffices to prove the invariant:
+As before, this specification only differs from the Hocap-style specification for initialise in the post-condition. We use the \emph{generalised} rule of consequence \ruleref{Ht-csq-vs-vs} and show that the post-condition of the Hocap-style specification, i.e. $\Exists \Qg . \isqueue(\vq, \Qg) \star{} \abstractstatefullfrag{\Qg.\gabst}{[]}$, implies the post-condition above but with an update modality, $\pvs$, in front. Both mention the queue predicates, $\isqueue(\vq, \Qg)$, so it suffices to prove the invariant:
 \begin{equation*}
   \pvs \knowInv{\Nl.c}{\Exists \absvalueList. \abstractstatefullfrag{\Qg.\gabst}{\absvalueList} \star{} \AllP(\absvalueList, \Psi)}
 \end{equation*}
