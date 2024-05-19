@@ -57,7 +57,6 @@
   - [x] Mention how it can be used to track exact contents of queue
   - [x] Can be used to prove a precise spec for sequential client used in testing
 - [x] Write about the concurrent spec for two-lock M&S queue in the report
-  - [ ] Talk about adequacy as a reason for safety
   - [x] Update spec to include the Ψ predicate
 - [x] Write about HOCAP spec for two-lock M&S queue in the report
   - [x] motivate it from sequential and concurrent

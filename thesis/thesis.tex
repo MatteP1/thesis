@@ -323,32 +323,32 @@
 \newcommand{\rulegenb}[4][]{\rulegenhrefb[#1]{#2}{#2}{#3}{#4}}
 
 \newcommand{\logicstarweakrule}[1][]
-{ \rulegen[#1]{$\ast$-weak}{star-weak}
+{ \rulegenhref[#1]{$\ast$-weak}{star-weak}
   { }
   {P_1 \ast P_2 \proves P_1}}
 
 \newcommand{\logicstarassocrule}[1][]
-{ \rulegen[#1]{$\ast$-assoc}{star-assoc}
+{ \rulegenhref[#1]{$\ast$-assoc}{star-assoc}
   { }
   {P_1 \ast (P_2 \ast P_3) \provesIff (P_1 \ast P_2) \ast P_3}}
 
 \newcommand{\logicstarcommrule}[1][]
-{ \rulegen[#1]{$\ast$-comm}{star-comm}
+{ \rulegenhref[#1]{$\ast$-comm}{star-comm}
   { }
   {P_1 \ast P_2 \provesIff P_2 \ast P_1}}
 
 \newcommand{\logicstarintrorule}[1][]
-{ \rulegen[#1]{$\ast$I}{star-I}
+{ \rulegenhref[#1]{$\ast$I}{star-I}
   {P_1 \proves Q_1 \and P_2 \proves Q_2 }
   {P_1 \ast P_2 \proves Q_1 \ast Q_2 }}
 
 \newcommand{\logicwandintrorule}[1][]
-{ \rulegen[#1]{$\wand$I}{wand-I}
+{ \rulegenhref[#1]{$\wand$I}{wand-I}
   {R \ast \prop \proves \propB}
   {R \proves \prop \wand \propB}}
 
 \newcommand{\logicwandelimrule}[1][]
-{ \rulegen[#1]{$\wand$E}{wand-E}
+{ \rulegenhref[#1]{$\wand$E}{wand-E}
   {R_1 \proves \prop \wand \propB \and R_2 \proves \prop}
   {R_1 \ast R_2 \proves \propB}}
 
@@ -359,6 +359,10 @@
 \newcommand{\persintrorule}[1][]
 { \rulegen[#1]{persistently-intro}
   {\persistently P \proves Q}{\persistently P \proves \persistently Q}}
+
+\newcommand{\perskeeprule}[1][]
+{ \rulegen[#1]{persistently-keep}
+  {P \proves \persistently Q}{P \proves \persistently Q \ast P}}
 
 \newcommand{\pershtrule}[1][]
 { \rulegen[#1]{persistently-Ht}{}{\hoare{P}{e}{\Phi} \provesIff \persistently \hoare{P}{e}{\Phi}}}
@@ -378,6 +382,45 @@
   {Q \proves \prop}
   {Q \proves \later{\prop}}}
 
+\newcommand{\htframe}[1][]
+{ \rulegen[#1]{Ht-frame}
+  {S \proves \hoare{P}{e}{v.Q}}
+  {S \proves \hoare{P \ast R}{e}{v.Q \ast R}}}
+
+\newcommand{\htret}[1][]
+{ \rulegen[#1]{Ht-ret}
+  {w \text{ is a value }}
+  {S \proves \hoare{\TRUE}{\valB}{v. v = \valB}}}
+
+\newcommand{\htbind}[1][]
+{\rulegen[#1]{Ht-bind}
+  { \text{$\lctx$ is an eval. context} \and
+    S \proves \hoare{\prop}{\expr}{\Ret\val. \propB} \and
+    S \proves \All \val. \hoare{\propB}{\lctx[\val]}{\Ret\valB.\propC}}
+  { S \proves \hoare{\prop}{\lctx[\expr]}{\Ret\valB.\propC}}}
+
+\newcommand{\htloadgen}[2][]
+{ \rulegen[#1]{Ht-load}
+  { }
+  { S \proves \hoare{#2 \ell \pointsto u}{\deref \ell}{v . v = u \land \ell \pointsto u}}}
+
+\newcommand{\htloadtemp}[1][]
+{ \htloadgen[-temp#1]{ }}
+
+\newcommand{\htalloc}[1][]
+{ \rulegen[#1]{Ht-alloc}
+  { }
+  { S \proves \hoare{\TRUE}{\Ref(u)}{v . \Exists \ell . v = \ell\land \ell \pointsto u}}}
+
+\newcommand{\htstoregen}[2][]
+{\rulegen[#1]{Ht-store}
+  { }
+  { S \proves \hoare{#2 \ell \pointsto -}{\ell \gets w }{v . v = \TT \land \ell \pointsto w}}}
+
+\newcommand{\htstoretemp}[1][]
+{\htstoregen[-temp#1]{ }}
+
+
 %% Generic command for constructing variations of the consequence rule
 \newcommand{\htcsq}[1][]
 { \rulegen[#1]{Ht-csq}
@@ -393,6 +436,15 @@
     S \proves \hoare{\prop'}{\expr}{\Ret\val.\propB'} \and
     S \proves \All u. \propB'[u/v] \vs \propB[u/v]}
   {S \proves \hoare{\prop}{\expr}{\Ret\val.\propB}}}
+
+\newcommand{\htbetagen}[3][]
+{ \rulegen[#1]{Ht-beta}
+  {S \proves \hoare{P}{e\left[v/x\right]}{u.Q}[#3]}
+  {S \proves \hoare{#2 P}{(\lambda x . e) v}{u.Q}[#3]}}
+
+\newcommand{\htbeta}[1][]{\htbetagen[#1]{ }{ }}
+
+\newcommand{\htbetalater}[1][]{\htbetagen[-later#1]{\later}{ }}
 
 \newcommand{\updmonorule}[1][]
 {\rulegen[#1]{upd-mono}
@@ -438,10 +490,17 @@
   {\mask_1\ \infinite}
   {\later P \proves \pvs[\mask_2][\mask_2]\Exists \iota \in \mask_1.\knowInv{\iota}{P}}}
 
-\newcommand{\invopen}
-{ \rulegen[]{Inv-open}
-  {\iota \in \mask}
-  {\knowInv{\iota}{P} \proves \pvs[\mask][\mask\setminus\{\iota\}]\left(\later P \ast \left(\later P \wand \pvs[\mask\setminus\{\iota\}][\mask]\TRUE\right)\right)}}
+\newcommand{\htinvopenrule}[1][]
+{ \rulegen[#1]{Ht-inv-open}
+  {e \text{ is an atomic expression} \and S \land\knowInv{\iota}{P} \proves \hoare{\later P \ast Q}{e}{v.\later P \ast R}[\mathcal{E}]}
+                          {S \land \knowInv{\iota}{P} \proves \hoare{Q}{e}{v.R}[\mathcal{E} \uplus \{\iota\}]}
+}
+\newcommand{\wpinvopen}[1][]
+{ \rulegen[#1]{wp-inv-open}
+    {e \text{ is an atomic expression }}
+    {\knowInv{\iota}{I} \ast \left(\later I \wand \wpre{e}[\mask\setminus\{\iota\}]{v.\later I \ast \Phi(v)}\right)
+    \proves{}
+    \wpre{e}[\mask]{\Phi}}}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -534,29 +593,71 @@ The full specification of the language language can be found in \citet{gentleiri
 
 In this section, we give a brief introduction to Iris -- the logic we use to reason about the \msq{}s. Iris is quite expressive and supports a myriad of features and derived rules, many of which have been utilised in this project. As such, it will be impossible to cover all facets of Iris in detail, so we limit ourselves to give an overview of the main aspects of Iris. If the reader wishes a more thorough introduction, or wants to see further details of the topics covered, please consult the Iris Lecture Notes \citep{gentleiris}.
 
-\todo{FOCUS IN THIS SECTION is on explaining the basic ideas of the concepts and showing the notation used. Assume the reader is somewhat familiar with program verification. }
-
 \subsection{Fundamentals of Iris}
 Briefly put, Iris is \enquote{A Higher-Order Concurrent Separation Logic Framework}. The framework part means that Iris is not tied to a single programming language; one may instantiate Iris with any programming language one sees fit. The ``concurrent'' part implies that Iris supports reasoning about language with concurrent features, such as \heaplang. In fact, \heaplang is a sort of ``default'' language which ships with Iris. As such some of the rules we present in this section will be programming language independent, while others will adhere to the semantics of \heaplang.
 
 A feature that makes Iris very powerful, is that it is a \textit{higher order logic}. This essentially means that we may quantify over propositions and predicates. This feature of Iris is essential to this project -- much of the work done relies on this capability.
 
-\todo{seperation logic}
-\todo{- exclusive ownership and duplicability}
-\todo{introduce persistent modality, duplicability}
-\todo{points-to predicates}
-\todo{resource oriented}
-\todo{derivation rules examples...}
+As Iris is a separation logic, we can reason about ownership of \textit{resources}. Iris's notion of resources is very general due to \textit{resource algebras}, which we explain in section \ref{Pre:iris:sub:RA}, but a simple example is that of pointers. One may ``own'' a particular pointer which allows one to manipulate it. We capture this with the ``points-to'' predicate; the proposition $\loc \mapsto \val$ denotes ownership over location $\loc$, with the fact that $\loc$ points-to $\val$ -- it guarantees that no other threads can interact with the location. Ownership of $\loc \mapsto \val$ can also be transferred to e.g. other threads, allowing them to interact with $\loc$. In general, propositions in Iris describe the resources that one owns.
+
+Iris has usual connectives such as $\land$, $\lor$, and $\implies$, but with the addition of ownership, we additionally introduce \textit{separating conjunction}, written as: $P \star{} Q$, for propositions $P$ and $Q$. The proposition $P \star{} Q$ describes the resources in $P$ \emph{combined} with the resources in $Q$. Since ownership of a resource can be exclusive, it shouldn't be freely duplicable. Hence, if we own some resources and wish to prove $Q_1 \star{} Q_2$, we must decide which resources we use to prove $Q_1$ and which resources to prove $Q_2$. This is captured by the \ruleref{star-I} rule. This is the main difference between regular conjunction and separating conjunction. We additionally introduce the ``wand'' connective, written $\wand$, which is similar to implication but works with separating conjunction instead. The introduction and elimination rules for wand (\ruleref{wand-I} and \ruleref{wand-E}) are hence similar to those for implication, but it takes the ownership aspect into consideration.
+\begin{mathpar}
+  \logicstarintrorule
+  \and
+  \logicwandintrorule
+  \and
+  \logicwandelimrule
+\end{mathpar}
+
+Ownership of resources does not have to be exclusive. For instance, if a location is never updated, then several threads should be allowed to have ownership over the points-to predicate for that location. To this end, Iris has the \textit{persistently modality}, written $\persistently P$ (read as ``persistently $P$''), which states that the resources described by $P$ are allowed to be duplicated (see rule \ruleref{persistently-dup}). Duplicability is an important capability, essential constructions in Iris rely on being duplicable as we explore in the next sections.\\
+Propositions are persistent if they satisfy $P \proves \persistently P$. There are many rules which state how to derive and work with persistent propositions, but for the sake of brevity, we highlight here just two important rules: \ruleref{persistently-intro} and \ruleref{persistently-keep}. The first states that any proposition we prove from \emph{only} persistent proposition are themselves persistent, and the second states that we can use resources to prove persistent propositions without consuming the resources.
+\begin{mathpar}
+  \persduprule
+  \and
+  \persintrorule
+  \and
+  \perskeeprule
+\end{mathpar}
+
 
 \subsection{Hoare Triples and Weakest Pre-Condition}
-\todo{explain Hoare triples}
-\todo{talk about Partial correctness and Adequacy}
-\todo{explain weakest pre-conditions}
-\todo{show how they are related}
+The logic supports reasoning about programs via \textit{Hoare triples}. A Hoare triple $\hoare{P}{\expr}{\val . \Phi ~ \val}$ states that, if we own the resources described by $P$, then we may safely run $\expr$, and \emph{if} the computation terminates with value $\val$, then the predicate $\Phi$ holds of $\val$. That is, Hoare triples only show partial correctness of programs.
 
-\begin{mathpar}
-  \htcsq
-\end{mathpar}
+Specifications for functions are usually written in terms of Hoare-triples -- the pre-condition mentions which resources the function require and the post-condition states which resources the callee gets back, if the function returns. Hoare-triples are persistent (see rule \ruleref{persistently-Ht}), which allows clients to apply the same Hoare-triple for multiple invocations of the same function. This is sensible as the Hoare triple implies that the function only needs the resources described by the pre-condition in order to run safely; if we can get those resources multiple times, we can of course also run the function multiple times.
+
+The rules for Hoare triples depend on the language. Figure \ref{Pre:iris:figure:hoare} shows some selected rules for the case of \heaplang{}. Some of the rules, such as \ruleref{Ht-alloc}, \ruleref{Ht-load-temp}, \ruleref{Ht-store-temp}, and \ruleref{Ht-beta} shows Hoare triples for basic constructs of the language. For example, \ruleref{Ht-alloc} states that it is always safe to create a new reference to some value, $u$, and the value returned from the creation is some location which points-to $u$.
+
+Other rules such as \ruleref{Ht-bind}, \ruleref{Ht-csq}, and \ruleref{Ht-frame} shows how to prove Hoare triples for more complex expressions. The bind rule allows us to ``focus'' on sub-expressions, as long as they are what will be executed next according to the semantics of the language. We must then prove a Hoare triple for the whole expression assuming that the sub-expression has reduced to some value. Note that the post-condition of the Hoare triple for the sub-expression becomes the pre-condition for Hoare triple of the whole expression.\\
+The rule of consequence states that we can strengthen pre-conditions and weaken post-conditions. Indeed, if we can execute an expression with some resources, we can surely also execute it if we have \emph{more} resources available. Similarly, we can also simply decide to mention \emph{fewer} of the resources available after the function invocation.\\
+The frame rule essentially states that resources which are not required to run the expression are not changed by it.
+
+\begin{figure}
+  \begin{mathpar}
+    \pershtrule
+    \and
+    \htret
+    \and
+    \htbind
+    \and
+    \htalloc
+    \and
+    \htloadtemp
+    \and
+    \htstoretemp
+    \and
+    \htbeta
+    \and
+    \htcsq
+    \and
+    \htframe
+  \end{mathpar}
+  \caption{Selected rules for Hoare triples.}
+  \label{Pre:iris:figure:hoare}
+\end{figure}
+
+Another way to reason about programs in Iris is \textit{weakest pre-condition}, written $\wpre{\expr}{\val .\Phi ~ \val}$. The main difference between weakest pre-conditions and Hoare triples is that the former does not mention the required resources in a pre-condition -- instead, we propositions describing the required resources will \emph{imply} the weakest-preconditions. For instance, if one owns the points-to predicate for some location $\loc$, then one can derive a weakest-precondition of a load of $\loc$. That is, we have that $\loc \pointsto \val \proves{} \wpre {\deref \loc}{u.u = v \ast \loc \pointsto \val}$.
+
+The rules for weakest pre-conditions are analogous to the rules for Hoare triples shown in \ref{Pre:iris:figure:hoare}, so we do not mention them here. Indeed, we may even define the notions in terms of each other. The reason for having both is that it is usually nicer to write specifications in terms of Hoare triples, whereas proofs of weakest pre-conditions are more streamlined.
 
 \subsection{Later Modality}
 \todo{explain concept}
@@ -565,7 +666,18 @@ A feature that makes Iris very powerful, is that it is a \textit{higher order lo
 
 The later modality adds a notion of step indexing to Iris propositions. This step indexing is technically parallel to the notion of taking steps in the programs, but the way we define Hoare triples and weakest-preconditions tie program steps together with steps in the logic. In other words, a single Later corresponds to a single step in the program.
 
+\begin{mathpar}
+  \laterweakrule
+  \and
+  \latermonorule
+  \and
+  \lobrule
+  \and
+  \htbetalater
+\end{mathpar}
+
 \subsection{Resource Algebra}
+\label{Pre:iris:sub:RA}
 \todo{Introduce the idea}
 \todo{Give the formal definition and explain the parts}
   \todo{Cite first line of definition Definition 8.10 in ILN}
@@ -616,11 +728,14 @@ The later modality adds a notion of step indexing to Iris propositions. This ste
 \todo{only one opening at a time}
 \todo{namespaces}
 \todo{Show the basic rules. Inv-alloc (FUP), ...}
+\todo{atomicity and bind rule}
 
 \begin{mathpar}
   \invalloc
   \and
-  \invopen
+  \htinvopenrule
+  \and
+  \wpinvopen
 \end{mathpar}
 
 
