@@ -322,6 +322,62 @@
 % Variant of bi-inference where name and label coincide
 \newcommand{\rulegenb}[4][]{\rulegenhrefb[#1]{#2}{#2}{#3}{#4}}
 
+\newcommand{\logicstarweakrule}[1][]
+{ \rulegen[#1]{$\ast$-weak}{star-weak}
+  { }
+  {P_1 \ast P_2 \proves P_1}}
+
+\newcommand{\logicstarassocrule}[1][]
+{ \rulegen[#1]{$\ast$-assoc}{star-assoc}
+  { }
+  {P_1 \ast (P_2 \ast P_3) \provesIff (P_1 \ast P_2) \ast P_3}}
+
+\newcommand{\logicstarcommrule}[1][]
+{ \rulegen[#1]{$\ast$-comm}{star-comm}
+  { }
+  {P_1 \ast P_2 \provesIff P_2 \ast P_1}}
+
+\newcommand{\logicstarintrorule}[1][]
+{ \rulegen[#1]{$\ast$I}{star-I}
+  {P_1 \proves Q_1 \and P_2 \proves Q_2 }
+  {P_1 \ast P_2 \proves Q_1 \ast Q_2 }}
+
+\newcommand{\logicwandintrorule}[1][]
+{ \rulegen[#1]{$\wand$I}{wand-I}
+  {R \ast \prop \proves \propB}
+  {R \proves \prop \wand \propB}}
+
+\newcommand{\logicwandelimrule}[1][]
+{ \rulegen[#1]{$\wand$E}{wand-E}
+  {R_1 \proves \prop \wand \propB \and R_2 \proves \prop}
+  {R_1 \ast R_2 \proves \propB}}
+
+\newcommand{\persduprule}[1][]
+{ \rulegen[#1]{persistently-dup}
+  {}{\persistently P \provesIff \persistently P \ast P}}
+
+\newcommand{\persintrorule}[1][]
+{ \rulegen[#1]{persistently-intro}
+  {\persistently P \proves Q}{\persistently P \proves \persistently Q}}
+
+\newcommand{\pershtrule}[1][]
+{ \rulegen[#1]{persistently-Ht}{}{\hoare{P}{e}{\Phi} \provesIff \persistently \hoare{P}{e}{\Phi}}}
+
+\newcommand{\lobrule}[1][]
+{ \rulegenhref[#1]{L{\"o}b}{Loeb}
+  {Q \land \later\prop \proves \prop}
+  {Q \proves \prop}}
+
+\newcommand{\latermonorule}[1][]
+{ \rulegenhref[#1]{later-mono}{Later-Mono}
+  {Q \proves \prop}
+  {\later Q \proves \later\prop}}
+
+\newcommand{\laterweakrule}[1][]
+{ \rulegenhref[#1]{later-weak}{Later-weak}
+  {Q \proves \prop}
+  {Q \proves \later{\prop}}}
+
 %% Generic command for constructing variations of the consequence rule
 \newcommand{\htcsq}[1][]
 { \rulegen[#1]{Ht-csq}
