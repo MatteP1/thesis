@@ -11,7 +11,6 @@
 \usepackage{thm-restate}
 \usepackage{mathpartir}
 \usepackage{epsfig}
-\usepackage[T1]{fontenc}
 \usepackage{stmaryrd}
 \usepackage{color}
 \usepackage{epstopdf}
@@ -665,12 +664,11 @@ The rules for weakest pre-conditions are analogous to the rules for Hoare triple
 
 \subsection{Later Modality}
 
-The presentation we have seen thus far does not allow us to tie propositions to steps in the program; we may want to express that some proposition holds after one program step. To achieve this, Iris provides a \textit{later} modality, written $\later P$. The $\later$ is technically language independent and hence parallel to program steps, but the way we define Hoare triples and weakest pre-conditions ties a single $\later$ to a single step in the program. For instance $\later (\loc \mapsto 5)$ asserts that the location $\loc$ will contain the value $5$ after taking one step in the program. In other words, we do not own the resource that $\loc$ points to $5$ now, but we will own it after one step. In this sense, the later modality weakens propositions; owning a resource now is stronger than owning it later (cf. rule \ruleref{Later-weak}).
+The presentation we have seen thus far does not allow us to tie propositions to steps in the program; we may want to express that some proposition holds after one program step. To achieve this, Iris provides a \textit{later} modality, written $\later P$. The $\later$ is technically language independent and hence parallel to program steps, but the way that Hoare triples and weakest pre-conditions are defined ties a single $\later$ to a single step in the program. For instance $\later (\loc \mapsto 5)$ asserts that the location $\loc$ will contain the value $5$ after taking one step in the program. In other words, we do not own the resource that $\loc$ points to $5$ now, but we will own it after one step. In this sense, the later modality weakens propositions; owning a resource now is stronger than owning it later (cf. rule \ruleref{Later-weak}).
 
 We update the rules from figure \ref{Pre:iris:figure:hoare} to capture the effect that taking a step removes a later. For instance, \ruleref{Ht-beta-later} is similar to \ruleref{Ht-beta}, but it strips away a later in the pre-condition to signify that the program has taken a step (in this case by computing the function application).
 
-The later modality has many uses in Iris, but for our presentation, the Löb induction rule (\todo{ref Loeb}) is the most important. It states that, if we want to prove some proposition $P$, we may assume that we have $P$ later. This rule is really useful when $P$ is a Hoare triple for a recursive function.
-If $f$ is some recursive function and we want to prove the Hoare triple: $\hoare{Q}{f ~ x}{v. \Phi ~ v}$, then Löb induction gives us an induction hypothesis: $\later (\hoare{Q}{f ~ x}{v. \Phi ~ v})$. As the later modality weakens our proposition, we cannot use it to prove our goal, but after performing the function application using \ruleref{Ht-beta}, the $\later$ in our induction hypothesis is stripped away, and we get to assume $\hoare{Q}{f ~ x}{v. \Phi ~ v}$. Hence, if we reach a recursive call inside $f$, we just have to prove $Q$, and then we can use our induction hypothesis to prove the recursive call.
+The later modality has many uses in Iris, but for our presentation, the Löb induction rule \ruleref{Loeb} is the most important. It states that, if we want to prove some proposition $P$, we may assume that we have $P$ later. This rule is really useful when $P$ is a Hoare triple for a recursive function. If $f$ is some recursive function and we want to prove the Hoare triple: $\hoare{Q}{f ~ x}{v. \Phi ~ v}$, then Löb induction gives us an induction hypothesis: $\later (\hoare{Q}{f ~ x}{v. \Phi ~ v})$. As the later modality weakens our proposition, we cannot use it to prove our goal, but after performing the function application using \ruleref{Ht-beta}, the $\later$ in our induction hypothesis is stripped away, and we get to assume $\hoare{Q}{f ~ x}{v. \Phi ~ v}$. Hence, if we reach a recursive call inside $f$, we just have to prove $Q$, and then we can use our induction hypothesis to prove the recursive call.
 
 \begin{mathpar}
   \laterweakrule
@@ -750,7 +748,18 @@ If $f$ is some recursive function and we want to prove the Hoare triple: $\hoare
 
 
 \subsection{Locks}\label{Pre:iris:locks}
-\todo{show and explain the lock specification}
+
+The \tlmsq{} uses locks, so we discuss these briefly in this section. A lock has three functions: $\newLock$, $\acquire$, and $\release$. In Iris, locks protect resources; when we create a new lock we give it the resources it must protect. When a thread acquires the lock, the thread gets access to the protected resources. Releasing the locks then requires that the resources are transferred back to the lock. In our project, we use the following specification for locks from \citet{gentleiris} (example 8.38 at time of writing).
+\begin{align*}
+  &\Exists \isLock : \Val \to \Prop \to \textlog{GhostName} \to \Prop.\nonumber\\
+  &\Exists \locked : \textlog{GhostName} \to \Prop.\nonumber\\
+  &\quad\quad\persistently(\All P, v, \gamma. \isLock(v,P,\gamma) \implies \persistently \isLock(v,P,\gamma))\\
+  &\land\quad\persistently(\All \gamma. \locked(\gamma) \ast \locked(\gamma) \implies \FALSE)\\
+  &\land\quad\All P.\hoare{P}{\newLock ()}{v.\Exists \gamma.\isLock(v,P,\gamma)}\\
+  &\land\quad\All P, v, \gamma.\hoare{\isLock(v,P,\gamma)}{\acquire v}{\_.P \ast \locked(\gamma)}\\
+  &\land\quad\All P, v, \gamma.\hoare{\isLock(v,P,\gamma) \ast P \ast \locked(\gamma)}{\release v}{\_.\TRUE}
+\end{align*}
+The specification assert the existence of two predicates: the lock predicate, $\isLock$ and a lock token, $\locked$. The lock predicate describes that a value represents a lock, and governs which resources the lock protects. The specification for the $\newLock$ function states that if we own the resources described by $P$, we can create a new lock by invoking $\newLock$. The value returned by the function will then represent the lock, and it protects the resources described by $P$. The lock predicate is persistent so we can give the lock predicate to multiple threads, allowing them to use the specifications for $\acquire$ and $\release$. The specification for $\acquire$ grants us access to the resources that the lock is protecting as well as a non-duplicable token, $\locked(\gname)$. This token tells us that we are the sole owner of the lock. To release the lock, we must give up the $\locked(\gname)$ token and the resources the lock protects.
 
 %=====================================================================
 \section{Formalisation in Coq}
