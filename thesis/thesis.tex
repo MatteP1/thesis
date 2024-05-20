@@ -669,7 +669,8 @@ The presentation we have seen thus far does not allow us to tie propositions to 
 
 We update the rules from figure \ref{Pre:iris:figure:hoare} to capture the effect that taking a step removes a later. For instance, \ruleref{Ht-beta-later} is similar to \ruleref{Ht-beta}, but it strips away a later in the pre-condition to signify that the program has taken a step (in this case by computing the function application).
 
-The later modality has many uses in Iris, but for our presentation, the Löb induction rule (\todo{ref Loeb}) is the most important. It states that if we can prove a proposition $P$ using $\later P$, then we can actually prove $P$ without $\later P$.
+The later modality has many uses in Iris, but for our presentation, the Löb induction rule (\todo{ref Loeb}) is the most important. It states that, if we want to prove some proposition $P$, we may assume that we have $P$ later. This rule is really useful when $P$ is a Hoare triple for a recursive function.
+If $f$ is some recursive function and we want to prove the Hoare triple: $\hoare{Q}{f ~ x}{v. \Phi ~ v}$, then Löb induction gives us an induction hypothesis: $\later (\hoare{Q}{f ~ x}{v. \Phi ~ v})$. As the later modality weakens our proposition, we cannot use it to prove our goal, but after performing the function application using \ruleref{Ht-beta}, the $\later$ in our induction hypothesis is stripped away, and we get to assume $\hoare{Q}{f ~ x}{v. \Phi ~ v}$. Hence, if we reach a recursive call inside $f$, we just have to prove $Q$, and then we can use our induction hypothesis to prove the recursive call.
 
 \begin{mathpar}
   \laterweakrule
