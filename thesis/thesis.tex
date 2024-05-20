@@ -446,6 +446,10 @@
 
 \newcommand{\htbetalater}[1][]{\htbetagen[-later#1]{\later}{ }}
 
+\newcommand{\htloadlaterrule}[1][]{\htloadgen[#1]{\later}}
+
+\newcommand{\htstorelaterrule}[1][]{\htstoregen[#1]{\later}}
+
 \newcommand{\updmonorule}[1][]
 {\rulegen[#1]{upd-mono}
   {P \proves Q}
@@ -660,11 +664,12 @@ Another way to reason about programs in Iris is \textit{weakest pre-condition}, 
 The rules for weakest pre-conditions are analogous to the rules for Hoare triples shown in \ref{Pre:iris:figure:hoare}, so we do not mention them here. Indeed, we may even define the notions in terms of each other. The reason for having both is that it is usually nicer to write specifications in terms of Hoare triples, whereas proofs of weakest pre-conditions are more streamlined.
 
 \subsection{Later Modality}
-\todo{explain concept}
-\todo{ties propositions to program steps}
-\todo{Explain the löb induction rule, mention the intuition when P is Hoare triple}
 
-The later modality adds a notion of step indexing to Iris propositions. This step indexing is technically parallel to the notion of taking steps in the programs, but the way we define Hoare triples and weakest-preconditions tie program steps together with steps in the logic. In other words, a single Later corresponds to a single step in the program.
+The presentation we have seen thus far does not allow us to tie propositions to steps in the program; we may want to express that some proposition holds after one program step. To achieve this, Iris provides a \textit{later} modality, written $\later P$. The $\later$ is technically language independent and hence parallel to program steps, but the way we define Hoare triples and weakest pre-conditions ties a single $\later$ to a single step in the program. For instance $\later (\loc \mapsto 5)$ asserts that the location $\loc$ will contain the value $5$ after taking one step in the program. In other words, we do not own the resource that $\loc$ points to $5$ now, but we will own it after one step. In this sense, the later modality weakens propositions; owning a resource now is stronger than owning it later (cf. rule \ruleref{Later-weak}).
+
+We update the rules from figure \ref{Pre:iris:figure:hoare} to capture the effect that taking a step removes a later. For instance, \ruleref{Ht-beta-later} is similar to \ruleref{Ht-beta}, but it strips away a later in the pre-condition to signify that the program has taken a step (in this case by computing the function application).
+
+The later modality has many uses in Iris, but for our presentation, the Löb induction rule (\todo{ref Loeb}) is the most important. It states that if we can prove a proposition $P$ using $\later P$, then we can actually prove $P$ without $\later P$.
 
 \begin{mathpar}
   \laterweakrule
@@ -674,6 +679,10 @@ The later modality adds a notion of step indexing to Iris propositions. This ste
   \lobrule
   \and
   \htbetalater
+  \and
+  \htloadlaterrule
+  \and
+  \htstorelaterrule
 \end{mathpar}
 
 \subsection{Resource Algebra}
@@ -2368,7 +2377,7 @@ The specification we wish to prove is the following.
     &\nIn{\nodenew} \mapsto^{\persistently} (\Some \absvalue, \nOut{\nodenew})\label{LFMSQSPECS:enqueue:proof:xnew1}\\
     &\nOut{\nodenew} \mapsto \None\label{LFMSQSPECS:enqueue:proof:xnew2}
   \end{align}
-  The next line is the beginning of the looping function. We proceed by löb induction, which allows us to assume the Hoare triple we wish to prove \emph{later}. This means that, if we reach a recursive call, we will have the Hoare triple that we must prove -- the later will be immediately stripped when we apply $\TT$ and ``step into'' the recursive function.\\
+  The next line is the beginning of the looping function. We proceed by Löb induction, which allows us to assume the Hoare triple we wish to prove \emph{later}. This means that, if we reach a recursive call, we will have the Hoare triple that we must prove -- the later will be immediately stripped when we apply $\TT$ and ``step into'' the recursive function.\\
   Line \ref{LFE:tal} first dereferences to the tail pointer $\loctail$ using the resources in \ref{LFMSQSPECS:enqueue:proof:isqueue}. We open the invariant to obtain the points-to predicate concerning $\loctail$. We get that $\loctail$ points to some $\nodetail$. Using the resources from the invariant, we may conclude the following persistent information:
   \begin{align}
     &\ar{\nodetail}{\Qg.\glast}\label{LFMSQSPECS:enqueue:proof:enqueue:xtail_ar_last}\\
@@ -2379,7 +2388,7 @@ The specification we wish to prove is the following.
   \begin{itemize}
     \item[\textbf{Case}]
     $\nodetail = \nodelast$. Since we had $\isLast(\nodelast, \xsc)$, we know that $\nodetail$ is the last node in the linked list, hence it points to $\None$. We perform the load which sets $next$ to $\None$, and close the invariant.\\
-    We proceed to the consistency check on line \ref{LFE:cct}. As before, the points-to predicate for $\loctail$ is in the invariant, so we open it. We get $\loctail \mapsto \nIn{\nodetail'}$, for some $\nodetail'$. Using this, we perform the deference and close the invariant. The branch taken now depends on whether or not $\nodetail'$ is consistent with $\nodetail$. In case they aren't, we take the ``else'' branch on line \ref{LFE:re2}, which simply consists of a recursive call to the looping function. We are done by the induction hypothesis (from the löb induction).\\
+    We proceed to the consistency check on line \ref{LFE:cct}. As before, the points-to predicate for $\loctail$ is in the invariant, so we open it. We get $\loctail \mapsto \nIn{\nodetail'}$, for some $\nodetail'$. Using this, we perform the deference and close the invariant. The branch taken now depends on whether or not $\nodetail'$ is consistent with $\nodetail$. In case they aren't, we take the ``else'' branch on line \ref{LFE:re2}, which simply consists of a recursive call to the looping function. We are done by the induction hypothesis (from the Löb induction).\\
     If they are consistent, we take the ``then'' branch and step to line \ref{LFE:nen}. Here we check whether or not $next$ is $\None$. We already know this is the case, so we proceed to line \ref{LFE:add}. This consists of a $\CAS$ instruction which attempts to add $\nodenew$ to the linked list. The $\CAS$ will succeed if and only if $\loctail$ still points to $\None$. We open the invariant to gain access to the relevant points-to predicate. Similarly to what we did earlier, we apply lemma \ref{lemma:abs-reach-concr} to conclude $\reach{\nodetail}{\nodelast'}$, where $\nodelast'$ is the current last node of the linked list (according to the invariant). As before, we perform case analysis on $\reach{\nodetail}{\nodelast'}$.
     \begin{itemize}
       \item[\textbf{Case}]
@@ -2407,7 +2416,7 @@ The specification we wish to prove is the following.
     \locqueue \mapsto^{\persistently} (\lochead, \loctail) \star{}
     \knowInv{\Nl.queue}{\LFQueueInvariantHocap(\lochead, \loctail, \Qg)}
   \end{equation}
-  The body of $\dequeue$ is the loop, so we immediately apply löb induction. We step through the function application, and into the looping function to line \ref{LFD:hed}. This line dereferences $\lochead$, so we open the invariant to access the associated points-to predicate. We obtain that $\lochead$ points to some $\nodehead$, meaning the load results to $\nIn{\nodehead}$. We also derive the following information
+  The body of $\dequeue$ is the loop, so we immediately apply Löb induction. We step through the function application, and into the looping function to line \ref{LFD:hed}. This line dereferences $\lochead$, so we open the invariant to access the associated points-to predicate. We obtain that $\lochead$ points to some $\nodehead$, meaning the load results to $\nIn{\nodehead}$. We also derive the following information
   \begin{align}
     &\isNode{\nodehead}\label{LFMSQSPECS:dequeue:proof:xhead_node}\\
     &\ar{\nodehead}{\Qg.\ghead}\label{LFMSQSPECS:dequeue:proof:xhead_ghead}\\
