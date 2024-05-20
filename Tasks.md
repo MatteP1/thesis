@@ -90,7 +90,7 @@
 - [x] Introduce the notion of linearisation points
 - [x] Point out the linearisation points in the proof outlines
 
-- [ ] Create a section/chapter explaining some of the basic rules (hoare-triples, weakest-precondition, inv-alloc, resource algebra), and also iris in general.
+- [x] Create a section/chapter explaining some of the basic rules (hoare-triples, weakest-precondition, inv-alloc, resource algebra), and also iris in general.
 
 - [x] Mention coq and iris version that the code works with.
 - [x] Give an overview of Coq files and how they refer to sections in report. Perhaps mention it at beginning/end of each section, or just have an overview in a section (on the coq formalisation)
