@@ -2607,6 +2607,12 @@ The authoritative set is existentially quantified as it can change over time, bu
 \chapter{Conclusion and Future Work}
 \label{ch:conclusion_fw}
 
+In this project, we gave three queue specifications, expressed in the Iris program logic. The \textit{sequential specification} allows client to track the contents of the queue, but the queue cannot be used concurrently. The \textit{concurrent specification} allows for concurrency, but there is no functionality for tracking the queue contents. The final and most general specification, the \textit{Hocap-style specification} can not only be used by concurrent clients, but it also allows clients to track the queue contents. This functionality was made possible by introducing a suitable ghost state which tracks the queue contents.
+We furthermore demonstrated that the sequential and concurrent specifications are derivable from the Hocap-style specification. That is, a queue satisfying the Hocap-style specification also satisfies the other two.
+
+
+
+
 \todo{conclude on the problem statement from the introduction}
 
 \todo{Mention the possibility of simplifying queue invariant for lock-free by removing isLL (and adding x\_last -> None)}
