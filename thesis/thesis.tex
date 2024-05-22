@@ -481,7 +481,7 @@
 {\rulegen[#1]{Ghost-update}
   {a \mupd b}
   { \ownGhost{\gamma}{a} \proves \pvs \ownGhost{\gamma}{b}}}
-  
+
 \newcommand{\ownoprule}[1][]
 { \rulegen[#1]{Own-op}
   { }
@@ -697,9 +697,7 @@ The later modality has many uses in Iris, but for our presentation, the Löb ind
 
 Thus far, the only kind of resource we have seen are the points-to predicate. This is in itself a very useful resource, but many constructions demand other kinds of resources. Iris allows us to create our own notion of a resource by defining a \textit{resource algebra} which specifies what the resources are, and how the resources interact with each other. Indeed, even the points-to predicate is defined via a resource algebra.
 
-Formally, 
-
-\enquote{A \emph{resource algebra} is a commutative semigroup $\Ml$ together with a subset $\Vl \subseteq \Ml$ of elements called \emph{valid}, and a \emph{partial} function $\mcore{\cdot} : \Ml \to \Ml$, called the \emph{core}.}
+Formally, \blockquote[\citet{gentleiris}]{A \emph{resource algebra} is a commutative semigroup $\Ml$ together with a subset $\Vl \subseteq \Ml$ of elements called \emph{valid}, and a \emph{partial} function $\mcore{\cdot} : \Ml \to \Ml$, called the \emph{core}.}
 
 That is, a resource algebra consists of a set of elements (the resources) with an associative and commutative operation, written as $a \mtimes b$. The set of elements is usually called the ``carrier''. Some of the elements are marked as ``valid'' -- only valid resources can be owned in Iris. Ownership of a non-valid element allows for deriving falsehood.\\
 The core function ``extracts'' duplicable parts from resources. In particular, if the core of an element $a$ is $a$ itself, i.e. $\mcore{a} = a$, then $a$ is freely duplicable. Hence, ownership of $a$ is persistent.\\
@@ -2615,7 +2613,7 @@ The invariant further maintained the relationship between the concrete state of 
 Having the queue resources in an invariant allows us to support concurrent clients as invariants are duplicable in Iris, which means that the invariant and its resources can be shared between threads.
 
 Similarly, we gave an implementation of the \lfmsq{} in \heaplang{} and proved its compliance with the Hocap-style specification. Unlike the \tlmsq{}, the \lfmsq{} \emph{does} rely on the fact that the tail does not lag behind the head. It further relies on the fact that the head and tail only ever move towards the end of the linked list. The queue invariant we created for the \lfmsq{} thus incorporated these two characteristics. We used the notion of \textit{reachability} introduced in \citet{DBLP:conf/cpp/VindumB21} to describe the properties formally. The concrete reachability predicate, $\reach{\node}{\node'}$ denotes that node $\node$ precedes node $\node'$ in the linked list making up the queue. The abstract points-to predicate, $\ap{\gname}{\node}$, allows us to keep track of the location of specific types of nodes, such as the head node, the tail node, and the last node, which can change during the course of the queues lifetime. Together with the abstract reachability predicate, $\ar{\node}{\gname}$, we could conclude that if a node could concretely reach, say, the head node, then it could concretely reach any future head nodes. The abstract points-to and reachability predicates we put in the invariant then allowed us to conclude that the head can \emph{always} concrete reach the tail.\\
-Finally, this queue invariant also maintained the same relationship between the concrete and abstract states of the queue, which enabled accurate tracking of the queue contents. 
+Finally, this queue invariant also maintained the same relationship between the concrete and abstract states of the queue, which enabled accurate tracking of the queue contents.
 
 \todo{Future work}
 \todo{Possibility of simplifying queue invariant for lock-free by removing isLL (and adding x\_last -> None)}
