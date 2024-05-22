@@ -525,15 +525,24 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \pagestyle{plain}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 \chapter*{Abstract}
 \addcontentsline{toc}{chapter}{Abstract}
 
-\todo{in English\dots}
+Ensuring correctness of programs is of ever-growing importance as software increasingly handles safety-critical functions. The surge of concurrent programs makes this task significantly more challenging. This thesis focuses on queue algorithms which are commonly used in a concurrent setting.\\
+To reason formally about queues, we use the Iris program logic. After giving a brief introduction to the logic, we use it to express three queue specifications. The most general of these is the ``Hocap-style'' specification, which supports concurrent clients and allows tracking of queue contents. We demonstrate that this specification implies the other, simpler specifications.\\
+The project then examines two queue algorithms: the blocking and non-blocking Michael-Scott Queues. We give implementations for these algorithms in the programming language \heaplang{}. Both implementations are proven to satisfy the Hocap-style specification. The blocking Michael-Scott Queue is verified using an invariant that tracks the contents of the queue and specifies the possible states of the queue data structure. For the non-blocking Michael-Scott Queue, a notion of reachability, borrowed from existing work, is incorporated into its invariant to meet the Hocap-style specification. All proofs developed in this project have been mechanised in the Coq proof assistant.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \chapter*{Resum\'e}
 \addcontentsline{toc}{chapter}{Resum\'e}
 
 \todo{in Danish\dots}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \chapter*{Acknowledgments}
 \addcontentsline{toc}{chapter}{Acknowledgments}
@@ -545,6 +554,8 @@
   \emph{Mathias Pedersen}\\
   \emph{Aarhus, \today.}
 \end{flushright}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \tableofcontents
 \cleardoublepage
