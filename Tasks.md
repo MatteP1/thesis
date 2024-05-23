@@ -161,17 +161,18 @@
   - [x] Update References
 - [x] Make derivations in report not use the projections, hence following the derivation of queue_specs.v
 - [x] Correctly format "hoare triple"
+- [x] Always start sentences with capital letter. Change sentences that start with variables to enforce this
+- [x] don't use future tense so much
+- [x] do not use contractions
+
 - [x] Check if any extra todos from Amin's feedback
 
 - [x] Fix spelling warnings
 - [x] format "hocap style"
 - [x] format forall in lemmas.
+- [ ] only use "points to" for the predicate
+- [ ] Check for correctness of line number references
 
-- [ ] Proof read report and fix the following:
-  - [x] Always start sentences with capital letter. Change sentences that start with variables to enforce this
-  - [ ] only use "points to" for predicate
-  - [ ] don't use future tense so much
-  - [ ] do not use contractions
-  - [ ] Check for correctness of line number references
+- [ ] Proofread report
 
 - [ ] If time permits, use hocap spec to prove a spec of a client
