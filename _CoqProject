@@ -6,10 +6,8 @@ theories/twoLockMSQ_impl.v
 theories/twoLockMSQ_sequential_spec.v
 theories/twoLockMSQ_concurrent_spec.v
 theories/twoLockMSQ_hocap_spec.v
-theories/twoLockMSQ_derived.v
 theories/lockFreeMSQ_impl.v
 theories/lockFreeMSQ_hocap_spec.v
-theories/lockFreeMSQ_derived.v
 
 theories/consistencyCheckFree/lockAndCCFreeMSQ_impl.v
 theories/consistencyCheckFree/lockAndCCFreeMSQ_hocap_spec.v

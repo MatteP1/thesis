@@ -541,8 +541,8 @@ The project then examines two queue algorithms: the blocking and non-blocking Mi
 \addcontentsline{toc}{chapter}{Resum\'e}
 
 I forbindelse med at software overtager flere sikkerheds-kritiske opgaver stiger vigtigheden af verificering af software. Den øgede popularitet af ``parallelprogrammering'' gør denne verificerings-opgave markant mere udfordrende. Dette speciale fokuser på kø-algoritmer, som ofte bruges i parallelprogrammering.\\
-Vi bruger program logikken Iris til at ræsonnere formelt omkring køer. Efter en kort introduktion til logikken bruger vi den til at udtrykke tre specifikationer for køer. Den mest generelle af disse er den såkaldte ``Hocap-style'' specifikation, som tillader køen at blive brugt i parallelle sammenhænge, samt understøtter at klienter kan holde styr på køens indhold. Vi demonstrerer at køer, der overholder Hocap-style specifikationen, også overholder de to andre specifikationer.\\
-Projektet udforsker derefter to specifikke køer: den blokerende og ikke-blokerende Michael-Scott kø. Vi give implementeringer af køerne i programmeringssproget \heaplang{}. Det vises, at begge implementeringer overholder Hocap-style specifikationen. Verifiseringen af den blokerende Michael-Scott kø fungerer ved brugen af en invariant, som holder styr på køens indhold, og specificerer de mulige tilstande som køren kan være i. Invarianten for den ikke-blokerende Michael-Scott kø benytter ideen om ``reachability'' fra tidligere arbejde. Alle beviser fremstillet i projektet er blevet maskine-verificeret i bevis assistenten Coq.
+Vi bruger program logikken Iris til at ræsonnere formelt omkring køer. Efter en kort introduktion til logikken anvender vi den til at udtrykke tre specifikationer for køer. Den mest generelle af disse er den såkaldte ``Hocap-style'' specifikation, som tillader køen at blive brugt i parallelle sammenhænge, samt understøtter at klienter kan holde styr på køens indhold. Vi demonstrerer at køer, der overholder Hocap-style specifikationen, også overholder de to andre specifikationer.\\
+Projektet udforsker derefter to specifikke køer: den blokerende og ikke-blokerende Michael-Scott kø. Vi give implementeringer af køerne i programmeringssproget \heaplang{}. Det vises, at begge implementeringer overholder Hocap-style specifikationen. Verifiseringen af den blokerende Michael-Scott kø fungerer ved brugen af en invariant, som holder styr på køens indhold, og specificerer de mulige tilstande, som køren kan være i. Invarianten for den ikke-blokerende Michael-Scott kø benytter ideen om ``reachability'' fra tidligere arbejde. Alle beviser fremstillet i projektet er blevet maskine-verificeret i bevis assistenten Coq.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -795,9 +795,7 @@ Table \ref{Pre:files-table} gives an overview of the files developed in the proj
   \toprule
   \textbf{File Name} & \textbf{Relevant Sections} & \textbf{Description} \\
   \midrule
-  \path{queue_specs.v} & Chapter \ref{ch:QueueSpecs} & \multirow{3}{\linewidth}{Implementation-independent specifications and derivations.} \\
-  \path{twoLockMSQ_derived.v} & Section \ref{QueueSpecs:section:deriving-seq-and-conc} & \\
-  \path{lockFreeMSQ_derived.v} & Section \ref{QueueSpecs:section:deriving-seq-and-conc} & \\
+  \path{queue_specs.v} & Chapter \ref{ch:QueueSpecs} & \multirow{1}{\linewidth}{Specifications and derivations.} \\
   \midrule
   \path{MSQ_common.v} & Chapters \ref{ch:TLMSQ} - \ref{ch:LFMSQSPECS} & Common definitions and lemmas. \\
   \midrule
@@ -1844,7 +1842,10 @@ To track which state the queue is in, we use \textit{tokens}. Importantly, token
 \end{restatable}
 
 \begin{restatable}[Token Exclusive]{lemma}{tokexclusive}\label{lemma:token:exclusive}
-  $\Token{\gname} \star{} \Token{\gname} \proves \FALSE$
+  For any ghost name $\gname$, owning $\Token{\gname}$ twice proves $\FALSE$. Formally,
+  \begin{equation*}
+    \Token{\gname} \star{} \Token{\gname} \proves \FALSE
+  \end{equation*}
 \end{restatable}
 
 We will use several tokens, each associated with their own ghost name. We collect all these new ghost names in $\ConcQgnames$, which then contains the ghost names for the two locks and the ghost names for the tokens.\\
@@ -2219,14 +2220,14 @@ Note that the points-to propositions are all persistent, which mimics the fact t
 
 We proceed to prove some useful lemmas about concrete reachability.
 \begin{lemma}[Reach Reflexive]\label{lemma:reach-reflexive}
-  $\reach{\nodeM{n}}{\nodeM{n}} \wandIff \isNode{\nodeM{n}}$
+  For a node $\nodeM{n}$, we have: $\reach{\nodeM{n}}{\nodeM{n}} \wandIff \isNode{\nodeM{n}}$.
 \end{lemma}
 \begin{proof}
   The $\wand$ direction follows directly by the definition. To prove the $\wandby$ direction, it suffices to show $(\nodeM{n} = \nodeM{n} \lor{} \Exists \nodeM{p} . \nOut{\nodeM{n}} \mapsto^{\persistently} \nIn{\nodeM{p}} \star{} \reach{\nodeM{p}}{\nodeM{n}})$. Clearly, this follows as the left disjunction holds.
 \end{proof}
 
 \begin{lemma}[Reach Transitive]\label{lemma:reach-transitive}
-  $\reach{\nodeM{n}}{\nodeM{m}} \wand \reach{\nodeM{m}}{\nodeM{o}} \wand \reach{\nodeM{n}}{\nodeM{o}}$
+  For nodes $\nodeM{n}$, $\nodeM{m}$, and $\nodeM{o}$, we have: $\reach{\nodeM{n}}{\nodeM{m}} \wand \reach{\nodeM{m}}{\nodeM{o}} \wand \reach{\nodeM{n}}{\nodeM{o}}$.
 \end{lemma}
 \begin{proof}
   We proceed by induction in $\reach{\nodeM{n}}{\nodeM{m}}$.
@@ -2238,21 +2239,25 @@ We proceed to prove some useful lemmas about concrete reachability.
 \end{proof}
 
 \begin{lemma}[Reach From is Node]\label{lemma:reach-from-is-node}
-  $\reach{\nodeM{n}}{\nodeM{m}} \wand \isNode{\nodeM{n}}$
+  For any $\nodeM{n}$ and $\nodeM{m}$, if $\reach{\nodeM{n}}{\nodeM{m}}$, then $\nodeM{n}$ is a node. That is, it satisfies: $\isNode{\nodeM{n}}$.
 \end{lemma}
 \begin{proof}
   This follow immediately from the definition or concrete reachability.
 \end{proof}
 
 \begin{lemma}[Reach To is Node]\label{lemma:reach-to-is-node}
-  $\reach{\nodeM{n}}{\nodeM{m}} \wand \isNode{\nodeM{m}}$
+  Similarly, for any $\nodeM{n}$ and $\nodeM{m}$, if 
+  $\reach{\nodeM{n}}{\nodeM{m}}$ then $\nodeM{m}$ is a node: $\isNode{\nodeM{m}}$.
 \end{lemma}
 \begin{proof}
   We proceed by induction in $\reach{\nodeM{n}}{\nodeM{m}}$. The base case follows by lemma \ref{lemma:reach-from-is-node} above. In the inductive case, we assume that $\nodeM{n}$ points to some $\nodeM{p}$, which reaches $\nodeM{m}$. Our induction hypothesis is $\isNode{\nodeM{m}}$, which is also our proof obligation, so we are done.
 \end{proof}
 
 \begin{lemma}[Reach Last]\label{lemma:reach-last}
-  $\reach{\nodeM{n}}{\nodeM{m}} \wand \nOut{\nodeM{n}} \mapsto \None \wand \nodeM{n} = \nodeM{m} \star{} \nOut{\nodeM{n}} \mapsto \None$
+  For any nodes $\nodeM{n}$ and $\nodeM{m}$ we have the following.
+  \begin{equation*}
+    \reach{\nodeM{n}}{\nodeM{m}} \wand \nOut{\nodeM{n}} \mapsto \None \wand \nodeM{n} = \nodeM{m} \star{} \nOut{\nodeM{n}} \mapsto \None
+  \end{equation*}
 \end{lemma}
 \begin{proof}
   Assuming $\reach{\nodeM{n}}{\nodeM{m}}$ and $\nOut{\nodeM{n}} \mapsto \None$, we must prove that $\nodeM{n} = \nodeM{m}$ and $\nOut{\nodeM{n}} \mapsto \None$.
@@ -2276,7 +2281,7 @@ Firstly, if we have a node, we may allocate some ghost variable $\gname$ which p
 
 The second lemma allows us to get a \textit{concrete} reachability predicate out of an abstract one. If a ghost name $\gname_m$ currently points abstractly to some node $\nodeM{m}$, then any node that can abstractly reach $\gname$, can also \textit{concretely} reach $\nodeM{m}$.
 \begin{restatable}[Abs Reach Concr]{lemma}{absreachconcr}\label{lemma:abs-reach-concr}
-  For nodes $\nodeM{n}$ and $\nodeM{m}$ and ghost names $\gname_m$, we have
+  For nodes $\nodeM{n}$ and $\nodeM{m}$, and ghost names $\gname_m$, we have
   \begin{equation*}
     \ar{\nodeM{n}}{\gname_m} \star{}
     \ap{\gname_m}{\nodeM{m}} \wand
@@ -2286,7 +2291,7 @@ The second lemma allows us to get a \textit{concrete} reachability predicate out
 
 We can also go the other way, and get an abstract reachability predicate out of a concrete one. If a ghost variable $\gname_m$ points abstractly to some node $\nodeM{m}$, and a node $\nodeM{n}$ can \textit{concretely} reach $\nodeM{m}$, then we may deduce that $\nodeM{n}$ can \textit{abstractly} reach $\gname_m$, meaning that $\nodeM{n}$ can reach any node that $\gname_m$ will ever point to in the future.
 \begin{restatable}[Abs Reach Abs]{lemma}{absreachabs}\label{lemma:abs-reach-abs}
-  For nodes $\nodeM{n}$ and $\nodeM{m}$ and ghost names $\gname_m$, we have
+  For nodes $\nodeM{n}$ and $\nodeM{m}$, and ghost names $\gname_m$, we have
   \begin{equation*}
     \reach{\nodeM{n}}{\nodeM{m}} \star{}
     \ap{\gname_m}{\nodeM{m}} \vs
@@ -2296,7 +2301,7 @@ We can also go the other way, and get an abstract reachability predicate out of 
 
 The final lemma allows us update abstract pointers. As discussed above, we will require that whatever node we update the pointer to is a successor of the current node. That is, if a ghost variable $\gname_m$ currently points to $\nodeM{m}$, then we must show that $\nodeM{m}$ can reach $\nodeM{o}$, before we can update $\gname$ to point abstractly to $\nodeM{o}$. After the update we additionally get that $\nodeM{o}$ can abstractly reach $\gname$.
 \begin{restatable}[Abs Reach Advance]{lemma}{absreachadvance}\label{lemma:abs-reach-advance}
-  For nodes $\nodeM{m}$ and $\nodeM{o}$ and ghost names $\gname_m$, we have
+  For nodes $\nodeM{m}$ and $\nodeM{o}$, and ghost names $\gname_m$, we have
   \begin{equation*}
     \ap{\gname_m}{\nodeM{m}} \star{}
     \reach{\nodeM{m}}{\nodeM{o}} \vs
@@ -2372,8 +2377,10 @@ With the invariant allocated, proving the post-condition becomes straightforward
 \subsubsection{Swing Tail}\label{LFMSQSPECS:subsub:swingtail}
 The specification we wish to prove is the following.
 \begin{lemma}[Swing Tail]\label{LFMSQSPECS:spec:swingtail}
-  $\All \lochead, \loctail, \nodetail, \nodenewtail, \Qg .\\
-  \hoareV[t]{\knowInv{\Nl.queue}{\LFQueueInvariantHocap(\lochead, \loctail, \Qg)} \star{} \reach{\nodetail}{\nodenewtail} \star{} \ar{\nodenewtail}{\Qg.\glast}}{\CAS \ \loctail \ \nIn{\nodetail} \ \nIn{\nodenewtail}}{\valB . \valB = \True \lor{} \valB = \False}$
+  \begin{equation*}
+    \All \lochead, \loctail, \nodetail, \nodenewtail, \Qg .
+  \hoareV[t]{\knowInv{\Nl.queue}{\LFQueueInvariantHocap(\lochead, \loctail, \Qg)} \star{} \reach{\nodetail}{\nodenewtail} \star{} \ar{\nodenewtail}{\Qg.\glast}}{\CAS \ \loctail \ \nIn{\nodetail} \ \nIn{\nodenewtail}}{\valB . \valB = \True \lor{} \valB = \False}
+  \end{equation*}
 \end{lemma}
 \begin{proof}
   The rule for $\CAS$ demands that we have a points-to predicate for $\loctail$. This is available inside the invariant, so we proceed to open it. This tells us that there is some $\nodetail'$ so that $\loctail \mapsto \nIn{\nodetail'}$. We consider both cases of the $\CAS$:

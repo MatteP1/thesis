@@ -1,8 +1,4 @@
 
-- In lemmas, should I write "For all nodes x, we have that x = x". Or should I just write "x = x".
-  I.e. style of Abs-reach-Concr vs style of reach-transitive
-  A: Write it out in words.
-
 - Hocap-style specification vs 
   HOCAP-style specification vs
   HOCAP specification?
@@ -10,6 +6,3 @@
 
 - Idea for client of queue?
   A: try to get your idea to work.
-
-- Should I include the derivations of the specific queues? or only include the general derivation? (twoLockMSQ_derived.v and lockFreeMSQ_derived.v)
-  A: remove them

@@ -160,8 +160,12 @@
 - [x] Rewrite moved sections and chapters to get a red line again
   - [x] Update References
 - [x] Make derivations in report not use the projections, hence following the derivation of queue_specs.v
-- [x] Correctly format "hoare triple" and "hocap style"
+- [x] Correctly format "hoare triple"
 - [x] Check if any extra todos from Amin's feedback
+
+- [ ] Fix spelling warnings
+- [ ] format "hocap style"
+- [x] format forall in lemmas.
 
 - [ ] Proof read report and fix the following:
   - [ ] Always start sentences with capital letter. Change sentences that start with variables to enforce this
