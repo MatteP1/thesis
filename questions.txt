@@ -15,3 +15,7 @@
 
 - Is length of report fine? Currently at 51.
   If not, where to cut?
+
+- Idea for client of queue?
+
+- Should I include the derivations of the specific queues? or only include the general derivation? (twoLockMSQ_derived.v and lockFreeMSQ_derived.v)
