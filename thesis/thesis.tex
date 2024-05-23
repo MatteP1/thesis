@@ -540,14 +540,17 @@ The project then examines two queue algorithms: the blocking and non-blocking Mi
 \chapter*{Resum\'e}
 \addcontentsline{toc}{chapter}{Resum\'e}
 
-\todo{in Danish\dots}
+I forbindelse med at software overtager flere sikkerheds-kritiske opgaver stiger vigtigheden af verificering af software. Den øgede popularitet af ``parallelprogrammering'' gør denne verificerings-opgave markant mere udfordrende. Dette speciale fokuser på kø-algoritmer, som ofte bruges i parallelprogrammering.\\
+Vi bruger program logikken Iris til at ræsonnere formelt omkring køer. Efter en kort introduktion til logikken bruger vi den til at udtrykke tre specifikationer for køer. Den mest generelle af disse er den såkaldte ``Hocap-style'' specifikation, som tillader køen at blive brugt i parallelle sammenhænge, samt understøtter at klienter kan holde styr på køens indhold. Vi demonstrerer at køer, der overholder Hocap-style specifikationen, også overholder de to andre specifikationer.\\
+Projektet udforsker derefter to specifikke køer: den blokerende og ikke-blokerende Michael-Scott kø. Vi give implementeringer af køerne i programmeringssproget \heaplang{}. Det vises, at begge implementeringer overholder Hocap-style specifikationen. Verifiseringen af den blokerende Michael-Scott kø fungerer ved brugen af en invariant, som holder styr på køens indhold, og specificerer de mulige tilstande som køren kan være i. Invarianten for den ikke-blokerende Michael-Scott kø benytter ideen om ``reachability'' fra tidligere arbejde. Alle beviser fremstillet i projektet er blevet maskine-verificeret i bevis assistenten Coq.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \chapter*{Acknowledgments}
 \addcontentsline{toc}{chapter}{Acknowledgments}
 
-\todo{\dots}
+I would like to thank my advisor, Amin Timany, for giving great guidance and feedback and for being a great teacher in both this and previous projects.\\
+A special thanks to my family who has given me support and encouragement throughout my studies.
 
 \vspace{2ex}
 \begin{flushright}
