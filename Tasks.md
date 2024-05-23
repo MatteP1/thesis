@@ -169,9 +169,9 @@
 
 - [x] Fix spelling warnings
 - [x] format "hocap style"
-- [x] format forall in lemmas.
-- [ ] only use "points to" for the predicate
-- [ ] Check for correctness of line number references
+- [x] format forall in lemmas
+- [x] only use "points to" for the predicate
+- [x] Check for correctness of line number references
 
 - [ ] Proofread report
 
