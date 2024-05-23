@@ -163,8 +163,8 @@
 - [x] Correctly format "hoare triple"
 - [x] Check if any extra todos from Amin's feedback
 
-- [ ] Fix spelling warnings
-- [ ] format "hocap style"
+- [x] Fix spelling warnings
+- [x] format "hocap style"
 - [x] format forall in lemmas.
 
 - [ ] Proof read report and fix the following:

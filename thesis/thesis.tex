@@ -252,7 +252,7 @@
 \newcommand{\concspecdeq}[1]{\concspecdeqGen{#1}{\vq}{\Qg}}
 
 
-% ------ Hocap Specification ------
+% ------ HOCAP-style Specification ------
 % Initialise
 \newcommand{\hocapspecinitHTGen}[2]{\hoare{\TRUE}{\initialise \ \TT}{#1 . \Exists #2 . \isqueue(#1, #2) \star{} \abstractstatefullfrag{#2.\gabst}{[]}}}
 
@@ -532,8 +532,8 @@
 \addcontentsline{toc}{chapter}{Abstract}
 
 Ensuring correctness of programs is of ever-growing importance as software increasingly handles safety-critical functions. The surge of concurrent programs makes this task significantly more challenging. This thesis focuses on queue algorithms which are commonly used in a concurrent setting.\\
-To reason formally about queues, we use the Iris program logic. After giving a brief introduction to the logic, we use it to express three queue specifications. The most general of these is the ``Hocap-style'' specification, which supports concurrent clients and allows tracking of queue contents. We demonstrate that this specification implies the other, simpler specifications.\\
-The project then examines two queue algorithms: the blocking and non-blocking Michael-Scott Queues. We give implementations for these algorithms in the programming language \heaplang{}. Both implementations are proven to satisfy the Hocap-style specification. The blocking Michael-Scott Queue is verified using an invariant that tracks the contents of the queue and specifies the possible states of the queue data structure. For the non-blocking Michael-Scott Queue, a notion of reachability, borrowed from existing work, is incorporated into its invariant to meet the Hocap-style specification. All proofs developed in this project have been mechanised in the Coq proof assistant.
+To reason formally about queues, we use the Iris program logic. After giving a brief introduction to the logic, we use it to express three queue specifications. The most general of these is the ``HOCAP-style'' specification, which supports concurrent clients and allows tracking of queue contents. We demonstrate that this specification implies the other, simpler specifications.\\
+The project then examines two queue algorithms: the blocking and non-blocking Michael-Scott Queues. We give implementations for these algorithms in the programming language \heaplang{}. Both implementations are proven to satisfy the HOCAP-style specification. The blocking Michael-Scott Queue is verified using an invariant that tracks the contents of the queue and specifies the possible states of the queue data structure. For the non-blocking Michael-Scott Queue, a notion of reachability, borrowed from existing work, is incorporated into its invariant to meet the HOCAP-style specification. All proofs developed in this project have been mechanised in the Coq proof assistant.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -541,8 +541,8 @@ The project then examines two queue algorithms: the blocking and non-blocking Mi
 \addcontentsline{toc}{chapter}{Resum\'e}
 
 I forbindelse med at software overtager flere sikkerheds-kritiske opgaver stiger vigtigheden af verificering af software. Den øgede popularitet af ``parallelprogrammering'' gør denne verificerings-opgave markant mere udfordrende. Dette speciale fokuser på kø-algoritmer, som ofte bruges i parallelprogrammering.\\
-Vi bruger program logikken Iris til at ræsonnere formelt omkring køer. Efter en kort introduktion til logikken anvender vi den til at udtrykke tre specifikationer for køer. Den mest generelle af disse er den såkaldte ``Hocap-style'' specifikation, som tillader køen at blive brugt i parallelle sammenhænge, samt understøtter at klienter kan holde styr på køens indhold. Vi demonstrerer at køer, der overholder Hocap-style specifikationen, også overholder de to andre specifikationer.\\
-Projektet udforsker derefter to specifikke køer: den blokerende og ikke-blokerende Michael-Scott kø. Vi give implementeringer af køerne i programmeringssproget \heaplang{}. Det vises, at begge implementeringer overholder Hocap-style specifikationen. Verifiseringen af den blokerende Michael-Scott kø fungerer ved brugen af en invariant, som holder styr på køens indhold, og specificerer de mulige tilstande, som køren kan være i. Invarianten for den ikke-blokerende Michael-Scott kø benytter ideen om ``reachability'' fra tidligere arbejde. Alle beviser fremstillet i projektet er blevet maskine-verificeret i bevis assistenten Coq.
+Vi bruger program logikken Iris til at ræsonnere formelt omkring køer. Efter en kort introduktion til logikken anvender vi den til at udtrykke tre specifikationer for køer. Den mest generelle af disse er den såkaldte ``HOCAP-style'' specifikation, som tillader køen at blive brugt i parallelle sammenhænge, samt understøtter at klienter kan holde styr på køens indhold. Vi demonstrerer at køer, der overholder HOCAP-style specifikationen, også overholder de to andre specifikationer.\\
+Projektet udforsker derefter to specifikke køer: den blokerende og ikke-blokerende Michael-Scott kø. Vi give implementeringer af køerne i programmeringssproget \heaplang{}. Det vises, at begge implementeringer overholder HOCAP-style specifikationen. Verifiseringen af den blokerende Michael-Scott kø fungerer ved brugen af en invariant, som holder styr på køens indhold, og specificerer de mulige tilstande, som køren kan være i. Invarianten for den ikke-blokerende Michael-Scott kø benytter ideen om ``reachability'' fra tidligere arbejde. Alle beviser fremstillet i projektet er blevet maskine-verificeret i bevis assistenten Coq.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -574,7 +574,7 @@ Correctness of software is of ever-growing importance as more and more safety-cr
 
 A verification technique that gives very strong correctness guarantees is that of using a \textit{program logic}. The idea is to set up a formal system that captures the semantics of a programming language, which one can then use to derive (i.e. prove) formal descriptions of how specific expressions behave: a specification of the program. That is, the logic allows us to write formal program specifications and prove them. One such program logic is \textit{Iris}, a concurrent separation logic that supports reasoning about concurrent programs and how the resources these programs operate on are used by participating threads.
 
-This project focuses on \textit{queues}. Using the aforementioned program logic, we give specifications for queue algorithms in general. These specifications vary in generality and complexity, reflecting the difficulties of reasoning about concurrent programs. The most general queue specification we develop is a so-called \textit{Hocap style} specification, which supports concurrent clients, and allows them to track the contents of the queue.
+This project focuses on \textit{queues}. Using the aforementioned program logic, we give specifications for queue algorithms in general. These specifications vary in generality and complexity, reflecting the difficulties of reasoning about concurrent programs. The most general queue specification we develop is a so-called \textit{HOCAP-style} specification, which supports concurrent clients, and allows them to track the contents of the queue.
 
 In this project, we study two concrete queue implementations, namely the blocking and non-blocking Michael-Scott Queues (\msq{}s for short). These queues demonstrate two of the most common synchronisation mechanisms: locks, which are blocking, and atomic instructions such as compare-and-swap, which are non-blocking.
 
@@ -585,11 +585,11 @@ This project makes the following contributions.
 \begin{itemize}
   \item Giving three different specifications for queues at different levels of generality.
   \item Proving that both \msq{}s meet these specifications.
-  \item Demonstrating that the Hocap-style specification implies the other two specifications.
+  \item Demonstrating that the HOCAP-style specification implies the other two specifications.
   \item Mechanising everything presented in this report in the Coq proof assistant.
 \end{itemize}
 
-The structure of the report is as follows. We begin in chapter \ref{ch:pre} with an exposition of the programming language used in the project, as well as the program logic, Iris. Following this, in chapter \ref{ch:QueueSpecs} we give the three queue specifications and discuss their capabilities. We further prove that the Hocap style specification can derive the other two specifications. Chapter \ref{ch:TLMSQ} discusses the \tlmsq{} and gives an implementation for it in our chosen programming language. We then proceed to prove that the implementation satisfies the three specifications in chapter \ref{ch:TLMSQSPECS}. In a similar way, chapter \ref{ch:LFMSQ} gives our implementation of the \lfmsq{}, and chapter \ref{ch:LFMSQSPECS} shows that it satisfies the Hocap style specification.
+The structure of the report is as follows. We begin in chapter \ref{ch:pre} with an exposition of the programming language used in the project, as well as the program logic, Iris. Following this, in chapter \ref{ch:QueueSpecs} we give the three queue specifications and discuss their capabilities. We further prove that the HOCAP-style specification can derive the other two specifications. Chapter \ref{ch:TLMSQ} discusses the \tlmsq{} and gives an implementation for it in our chosen programming language. We then proceed to prove that the implementation satisfies the three specifications in chapter \ref{ch:TLMSQSPECS}. In a similar way, chapter \ref{ch:LFMSQ} gives our implementation of the \lfmsq{}, and chapter \ref{ch:LFMSQSPECS} shows that it satisfies the HOCAP-style specification.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -669,6 +669,7 @@ The frame rule essentially states that resources which are not required to run t
     \htstoretemp
     \and
     \htbeta
+    \and
     \and
     \htcsq
     \and
@@ -799,12 +800,12 @@ Table \ref{Pre:files-table} gives an overview of the files developed in the proj
   \midrule
   \path{MSQ_common.v} & Chapters \ref{ch:TLMSQ} - \ref{ch:LFMSQSPECS} & Common definitions and lemmas. \\
   \midrule
-  \path{twoLockMSQ_impl.v} & Chapter \ref{ch:TLMSQ} & \multirow{4}{\linewidth}{\tlmsq{} implementation and proofs of sequential, concurrent, and Hocap-style specifications.} \\
+  \path{twoLockMSQ_impl.v} & Chapter \ref{ch:TLMSQ} & \multirow{4}{\linewidth}{\tlmsq{} implementation and proofs of sequential, concurrent, and HOCAP-style specifications.} \\
   \path{twoLockMSQ_sequential_spec.v} & Section \ref{TLMSQSPECS:section:sequential} & \\
   \path{twoLockMSQ_concurrent_spec.v} & Section \ref{TLMSQSPECS:section:concurrent} & \\
   \path{twoLockMSQ_hocap_spec.v} & Section \ref{TLMSQSPECS:section:hocap}& \\
   \midrule
-  \path{lockFreeMSQ_impl.v} & Chapter \ref{ch:LFMSQ} & \multirow{2}{\linewidth}{\lfmsq{} implementation and Hocap-style specification proof.} \\
+  \path{lockFreeMSQ_impl.v} & Chapter \ref{ch:LFMSQ} & \multirow{2}{\linewidth}{\lfmsq{} implementation and HOCAP-style specification proof.} \\
   \path{lockFreeMSQ_hocap_spec.v} & Chapter \ref{ch:LFMSQSPECS} & \\
   \midrule
   \path{lockAndCCFreeMSQ_impl.v} & Section \ref{LFMSQSPECS:section:discussion} & \multirow{2}{\linewidth}{Consistency-Check-Free version of \lfmsq{}.}\\
@@ -881,7 +882,7 @@ This specification additionally requires that $\isqueueconc$ is persistent, whic
 \section{Defining a HOCAP-style Specification}
 \label{QueueSpecs:section:hocap}
 
-In this section we will explore our most general specification: one that allows for both concurrency and tracking of the contents of the queue. We refer to this specification as a Hocap-style specification -- Higher Order Concurrent Abstract Predicate -- since it will be concurrent and parametrised by abstract predicates. This specification is more general than both the sequential and concurrent specifications in the sense that they are derivable from the Hocap-style specification. We prove this in section \ref{QueueSpecs:section:deriving-seq-and-conc}.
+In this section we will explore our most general specification: one that allows for both concurrency and tracking of the contents of the queue. We refer to this specification as a HOCAP-style specification -- Higher Order Concurrent Abstract Predicate -- since it will be concurrent and parametrised by abstract predicates. This specification is more general than both the sequential and concurrent specifications in the sense that they are derivable from the HOCAP-style specification. We prove this in section \ref{QueueSpecs:section:deriving-seq-and-conc}.
 
 As with concurrent specification, we cannot simply parametrise the queue predicate (now denoted $\isqueue$) with the abstract state of the queue. So to allow clients to keep track of the contents of the queue, we will ``split'' the abstract state into two parts; the authoritative view and the fragmental view. The clients will then own the fragmental view, allowing them to keep track of the contents of the queue, whereas the $\isqueue$ predicate will own the authoritative view. We will in particular make sure that, if one has both the fragmental and authoritative views, then these agree on the abstract state of the queue. Further, it is only possible to update the abstract state of the queue if one possess both the authoritative and fragmental views. Hence, clients will have to supply the fragmental view to be able to apply the specifications for $\enqueue$ and $\dequeue$.
 
@@ -918,8 +919,8 @@ The final lemma shows that, if we own both the authoritative and fragmental view
 
 The collection of ghost names is now denoted $\Qgnames$, but as all queues will have to deal with the ghost name keeping track of the abstract state as describe above, we require that any $\Qgnames$ will contain a ghost name used for this purpose. We shall refer to this ghost name as $\gabst$.
 
-With this, we now give the Hocap-style specification, and explain the intricacies of it afterwards.
-\begin{definition}[Hocap Specification]\label{QueueSpecs:spec:hocap}
+With this, we now give the HOCAP-style specification, and explain the intricacies of it afterwards.
+\begin{definition}[HOCAP Specification]\label{QueueSpecs:spec:hocap}
 \begin{align*}
   &\Exists \isqueue : \Val \to \Qgnames \to \Prop.\\
   &\quad\quad \All \vq, \Qg . \isqueue(\vq, \Qg) \implies \persistently \isqueue(\vq, \Qg)\\
@@ -936,16 +937,16 @@ The specifications for $\enqueue$ and $\dequeue$ have now been parametrised by t
 
 It might seem a bit strange that the client has to prove that the abstract state can be updated, but remember that the client owns the fragmental view, and that both this and the authoritative view, which is owned by the queue, is needed to update the abstract state. When proving the view-shift, clients are not updating the abstract state of the queue, they are merely showing that they can supply the fragmental view, allowing the abstract state to be updated. This then enables the queue to update the authoritative view of the abstract state (using the proved view-shift) in conjunction with updating the concrete view.
 
-Exactly how client supply the fragmental view depends on what the client wants to achieve. We will see two options, when we derive the sequential and concurrent specifications from this Hocap-style specification in the next section.
+Exactly how client supply the fragmental view depends on what the client wants to achieve. We will see two options, when we derive the sequential and concurrent specifications from this HOCAP-style specification in the next section.
 
 %=====================================================================
 \section{Deriving Sequential and Concurrent Specifications}
 \label{QueueSpecs:section:deriving-seq-and-conc}
 
-It is technically possible to derive the sequential and concurrent specifications from the Hocap-style specification without having proven the Hocap-style specification for a specific queue. However, it might be beneficial for the reader to first see how we can prove each specification \textit{directly} for a specific queue, which we show in chapter \ref{ch:TLMSQSPECS}, and then return to this section.
+It is technically possible to derive the sequential and concurrent specifications from the HOCAP-style specification without having proven the HOCAP-style specification for a specific queue. However, it might be beneficial for the reader to first see how we can prove each specification \textit{directly} for a specific queue, which we show in chapter \ref{ch:TLMSQSPECS}, and then return to this section.
 
 
-In this section we show that we can derive the sequential and concurrent specifications from sections \ref{QueueSpecs:section:seq} and \ref{QueueSpecs:section:conc} from the Hocap-style specification we saw in the previous chapter. These derivations are implementation independent, so we assume that we have some functions $\initialise$, $\enqueue$, and $\dequeue$ which satisfy the Hocap-style specification of definition \ref{QueueSpecs:spec:hocap}, and we wish to prove that they also satisfy the sequential and concurrent specifications of definitions \ref{QueueSpecs:spec:seq} and \ref{QueueSpecs:spec:conc}. That is, we assume that we have a collection of ghost names, $\Qgnames$, a persistent queue predicate, $\isqueue$, and the three Hocap-style specifications for $\initialise$, $\enqueue$, and $\dequeue$. Both derivations will simply use $\Qgnames$ as the collection of ghost names. So we let $\SeqQgnames$ and $\ConcQgnames$ be $\Qgnames$ in the following.
+In this section we show that we can derive the sequential and concurrent specifications from sections \ref{QueueSpecs:section:seq} and \ref{QueueSpecs:section:conc} from the HOCAP-style specification we saw in the previous chapter. These derivations are implementation independent, so we assume that we have some functions $\initialise$, $\enqueue$, and $\dequeue$ which satisfy the HOCAP-style specification of definition \ref{QueueSpecs:spec:hocap}, and we wish to prove that they also satisfy the sequential and concurrent specifications of definitions \ref{QueueSpecs:spec:seq} and \ref{QueueSpecs:spec:conc}. That is, we assume that we have a collection of ghost names, $\Qgnames$, a persistent queue predicate, $\isqueue$, and the three HOCAP-style specifications for $\initialise$, $\enqueue$, and $\dequeue$. Both derivations will simply use $\Qgnames$ as the collection of ghost names. So we let $\SeqQgnames$ and $\ConcQgnames$ be $\Qgnames$ in the following.
 
 \subsection{Deriving the Sequential Specification}
 Recall the sequential specification specified in definition \ref{QueueSpecs:spec:seq}. It demands a queue predicate, $\isqueueseq$. We here choose to define it as follows.
@@ -963,7 +964,7 @@ Recall the sequential specification for initialise:
 \begin{equation*}
   \seqspecinit
 \end{equation*}
-Unfolding $\isqueueseq$, this Hoare triple follows directly from the Hocap-style initialise specification (cf. lemma \ref{QueueSpecs:spec:hocap}).
+Unfolding $\isqueueseq$, this Hoare triple follows directly from the HOCAP-style initialise specification (cf. lemma \ref{QueueSpecs:spec:hocap}).
 
 \subsubsection{Sequential Enqueue Specification}
 The specification for $\enqueue$ states:
@@ -974,7 +975,7 @@ So assume some $\vq$, $\absvalue$, $\absvalueList$, and $\Qg$. Unfolding $\isque
 \begin{equation*}
   \hoare{\isqueue(\vq, \Qg) \star{} \abstractstatefullfrag{\Qg.\gabst}{\absvalueList}}{\enqueue \ \vq \ \absvalue}{\valB . \isqueue(\vq, \Qg) \star{} \abstractstatefullfrag{\Qg.\gabst}{(\absvalue :: \absvalueList)}}
 \end{equation*}
-To prove the Hoare triple, we shall use the Hocap-style specification for enqueue. This however requires us to pick $P$ and $Q$, and prove the resulting view-shift.
+To prove the Hoare triple, we shall use the HOCAP-style specification for enqueue. This however requires us to pick $P$ and $Q$, and prove the resulting view-shift.
 We choose
 \begin{align*}
   &P \eqdef \abstractstatefullfrag{\Qg.\gabst}{\absvalueList}&
@@ -997,7 +998,7 @@ We use a similar approach to above to prove the sequential dequeue specification
 \begin{equation*}
   \seqspecdeq
 \end{equation*}
-So we assume some $\vq$, $\absvalueList$, $\Qg$. We now instantiate the Hocap-style dequeue specification with the following choices:
+So we assume some $\vq$, $\absvalueList$, $\Qg$. We now instantiate the HOCAP-style dequeue specification with the following choices:
 \begin{align*}
   P &\eqdef \abstractstatefullfrag{\Qg.\gabst}{\absvalueList}\\
   Q(\nodeval) &\eqdef \begin{array}{l}(\absvalueList = [] \star{} \nodeval = \None \star{} \abstractstatefullfrag{\Qg.\gabst}{\absvalueList}) \lor{}\\ (\Exists \absvalue, \absvalueList'. \absvalueList = \absvalueList' \catenate [\absvalue] \star{} \nodeval = \Some{\absvalue} \star{} \abstractstatefullfrag{\Qg.\gabst}{\absvalueList'})\end{array}
@@ -1030,11 +1031,11 @@ We have to derive the specification:
 \begin{equation*}
   \concspecinit{\Psi}
 \end{equation*}
-As before, this specification only differs from the Hocap-style specification for initialise in the post-condition. We use the \emph{generalised} rule of consequence \ruleref{Ht-csq-vs} and show that the post-condition of the Hocap-style specification, i.e. $\Exists \Qg . \isqueue(\vq, \Qg) \star{} \abstractstatefullfrag{\Qg.\gabst}{[]}$, implies the post-condition above but with an update modality, $\pvs$, in front. Both mention the queue predicates, $\isqueue(\vq, \Qg)$, so it suffices to prove the invariant:
+As before, this specification only differs from the HOCAP-style specification for initialise in the post-condition. We use the \emph{generalised} rule of consequence \ruleref{Ht-csq-vs} and show that the post-condition of the HOCAP-style specification, i.e. $\Exists \Qg . \isqueue(\vq, \Qg) \star{} \abstractstatefullfrag{\Qg.\gabst}{[]}$, implies the post-condition above but with an update modality, $\pvs$, in front. Both mention the queue predicates, $\isqueue(\vq, \Qg)$, so it suffices to prove the invariant:
 \begin{equation*}
   \pvs \knowInv{\Nl.c}{\Exists \absvalueList. \abstractstatefullfrag{\Qg.\gabst}{\absvalueList} \star{} \AllP(\absvalueList, \Psi)}
 \end{equation*}
-We have $\abstractstatefullfrag{\Qg.\gabst}{[]}$ from the Hocap-style post-condition, and $\AllP([], \Psi)$ is equivalent to $\TRUE$. Hence, we can deduce $\Exists \absvalueList. \abstractstatefullfrag{\Qg.\gabst}{\absvalueList} \star{} \AllP(\absvalueList, \Psi)$. The rule \ruleref{Inv-alloc} shows us that we can turn this into the above invariant, so we are done.
+We have $\abstractstatefullfrag{\Qg.\gabst}{[]}$ from the HOCAP-style post-condition, and $\AllP([], \Psi)$ is equivalent to $\TRUE$. Hence, we can deduce $\Exists \absvalueList. \abstractstatefullfrag{\Qg.\gabst}{\absvalueList} \star{} \AllP(\absvalueList, \Psi)$. The rule \ruleref{Inv-alloc} shows us that we can turn this into the above invariant, so we are done.
 
 
 \subsubsection{Concurrent Enqueue Specification}
@@ -1047,7 +1048,7 @@ Assume some $\vq$, $\absvalue$, $\Qg$, and the invariant $\knowInv{\Nl.c}{\Exist
   \hoare{\isqueue(\vq, \Qg) \star{} \Psi(\absvalue)}{\enqueue \ \vq \ \absvalue}{\valB . \TRUE}
 \end{equation*}
 
-We specialise the Hocap-style enqueue specification with $P \eqdef \Psi(\absvalue)$ and $Q \eqdef \TRUE$. With this choice, the Hoare triple we get after proving the view-shift exactly matches our goal. Hence, we are done if we can prove the view-shift.
+We specialise the HOCAP-style enqueue specification with $P \eqdef \Psi(\absvalue)$ and $Q \eqdef \TRUE$. With this choice, the Hoare triple we get after proving the view-shift exactly matches our goal. Hence, we are done if we can prove the view-shift.
 
 We assume $\absvalueList'$, and prove the view-shift:
 \begin{equation*}
@@ -1652,9 +1653,9 @@ Observation \ref{TLMSQ:insights:states} is a simple consequence of the implement
 \section{Introduction}
 \label{TLMSQSPECS:section:introduction}
 
-In this chapter we show that the \tlmsq{} satisfies the three queue specifications introduces in chapter \ref{ch:QueueSpecs}. Section \ref{QueueSpecs:section:deriving-seq-and-conc} of said chapter showed us that we get the sequential and concurrent specifications essentially for free, granted we can prove that \tlmsq{} satisfies the Hocap-style specification. However, for instructive purposes, we will in this chapter give the sequential and concurrent specifications directly, as the proof of the Hocap-style specification can get somewhat overwhelming.
+In this chapter we show that the \tlmsq{} satisfies the three queue specifications introduces in chapter \ref{ch:QueueSpecs}. Section \ref{QueueSpecs:section:deriving-seq-and-conc} of said chapter showed us that we get the sequential and concurrent specifications essentially for free, granted we can prove that \tlmsq{} satisfies the HOCAP-style specification. However, for instructive purposes, we will in this chapter give the sequential and concurrent specifications directly, as the proof of the HOCAP-style specification can get somewhat overwhelming.
 
-In section \ref{TLMSQSPECS:section:sequential} we prove that the \tlmsq satisfies the sequential specification. This also introduces some of the basic predicates we use for the queue. Next, in section \ref{TLMSQSPECS:section:concurrent}, we prove the concurrent specification, which introduces some more complexities, such as invariant, and shows us how we can work with concurrent programs. Finally, section \ref{TLMSQSPECS:section:hocap} shows how to modify the proof of the concurrent specification to prove the Hocap style specification.
+In section \ref{TLMSQSPECS:section:sequential} we prove that the \tlmsq satisfies the sequential specification. This also introduces some of the basic predicates we use for the queue. Next, in section \ref{TLMSQSPECS:section:concurrent}, we prove the concurrent specification, which introduces some more complexities, such as invariant, and shows us how we can work with concurrent programs. Finally, section \ref{TLMSQSPECS:section:hocap} shows how to modify the proof of the concurrent specification to prove the HOCAP-style specification.
 
 %=====================================================================
 \section{Sequential Specification}
@@ -1704,7 +1705,7 @@ Then, to define $\isLL$, we add that the last node in the linked list points to 
   \end{align*}
 \end{definition}
 
-For instance, if we wanted to capture the linked list in figure \ref{TLMSQ:impl:figure:enqueue:c}, we would use the list $\xsc = [(\locinM{3}, \nodevalM{3}, \locoutM{3}); (\locinM{2}, \nodevalM{2}, \locoutM{2});  (\locinM{1}, \nodevalM{1}, \locoutM{1})]$. $\isLL(\xsc)$ will expand to $\locoutM{3} \mapsto \None \star{} \isLLchain(\xsc)$, and $\isLLchain(\xsc)$ expands to
+For instance, if we wanted to capture the linked list in figure \ref{TLMSQ:impl:figure:enqueue:c}, we would use the following list: $\xsc = [(\locinM{3}, \nodevalM{3}, \locoutM{3}); (\locinM{2}, \nodevalM{2}, \locoutM{2});  (\locinM{1}, \nodevalM{1}, \locoutM{1})]$. The proposition $\isLL(\xsc)$ then expands to $\locoutM{3} \mapsto \None \star{} \isLLchain(\xsc)$, and $\isLLchain(\xsc)$ expands to
 \begin{align*}
   &\locinM{3} \mapsto^{\persistently} (\nodevalM{3}, \locoutM{3}) \star{} \locoutM{2}	\mapsto^{\persistently} \locinM{3}\star{}\\
   &\locinM{2} \mapsto^{\persistently} (\nodevalM{2}, \locoutM{2}) \star{} \locoutM{1}\mapsto^{\persistently} \locinM{2} \star{}\\
@@ -1905,7 +1906,7 @@ One way to characterise linearisability is through the concept of \textit{linear
 For example, $\enqueue$ has a single linearisation point at the instruction that appends the newly created node to the linked list (the store on line \ref{TLE:add}). At exactly that point, the effect of the enqueue takes place. $\dequeue$ is slightly more complicated as it has multiple linearisation points. If the queue is empty when we read the head node's out pointer on line \ref{TLD:new}, then at that read, the $\dequeue$ function is guaranteed to return $\None$, interpreting the queue as empty. In this case the $\dequeue$ doesn't change the queue but merely observes it, and the observation happens exactly at the read of the head node's out pointer, making it the linearisation point.\\
 On the hand, if the queue was not empty at that point, then the linearisation point is at line \ref{TLD:shs}, when we swing the head pointer. At that very store operation, the effect of $\dequeue$ occurs.
 
-Linearisation points are closely tied to updates of the abstract state of the queue. The abstract state of the queue changes only at linearisation points. This is consistent with the notion that the effects of the function takes effect at the linearisation points -- updates to the abstract state happen atomically as we would intuitively want it to. This link to the abstract state becomes even more prevalent when we prove Hocap-style specifications in sections \ref{TLMSQSPECS:section:hocap} and section \ref{LFMSQSPECS:section:proof-outline}.
+Linearisation points are closely tied to updates of the abstract state of the queue. The abstract state of the queue changes only at linearisation points. This is consistent with the notion that the effects of the function takes effect at the linearisation points -- updates to the abstract state happen atomically as we would intuitively want it to. This link to the abstract state becomes even more prevalent when we prove HOCAP-style specifications in sections \ref{TLMSQSPECS:section:hocap} and section \ref{LFMSQSPECS:section:proof-outline}.
 
 \subsection{Proof Outline}
 \label{TLMSQSPECS:concurrent:sub:proof-outline}
@@ -2018,17 +2019,17 @@ As mentioned in the observations, it is possible for the tail to lag one node be
 Had we not used an $\xsold$ and essentially just ``forgotten'' old nodes, we couldn't have done this. Say we defined $\xsc$ as $\xsc = \xsqueue \catenate [\nodehead]$ instead. Then, once we have to close the invariant, we cannot supply $\xsc$, which we got when we opened the invariant. Our only choice (due to the fact that $loc_{head}$ must point to $\nodeheadnext$) is to close the invariant with $\xsc' = \xsqueue = \xsqueue' \catenate [\nodeheadnext]$. However, clearly $\xsc' \neq \xsc$, so we cannot supply the same predicate concerning the location of $\nodetail$ that we got when opening the invariant, since this predicate talks about $\xsc$, not $\xsc'$. Now, if we opened the invariant in the state \DequeueState, then we could conclude $\isLast(\nodetail, \xsc')$ from $\isLast(\nodetail, \xsc)$, due to the relationship between $\xsc$ and $\xsc'$, and still be able close the invariant. However, if we opened the invariant in state \BothState, then we would need to assert $\isSndLast(\nodetail, \xsc')$ from $\isSndLast(\nodetail, \xsc)$. This is however not provable, since $\isSndLast(\nodetail, \xsc)$ allows for the case where $\xsqueue'$ is empty. In this case $\xsc' = [\nodeheadnext]$ which makes it impossible to prove $\isSndLast(\nodetail, \xsc')$, as it is impossible to the be the second last element in a list of size one.
 
 %=====================================================================
-\section{Hocap-Style Specification}
+\section{HOCAP-Style Specification}
 \label{TLMSQSPECS:section:hocap}
 
 \subsection{Introduction}
-When proving the concurrent specification in the previous section, we were quite careful with tracking the state of the queue, and to some extent, even its contents. The contents may have been existentially quantified, but through saving half a pointer, we could match up the contents of the queue between invariant openings. Given this precision in the proof, it should be no surprise that proving the Hocap-style specification will be very similar. This section will hence focus on the parts where the proof of the Hocap-style specification differs from that of the concurrent specification.
+When proving the concurrent specification in the previous section, we were quite careful with tracking the state of the queue, and to some extent, even its contents. The contents may have been existentially quantified, but through saving half a pointer, we could match up the contents of the queue between invariant openings. Given this precision in the proof, it should be no surprise that proving the HOCAP-style specification will be very similar. This section will hence focus on the parts where the proof of the HOCAP-style specification differs from that of the concurrent specification.
 
 
-\subsection{Hocap-Style Queue Predicate}
+\subsection{HOCAP-Style Queue Predicate}
 \label{TLMSQSPECS:hocap:sub:hocap-queue-pred}
-Our definition of the queue predicate, $\isqueue$, is \emph{almost} the same as $\isqueueconc$. First and foremost, the collection of ghost names, $\Qgnames$, now contains the additional ghost name: $\gabst$, as required. For the queue invariant, the differences are that we no longer take the predicate $\Psi$, and we assert $\abstractstateauth{\Qg.\gabst}{\absvalueList}$ instead of $\AllP(\absvalueList, \Psi)$. That is, our queue invariant for the Hocap-style specification now looks as follows.
-\begin{definition}[\tlmsq{} Hocap Invariant]\label{TLMSQ:spec:hocap:invariant}
+Our definition of the queue predicate, $\isqueue$, is \emph{almost} the same as $\isqueueconc$. First and foremost, the collection of ghost names, $\Qgnames$, now contains the additional ghost name: $\gabst$, as required. For the queue invariant, the differences are that we no longer take the predicate $\Psi$, and we assert $\abstractstateauth{\Qg.\gabst}{\absvalueList}$ instead of $\AllP(\absvalueList, \Psi)$. That is, our queue invariant for the HOCAP-style specification now looks as follows.
+\begin{definition}[\tlmsq{} HOCAP Invariant]\label{TLMSQ:spec:hocap:invariant}
   \begin{align*}
     &\TLQueueInvariantHocap(\lochead, \loctail, \Qg) \eqdef\\
     &\Exists \absvalueList. \abstractstateauth{\Qg.\gabst}{\absvalueList} \star{} &&\text{(abstract state)}\\
@@ -2055,7 +2056,7 @@ Our definition of the queue predicate, $\isqueue$, is \emph{almost} the same as 
 \end{definition}
 
 For the queue predicate, the only real difference is that we no longer take the predicate $\Psi$. That is, our queue predicate is the following.
-\begin{definition}[\tlmsq{} - $\isqueue$ Predicate (Hocap)]\label{TLMSQ:spec:hocap:isqueue}
+\begin{definition}[\tlmsq{} - $\isqueue$ Predicate (HOCAP)]\label{TLMSQ:spec:hocap:isqueue}
   \begin{align*}
     \isqueueconc(\vq, \Qg) \eqdef
     &\Exists \locqueue, \lochead, \loctail \in \Loc . \Exists \Hlock, \Tlock \in \Val . \\
@@ -2069,10 +2070,10 @@ For the queue predicate, the only real difference is that we no longer take the 
 
 \subsection{Proof Sketch}
 \label{TLMSQSPECS:hocap:sub:proof-Sketch}
-The Hocap-style proofs are largely similar their concurrent counterparts. However, instead of having to handle the $\Psi$ predicate, we must now work with the authoritative and fragmental views of the abstract state. For initialise, we must additionally get ownership of the authoritative and fragmental view of the empty abstract state, and for enqueue and dequeue, the only real changes happen at the linearisation points. We sketch these challenges below.
+The HOCAP-style proofs are largely similar their concurrent counterparts. However, instead of having to handle the $\Psi$ predicate, we must now work with the authoritative and fragmental views of the abstract state. For initialise, we must additionally get ownership of the authoritative and fragmental view of the empty abstract state, and for enqueue and dequeue, the only real changes happen at the linearisation points. We sketch these challenges below.
 
 \subsubsection{Initialise}
-\begin{lemma}[\tlmsq{} Hocap Specification - Initialise]\label{TLMSQ:spec:hocap:initialise}
+\begin{lemma}[\tlmsq{} HOCAP Specification - Initialise]\label{TLMSQ:spec:hocap:initialise}
   \begin{equation*}
     \hocapspecinit
   \end{equation*}
@@ -2081,7 +2082,7 @@ As discussed, we must obtain $\abstractstateauth{\Qg.\gabst}{[]} \star{} \abstra
 
 
 \subsubsection{Enqueue}
-\begin{lemma}[\tlmsq{} Hocap Specification - Enqueue]\label{TLMSQ:spec:hocap:enqueue}
+\begin{lemma}[\tlmsq{} HOCAP Specification - Enqueue]\label{TLMSQ:spec:hocap:enqueue}
   \begin{equation*}
     \hocapspecenq
   \end{equation*}
@@ -2089,7 +2090,7 @@ As discussed, we must obtain $\abstractstateauth{\Qg.\gabst}{[]} \star{} \abstra
 We start by assuming the view-shift which allows us to update $P$ to $Q$ and $\abstractstateauth{\Qg.\gabst}{\absvalueList}$ to $\abstractstateauth{\Qg.\gabst}{(\absvalue :: \absvalueList)}$, for any $\absvalueList$. The only real change from the previous proof happens the second time we open the invariant; the first and third times, the abstract state doesn't change, hence we simply frame away the newly added authoritative fragment, and continue as we did before. The second time we open the invariant is on line \ref{TLE:add}, around the expression that adds the newly created node, $\nodenew$, to the linked list. When opening the invariant, we now get $\abstractstateauth{\Qg.\gabst}{\absvalueList}$. And as before, we also get all the resources to match up variables and step through the code, updating the concrete state. To close the invariant, we must make the same choice of abstract state as we did previously: $(\absvalue :: \absvalueList)$. This, however, requires us to obtain $\abstractstateauth{\Qg.\gabst}{(\absvalue :: \absvalueList)}$. However, since we have $\abstractstateauth{\Qg.\gabst}{\absvalueList}$ and $P$ (from the pre-condition), we can apply the view-shift to obtain it, along with $Q$. This then allows us to close the invariant, and the proof proceeds as previously. At the end, we must now additionally prove the post-condition $Q$, but this is no issue as we obtained that from the view-shift.
 
 \subsubsection{Dequeue}
-\begin{lemma}[\tlmsq{} Hocap Specification - Dequeue]\label{TLMSQ:spec:hocap:dequeue}
+\begin{lemma}[\tlmsq{} HOCAP Specification - Dequeue]\label{TLMSQ:spec:hocap:dequeue}
   \begin{equation*}
     \hocapspecdeq
   \end{equation*}
@@ -2184,14 +2185,14 @@ To solve this issue, we use a \textit{prophecy variable}. Prophecies are a part 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\chapter{Proving Hocap-style Specification for the Lock-Free Michael-Scott Queue}
+\chapter{Proving HOCAP-style Specification for the Lock-Free Michael-Scott Queue}
 \label{ch:LFMSQSPECS}
 
 %=====================================================================
 \section{Introduction}
 \label{LFMSQSPECS:section:introduction}
 
-In this chapter we prove that the \lfmsq{} satisfies the Hocap-style specification given in section \ref{QueueSpecs:section:hocap}. Section \ref{LFMSQSPECS:section:reachability} introduces the notion of \textit{Reachability} which we will need in the proofs. In section \ref{LFMSQSPECS:section:spec} we discuss the specification we will be proving, and in sections \ref{LFMSQSPECS:section:hocap-queue-pred} and \ref{LFMSQSPECS:section:proof-outline} we give the proofs. Finally, in section \ref{LFMSQSPECS:section:discussion}, we discuss a simplification to the \lfmsq{} algorithm and its implications.
+In this chapter we prove that the \lfmsq{} satisfies the HOCAP-style specification given in section \ref{QueueSpecs:section:hocap}. Section \ref{LFMSQSPECS:section:reachability} introduces the notion of \textit{Reachability} which we will need in the proofs. In section \ref{LFMSQSPECS:section:spec} we discuss the specification we will be proving, and in sections \ref{LFMSQSPECS:section:hocap-queue-pred} and \ref{LFMSQSPECS:section:proof-outline} we give the proofs. Finally, in section \ref{LFMSQSPECS:section:discussion}, we discuss a simplification to the \lfmsq{} algorithm and its implications.
 
 %=====================================================================
 \section{Reachability}
@@ -2313,12 +2314,12 @@ The final lemma allows us update abstract pointers. As discussed above, we will 
 \section{Specifications for \lfmsq{}}
 \label{LFMSQSPECS:section:spec}
 
-As we showed in section \ref{QueueSpecs:section:deriving-seq-and-conc}, the sequential and concurrent specifications can be derived from the Hocap-style specification \emph{without} referring to the actual implementation. Thus, in this chapter we focus only on proving the Hocap-style specification, and rely on the derivations to prove the concurrent and sequential specifications.
+As we showed in section \ref{QueueSpecs:section:deriving-seq-and-conc}, the sequential and concurrent specifications can be derived from the HOCAP-style specification \emph{without} referring to the actual implementation. Thus, in this chapter we focus only on proving the HOCAP-style specification, and rely on the derivations to prove the concurrent and sequential specifications.
 
-We prove the Hocap-style specification for the $\initialise$, $\enqueue$, and $\dequeue$ functions introduced in chapter \ref{ch:LFMSQ}. We make the collection of ghost names, $\Qgnames$, be the set of four-tuples. Firstly, it contains the mandatory $\gabst$ whose purpose is the same as before; to keep track of the abstract state of the queue. Additionally, it contains $\ghead$, $\gtail$, and $\glast$, which will abstractly point to the head, tail, and last node, respectively.
+We prove the HOCAP-style specification for the $\initialise$, $\enqueue$, and $\dequeue$ functions introduced in chapter \ref{ch:LFMSQ}. We make the collection of ghost names, $\Qgnames$, be the set of four-tuples. Firstly, it contains the mandatory $\gabst$ whose purpose is the same as before; to keep track of the abstract state of the queue. Additionally, it contains $\ghead$, $\gtail$, and $\glast$, which will abstractly point to the head, tail, and last node, respectively.
 
 %=====================================================================
-\section{Hocap-style Queue Predicate}
+\section{HOCAP-style Queue Predicate}
 \label{LFMSQSPECS:section:hocap-queue-pred}
 
 Since the queue predicate is required to be persistent and multiple threads need to access shared resources of the queue, we will be needing an invariant. The invariant we define has some commonalities with the invariant we used for the two-lock variant, but it incorporates the differences we discussed earlier in the chapter. In particular, it is important for the correctness of the queue that the tail does not lag behind the head. As such, our invariant will not allow for this behaviour. This has the extra implication that the head node is always the oldest node, meaning that we do not need to keep track of older nodes, $\xsold$.
@@ -2518,7 +2519,7 @@ We do this check \textit{after} reading any ``next'' nodes to ensure that they a
 
 However, the language used in \citet{DBLP:conf/cpp/VindumB21} and this project, \heaplang, is a garbage-collected language. This means that we do not need to worry about freeing nodes, and the ABA problem doesn't occur. In other words, when we read the ``next'' of a node, we can be certain that it is the next of the node we originally read -- no one could have freed it in a dequeue it and subsequently allocated a similar looking node in an enqueue. This then means that the consistency checks are no longer needed.
 
-Indeed, in the Coq formalisations, we prove the Hocap-style specification for an implementation that doesn't have the consistency checks. As an additional benefit, removing the consistency check means that in $\dequeue$, we know already when we read the ``next'' of the head node on line \ref{LFD:nex} whether or not the dequeue will conclude that the queue is empty, and hence whether or not the load is a linearisation point. The prophecy variable is thus not needed, which further simplifies the proof of the specification.
+Indeed, in the Coq formalisations, we prove the HOCAP-style specification for an implementation that doesn't have the consistency checks. As an additional benefit, removing the consistency check means that in $\dequeue$, we know already when we read the ``next'' of the head node on line \ref{LFD:nex} whether or not the dequeue will conclude that the queue is empty, and hence whether or not the load is a linearisation point. The prophecy variable is thus not needed, which further simplifies the proof of the specification.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -2626,14 +2627,14 @@ The authoritative set is existentially quantified as it can change over time, bu
 \chapter{Conclusion and Future Work}
 \label{ch:conclusion_fw}
 
-In this project, we gave three queue specifications, expressed in the Iris program logic. The \textit{sequential specification} allows client to track the contents of the queue, but the queue cannot be used concurrently. The \textit{concurrent specification} allows for concurrency, but there is no functionality for tracking the queue contents. The final and most general specification -- the \textit{Hocap-style specification} -- can not only be used by concurrent clients, it also allows clients to track the queue contents. This functionality was made possible by introducing suitable predicates which track the queue contents. In particular, we introduced two ``views'' of the abstract state of the queue, $\absvalueList$: the \textit{authoritative} view $\abstractstateauth{\gname}{\absvalueList}$, and the \textit{fragmental} view $\abstractstatefullfrag{\gname}{\absvalueList}$. The authoritative view is owned by the queue, and the fragmental view is owned by clients. The construction of the predicates enforces that the views agree on the state of the queue and ensures they can only be updated in unison. This gives clients a way to track the contents of the queue.\\
-We furthermore demonstrated that the sequential and concurrent specifications are derivable from the Hocap-style specification. That is, a queue satisfying the Hocap-style specification also satisfies the other two.
+In this project, we gave three queue specifications, expressed in the Iris program logic. The \textit{sequential specification} allows client to track the contents of the queue, but the queue cannot be used concurrently. The \textit{concurrent specification} allows for concurrency, but there is no functionality for tracking the queue contents. The final and most general specification -- the \textit{HOCAP-style specification} -- can not only be used by concurrent clients, it also allows clients to track the queue contents. This functionality was made possible by introducing suitable predicates which track the queue contents. In particular, we introduced two ``views'' of the abstract state of the queue, $\absvalueList$: the \textit{authoritative} view $\abstractstateauth{\gname}{\absvalueList}$, and the \textit{fragmental} view $\abstractstatefullfrag{\gname}{\absvalueList}$. The authoritative view is owned by the queue, and the fragmental view is owned by clients. The construction of the predicates enforces that the views agree on the state of the queue and ensures they can only be updated in unison. This gives clients a way to track the contents of the queue.\\
+We furthermore demonstrated that the sequential and concurrent specifications are derivable from the HOCAP-style specification. That is, a queue satisfying the HOCAP-style specification also satisfies the other two.
 
-We gave an implementation of the \tlmsq{} in \heaplang{}, which essentially consists of a linked list, making up the elements of the queue, and a \textit{head} and \textit{tail} pointer, pointing to nodes in the linked list. The head pointer marks the start of the queue and is used in dequeueing, and the tail pointer is near the end of the queue and is used for enqueuing new values. We demonstrated the possibility of the tail lagging behind the head -- a situation thought to be impossible. However, even with this, we were able to show that the queue adheres to all three specifications. Most notably, proving it satisfies the Hocap style specification was done by establishing a \text{queue invariant}, which identified the four possible states the queue could be in, and what the ownership of the queue resources looked like in each of the four states. The proof then showed how instructions in the code changed the state of the queue, and which queue resources participating threads were allowed to own in each state. In particular, we used the fact that we can split points to predicates to allow e.g. an enqueueing thread to own $\lochead \mapsto^{\frac{1}{2}} \nIn{\nodehead}$ while enqueueing. This assures the thread that the head pointer cannot be updated while it is working on enqueueing its value.\\
+We gave an implementation of the \tlmsq{} in \heaplang{}, which essentially consists of a linked list, making up the elements of the queue, and a \textit{head} and \textit{tail} pointer, pointing to nodes in the linked list. The head pointer marks the start of the queue and is used in dequeueing, and the tail pointer is near the end of the queue and is used for enqueuing new values. We demonstrated the possibility of the tail lagging behind the head -- a situation thought to be impossible. However, even with this, we were able to show that the queue adheres to all three specifications. Most notably, proving it satisfies the HOCAP-style specification was done by establishing a \text{queue invariant}, which identified the four possible states the queue could be in, and what the ownership of the queue resources looked like in each of the four states. The proof then showed how instructions in the code changed the state of the queue, and which queue resources participating threads were allowed to own in each state. In particular, we used the fact that we can split points to predicates to allow e.g. an enqueueing thread to own $\lochead \mapsto^{\frac{1}{2}} \nIn{\nodehead}$ while enqueueing. This assures the thread that the head pointer cannot be updated while it is working on enqueueing its value.\\
 The invariant further maintained the relationship between the concrete state of the queue, represented by the underlying linked list, and the abstract state of the queue, represented by the aforementioned predicate, $\abstractstateauth{\gname}{\absvalueList}$. This allowed us to show how the queue functions, $\enqueue$ and $\dequeue$, affect the contents of the queue, which in turn gives clients a way to track the contents of the queue.\\
 Having the queue resources in an invariant allows us to support concurrent clients as invariants are duplicable in Iris, which means that the invariant and its resources can be shared between threads.
 
-Similarly, we gave an implementation of the \lfmsq{} in \heaplang{} and proved its compliance with the Hocap-style specification. Unlike the \tlmsq{}, the \lfmsq{} \emph{does} rely on the fact that the tail does not lag behind the head. It further relies on the fact that the head and tail only ever move towards the end of the linked list. The queue invariant we created for the \lfmsq{} thus incorporated these two characteristics. We used the notion of \textit{reachability} introduced in \citet{DBLP:conf/cpp/VindumB21} to describe the properties formally. The concrete reachability predicate, $\reach{\node}{\node'}$ denotes that node $\node$ precedes node $\node'$ in the linked list making up the queue. The abstract points-to predicate, $\ap{\gname}{\node}$, allows us to keep track of the location of specific types of nodes, such as the head node, the tail node, and the last node, which can change during the course of the queues lifetime. Together with the abstract reachability predicate, $\ar{\node}{\gname}$, we could conclude that if a node could concretely reach, say, the head node, then it could concretely reach any future head nodes. The abstract points-to and reachability predicates we put in the invariant then allowed us to conclude that the head can \emph{always} concrete reach the tail.\\
+Similarly, we gave an implementation of the \lfmsq{} in \heaplang{} and proved its compliance with the HOCAP-style specification. Unlike the \tlmsq{}, the \lfmsq{} \emph{does} rely on the fact that the tail does not lag behind the head. It further relies on the fact that the head and tail only ever move towards the end of the linked list. The queue invariant we created for the \lfmsq{} thus incorporated these two characteristics. We used the notion of \textit{reachability} introduced in \citet{DBLP:conf/cpp/VindumB21} to describe the properties formally. The concrete reachability predicate, $\reach{\node}{\node'}$ denotes that node $\node$ precedes node $\node'$ in the linked list making up the queue. The abstract points-to predicate, $\ap{\gname}{\node}$, allows us to keep track of the location of specific types of nodes, such as the head node, the tail node, and the last node, which can change during the course of the queues lifetime. Together with the abstract reachability predicate, $\ar{\node}{\gname}$, we could conclude that if a node could concretely reach, say, the head node, then it could concretely reach any future head nodes. The abstract points-to and reachability predicates we put in the invariant then allowed us to conclude that the head can \emph{always} concrete reach the tail.\\
 Finally, this queue invariant also maintained the same relationship between the concrete and abstract states of the queue, which enabled accurate tracking of the queue contents.
 
 \todo{Future work}

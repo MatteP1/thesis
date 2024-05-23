@@ -1,8 +1,0 @@
-
-- Hocap-style specification vs 
-  HOCAP-style specification vs
-  HOCAP specification?
-  A: HOCAP-style specification
-
-- Idea for client of queue?
-  A: try to get your idea to work.
