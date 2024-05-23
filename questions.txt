@@ -1,21 +1,29 @@
 
 - In lemmas, should I write "For all nodes x, we have that x = x". Or should I just write "x = x".
   I.e. style of Abs-reach-Concr vs style of reach-transitive
+  A: Write it out in words.
 
 - Hocap-style specification vs 
   HOCAP-style specification vs
   HOCAP specification?
+  A: HOCAP-style specification
 
 - Is it okay that I use the macros from ILN repo to create the inference rules?
   Includes locallabel.sty, pftools.sty, and "Inferences Rules" section in thesis.tex preamble.
+  A: fine
 
 - What is usually put in Acknowledgments?
+  A: whatever I want.
 
 - Should I have also have Abstract in danish (resumé)? It was part of template.
+  A: translate it from abstract
 
 - Is length of report fine? Currently at 51.
   If not, where to cut?
+  A: fine
 
 - Idea for client of queue?
+  A: try to get your idea to work.
 
 - Should I include the derivations of the specific queues? or only include the general derivation? (twoLockMSQ_derived.v and lockFreeMSQ_derived.v)
+  A: remove them
