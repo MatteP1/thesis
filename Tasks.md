@@ -168,7 +168,7 @@
 - [x] format forall in lemmas.
 
 - [ ] Proof read report and fix the following:
-  - [ ] Always start sentences with capital letter. Change sentences that start with variables to enforce this
+  - [x] Always start sentences with capital letter. Change sentences that start with variables to enforce this
   - [ ] only use "points to" for predicate
   - [ ] don't use future tense so much
   - [ ] do not use contractions
