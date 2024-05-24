@@ -173,6 +173,6 @@
 - [x] only use "points to" for the predicate
 - [x] Check for correctness of line number references
 
-- [ ] Proofread report
+- [x] Proofread report
 
 - [ ] If time permits, use hocap spec to prove a spec of a client
