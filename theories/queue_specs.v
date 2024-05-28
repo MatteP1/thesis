@@ -111,14 +111,14 @@ Class queue := Queue {
   {{{ v_q G, RET v_q; isQueue (L:=L) v_q G ∗ G.(γ_Abst) ⤇◯ [] }}};
 
   (* Hocap-Style Enqueue Specifictaion *)
-  enqueue_spec `{!heapGS Σ} {L : queueG Σ} `{!inG Σ (frac_authR (agreeR (listO val)))} v_q (v : val) (G : Qgnames) (P Q : iProp Σ) :
+  enqueue_spec `{!heapGS Σ} {L : queueG Σ} `{!inG Σ (frac_authR (agreeR (listO val)))} (v_q v : val) (G : Qgnames) (P Q : iProp Σ) :
   □(∀xs_v, (G.(γ_Abst) ⤇● xs_v ∗ P ={⊤ ∖ ↑Ni}=∗ ▷ (G.(γ_Abst) ⤇● (v :: xs_v) ∗ Q))) -∗
   {{{ isQueue (L:=L) v_q G ∗ P}}}
     enqueue v_q v
   {{{ w, RET w; Q }}};
 
   (* Hocap-Style Dequeue Specifictaion *)
-  dequeue_spec `{!heapGS Σ} {L : queueG Σ} `{!inG Σ (frac_authR (agreeR (listO val)))} v_q (G : Qgnames) (P : iProp Σ) (Q : val -> iProp Σ):
+  dequeue_spec `{!heapGS Σ} {L : queueG Σ} `{!inG Σ (frac_authR (agreeR (listO val)))} (v_q : val) (G : Qgnames) (P : iProp Σ) (Q : val -> iProp Σ):
   □(∀xs_v, (G.(γ_Abst) ⤇● xs_v ∗ P
               ={⊤ ∖ ↑Ni}=∗
               ▷ (( ⌜xs_v = []⌝ ∗ G.(γ_Abst) ⤇● xs_v ∗ Q NONEV) ∨
