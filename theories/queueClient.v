@@ -67,18 +67,15 @@ Proof.
   iIntros (a b c Ga G v_q Φ) "(#HisQueue & #Hinv & Hcase) HΦ".
   wp_lam.
   wp_pures.
-  (* wp_bind (enqueue v_q #c). *)
-  (* wp_apply (enqueue_spec v_q #c G ). *)
   set (P := ((TokA Ga ∗ ⌜c = a⌝) ∨ (TokB Ga ∗ ⌜c = b⌝))%I).
   set (Q := (TokD1 Ga ∨ TokD2 Ga)%I).
-  wp_bind (enqueue v_q #c).
-  (* iApply (enqueue_spec v_q #c G P Q). *)
-  (* About enqueue_spec. *)
+  (* TODO: find out how to apply enqueue spec *)
+  (* wp_apply (enqueue_spec v_q #c G P Q with "[] [Hcase]"). *)
   iAssert (□(∀xs_v, (γ_Abst G ⤇● xs_v ∗ P ={⊤ ∖ ↑Ni}=∗ ▷ (γ_Abst G ⤇● (#c :: xs_v) ∗ Q))) -∗ {{{ isQueue v_q G ∗ P}}} enqueue v_q #c {{{ w, RET w; Q }}})%I as "Henqspec".
   { admit. }
-  wp_apply ("Henqspec" with "[] [Hcase]").
+  wp_apply ("Henqspec" with "[] [Hcase]"); iClear "Henqspec". (* TODO: REMOVE*)
   (* Proving viewshift *)
-  { 
+  {
     iModIntro.
     iIntros (xs_v) "[Hauth Hcase]".
     iInv "Hinv" as "[(>Hfrag & >HTokD1 & >HTokD2) |
@@ -86,31 +83,31 @@ Proof.
                     [(>Hfrag & >HTokB & >HTokD12) |
                     [(>Hfrag & >HTokA & >HTokB) |
                      (>Hfrag & >HTokB & >HTokA)]]]]";
-      iDestruct "Hcase" as "[[HTokA' -> ]| [HTokB' ->]]";
-      (* Most cases are impossible... *)
-      try (by iCombine "HTokA HTokA'" gives "%Hcontra");
-      try (by iCombine "HTokB HTokB'" gives "%Hcontra");
-      (* The possible cases are handled similarly: *)
-      (* Update the abstract state to include the newly enqueue element *)
-      iPoseProof (queue_contents_auth_frag_agree with "Hauth Hfrag") as "<-";
-      [ iMod (queue_contents_update _ _ _ [ #a ] with "Hauth Hfrag") as "[Hauth Hfrag]"
-      | iMod (queue_contents_update _ _ _ [ #b ] with "Hauth Hfrag") as "[Hauth Hfrag]"
-      | iMod (queue_contents_update _ _ _ [ #b ; #a ] with "Hauth Hfrag") as "[Hauth Hfrag]"
-      | iMod (queue_contents_update _ _ _ [ #a ; #b ] with "Hauth Hfrag") as "[Hauth Hfrag]" ];
-      iModIntro.
-      (* Close the invariant in the updated state *)
-      + iSplitL "HTokA' HTokD1 Hfrag". (* Can give up either D1 or D2 *)
-        { iNext. iRight. iLeft. iFrame. }
-        by iFrame.
-      + iSplitL "HTokB' HTokD1 Hfrag". (* Can give up either D1 or D2 *)
-        { iNext. iRight. iRight. iLeft. iFrame. }
-        by iFrame.
-      + iSplitL "HTokA HTokB' Hfrag".
-        { iNext. iRight. iRight. iRight. iRight. iFrame. }
-        by iFrame.
-      + iSplitL "HTokA' HTokB Hfrag".
-        { iNext. iRight. iRight. iRight. iLeft. iFrame. }
-        by iFrame.
+    iDestruct "Hcase" as "[[HTokA' -> ]| [HTokB' ->]]";
+    (* Most cases are impossible... *)
+    try (by iCombine "HTokA HTokA'" gives "%Hcontra");
+    try (by iCombine "HTokB HTokB'" gives "%Hcontra");
+    (* The possible cases are handled similarly: *)
+    (* Update the abstract state to include the newly enqueue element *)
+    iPoseProof (queue_contents_auth_frag_agree with "Hauth Hfrag") as "<-";
+    [ iMod (queue_contents_update _ _ _ [ #a ] with "Hauth Hfrag") as "[Hauth Hfrag]"
+    | iMod (queue_contents_update _ _ _ [ #b ] with "Hauth Hfrag") as "[Hauth Hfrag]"
+    | iMod (queue_contents_update _ _ _ [ #b ; #a ] with "Hauth Hfrag") as "[Hauth Hfrag]"
+    | iMod (queue_contents_update _ _ _ [ #a ; #b ] with "Hauth Hfrag") as "[Hauth Hfrag]" ];
+    iModIntro.
+    (* Close the invariant in the updated state *)
+    + iSplitL "HTokA' HTokD1 Hfrag". (* Can give up either D1 or D2 *)
+      { iNext. iRight. iLeft. iFrame. }
+      by iFrame.
+    + iSplitL "HTokB' HTokD1 Hfrag". (* Can give up either D1 or D2 *)
+      { iNext. iRight. iRight. iLeft. iFrame. }
+      by iFrame.
+    + iSplitL "HTokA HTokB' Hfrag".
+      { iNext. iRight. iRight. iRight. iRight. iFrame. }
+      by iFrame.
+    + iSplitL "HTokA' HTokB Hfrag".
+      { iNext. iRight. iRight. iRight. iLeft. iFrame. }
+      by iFrame.
   }
   (* Proving pre-condition of hocap enqueue spec *)
   { by iFrame. }
@@ -120,6 +117,7 @@ Proof.
   wp_bind (dequeue v_q).
   set (P' := Q%I : iProp Σ).
   set (Q' := λ w, (⌜w = SOMEV #a⌝ ∗ TokA Ga ∨ ⌜w = SOMEV #b⌝ ∗ TokB Ga)%I : iProp Σ).
+  (* TODO: find out how to apply dequeue spec *)
   (* wp_apply (dequeue_spec v_q G P Q'). *)
   iAssert (□(∀xs_v, (γ_Abst G ⤇● xs_v ∗ P'
             ={⊤ ∖ ↑Ni}=∗
@@ -132,12 +130,58 @@ Proof.
             dequeue v_q
           {{{ w, RET w; Q' w }}})%I as "Hdeqspec".
   { admit. }
-  wp_apply ("Hdeqspec" with "[] [HQ]").
+  wp_apply ("Hdeqspec" with "[] [HQ]"); iClear "Hdeqspec". (* TODO: REMOVE *)
   (* Proving viewshift *)
   {
     iModIntro.
     iIntros (xs_v) "[Hauth HP']".
-    admit.
+    iRight.
+    iInv "Hinv" as "[(>Hfrag & >HTokD1 & >HTokD2) |
+                    [(>Hfrag & >HTokA & [>HTokD1 | >HTokD2]) |
+                    [(>Hfrag & >HTokB & [>HTokD1 | >HTokD2]) |
+                    [(>Hfrag & >HTokA & >HTokB) |
+                     (>Hfrag & >HTokB & >HTokA)]]]]";
+    iDestruct "HP'" as "[HTokD1' | HTokD2']";
+    (* Most cases are impossible... *)
+    try (by iCombine "HTokD1 HTokD1'" gives "%Hcontra");
+    try (by iCombine "HTokD2 HTokD2'" gives "%Hcontra");
+    iPoseProof (queue_contents_auth_frag_agree with "Hauth Hfrag") as "<-";
+    [ iMod (queue_contents_update _ _ _ [ ] with "Hauth Hfrag") as "[Hauth Hfrag]"
+    | iMod (queue_contents_update _ _ _ [ ] with "Hauth Hfrag") as "[Hauth Hfrag]"
+    | iMod (queue_contents_update _ _ _ [ ] with "Hauth Hfrag") as "[Hauth Hfrag]"
+    | iMod (queue_contents_update _ _ _ [ ] with "Hauth Hfrag") as "[Hauth Hfrag]"
+    | iMod (queue_contents_update _ _ _ [ #a ] with "Hauth Hfrag") as "[Hauth Hfrag]"
+    | iMod (queue_contents_update _ _ _ [ #a ] with "Hauth Hfrag") as "[Hauth Hfrag]"
+    | iMod (queue_contents_update _ _ _ [ #b ] with "Hauth Hfrag") as "[Hauth Hfrag]"
+    | iMod (queue_contents_update _ _ _ [ #b ] with "Hauth Hfrag") as "[Hauth Hfrag]" ];
+    iModIntro;
+    iFrame "Hauth";
+    unfold Q'.
+    (* Close the invariant in the updated state *)
+    + iSplitL "HTokD1 HTokD2' Hfrag".
+      { iNext. iLeft. iFrame. }
+      eauto 7.
+    + iSplitL "HTokD1' HTokD2 Hfrag".
+      { iNext. iLeft. iFrame. }
+      eauto 7.
+    + iSplitL "HTokD1 HTokD2' Hfrag".
+      { iNext. iLeft. iFrame. }
+      eauto 7.
+    + iSplitL "HTokD1' HTokD2 Hfrag".
+      { iNext. iLeft. iFrame. }
+      eauto 7.
+    + iSplitL "HTokD1' HTokA Hfrag".
+      { iNext. iRight. iLeft. iFrame. }
+      eauto 7.
+    + iSplitL "HTokD2' HTokA Hfrag".
+      { iNext. iRight. iLeft. iFrame. }
+      eauto 7.
+    + iSplitL "HTokD1' HTokB Hfrag".
+      { iNext. iRight. iRight. iLeft. iFrame. }
+      eauto 7.
+    + iSplitL "HTokD2' HTokB Hfrag".
+      { iNext. iRight. iRight. iLeft. iFrame. }
+      eauto 7.
   }
   (* Proving pre-condition of hocap dequeue spec *)
   { by iFrame. }
