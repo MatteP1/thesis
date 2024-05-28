@@ -175,4 +175,5 @@
 
 - [x] Proofread report
 
-- [ ] If time permits, use hocap spec to prove a spec of a client
+- [x] If time permits, use hocap spec to prove a spec of a client
+  - [ ] Clean up proof of client spec
