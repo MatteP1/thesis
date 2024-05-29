@@ -60,6 +60,10 @@
 \newcommand{\initialise}{\operatorname{initialize}}
 \newcommand{\enqueue}{\operatorname{enqueue}}
 \newcommand{\dequeue}{\operatorname{dequeue}}
+\newcommand{\unwrap}{\operatorname{unwrap}}
+\newcommand{\enqdeq}{\operatorname{enqdeq}}
+\newcommand{\queueAdd}{\operatorname{queueAdd}}
+\newcommand{\parcomp}{\ensuremath{\mathbin{||}}}
 
 \newcommand{\msq}{M\&S Queue}
 \newcommand{\tlmsq}{Two-Lock \msq{}}
@@ -412,7 +416,7 @@
   { S \proves \hoare{\TRUE}{\Ref(u)}{v . \Exists \ell . v = \ell\land \ell \pointsto u}}}
 
 \newcommand{\htstoregen}[2][]
-{\rulegen[#1]{Ht-store}
+{ \rulegen[#1]{Ht-store}
   { }
   { S \proves \hoare{#2 \ell \pointsto -}{\ell \gets w }{v . v = \TT \land \ell \pointsto w}}}
 
@@ -448,6 +452,11 @@
 \newcommand{\htloadlaterrule}[1][]{\htloadgen[#1]{\later}}
 
 \newcommand{\htstorelaterrule}[1][]{\htstoregen[#1]{\later}}
+
+\newcommand{\Htpar}[1][]
+{ \rulegen[#1]{Ht-par}
+    {S \proves \hoare{P_1}{e_1}{v.Q_1} \and S \proves \hoare{P_2}{e_2}{v.Q_2}}
+    {S \proves \hoare{P_1 \ast P_2}{e_1 \parcomp e_2}{v.\Exists v_1 v_2.v = (v_1,v_2) \ast Q_1[v_1/v] \ast Q_2[v_2/v]}}}
 
 \newcommand{\fpurule}[1][]
 { \rulegen[#1]{frame-preserving-update}
@@ -796,7 +805,8 @@ Table \ref{Pre:files-table} gives an overview of the files developed in the proj
   \toprule
   \textbf{File Name} & \textbf{Relevant Sections} & \textbf{Description} \\
   \midrule
-  \path{queue_specs.v} & Chapter \ref{ch:QueueSpecs} & \multirow{1}{\linewidth}{Specifications and derivations.} \\
+  \path{queue_specs.v} & Chapter \ref{ch:QueueSpecs} & \multirow{2}{\linewidth}{Queue specifications and derivations, and an example client.} \\
+  \path{queue_client.v} & Section \ref{QueueSpecs:section:queueadd} & \\
   \midrule
   \path{MSQ_common.v} & Chapters \ref{ch:TLMSQ} - \ref{ch:LFMSQSPECS} & Common definitions and lemmas. \\
   \midrule
@@ -1077,6 +1087,37 @@ We assume some $\absvalueList'$, and prove the view-shift (again, without substi
   \hocapspecdeqVS{\Qg}{\TRUE}{Q}{\absvalueList'}
 \end{equation*}
 Assume $\abstractstateauth{\Qg.\gabst}{\absvalueList'}$. Opening the invariant, we get $\AllP(\absvalueList, \Psi)$ and the fragmental part, $\abstractstatefullfrag{\Qg.\gabst}{\absvalueList}$, for some $\absvalueList$, which by lemma \ref{lemma:abst:agree} we know is equal to $\absvalueList'$. We proceed by case analysis on $\absvalueList$. If it is empty, we simply close the invariant again, and proceed to prove the first disjunct of the consequent. If it is not empty, then we have $\absvalueList = \absvalueList'' \catenate [\absvalue]$ for some $\absvalueList''$ and $\absvalue$. We use lemma \ref{lemma:abst:update} to update the abstract state to $\absvalueList''$, and split $\AllP(\absvalueList, \Psi)$ into $\Psi(\absvalue)$ and $\AllP(\absvalueList'', \Psi)$. Using this and the fragmental part, we close the invariant again. To finish, we prove the right disjunct of the consequent using the authoritative part and $\Psi(\absvalue)$.\footnote{Note here the importance of the $\later$ in the consequent. From the invariant, we technically only have $\later\Psi(\absvalue)$. If we did not have the later in the consequent, we would have to prove $\Psi(\absvalue)$ from $\later\Psi(\absvalue)$ which is not possible.}
+
+%=====================================================================
+\section{QueueAdd: An Example Queue Client}
+\label{QueueSpecs:section:queueadd}
+In this section, we look at an example queue client, named \textit{QueueAdd}. The example is somewhat contrived but illustrates the capabilities of the HOCAP-style specification, and the limitations of the concurrent and sequential specifications. \todo{write more}
+\begin{figure}
+\begin{minted}[linenos=true, escapeinside=||, mathescape=true, bgcolor=codebg, frame=lines]{ocaml}
+|$\label{UNW:def}$|  |$ \unwrap \ w \eqdef \langkw{match}\spac w \spac\langkw{with}\spac \None \Ra \TT \ \TT \mid \Some v \Ra v \spac\langkw{end} $|
+
+|$\label{EDQ:def}$|  |$ \enqdeq \ \vq \ c \eqdef \enqueue \ \vq \ c; \unwrap (\dequeue \ \vq)$|
+
+|$\label{QAD:def}$|  |$ \queueAdd \ a \ b \eqdef $|
+|$\label{QAD:que}$|    |$ \Let \vq = \initialise \ \TT in $|
+|$\label{QAD:spw}$|    |$ \Let p = (\enqdeq \ \vq \ a) \parcomp (\enqdeq \ \vq \ b) in $|
+|$\label{QAD:add}$|    |$ \Fst p + \Snd p $|
+\end{minted}
+\caption{Implementation of $\queueAdd$.}
+\label{QueueSpecs:queueadd:code}
+\end{figure}
+
+\begin{mathpar}
+  \Htpar
+\end{mathpar}
+
+\begin{definition}[QueueAdd Specification]\label{QueueSpecs:spec:queueadd}
+  \begin{equation*}
+    \All a, b \in \mathbb{Z} . \hoare{\TRUE}{\queueAdd \ a \ b}{v . v = a + b}
+  \end{equation*}
+\end{definition}
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -1931,7 +1972,7 @@ We create $\TLQueueInvariantConc$ in the \StaticState state, most of which is an
   \end{equation*}
 \end{lemma}
 \begin{proof}
-We assume the pre-condition, which tells us that $v_q$ is a location $\locqueue$, and we have:
+We assume the pre-condition, which tells us that $\vq$ is a location $\locqueue$, and we have:
 \begin{align}
   &\Psi(\absvalue)\label{TLMSQ:spec:conc:proof:enq:phiv}\\
   &\locqueue \mapsto^{\persistently} ((\lochead, \loctail), (\Hlock, \Tlock))\label{TLMSQ:spec:conc:proof:enq:queue}\\
@@ -1958,7 +1999,7 @@ Finally, on line \ref{TLE:rel}, we release the lock which we can do since we hav
   \end{equation*}
 \end{lemma}
 \begin{proof}
-As usual, we assume the pre-condition giving us that $v_q$ is a location $\locqueue$ with
+As usual, we assume the pre-condition giving us that $\vq$ is a location $\locqueue$ with
 \begin{align}
   &\locqueue \mapsto^{\persistently} ((\lochead, \loctail), (\Hlock, \Tlock))\label{TLMSQ:spec:conc:proof:deq:queue}\\
   &\knowInv{\Nl.queue}{\TLQueueInvariantConc(\Psi, \lochead, \loctail, \Qg)}\label{TLMSQ:spec:conc:proof:deq:inv}\\
@@ -2631,7 +2672,6 @@ Finally, this queue invariant also maintained the same relationship between the 
 
 \todo{Future work}
 \todo{Possibility of simplifying queue invariant for lock-free by removing isLL (and adding x\_last -> None)}
-\todo{Proving correctness of a queue client}
 \todo{The two queues studied in this project are somewhat related, so it would be interesting to see if other queues also adhere to the specifications given.}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

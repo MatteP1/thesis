@@ -177,11 +177,12 @@
 
 - [x] If time permits, use hocap spec to prove a spec of a client
   - [x] Clean up proof of client spec
-  - [ ] Add to report file overview
+  - [x] Add to report file overview
   - [ ] write small section about it in chapter on specifications
-    - [ ] Show code
+    - [x] Show code
     - [ ] Argue for sufficiency of sequential spec if we hadn't spawned a thread, but just invoked enqdeq twice
-    - [ ] Argue for need of hocap spec since concurrent and spawning thread: The threads will need to know state of the queue to argue that the dequeue in enqdeq is not None. Concurrent spec only tells us that the enqueue is either None or Some v. We have no way of proving that it must be Some v. Hocap spec allows us to conclude that the queue is non-empty, hence it must be Some v.
+    - [ ] Mention why we can't use sequential spec when using parallel construct: Ht-par demands we split our resources to prove the first and second thread. isqueue_seq not duplicable so can't give to both, but both will need predicate to invoke specifications for enqueue and dequeue. Concurrent spec solves this issue by making queue predicate persistent, but the concurrent specification is not strong enough...
+    - [ ] Argue for need of hocap spec since concurrent and spawning thread: The threads will need to know the state of the queue to argue that the dequeue in enqdeq is not None. If the dequeue results in None, then unwrap crashes, so it is paramount that we can conclude that the dequeues are not None. The concurrent spec only tells us that the dequeue is either None or Some v. We have no way of proving that it must be Some v. Hence the concurrent spec is not strong enough. Since the Hocap spec allows us to track the contents of the queue, we are able to exclude the case, where the dequeues results in None. Further, we can argue about the actual values that are dequeue. It must be either a or b.
     - [ ] Mention idea of proofs. Maybe show invariant.
 
 - [ ] Improvements for introduction

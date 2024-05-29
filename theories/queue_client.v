@@ -1,5 +1,5 @@
 From iris.algebra Require Import list agree lib.frac_auth.
-From iris.heap_lang Require Import lang proofmode notation spawn.
+From iris.heap_lang Require Import lang proofmode notation par.
 From iris.base_logic.lib Require Import invariants token.
 From MSQueue Require Import queue_specs.
 
@@ -11,6 +11,8 @@ Context `{!heapGS Σ}.
 Context `{!inG Σ (frac_authR (agreeR (listO val)))}.
 Context `{!spawnG Σ}.
 Context `{!tokenG Σ}.
+
+(* ===== Implementation of queueAdd ===== *)
 
 Definition unwrap : val :=
   λ: "w",
@@ -27,13 +29,11 @@ Definition enqdeq : val :=
 Definition queueAdd : val :=
   λ: "a" "b",
     let: "v_q" := initialize #() in
-    let: "jh" := spawn (λ: <>, enqdeq "v_q" "a") in
-    let: "x" := enqdeq "v_q" "b" in
-    let: "y" := spawn.join "jh" in
-    "x" + "y".
+    let: "p" := enqdeq "v_q" "a" ||| enqdeq "v_q" "b" in
+    Fst "p" + Snd "p".
 
-(* Namespace for spawn and queueAdd *)
-Variable Ns: namespace.
+(* ===== Specification for queueAdd ===== *)
+
 Notation Nqa := (N .@ "QueueAdd").
 
 Record QAgnames := {  γ_D1  : gname;
@@ -48,6 +48,7 @@ Definition TokD2 (g : QAgnames) := token g.(γ_D2).
 Definition TokA (g : QAgnames) := token g.(γ_A).
 Definition TokB (g : QAgnames) := token g.(γ_B).
 
+(* ----- Invariant for queueAdd ----- *)
 Definition contentsInv G Ga a b : iProp Σ :=
   (γ_Abst G) ⤇◯ [] ∗ TokD1 Ga ∗ TokD2 Ga ∨
   (γ_Abst G) ⤇◯ [a] ∗ TokA Ga ∗ (TokD1 Ga ∨ TokD2 Ga) ∨
@@ -55,15 +56,17 @@ Definition contentsInv G Ga a b : iProp Σ :=
   (γ_Abst G) ⤇◯ [a; b] ∗ TokA Ga ∗ TokB Ga ∨
   (γ_Abst G) ⤇◯ [b; a] ∗ TokB Ga ∗ TokA Ga.
 
-Definition case_a_b (v a b : val) Ga : iProp Σ := ⌜v = a⌝ ∗ TokA Ga ∨ ⌜v = b⌝ ∗ TokB Ga.
+(* ----- Case distinction definition ----- *)
+Definition case_a_b (c a b : val) Ga : iProp Σ := ⌜c = a⌝ ∗ TokA Ga ∨ ⌜c = b⌝ ∗ TokB Ga.
 
-Lemma enqdeq_spec : ∀(a b c : Z) Ga G (v_q : val),
+(* ----- Specification for enqdeq ----- *)
+Lemma enqdeq_spec : ∀(c a b : Z) Ga G (v_q : val),
   {{{ isQueue v_q G ∗ inv Nqa (contentsInv G Ga #a #b) ∗
             (case_a_b #c #a #b Ga) }}}
     enqdeq v_q #c
   {{{v, RET v; case_a_b v #a #b Ga }}}.
 Proof.
-  iIntros (a b c Ga G v_q Φ) "(#HisQueue & #Hinv & Hcase) HΦ".
+  iIntros (c a b Ga G v_q Φ) "(#HisQueue & #Hinv & Hcase) HΦ".
   wp_lam.
   wp_pures.
   set (P := (case_a_b #c #a #b Ga)%I).
@@ -153,47 +156,44 @@ Proof.
   by iFrame.
 Qed.
 
+(* ----- Specification for queueAdd ----- *)
 Lemma queueAdd_spec : ∀(a b : Z),
   {{{ True }}} queueAdd #a #b {{{v, RET v; ⌜v = #(a + b)⌝}}}.
 Proof.
   iIntros (a b Φ) "_ HΦ".
   wp_lam.
   wp_pures.
-  iMod token_alloc as (γ_D1) "Hγ_D1".
-  iMod token_alloc as (γ_D2) "Hγ_D2".
-  iMod token_alloc as (γ_A) "Hγ_A".
-  iMod token_alloc as (γ_B) "Hγ_B".
+  wp_apply (initialize_spec); first done.
+  iIntros (v_q G) "[#HisQueue Hfrag]".
+  wp_pures.
+  iMod token_alloc as (γ_D1) "HTokD1".
+  iMod token_alloc as (γ_D2) "HTokD2".
+  iMod token_alloc as (γ_A) "HTokA".
+  iMod token_alloc as (γ_B) "HTokB".
   set (Ga := {| γ_D1 := γ_D1;
                 γ_D2 := γ_D2;
                 γ_A := γ_A;
                 γ_B := γ_B;
               |}).
-  wp_apply (initialize_spec); first done.
-  iIntros (v_q G) "[#HisQueue Hfrag]".
-  iMod (inv_alloc Nqa _ (contentsInv G Ga #a #b) with "[Hγ_D1 Hγ_D2 Hfrag]") as "#HCInv".
+  iMod (inv_alloc Nqa _ (contentsInv G Ga #a #b) with "[HTokD1 HTokD2 Hfrag]") as "#HCInv".
   { iNext. iLeft. iFrame. }
+  wp_apply (wp_par (λ v, case_a_b v #a #b Ga) (λ v, case_a_b v #a #b Ga) with "[HTokA] [HTokB]").
+  { wp_apply (enqdeq_spec a a b Ga G v_q with "[HisQueue HTokA]");
+    unfold case_a_b; auto. }
+  { wp_apply (enqdeq_spec b a b Ga G v_q with "[HisQueue HTokB]");
+    unfold case_a_b; auto. }
+  iIntros (x y) "[Hcase_x Hcase_y]".
+  iModIntro.
   wp_pures.
-  wp_apply (spawn_spec Ns (λ v, case_a_b v #a #b Ga) _ with "[Hγ_A]").
-  - wp_lam.
-    wp_apply (enqdeq_spec a b a Ga G v_q with "[HisQueue Hγ_A]");
-    unfold case_a_b; auto.
-  - iIntros (jh) "HJoinHandle".
-    wp_pures.
-    wp_apply (enqdeq_spec a b b Ga G v_q with "[Hγ_B]");
-    first (unfold case_a_b; iFrame "#"); auto.
-    iIntros (x) "Hcase_x".
-    wp_pures.
-    wp_apply (join_spec with "HJoinHandle").
-    iIntros (y) "Hcase_y".
-    wp_pures.
-    iDestruct "Hcase_x" as "[[-> HTokA]|[-> HTokB]]";
-    iDestruct "Hcase_y" as "[[-> HTokA']|[-> HTokB']]";
-    [ by iCombine "HTokA HTokA'" gives "%Hcontra" | |
-    | by iCombine "HTokB HTokB'" gives "%Hcontra" ];
-    wp_pures;
-    iModIntro;
-    iApply "HΦ"; first done.
-    by rewrite Z.add_comm.
+  iDestruct "Hcase_x" as "[[-> HTokA]|[-> HTokB]]";
+  iDestruct "Hcase_y" as "[[-> HTokA']|[-> HTokB']]";
+  [ by iCombine "HTokA HTokA'" gives "%Hcontra" | |
+  | by iCombine "HTokB HTokB'" gives "%Hcontra" ];
+  wp_pures;
+  iModIntro;
+  iApply "HΦ";
+  first done;
+  by rewrite Z.add_comm.
 Qed.
 
 End client.
