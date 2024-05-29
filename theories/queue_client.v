@@ -27,18 +27,19 @@ Definition enqdeq : val :=
 Definition queueAdd : val :=
   λ: "a" "b",
     let: "v_q" := initialize #() in
-    let: "j" := spawn (λ: <>, enqdeq "v_q" "a") in
+    let: "jh" := spawn (λ: <>, enqdeq "v_q" "a") in
     let: "x" := enqdeq "v_q" "b" in
-    let: "y" := spawn.join "j" in
+    let: "y" := spawn.join "jh" in
     "x" + "y".
 
+(* Namespace for spawn and queueAdd *)
 Variable Ns: namespace.
 Notation Nqa := (N .@ "QueueAdd").
 
-Record QAgnames := {  γ_D1     : gname;
-                      γ_D2     : gname;
-                      γ_A      : gname;
-                      γ_B      : gname;
+Record QAgnames := {  γ_D1  : gname;
+                      γ_D2  : gname;
+                      γ_A   : gname;
+                      γ_B   : gname;
                     }.
 
 (* ----- Tokens ----- *)
@@ -54,18 +55,18 @@ Definition contentsInv G Ga a b : iProp Σ :=
   (γ_Abst G) ⤇◯ [a; b] ∗ TokA Ga ∗ TokB Ga ∨
   (γ_Abst G) ⤇◯ [b; a] ∗ TokB Ga ∗ TokA Ga.
 
-Definition case_a_b v a b Ga : iProp Σ := ⌜v = #a⌝ ∗ TokA Ga ∨ ⌜v = #b⌝ ∗ TokB Ga.
+Definition case_a_b (v a b : val) Ga : iProp Σ := ⌜v = a⌝ ∗ TokA Ga ∨ ⌜v = b⌝ ∗ TokB Ga.
 
 Lemma enqdeq_spec : ∀(a b c : Z) Ga G (v_q : val),
   {{{ isQueue v_q G ∗ inv Nqa (contentsInv G Ga #a #b) ∗
-              ((TokA Ga ∗ ⌜c = a⌝) ∨ (TokB Ga ∗ ⌜c = b⌝)) }}}
+            (case_a_b #c #a #b Ga) }}}
     enqdeq v_q #c
-  {{{v, RET v; case_a_b v a b Ga }}}.
+  {{{v, RET v; case_a_b v #a #b Ga }}}.
 Proof.
   iIntros (a b c Ga G v_q Φ) "(#HisQueue & #Hinv & Hcase) HΦ".
   wp_lam.
   wp_pures.
-  set (P := ((TokA Ga ∗ ⌜c = a⌝) ∨ (TokB Ga ∗ ⌜c = b⌝))%I).
+  set (P := (case_a_b #c #a #b Ga)%I).
   set (Q := (TokD1 Ga ∨ TokD2 Ga)%I).
   wp_apply (enqueue_spec v_q #c G P Q with "[] [Hcase]").
   (* Proving viewshift *)
@@ -77,7 +78,7 @@ Proof.
                     [(>Hfrag & >HTokB & >HTokD12) |
                     [(>Hfrag & >HTokA & >HTokB) |
                      (>Hfrag & >HTokB & >HTokA)]]]]";
-    iDestruct "Hcase" as "[[HTokA' -> ]| [HTokB' ->]]";
+    iDestruct "Hcase" as "[[-> HTokA']| [-> HTokB']]";
     (* Most cases are impossible... *)
     try (by iCombine "HTokA HTokA'" gives "%Hcontra");
     try (by iCombine "HTokB HTokB'" gives "%Hcontra");
@@ -102,9 +103,8 @@ Proof.
   iIntros (w) "HQ".
   wp_pures.
   clear w.
-  wp_bind (dequeue v_q).
-  set (P' := Q%I : iProp Σ).
-  set (Q' := λ w, (⌜w = SOMEV #a⌝ ∗ TokA Ga ∨ ⌜w = SOMEV #b⌝ ∗ TokB Ga)%I : iProp Σ).
+  set (P' := Q).
+  set (Q' := λ w, (case_a_b w (SOMEV #a) (SOMEV #b) Ga)%I : iProp Σ).
   wp_apply (dequeue_spec v_q G P' Q' with "[] [HQ]").
   (* Proving viewshift *)
   {
@@ -131,7 +131,7 @@ Proof.
     | iMod (queue_contents_update _ _ _ [ #b ] with "Hauth Hfrag") as "[Hauth Hfrag]" ];
     iModIntro;
     iFrame "Hauth";
-    unfold Q', contentsInv;
+    unfold Q', contentsInv, case_a_b;
     (* Close the invariant in the updated state *)
     [ iSplitL "HTokD1 HTokD2' Hfrag"
     | iSplitL "HTokD1' HTokD2 Hfrag"
@@ -170,22 +170,24 @@ Proof.
               |}).
   wp_apply (initialize_spec); first done.
   iIntros (v_q G) "[#HisQueue Hfrag]".
-  iMod (inv_alloc Nqa _ (contentsInv G Ga #a #b) with "[Hγ_D1 Hγ_D2 Hfrag]") as "#HqaInv".
+  iMod (inv_alloc Nqa _ (contentsInv G Ga #a #b) with "[Hγ_D1 Hγ_D2 Hfrag]") as "#HCInv".
   { iNext. iLeft. iFrame. }
   wp_pures.
-  wp_apply (spawn_spec Ns (λ v, case_a_b v a b Ga) _ with "[Hγ_A]").
+  wp_apply (spawn_spec Ns (λ v, case_a_b v #a #b Ga) _ with "[Hγ_A]").
   - wp_lam.
-    wp_apply (enqdeq_spec a b a Ga G v_q with "[HisQueue Hγ_A]"); auto.
-  - iIntros (jloc) "Hjhandle".
+    wp_apply (enqdeq_spec a b a Ga G v_q with "[HisQueue Hγ_A]");
+    unfold case_a_b; auto.
+  - iIntros (jh) "HJoinHandle".
     wp_pures.
-    wp_apply (enqdeq_spec a b b Ga G v_q with "[Hγ_B]"); first iFrame "#"; auto.
-    iIntros (x) "Hcase".
+    wp_apply (enqdeq_spec a b b Ga G v_q with "[Hγ_B]");
+    first (unfold case_a_b; iFrame "#"); auto.
+    iIntros (x) "Hcase_x".
     wp_pures.
-    wp_apply (join_spec with "Hjhandle").
-    iIntros (y) "Hcase'".
+    wp_apply (join_spec with "HJoinHandle").
+    iIntros (y) "Hcase_y".
     wp_pures.
-    iDestruct "Hcase" as "[[-> HTokA]|[-> HTokB]]";
-    iDestruct "Hcase'" as "[[-> HTokA']|[-> HTokB']]"; 
+    iDestruct "Hcase_x" as "[[-> HTokA]|[-> HTokB]]";
+    iDestruct "Hcase_y" as "[[-> HTokA']|[-> HTokB']]";
     [ by iCombine "HTokA HTokA'" gives "%Hcontra" | |
     | by iCombine "HTokB HTokB'" gives "%Hcontra" ];
     wp_pures;

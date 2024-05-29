@@ -176,7 +176,7 @@
 - [x] Proofread report
 
 - [x] If time permits, use hocap spec to prove a spec of a client
-  - [ ] Clean up proof of client spec
+  - [x] Clean up proof of client spec
   - [ ] Add to report file overview
   - [ ] write small section about it in chapter on specifications
     - [ ] Show code
