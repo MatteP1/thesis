@@ -11,3 +11,5 @@ theories/lockFreeMSQ_hocap_spec.v
 
 theories/consistencyCheckFree/lockAndCCFreeMSQ_impl.v
 theories/consistencyCheckFree/lockAndCCFreeMSQ_hocap_spec.v
+
+theories/queue_client.v

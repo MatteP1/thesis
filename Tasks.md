@@ -177,3 +177,16 @@
 
 - [x] If time permits, use hocap spec to prove a spec of a client
   - [ ] Clean up proof of client spec
+  - [ ] Add to report file overview
+  - [ ] write small section about it in chapter on specifications
+    - [ ] Show code
+    - [ ] Argue for sufficiency of sequential spec if we hadn't spawned a thread, but just invoked enqdeq twice
+    - [ ] Argue for need of hocap spec since concurrent and spawning thread: The threads will need to know state of the queue to argue that the dequeue in enqdeq is not None. Concurrent spec only tells us that the enqueue is either None or Some v. We have no way of proving that it must be Some v. Hocap spec allows us to conclude that the queue is non-empty, hence it must be Some v.
+    - [ ] Mention idea of proofs. Maybe show invariant.
+
+- [ ] Improvements for introduction
+  - [ ] More layman stuff in introduction
+    - [ ] queues in general are used a lot for different things. mention.
+    - [ ] mention importance of michael scott queue (used in many places)
+  - [ ] Try to describe where your work is placed in the field 
+        (See https://en.wikipedia.org/wiki/Interference_freedom)
