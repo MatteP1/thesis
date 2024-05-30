@@ -79,6 +79,7 @@
 \newcommand{\SeqQgnames}{SeqQgnames}
 \newcommand{\ConcQgnames}{ConcQgnames}
 \newcommand{\Qgnames}{Qgnames}
+\newcommand{\QueueAddInvariant}{I_{QA}}
 
 \newcommand{\vq}{v_q}
 \newcommand{\xsc}{xs}
@@ -143,6 +144,7 @@
 \newcommand{\Qgseq}{G_{S}}
 \newcommand{\Qgconc}{G_{C}}
 \newcommand{\Qghocap}{G_{H}}
+\newcommand{\QAg}{Ga}
 
 \newcommand{\ghlock}{\gname_{\mathrm{Hlock}}}
 \newcommand{\gtlock}{\gname_{\mathrm{Tlock}}}
@@ -166,6 +168,14 @@
 \newcommand{\TokAfterQg}{\TokAfter{\Qg}}
 \newcommand{\TokUpdated}[1]{\operatorname{TokUpdated} ~ #1}
 \newcommand{\TokUpdatedQg}{\TokUpdated{\Qg}}
+\newcommand{\TokDo}[1]{\operatorname{TokD1} ~ #1}
+\newcommand{\TokDoQAg}{\TokDo{\QAg}}
+\newcommand{\TokDt}[1]{\operatorname{TokD2} ~ #1}
+\newcommand{\TokDtQAg}{\TokDt{\QAg}}
+\newcommand{\TokA}[1]{\operatorname{TokA} ~ #1}
+\newcommand{\TokAQAg}{\TokA{\QAg}}
+\newcommand{\TokB}[1]{\operatorname{TokB} ~ #1}
+\newcommand{\TokBQAg}{\TokB{\QAg}}
 
 \newcommand\catenate{\mathbin{\text{\ttfamily\upshape ++}}}
 
@@ -748,7 +758,7 @@ The first component we need is an \textit{update modality}, written $\pvs P$. Th
   \and
   \htcsqvsrule
 \end{mathpar}
-Here, the \textit{view shift}, $\vs$, is defined as $P \vs Q = \persistently(P \implies \pvs Q)$, and states that, if we own the resources described by $P$, then we can derive the resources described by $Q$ after updating our resources (for instance via a frame preserving update).
+Here, the \textit{view-shift}, $\vs$, is defined as $P \vs Q = \persistently(P \implies \pvs Q)$, and states that, if we own the resources described by $P$, then we can derive the resources described by $Q$ after updating our resources (for instance via a frame preserving update).
 
 Iris supports reasoning about resource algebra via the notion of \textit{ghost state}: for a resource algebra $\Ml$ and an element $a$ in the carrier, the assertion $\ownGhost{\gname}{a}$ denotes ownership over an instance of the resource $a$. Here $\gname$ is a \textit{ghost name} -- it gives a way to refer specific instances of the resource algebra. The following four rules demonstrate how to create, update, and reason about ghost resources in Iris.
 \begin{mathpar}
@@ -1091,7 +1101,10 @@ Assume $\abstractstateauth{\Qg.\gabst}{\absvalueList'}$. Opening the invariant, 
 %=====================================================================
 \section{QueueAdd: An Example Queue Client}
 \label{QueueSpecs:section:queueadd}
-In this section, we look at an example queue client, named \textit{QueueAdd}. The example is somewhat contrived but illustrates the capabilities of the HOCAP-style specification, and the limitations of the concurrent and sequential specifications. \todo{write more}
+In this section, we look at an example queue client, named \textit{QueueAdd}. The example is somewhat contrived but illustrates the capabilities of the HOCAP-style specification, and the limitations of the concurrent and sequential specifications.
+
+The program is quite simple: it takes two integers $a$ and $b$ as input, and creates two threads that run in parallel. One thread enqueues $a$, and dequeues some element which is returned. The other thread does the same, except it enqueues $b$. The result of $\queueAdd$ is then the sum of the values dequeued by the threads: $a + b$. Figure \ref{QueueSpecs:queueadd:code} shows the program. Here, $e_1 \parcomp e_2$ is a construct for \textit{parallel composition}. It is syntactic sugar for an expression that runs $e_1$ and $e_2$ concurrently, waits for both computations to finish, and returns the results in a pair.
+
 \begin{figure}
 \begin{minted}[linenos=true, escapeinside=||, mathescape=true, bgcolor=codebg, frame=lines]{ocaml}
 |$\label{UNW:def}$|  |$ \unwrap \ w \eqdef \langkw{match}\spac w \spac\langkw{with}\spac \None \Ra \TT \ \TT \mid \Some v \Ra v \spac\langkw{end} $|
@@ -1107,17 +1120,35 @@ In this section, we look at an example queue client, named \textit{QueueAdd}. Th
 \label{QueueSpecs:queueadd:code}
 \end{figure}
 
-\begin{mathpar}
-  \Htpar
-\end{mathpar}
-
+The specification for $\queueAdd$ essentially says that the return value is the sum of the inputs.
 \begin{definition}[QueueAdd Specification]\label{QueueSpecs:spec:queueadd}
   \begin{equation*}
     \All a, b \in \mathbb{Z} . \hoare{\TRUE}{\queueAdd \ a \ b}{v . v = a + b}
   \end{equation*}
 \end{definition}
+This also implies that the program does not crash; the first case in the $\unwrap$ function never occurs.
 
+Note first that, if we had not used the parallel composition, and simply executed $\enqdeq$ twice in sequence, then the sequential specification would have sufficed in proving the specification. We would always have the $\isqueueseq$ predicate at hand to step through the $\enqueue$ and $\dequeue$ in the $\enqdeq$ function, and this would allow us to track the exact contents, which means that we could deduce that we never invoke $\dequeue$ when the queue is empty, and the values dequeued are exactly $a$ and $b$. However, since $\isqueueseq$ is not persistent (and hence not duplicable), it is not strong enough for the version using parallel composition.\\
+The specification for parallel composition, \ruleref{Ht-par}, states that we must decide which resources we give to each thread. We can not give both threads $\isqueueseq$ as it is not duplicable, but both threads will need the predicate in order to apply the specifications for $\enqueue$ and $\dequeue$.
 
+\begin{mathpar}
+  \Htpar
+\end{mathpar}
+
+The Concurrent specification does not have this issue, as its queue predicate, $\isqueueconc$ \textit{is} persistent. However, the concurrent specification is not strong enough as it does not track the state of the queue. It is paramount for correctness that the $\dequeue$ in $\enqdeq$ does not result in $\None$; the $\unwrap$ crashes if it does. However, the concurrent specification only tells us that the $\dequeue$ is either $\None$ or $\Some \val$, for some value $\val$. We have no way of proving that it must the latter case, as we do not track the contents of the queue.\\
+Fortunately, the HOCAP-style specification allows us to track the contents of the queue, so we are able to exclude the cases where the dequeues result in $\None$. Further, we can argue about the actual values that are dequeued; it must be either a or b. The way we realise this, is by creating an invariant that expresses the \textit{five} possible states of the queue using the fragmental view of the abstract state, which we get from the HOCAP-style $\initialise$ specification. The invariant looks as follows.
+\begin{definition}[Invariant for QueueAdd]\label{QueueSpecs:queueadd:invariant}
+  \begin{align*}
+    \QueueAddInvariant(\Qg, \QAg, a, b) \eqdef~
+    &\abstractstatefullfrag{\Qg.\gabst}{[]}~\star~\TokDoQAg~\star~\TokDtQAg~\lor\\
+    &\abstractstatefullfrag{\Qg.\gabst}{[a]}~\star~\TokAQAg~\star~(\TokDoQAg~\lor~\TokDtQAg)~\lor\\
+    &\abstractstatefullfrag{\Qg.\gabst}{[b]}~\star~\TokBQAg~\star~(\TokDoQAg~\lor~\TokDtQAg)~\lor\\
+    &\abstractstatefullfrag{\Qg.\gabst}{[a; b]}~\star~\TokAQAg~\star~\TokBQAg~\lor\\
+    &\abstractstatefullfrag{\Qg.\gabst}{[b; a]}~\star~\TokBQAg~\star~\TokAQAg~\lor
+  \end{align*}
+\end{definition}
+Since invariants are persistent, we can give both the invariant and the HOCAP-style queue predicate to both threads, meaning that both threads can use the HOCAP-style specifications for $\enqueue$ and $\dequeue$, when stepping through $\enqdeq$. The threads can open the invariant to get the fragmental view which they can use to prove the required view-shifts of the specifications. The invariant also mentions four \textit{tokens}, $\TokDoQAg$, $\TokDtQAg$, $\TokAQAg$, and $\TokBQAg$, which the threads use to reason about which state the queue is in when they open the invariant (see \ref{RA:sections:tokens} for a discussion on tokens). In particular, both threads can reason that, after its enqueue, it cannot be in the first state of the invariant, which in particular means that the queue cannot be empty. Hence they can rule out the case where the dequeue results in $\None$, and they can argue that the value dequeued is either $a$ or $b$. Further, using the tokens, we can also argue that one thread must have dequeued $a$ and the other $b$; they could not have dequeue the same value.\\
+We omit the precise proof here, and refer instead to the formal proof found in \path{queue_client.v}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -2176,7 +2207,7 @@ If the head and tail nodes are not the same, then it must be safe to dequeue, wh
 \subsection{Prophecies}
 Notice that the load on line \ref{LFD:nex} is a possible linearisation point -- if the load resolves to $\None$ (i.e. the queue is empty) and the consistency check on the next line passes, the dequeue will conclude the queue is empty and return $\None$. That is, the point where we ``read'' the state of the queue is the load on line \ref{LFD:nex}, but we only conclude that the queue is empty if the consistency check on the next line succeeds. So when we are at the load, we need to know whether or not the consistency check passes; if it does, we should apply the view-shift, and if it does not, we should not apply it. This is somewhat of a conundrum, as this requires us to reason about a future computation.
 
-To solve this issue, we use a \textit{prophecy variable}. Prophecies are a part of Iris and allow us to reason about the result of future expressions. They are only used in the logic and do not alter the semantics of the code. On line \ref{LFD:pro} in $\dequeue$, we create one such prophecy variable, which is then ``resolved'' on line \ref{LFD:cch}. The prophecy variable allows us to reason about the result of the expression inside the $\langkw{Resolve}$ statement. In other words, we can reason about the consistency check already at the load on line \ref{LFD:nex}, allowing us to make the correct choice. We will see exactly how this works when we prove the specification for the \lfmsq{} in chapter \ref{ch:LFMSQSPECS}.
+To solve this issue, we use a \textit{prophecy variable}. Prophecies are a part of Iris \citep{DBLP:journals/pacmpl/JungLPRTDJ20} and allow us to reason about the result of future expressions. They are only used in the logic and do not alter the semantics of the code. On line \ref{LFD:pro} in $\dequeue$, we create one such prophecy variable, which is then ``resolved'' on line \ref{LFD:cch}. The prophecy variable allows us to reason about the result of the expression inside the $\langkw{Resolve}$ statement. In other words, we can reason about the consistency check already at the load on line \ref{LFD:nex}, allowing us to make the correct choice. We will see exactly how this works when we prove the specification for the \lfmsq{} in chapter \ref{ch:LFMSQSPECS}.
 
 \begin{figure}
 \begin{minted}[linenos=true, escapeinside=||, mathescape=true, bgcolor=codebg, frame=lines]{ocaml}
@@ -2673,6 +2704,7 @@ Finally, this queue invariant also maintained the same relationship between the 
 \todo{Future work}
 \todo{Possibility of simplifying queue invariant for lock-free by removing isLL (and adding x\_last -> None)}
 \todo{The two queues studied in this project are somewhat related, so it would be interesting to see if other queues also adhere to the specifications given.}
+\todo{There are other types of queues, such as priority queues which are also widely used in practice. It would be interesting to write similar specifications for such queues.}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

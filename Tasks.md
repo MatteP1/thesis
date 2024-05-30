@@ -28,7 +28,7 @@
   - [x] Implement proof in Iris
 
 - [x] State and prove correctness of M&S queue with locks (concurrent case)
-  - [x] Change initialise so that locks are created before head and tail.
+  - [x] Change initialise so that locks are created before head and tail
   - [x] Define queue Invariant
   - [x] Change l_null to l_n+1
   - [x] Do proof sketch on paper
@@ -49,9 +49,9 @@
   - [x] Clear unused variables and propositions
   - [x] Remove _2 and _3 from subsequent invariant accesses
 - [x] Clean up proof of Sequential spec for M&S queue with locks in Coq
-- [x] Change let N := ... into Notation (...) for namespaces.
-- [x] Consider removing some of the CHANGE comments in hocap.
-- [x] Consider changing indentation from 4 to 2.
+- [x] Change let N := ... into Notation (...) for namespaces
+- [x] Consider removing some of the CHANGE comments in hocap
+- [x] Consider changing indentation from 4 to 2
 
 - [x] Write about the sequential spec for two-lock M&S queue in the report
   - [x] Mention how it can be used to track exact contents of queue
@@ -82,17 +82,17 @@
   - [x] in -> node
   - [x] x_n -> xn_
   - [x] remove redundant '
-  - [x] rewrite with ssreflect (in most places). I.e. rewrite /Reach /=.
+  - [x] rewrite with ssreflect (in most places). I.e. rewrite /Reach /=
   - [x] create queue_case lemma
   - [x] fix indentation
-  - [x] Consider renaming 'pt' to 'ap' for abstract points-to in lockfreeMSQ_hocap and lockAndCCfreeMSQ_hocap.
+  - [x] Consider renaming 'pt' to 'ap' for abstract points-to in lockfreeMSQ_hocap and lockAndCCfreeMSQ_hocap
 
 - [x] Introduce the notion of linearisation points
 - [x] Point out the linearisation points in the proof outlines
 
-- [x] Create a section/chapter explaining some of the basic rules (hoare-triples, weakest-precondition, inv-alloc, resource algebra), and also iris in general.
+- [x] Create a section/chapter explaining some of the basic rules (hoare-triples, weakest-precondition, inv-alloc, resource algebra), and also iris in general
 
-- [x] Mention coq and iris version that the code works with.
+- [x] Mention coq and iris version that the code works with
 - [x] Give an overview of Coq files and how they refer to sections in report. Perhaps mention it at beginning/end of each section, or just have an overview in a section (on the coq formalisation)
 - [x] Mention how to compile the files (via _CoqProject and make)
 
@@ -104,7 +104,7 @@
 - [x] Create better notation of nIn, nOut and nVal
 - [x] Write macros for many of the predicates (queue_invariant isLast, etc.)
 - [x] Wrap proofs of initialise, enqueue, and dequeue in begin{proof}
-- [x] Add lemmas in sections when proving initialise, enqueue, and dequeue, showing exactly what we are proving (see lock-free proof outline).
+- [x] Add lemmas in sections when proving initialise, enqueue, and dequeue, showing exactly what we are proving (see lock-free proof outline)
 - [x] Add isLL lemmas in appendix
 - [x] Refer to nIn-equal lemma in lock-free proofs
 - [x] change null / null node / ... to None
@@ -119,7 +119,7 @@
 - [x] refactor specification macros to take the forall quantified variables as input
 - [x] Also make hocap viewshifts their own macros
 - [x] Make the \Qg variables in derivations \Qgseq and \Qgconc
-- [x] Refer to Appendix definitions when explaining isLast, All, Wrap_some, Proj_val, etc.
+- [x] Refer to Appendix definitions when explaining isLast, All, Wrap_some, Proj_val, etc
 - [x] Format Appendix
 
 - [x] fix readme
@@ -136,7 +136,7 @@
 
 - [x] Decide on name/notation for Qgnames (including SeqQgnames and ConcQgnames). Maybe \mathcal(G)_{\text{seq}}?
 - [x] Format the forall intros in lemmas (and definitions) better
-- [x] Remove end of line spaces.
+- [x] Remove end of line spaces
 - [x] Change is_queue to isQueue
 - [x] Change is_queue_seq to isQueue_{seq} and similarly for conc
 - [x] Use camelCase for predicates. (proj_val, wrap_some, proj_gnames...)
@@ -178,16 +178,16 @@
 - [x] If time permits, use hocap spec to prove a spec of a client
   - [x] Clean up proof of client spec
   - [x] Add to report file overview
-  - [ ] write small section about it in chapter on specifications
+  - [x] write small section about it in chapter on specifications
     - [x] Show code
-    - [ ] Argue for sufficiency of sequential spec if we hadn't spawned a thread, but just invoked enqdeq twice
-    - [ ] Mention why we can't use sequential spec when using parallel construct: Ht-par demands we split our resources to prove the first and second thread. isqueue_seq not duplicable so can't give to both, but both will need predicate to invoke specifications for enqueue and dequeue. Concurrent spec solves this issue by making queue predicate persistent, but the concurrent specification is not strong enough...
-    - [ ] Argue for need of hocap spec since concurrent and spawning thread: The threads will need to know the state of the queue to argue that the dequeue in enqdeq is not None. If the dequeue results in None, then unwrap crashes, so it is paramount that we can conclude that the dequeues are not None. The concurrent spec only tells us that the dequeue is either None or Some v. We have no way of proving that it must be Some v. Hence the concurrent spec is not strong enough. Since the Hocap spec allows us to track the contents of the queue, we are able to exclude the case, where the dequeues results in None. Further, we can argue about the actual values that are dequeue. It must be either a or b.
-    - [ ] Mention idea of proofs. Maybe show invariant.
+    - [x] Argue for sufficiency of sequential spec if we hadn't spawned a thread, but just invoked enqdeq twice
+    - [x] Mention why we can't use sequential spec when using parallel construct
+    - [x] Argue for need of hocap spec since concurrent and spawning thread
+    - [x] Mention idea of proofs. Maybe show invariant
 
 - [ ] Improvements for introduction
   - [ ] More layman stuff in introduction
-    - [ ] queues in general are used a lot for different things. mention.
+    - [ ] queues in general are used a lot for different things. mention
     - [ ] mention importance of michael scott queue (used in many places)
   - [ ] Try to describe where your work is placed in the field 
         (See https://en.wikipedia.org/wiki/Interference_freedom)
