@@ -593,9 +593,9 @@ Correctness of software is of ever-growing importance as more and more safety-cr
 
 A verification technique that gives very strong correctness guarantees is that of using a \textit{program logic}. The idea is to set up a formal system that captures the semantics of a programming language, which one can then use to derive (i.e. prove) formal descriptions of how specific expressions behave: a specification of the program. That is, the logic allows us to write formal program specifications and prove them. One such program logic is \textit{Iris}, a concurrent separation logic that supports reasoning about concurrent programs and how the resources these programs operate on are used by participating threads.
 
-This project focuses on \textit{queues}. Using the aforementioned program logic, we give specifications for queue algorithms in general. These specifications vary in generality and complexity, reflecting the difficulties of reasoning about concurrent programs. The most general queue specification we develop is a so-called \textit{HOCAP-style} specification, which supports concurrent clients, and allows them to track the contents of the queue.
+This project focuses on \textit{queues}, a fundamental data structure in computer science that operate on the first-in, first-out principle. Queues are widely used across many types of applications, including process schedulers in operating systems, handling requests to webservers, and implementing the breadth-first search algorithm. Using the aforementioned program logic, we give specifications for queue algorithms in general. These specifications vary in generality and complexity, reflecting the difficulties of reasoning about concurrent programs. The most general queue specification we develop is a so-called \textit{HOCAP-style} specification, which supports concurrent clients, and allows them to track the contents of the queue.
 
-In this project, we study two concrete queue implementations, namely the blocking and non-blocking Michael-Scott Queues (\msq{}s for short). These queues demonstrate two of the most common synchronisation mechanisms: locks, which are blocking, and atomic instructions such as compare-and-swap, which are non-blocking.
+In this project, we study two concrete queue implementations, namely the blocking and non-blocking Michael-Scott Queues (\msq{}s for short). These queues demonstrate two of the most common synchronisation mechanisms: locks, which are blocking, and atomic instructions such as compare-and-swap, which are non-blocking. The non-blocking \msq{} in particular has enjoyed quite a bit of use in practice, as many libraries include queue implementations based on or inspired by it. A notable example is the \mintinline{java}{ConcurrentLinkedQueue} class in Java's concurrent library, which is based upon it.
 
 Previous work \citep{DBLP:conf/cpp/VindumB21} has shown that the non-blocking \msq{} contextually refines a coarse-grained queue. However, this result does not allow clients of the queue to formally verify their own specifications using the logic.\\
 As for the blocking \msq{}, no prior correctness results are known to this author. The original presentation of the queue \citep{DBLP:conf/podc/MichaelS96} gave an argument for its correctness, however, we demonstrate that the argument relies on an incorrect assumption.
@@ -608,7 +608,7 @@ This project makes the following contributions.
   \item Mechanising everything presented in this report in the Coq proof assistant.
 \end{itemize}
 
-The structure of the report is as follows. We begin in chapter \ref{ch:pre} with an exposition of the programming language used in the project, as well as the program logic, Iris. Following this, in chapter \ref{ch:QueueSpecs} we give the three queue specifications and discuss their capabilities. We further prove that the HOCAP-style specification can derive the other two specifications. Chapter \ref{ch:TLMSQ} discusses the \tlmsq{} and gives an implementation for it in our chosen programming language. We then proceed to prove that the implementation satisfies the three specifications in chapter \ref{ch:TLMSQSPECS}. In a similar way, chapter \ref{ch:LFMSQ} gives our implementation of the \lfmsq{}, and chapter \ref{ch:LFMSQSPECS} shows that it satisfies the HOCAP-style specification.
+The structure of the report is as follows. We begin in chapter \ref{ch:pre} with an exposition of the programming language used in the project, as well as the program logic, Iris. Following this, in chapter \ref{ch:QueueSpecs} we give the three queue specifications, discuss their capabilities, and study an example queue client. We further prove that the HOCAP-style specification can derive the other two specifications. Chapter \ref{ch:TLMSQ} discusses the \tlmsq{} and gives an implementation for it in our chosen programming language. We then proceed to prove that the implementation satisfies the three specifications in chapter \ref{ch:TLMSQSPECS}. In a similar way, chapter \ref{ch:LFMSQ} gives our implementation of the \lfmsq{}, and chapter \ref{ch:LFMSQSPECS} shows that it satisfies the HOCAP-style specification. We finish in Chapter \ref{ch:RA} where we give formal definitions and proofs for essential constructs used throughout the previous chapters.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -2319,8 +2319,7 @@ We proceed to prove some useful lemmas about concrete reachability.
 \end{proof}
 
 \begin{lemma}[Reach To is Node]\label{lemma:reach-to-is-node}
-  Similarly, for any $\nodeM{n}$ and $\nodeM{m}$, if 
-  $\reach{\nodeM{n}}{\nodeM{m}}$ then $\nodeM{m}$ is a node: $\isNode{\nodeM{m}}$.
+  Similarly, for any $\nodeM{n}$ and $\nodeM{m}$, if $\reach{\nodeM{n}}{\nodeM{m}}$ then $\nodeM{m}$ is a node: $\isNode{\nodeM{m}}$.
 \end{lemma}
 \begin{proof}
   We proceed by induction in $\reach{\nodeM{n}}{\nodeM{m}}$. The base case follows by lemma \ref{lemma:reach-from-is-node} above. In the inductive case, we assume that $\nodeM{n}$ points to some $\nodeM{p}$, which reaches $\nodeM{m}$. Our induction hypothesis is $\isNode{\nodeM{m}}$, which is also our proof obligation, so we are done.

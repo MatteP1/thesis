@@ -13,7 +13,7 @@
 - [x] Reread about fancy update and view-shift (sections in chapter 14 ILN)
 - [x] Reread about invariant namespaces (chapter 14.5 ILN)
 - [x] Read chapter 13 of Iris Lecture Notes (Hocap style Specs)
-- [ ] Read paper: The Future is Ours: Prophecy Variables in Separation Logic
+- [x] Read parts of paper: The Future is Ours: Prophecy Variables in Separation Logic
 
 - [x] Create Thesis Report file
 - [x] Add bibliography (Iris-Lecture-Notes, Contextual Refinement Paper, Iris from Ground up, etc)
@@ -186,8 +186,8 @@
     - [x] Mention idea of proofs. Maybe show invariant
 
 - [ ] Improvements for introduction
-  - [ ] More layman stuff in introduction
-    - [ ] queues in general are used a lot for different things. mention
-    - [ ] mention importance of michael scott queue (used in many places)
+  - [x] More layman stuff in introduction
+    - [x] queues in general are used a lot for different things. mention
+    - [x] mention importance of michael scott queue (used in many places)
   - [ ] Try to describe where your work is placed in the field 
         (See https://en.wikipedia.org/wiki/Interference_freedom)
