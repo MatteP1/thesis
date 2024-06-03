@@ -833,7 +833,7 @@ Table \ref{Pre:files-table} gives an overview of the files developed in the proj
   \path{lockFreeMSQ_impl.v} & Chapter \ref{ch:LFMSQ} & \multirow{2}{\linewidth}{\lfmsq{} implementation and HOCAP-style specification proof.} \\
   \path{lockFreeMSQ_hocap_spec.v} & Chapter \ref{ch:LFMSQSPECS} & \\
   \midrule
-  \path{lockAndCCFreeMSQ_impl.v} & Section \ref{LFMSQSPECS:section:discussion} & \multirow{2}{\linewidth}{Consistency-Check-Free version of \lfmsq{}.}\\
+  \path{lockAndCCFreeMSQ_impl.v} & Section \ref{LFMSQSPECS:section:discussion} & \multirow{2}{\linewidth}{Consistency-Check-Free version of the \lfmsq{}.}\\
   \path{lockAndCCFreeMSQ_hocap_spec.v} & Section \ref{LFMSQSPECS:section:discussion}& \\
   \bottomrule
 \end{tabularx}
@@ -1112,7 +1112,7 @@ Assume $\abstractstateauth{\Qg.\gabst}{\absvalueList'}$. Opening the invariant, 
 
 In this section, we look at an example queue client named ``QueueAdd''. The example is somewhat contrived but illustrates the capabilities of the HOCAP-style specification and the limitations of the concurrent and sequential specifications.
 
-The program is quite simple: it takes two integers, $a$ and $b$, as input and creates two threads that run in parallel. One thread enqueues $a$ and dequeues some element, which is returned. The other thread does the same, except it enqueues $b$. The result of $\queueAdd$ is then the sum of the values dequeued by the threads: $a + b$. Figure \ref{QueueSpecs:queueadd:code} shows the program. Here, $e_1 \parcomp e_2$ is a construct for \textit{parallel composition} introduced in \citet{gentleiris} (Section 8.1 at the time of writing). It is syntactic sugar for an expression that runs $e_1$ and $e_2$ concurrently, waits for both computations to finish, and returns the results in a pair.
+The program is quite simple: it takes two integers, $a$ and $b$, as input and creates two threads that run in parallel. One thread enqueues $a$ and dequeues some element, which is returned. The other thread does the same, except it enqueues $b$. The result of $\queueAdd$ is then the sum of the values dequeued by the threads: $a + b$. Figure \ref{QueueSpecs:queueadd:code} shows the program. Here, $e_1 \parcomp e_2$ is a construct for \textit{parallel composition} introduced by \citet{gentleiris} (Section 8.1 at the time of writing). It is syntactic sugar for an expression that runs $e_1$ and $e_2$ concurrently, waits for both computations to finish, and returns the results in a pair.
 
 \begin{figure}
 \begin{minted}[linenos=true, escapeinside=||, mathescape=true, bgcolor=codebg, frame=lines]{ocaml}
@@ -1165,7 +1165,7 @@ We omit further details of the proof and refer the interested reader to the form
 \chapter{The Two-Lock Michael-Scott Queue}
 \label{ch:TLMSQ}
 
-In this chapter, we give an implementation of the blocking version of the \msq{}, the \tlmsq{}, in \heaplang. This implementation differs slightly from the original, presented in \citet{DBLP:conf/podc/MichaelS96}, but most changes simply reflect the differences in the two languages.
+In this chapter, we give an implementation of the blocking version of the \msq{}, the \tlmsq{}, in \heaplang. This implementation differs slightly from the original, presented by \citet{DBLP:conf/podc/MichaelS96}, but most changes simply reflect the differences in the two languages.
 
 %=====================================================================
 \section{Introduction}
@@ -1195,7 +1195,7 @@ The queue consists of three functions: $\initialise$, $\enqueue$, and $\dequeue$
 
 The $\initialise$ function first creates a single node -- the head node -- marking the start of the linked list. It then creates two locks: the head lock, denoted $\Hlock$, protecting the head pointer, and the tail lock, denoted $\Tlock$, protecting the tail pointer. Finally, it creates the head and tail pointers, both pointing to the head node. The queue is then a pointer to a structure containing the head and tail pointers and the two locks.
 
-Figure \ref{TLMSQ:impl:figure:init} illustrates the structure of the queue after initialisation. Note that one of the pointers is decorated with a square. This represents a \emph{persistent} pointer; a pointer that will never be updated again. All ``in'' pointers, $\locinM{i}$, are persistent, meaning that, once created, they will only ever point to $(\nodevalM{i}, \locoutM{i})$. We use the notation $\loc \mapsto^{\persistently} \val$ (introduced in \citet{DBLP:conf/cpp/VindumB21}) to mean that $\loc$ points to $\val$ persistently.
+Figure \ref{TLMSQ:impl:figure:init} illustrates the structure of the queue after initialisation. Note that one of the pointers is decorated with a square. This represents a \emph{persistent} pointer; a pointer that will never be updated again. All ``in'' pointers, $\locinM{i}$, are persistent, meaning that, once created, they will only ever point to $(\nodevalM{i}, \locoutM{i})$. We use the notation $\loc \mapsto^{\persistently} \val$ (introduced by \citet{DBLP:conf/cpp/VindumB21}) to mean that $\loc$ points to $\val$ persistently.
 
 Note that in the original specification, a queue is a pointer to a 4-tuple $(\lochead, \loctail, \Hlock, \Tlock)$. Since \heaplang does not support 4-tuples, we instead represent the queue as a pointer to a pair of pairs: $\left((\lochead, \loctail), (\Hlock, \Tlock)\right)$.
 
@@ -1771,17 +1771,17 @@ Next, we have the $\isLock$ predicate for our two locks. Since we are in a seque
 The $\isLL$ predicate essentially creates the structure seen in the examples of Section \ref{TLMSQ:section:implementation}. It is defined in two steps. Firstly, we create all the persistent pointers in the linked list using the $\isLLchain$ predicate. Note that this, in effect, makes $\isLLchain(\xsc)$ persistent for all $\xsc$.
 \begin{definition}[Linked List Chain Predicate]
   \begin{align*}
-    \isLLchain([]) \equiv& \TRUE\\
-    \isLLchain([\node]) \equiv& \isNode{\node}\\
-    \isLLchain(\node :: \node' :: \xsc) \equiv& \isNode{\node} \star{} \nOut{\node'} \mapsto^{\persistently} \nIn{\node} \star{} \isLLchain(\node' :: \xsc)
+    \isLLchain([]) \eqdef& \TRUE\\
+    \isLLchain([\node]) \eqdef& \isNode{\node}\\
+    \isLLchain(\node :: \node' :: \xsc) \eqdef& \isNode{\node} \star{} \nOut{\node'} \mapsto^{\persistently} \nIn{\node} \star{} \isLLchain(\node' :: \xsc)
   \end{align*}
 \end{definition}
 
 Then, to define $\isLL$, we add that the last node in the linked list points to $\None$.
 \begin{definition}[Linked List Predicate]
   \begin{align*}
-    \isLL([]) \equiv& \TRUE\\
-    \isLL(\node :: \xsc) \equiv& \nOut{\node} \mapsto \None \star{} \isLLchain(\node :: \xsc)
+    \isLL([]) \eqdef& \TRUE\\
+    \isLL(\node :: \xsc) \eqdef& \nOut{\node} \mapsto \None \star{} \isLLchain(\node :: \xsc)
   \end{align*}
 \end{definition}
 
@@ -2202,17 +2202,17 @@ In this chapter, we study the non-blocking version of the \msq{}, the \lfmsq{}. 
 \section{Implementation}
 \label{LFMSQ:section:implementation}
 
-The implementation shares many commonalities with the two-lock variant. Most importantly, the underlying queue is still a linked list. The major differences are how we manipulate the linked list and the head and tail pointers.
+The implementation shares many commonalities with the two-lock variant. Most importantly, the underlying queue is still a linked list. The major differences are how we manipulate the linked list and the head and tail pointers. The code is shown in Figure \ref{LFMSQ:implementation:code}.
 
 \subsection{Initialise}
 \label{LFMSQ:implementation:sub:initialise}
 
-As the implementation does not use locks, the queue data structure is now just a pointer to a pair consisting of the head and tail pointers.
+As the implementation does not use locks, the queue data structure is now just a pointer to a pair consisting of the head and tail pointers. Other than this, the function behaves as the two-lock variant, creating the initial head node and the head and tail pointers.
 
 \subsection{Enqueue}
 \label{LFMSQ:implementation:sub:enqueue}
 
-Enqueueing a node consists of the same two steps as before: add the newly created node to the linked list and swing the tail pointer. In this way, figures \ref{TLMSQ:impl:figure:enqueue:a}, \ref{TLMSQ:impl:figure:enqueue:b}, and \ref{TLMSQ:impl:figure:enqueue:c} still accurately reflect the state changes that the queue goes through during an enqueue. However, one big difference is that swinging the tail pointer to the newly inserted node is not necessarily done by the thread that enqueued it. We discuss this below.\\
+Enqueueing a node consists of the same two steps as before: add the newly created node to the linked list and swing the tail pointer. In this way, Figures \ref{TLMSQ:impl:figure:enqueue:a}, \ref{TLMSQ:impl:figure:enqueue:b}, and \ref{TLMSQ:impl:figure:enqueue:c} still accurately reflect the state changes that the queue goes through during an enqueue. However, one big difference is that swinging the tail pointer to the newly inserted node is not necessarily done by the thread that enqueued it. We discuss this below.\\
 Since other threads can work on the linked list at the same time, we must do some extra checks when enqueueing a new node. Firstly, we must ensure that the tail pointer is actually pointing to the last node. We ensure this on line \ref{LFE:nen}. If it is not, then another enqueueing thread has added a new node to the linked list but has yet to swing the tail pointer. So instead of waiting for it, we \textit{help} it by trying to swing the tail pointer for it. Afterwards, we try to enqueue our node again.\\
 Secondly, before we can add the node, we must ensure that no thread has performed an enqueue while we have been working so that we do not overwrite another thread's enqueue. This is ensured with the $\CAS$ instruction on line \ref{LFE:add} -- it adds the new node to the linked list only if our tail node is still the last, and hence points to $\None$. After adding the node, we attempt to swing the tail pointer to it. This may fail, but that simply means that another thread has already swung it for us.
 Finally, we have an additional \textit{consistency check} on line \ref{LFE:cct}. We discuss the purpose of this extra check in Section \ref{LFMSQSPECS:section:discussion}.
@@ -2226,7 +2226,7 @@ If the head and tail nodes are not the same, then it must be safe to dequeue, wh
 \subsection{Prophecies}
 \label{LFMSQ:implementation:sub:prophecies}
 
-Notice that the load on line \ref{LFD:nex} is a possible linearisation point -- if the load resolves to $\None$ (i.e. the queue is empty) and the consistency check on the following line passes, the dequeue will conclude the queue is empty and return $\None$. That is, the point where we ``read'' the state of the queue is the load on line \ref{LFD:nex}, but we only conclude that the queue is empty if the consistency check on the following line succeeds. So when we are at the load, we need to know whether the consistency check passes; if it does, we should apply the view-shift, and if it does not, we should not apply it. This is somewhat of a conundrum, as this requires us to reason about a future computation.
+Notice that the load on line \ref{LFD:nex} is a possible linearisation point -- if the load resolves to $\None$ (i.e. the queue is empty) and the consistency check on the following line passes, the dequeue will conclude the queue is empty and return $\None$. That is, the point where we ``read'' the state of the queue is the load on line \ref{LFD:nex}, but we only conclude that the queue is empty if the consistency check on the following line succeeds. So when we are at the load while proving compliance with the HOCAP-style specification, we need to know whether the consistency check passes; if it does, we should apply the view-shift, and if it does not, we should not apply it. This is somewhat of a conundrum, as this requires us to reason about a future computation.
 
 To solve this issue, we use a \textit{prophecy variable}. Prophecies are a part of Iris \citep{DBLP:journals/pacmpl/JungLPRTDJ20} and allow us to reason about the result of future expressions. They are only used in the logic and do not alter the semantics of the code. On line \ref{LFD:pro} in $\dequeue$, we create one such prophecy variable, which is then ``resolved'' on line \ref{LFD:cch}. The prophecy variable allows us to reason about the result of the expression inside the $\langkw{Resolve}$ statement. In other words, we can reason about the consistency check already at the load on line \ref{LFD:nex}, allowing us to make the correct choice. We will see exactly how this works when we prove the specification for the \lfmsq{} in Chapter \ref{ch:LFMSQSPECS}.
 
@@ -2270,7 +2270,8 @@ To solve this issue, we use a \textit{prophecy variable}. Prophecies are a part 
 |$\label{LFD:re2}$|      |$ \Else loop \ \TT $|
 |$\label{LFD:app}$|      |$ ) \TT $|
 \end{minted}
-\caption{Implementation of \lfmsq{} in \heaplang.}
+\caption{Implementation of the \lfmsq{} in \heaplang.}
+\label{LFMSQ:implementation:code}
 \end{figure}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2294,11 +2295,11 @@ An important aspect in the correctness of the \lfmsq{} is which nodes a particul
 
 Firstly, the underlying linked list still only ever grows, and it does so only at the end. Hence, the set of nodes that a given node can reach only ever grows. Further, all nodes can always reach the last node in the linked list.
 
-Secondly, similarly to the two-lock variant, the correctness of the queue relies on the fact that the head and tail pointers are only ever swung towards the end of the linked list. That is, if a node can reach, say, the tail node at one point during the program, then it can reach any future tail node.
+Secondly, the correctness of the queue relies on the fact that the head and tail pointers are only ever swung towards the end of the linked list. That is, if a node can reach, say, the tail node at one point during the program, then it can reach any future tail node.
 
 Thirdly, whereas it was possible for the tail node to lag behind the head node in the two-lock version, it is not possible in the lock-free version. Indeed, if such a scenario could happen, $\dequeue$ could crash! Consider the scenario where the head node is the last node in the linked list (hence, the queue is empty), and the tail is lagging behind the head. If someone invokes $\dequeue$, the check on line \ref{LFD:hte}, which is supposed to detect an empty queue or a lagging tail, results in $\False$, and hence, incorrectly, takes the ``else'' branch, which assumes that there is something to dequeue. But since the queue is empty, then $next$ -- the node after head -- is $\None$, and when we try to dereference $next$ on line \ref{LFD:vde}, we will crash. Therefore, our invariant must ensure that the tail never lags behind the head.
 
-To capture these properties, we introduce two notions of reachability, concrete reachability and abstract reachability, which we introduce in the following sections. This way of modelling the queue was originally introduced in \citet{DBLP:conf/cpp/VindumB21}. The presentation here borrows the same ideas but differs in the sense that it is node-oriented instead of location-oriented. Moreover, we prove some additional properties of reachability which allows us to simplify the queue invariant slightly.
+To capture these properties, we introduce two notions of reachability, concrete reachability and abstract reachability, which we introduce in the following sections. This way of modelling the queue was originally introduced by \citet{DBLP:conf/cpp/VindumB21}. The presentation here borrows the same ideas but differs in the sense that it is node-oriented instead of location-oriented. Moreover, we prove some additional properties of reachability which allows us to simplify the queue invariant slightly.
 
 \subsection{Concrete Reachability}
 \label{LFMSQSPECS:reachability:sub:concrete}
@@ -2373,7 +2374,7 @@ Firstly, if we have a node, we may allocate some ghost variable $\gname$ which p
   \end{equation*}
 \end{restatable}
 
-The second lemma allows us to get a \textit{concrete} reachability predicate out of an abstract one. If a ghost name $\gname_m$ currently points abstractly to some node $\nodeM{m}$, then any node that can abstractly reach $\gname$ can also \textit{concretely} reach $\nodeM{m}$.
+The second lemma allows us to get a \textit{concrete} reachability predicate out of an abstract one. If a ghost name $\gname_m$ currently points abstractly to some node $\nodeM{m}$, then any node that can abstractly reach $\gname_m$ can also \textit{concretely} reach $\nodeM{m}$.
 \begin{restatable}[Abs Reach Concr]{lemma}{absreachconcr}\label{lemma:abs-reach-concr}
   For nodes $\nodeM{n}$ and $\nodeM{m}$, and ghost names $\gname_m$, we have
   \begin{equation*}
@@ -2393,7 +2394,7 @@ We can also go the other way and get an abstract reachability predicate out of a
   \end{equation*}
 \end{restatable}
 
-The final lemma allows us to update abstract pointers. As discussed above, we require that whatever node we update the pointer to is a successor of the current node. That is, if a ghost variable $\gname_m$ currently points to $\nodeM{m}$, then we must show that $\nodeM{m}$ can reach $\nodeM{o}$ before we can update $\gname$ to point abstractly to $\nodeM{o}$. After the update, we additionally get that $\nodeM{o}$ can abstractly reach $\gname$.
+The final lemma allows us to update abstract pointers. As discussed above, we require that whatever node we update the pointer to is a successor of the current node. That is, if a ghost variable $\gname_m$ currently points to $\nodeM{m}$, then we must show that $\nodeM{m}$ can reach $\nodeM{o}$ before we can update $\gname_m$ to point abstractly to $\nodeM{o}$. After the update, we additionally get that $\nodeM{o}$ can abstractly reach $\gname_m$.
 \begin{restatable}[Abs Reach Advance]{lemma}{absreachadvance}\label{lemma:abs-reach-advance}
   For nodes $\nodeM{m}$ and $\nodeM{o}$, and ghost names $\gname_m$, we have
   \begin{equation*}
@@ -2407,7 +2408,7 @@ The final lemma allows us to update abstract pointers. As discussed above, we re
 \section{HOCAP-style Queue Predicate}
 \label{LFMSQSPECS:section:hocap-queue-pred}
 
-In the HOCAP-style specification we prove, we make the collection of ghost names, $\Qgnames$, be the set of 4-tuples. Firstly, it contains the mandatory $\gabst$ whose purpose is the same as before -- to keep track of the abstract state of the queue. Additionally, it contains $\ghead$, $\gtail$, and $\glast$, which will abstractly point to the head, tail, and last node, respectively.
+For the HOCAP-style specification that we prove, we let the collection of ghost names, $\Qgnames$, be the set of 4-tuples of ghost names. Firstly, it contains the mandatory $\gabst$ whose purpose is the same as before -- to keep track of the abstract state of the queue. Additionally, it contains $\ghead$, $\gtail$, and $\glast$, which will abstractly point to the head, tail, and last node, respectively.
 
 Since the queue predicate is required to be persistent and multiple threads need to access shared resources of the queue, we need an invariant. The invariant we define has some commonalities with the invariant we used for the two-lock variant, but it incorporates the differences we discussed earlier in the chapter. In particular, it is important for the correctness of the queue that the tail does not lag behind the head. As such, our invariant does not allow for this behaviour. This has the extra implication that the head node is always the oldest node, meaning that we do not need to keep track of older nodes, $\xsold$.
 
@@ -2421,7 +2422,7 @@ We proceed to define the invariant.
     &\Exists \xsc, \xsqueue, \nodehead, \nodetail \nodelast . &&\text{(concrete state)}\\
     &\xsc = \xsqueue \catenate [\nodehead] \star{}\\
     &\isLL(\xsc) \star{}\\
-    &\isLast(\nodelast, \xsc)\\
+    &\isLast(\nodelast, \xsc) \star{}\\
     &\projval(\xsqueue) = \wrapsome(\absvalueList) \star{}\\
     &\lochead \mapsto \nIn{\nodehead} \star{}\\
     &\loctail \mapsto \nIn{\nodetail} \star{}\\
@@ -2454,7 +2455,7 @@ We instantiate the specification with our definition of $\isqueue$ (\ref{LFMSQSP
 \end{lemma}
 \begin{proof}
 We first step through line \ref{LFI:nod} which creates a new node: $\nodeM{1} = (\locinM{1}, \None, \locoutM{1})$, with $\locoutM{1} \mapsto \None$ and $\locinM{1} \mapsto (\None, \locoutM{1})$, the latter of which we make persistent. Next, we step through line \ref{LFI:que} which gives us some locations $\lochead$, $\loctail$, and $\locqueue$, with $\lochead \mapsto \nIn{\nodeM{1}}$ and $\loctail \mapsto \nIn{\nodeM{1}}$, and finally $\locqueue \mapsto (\lochead, \loctail)$.\\
-As we did for the two-lock version, we apply Lemma \ref{lemma:abst:alloc} to allocate an empty abstract queue, giving us some ghost name $\gabst$ that we put into $\Qg$, and the resources $\abstractstateauth{\Qg.\gabst}{[]} \star{} \abstractstatefullfrag{\Qg.\gabst}{[]}$. To allocate the invariant, we must additionally obtain abstract reach propositions. Since $\nodeM{1}$ is a node, we may use Lemma \ref{lemma:reach-reflexive} to conclude $\reach{\nodeM{1}}{\nodeM{1}}$. We can now use Lemma \ref{lemma:abs-reach-alloc} three times, giving us ghost names $\ghead$, $\gtail$, $\glast$ which we again put into $\Qg$, and the resources
+As we did for the two-lock version, we apply Lemma \ref{lemma:abst:alloc} to allocate an empty abstract queue, giving us some ghost name $\gabst$ that we put into a tuple, $\Qg$, and the resources $\abstractstateauth{\Qg.\gabst}{[]} \star{} \abstractstatefullfrag{\Qg.\gabst}{[]}$. To allocate the invariant, we must additionally obtain abstract reach propositions. Since $\nodeM{1}$ is a node, we may use Lemma \ref{lemma:reach-reflexive} to conclude $\reach{\nodeM{1}}{\nodeM{1}}$. We can now use Lemma \ref{lemma:abs-reach-alloc} three times, giving us ghost names $\ghead$, $\gtail$, $\glast$ which we put into $\Qg$, and the resources
 \begin{equation*}
   \ap{\Qg.\ghead}{\nodeM{1}} \star{} \ap{\Qg.\gtail}{\nodeM{1}} \star{} \ar{\nodeM{1}}{\Qg.\gtail} \star{} \ap{\Qg.\glast}{\nodeM{1}} \star{} \ar{\nodeM{1}}{\Qg.\glast}
 \end{equation*}
@@ -2640,7 +2641,7 @@ Importantly, if we own a particular token, we know that no one else can own the 
 We use the resource algebra $\authm(\option{(\fracm \times \agm(\List ~ \Val))})$ to define the abstract state predicate. The abstract state is $\List ~ \Val$. It is wrapped in the agreement RA, $\agm$, which ensures that, if one owns two elements, they agree on the abstract state. The fractional RA, $\fracm$, denotes how much of the fragmental view is owned; the fragmental view can be split up, which is handled by the clients. We collect $\fracm$ and $\agm(\List ~ \Val)$ in the product RA, whose elements are then pairs of fractions and abstract states. The option RA, $?$, makes the product RA unital, which is required by the $\authm$ construction. Here, $\authm$ is the authoritative resource algebra. It gives us the authoritative and fragmental views and, together with the fractional RA, governs that they can only be updated in unison.\\
 We note that the core of the fractional RA is always undefined, which means that the core of $\authm(\option{(\fracm \times \agm(\List ~ \Val))})$ is also undefined. Hence, no elements of the RA can be persistent -- not even the fragmental ones.
 
-With this, we may now define $\abstractstateauth{\gname}{\absvalueList}$ and $\abstractstatefullfrag{\gname}{\absvalueList}$ formally.
+With this, we may now define $\abstractstateauth{\gname}{\absvalueList}$ and $\abstractstatefullfrag{\gname}{\absvalueList}$ formally and prove the three lemmas we postulated of them in Section \ref{QueueSpecs:section:hocap}.
 \begin{definition}[Authoritative Abstract State]
   $\abstractstateauth{\gname}{\absvalueList} \eqdef \ownGhost{\gname}{\authfull (1, \aginj ~ \absvalueList)}$
 \end{definition}
@@ -2654,10 +2655,9 @@ With this, we may now define $\abstractstateauth{\gname}{\absvalueList}$ and $\a
   By \ruleref{Own-op}, it suffices to show $\pvs \Exists \gname . \ownGhost{\gname}{\authfull (1, \aginj ~ \absvalueList) \mtimes \authfrag (1, \aginj ~ \absvalueList)}$. This follows by \ruleref{Ghost-alloc} if we can show that the element is valid. That is, $\authfull (1, \aginj ~ \absvalueList) \mtimes \authfrag (1, \aginj ~ \absvalueList) \in \Vl$. However, this follows by the definitions of the involved resource algebras.
 \end{proof}
 
-In Section \ref{QueueSpecs:section:deriving-seq-and-conc}, we postulated two important lemmas that showed that the authoritative and fragmental states agree and how to update the abstract state. We now proceed to prove these lemmas.
 \abstagree*
 \begin{proof}
-  Since we own both $\abstractstateauth{\gname}{\absvalueList}$ and $\abstractstatefullfrag{\gname}{\absvalueList'}$, and they have the same ghost name, we can use rules \ruleref{Own-op} and \ruleref{Own-valid} to conclude that the element $\authfull (1, \aginj ~ \absvalueList) \mtimes \authfrag (1, \aginj ~ \absvalueList')$ is valid. By the authoritative RA, this means that $\aginj ~ \absvalueList' \mincl \aginj ~ \absvalueList$. By definition of the agreement RA, this means that $\absvalueList' = \absvalueList$, which is what we wanted.
+  Since we own both $\abstractstateauth{\gname}{\absvalueList}$ and $\abstractstatefullfrag{\gname}{\absvalueList'}$, and they have the same ghost name, we can use rules \ruleref{Own-op} and \ruleref{Own-valid} to conclude that the element $\authfull (1, \aginj ~ \absvalueList) \mtimes \authfrag (1, \aginj ~ \absvalueList')$ is valid. By the authoritative RA and the product RA, this means that $\aginj ~ \absvalueList' \mincl \aginj ~ \absvalueList$. By definition of the agreement RA, this means that $\absvalueList' = \absvalueList$, which is what we wanted.
 \end{proof}
 
 \abstupdate*
@@ -2721,7 +2721,7 @@ We gave an implementation of the \tlmsq{} in \heaplang{}, which essentially cons
 The invariant further maintained the relationship between the concrete state of the queue, represented by the underlying linked list, and the abstract state of the queue, represented by the aforementioned predicate, $\abstractstateauth{\gname}{\absvalueList}$. This allowed us to show how the queue functions, $\enqueue$ and $\dequeue$, affect the contents of the queue, which in turn gives clients a way to track the contents of the queue.\\
 Having the queue resources in an invariant allows us to support concurrent clients, as invariants are duplicable in Iris, which means that the invariant and its resources can be shared between threads.
 
-Similarly, we gave an implementation of the \lfmsq{} in \heaplang{} and proved its compliance with the HOCAP-style specification. Unlike the \tlmsq{}, the \lfmsq{} \emph{does} rely on the fact that the tail does not lag behind the head. It further relies on the fact that the head and tail only ever move towards the end of the linked list. The queue invariant we created for the \lfmsq{} thus incorporated these two characteristics. We used the notion of \textit{reachability} introduced in \citet{DBLP:conf/cpp/VindumB21} to describe the properties formally. The concrete reachability predicate, $\reach{\node}{\node'}$, denotes that node $\node$ precedes node $\node'$ in the linked list making up the queue. The abstract points-to predicate, $\ap{\gname}{\node}$, allows us to keep track of the location of specific types of nodes, such as the head node, the tail node, and the last node, which can change during the course of the queues lifetime. Together with the abstract reachability predicate, $\ar{\node}{\gname}$, we could conclude that if a node could concretely reach, say, the head node, then it could concretely reach any future head nodes. The abstract points-to and reachability predicates we put in the invariant then allowed us to conclude that the head can \emph{always} concretely reach the tail.\\
+Similarly, we gave an implementation of the \lfmsq{} in \heaplang{} and proved its compliance with the HOCAP-style specification. Unlike the \tlmsq{}, the \lfmsq{} \emph{does} rely on the fact that the tail does not lag behind the head. It further relies on the fact that the head and tail only ever move towards the end of the linked list. The queue invariant we created for the \lfmsq{} thus incorporated these two characteristics. We used the notion of \textit{reachability} introduced by \citet{DBLP:conf/cpp/VindumB21} to describe the properties formally. The concrete reachability predicate, $\reach{\node}{\node'}$, denotes that node $\node$ precedes node $\node'$ in the linked list making up the queue. The abstract points-to predicate, $\ap{\gname}{\node}$, allows us to keep track of the location of specific types of nodes, such as the head node, the tail node, and the last node, which can change during the course of the queues lifetime. Together with the abstract reachability predicate, $\ar{\node}{\gname}$, we could conclude that if a node could concretely reach, say, the head node, then it could concretely reach any future head nodes. The abstract points-to and reachability predicates that we put into the invariant then allowed us to conclude that the head can \emph{always} concretely reach the tail.\\
 Similarly to the queue invariant for the \tlmsq{}, this queue invariant also maintained a relationship between the concrete and abstract states of the queue, which enabled accurate tracking of the queue contents.
 
 For future work, we first note that it might be possible to simplify the queue invariant of the \lfmsq{} by removing the $\isLL$ predicate and replacing it with $\nodelast \mapsto \None$. I postulate that the remaining, persistent points-to predicates mentioned by the $\isLL$ predicate are derivable from the abstract points-to and reachability predicates present in the invariant.
