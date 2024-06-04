@@ -471,7 +471,7 @@ Proof.
   (* --- Read current tail node: x_tail --- *)
   wp_load.
   wp_pures.
-  (* To perform load, we must have a points-to predicate for l_tail *)
+  (* To perform load, we must know what l_tail points to *)
   (* --- Open Invariant (1) --- *)
   wp_bind (! #l_tail)%E.
   iInv "Hqueue_inv" as "(%xs_v & HAbst & %xs & %xs_queue & %x_head & %x_tail & %x_last & >%Hxs_eq & HisLL_xs & >%HisLast_xlast & >%Hconc_abst_eq & >Hl_head & >Hl_tail & HγHead_ap_xhead & >#Hxhead_ar_γTail & HγTail_ap_xtail & >#Hxtail_ar_γLast & HγLast_ap_xlast)".
@@ -513,7 +513,7 @@ Proof.
       destruct HisLast_xlast as [xs_rest ->].
       by iDestruct "HisLL_xs" as "[Hxtail_to_none _]".
     }
-    (* --- Perform the load: x_tail points to None --- *)
+    (* --- Perform load: x_tail points to None --- *)
     wp_load.
     iModIntro.
     (* --- Close Invariant (2) --- *)
@@ -600,7 +600,7 @@ Proof.
       (* --- Prove post-condition --- *)
       by iApply "HΦ".
   - (* CASE: x_tail is not last *)
-    (* --- Perform the load: x_tail points to some node x_tail_next --- *)
+    (* --- Perform load: x_tail points to some node x_tail_next --- *)
     wp_load.
     iPoseProof (reach_from_is_node with "Hxtailnext_reach_xlast") as "Hxtailnext_node".
     iMod (Abs_Reach_Abs with "Hxtailnext_reach_xlast HγLast_ap_xlast") as "[#Hxtailnext_ar_γLast HγLast_ap_xlast]".
@@ -658,7 +658,7 @@ Proof.
   (* --- Read current head node: x_head --- *)
   wp_load.
   wp_pures.
-  (* To perform load, we must have a points-to predicate for l_head *)
+  (* To perform load, we must know what l_head points to *)
   (* --- Open Invariant (1) --- *)
   wp_bind (! #l_head)%E.
   iInv "Hqueue_inv" as "(%xs_v & HAbst & %xs & %xs_queue & %x_head & %x_tail & %x_last & >%Hxs_eq & HisLL_xs & >%HisLast_xlast & >%Hconc_abst_eq & >Hl_head & >Hl_tail & HγHead_ap_xhead & >#Hxhead_ar_γTail & HγTail_ap_xtail & >#Hxtail_ar_γLast & HγLast_ap_xlast)".
@@ -687,12 +687,12 @@ Proof.
     iFrame "%#".
   }
   iClear (Hconc_abst_eq xs_v Hxs_eq x_tail HisLast_xlast x_last xs xs_queue) "Hxtail_ar_γLast".
-  (* l_head pointed to x_head *)
+  (* --- l_head pointed to x_head --- *)
   wp_let.
   (* --- Read current tail node: x_tail --- *)
   wp_load.
   wp_pures.
-  (* To perform load, we must have a points-to predicate for l_tail *)
+  (* To perform load, we must know what l_tail points to *)
   (* --- Open Invariant (2) --- *)
   wp_bind (! #l_tail)%E.
   iInv "Hqueue_inv" as "(%xs_v & HAbst & %xs & %xs_queue & %x_head' & %x_tail & %x_last & >%Hxs_eq & HisLL_xs & >%HisLast_xlast & >%Hconc_abst_eq & >Hl_head & >Hl_tail & HγHead_ap_xhead & >#Hxhead'_ar_γTail & HγTail_ap_xtail & >#Hxtail_ar_γLast & HγLast_ap_xlast)".
@@ -741,7 +741,7 @@ Proof.
     iPoseProof (reach_last with "Hxhead_reach_xtail' Hxhead_to_none") as "[><- Hxhead_to_none]".
     (* x_head = x_tail *)
     iPoseProof (reach_last with "Hxhead_reach_xtail Hxhead_to_none") as "[><- Hxhead_to_none]".
-    (* --- Perform the load: x_head points to None --- *)
+    (* --- Perform load: x_head points to None --- *)
     wp_load. (* Linearisation Point *)
     (* --- Deduce that abst. and conc. queues must be empty --- *)
     iAssert (⌜xs_queue = []⌝)%I as "->".
@@ -776,7 +776,7 @@ Proof.
     iClear (Hconc_abst_eq xs_rest Hxs_eq) "Hxhead'_ar_γTail Hxtail'_ar_γLast Hxhead_reach_xlast HisLL_chain_xs".
     (* --- x_head pointed to None --- *)
     wp_let.
-    (* --- x_head = x_tail and x_head was last, so return None.  *)
+    (* --- x_head = x_tail and x_head was last, so return None --- *)
     wp_pures.
     case_bool_decide; last contradiction.
     wp_if_true.
@@ -785,7 +785,7 @@ Proof.
     (* --- Prove post-condition --- *)
     by iApply "HΦ".
   - (* CASE: x_head is not last *)
-    (* --- Perform the load: x_head points to some node x_head_next --- *)
+    (* --- Perform load: x_head points to some node x_head_next --- *)
     wp_load.
     iPoseProof (reach_from_is_node with "Hxheadnext_reach_xlast") as "Hxheadnext_node".
     iMod (Abs_Reach_Abs with "Hxheadnext_reach_xlast HγLast_ap_xlast") as "[#Hxheadnext_ar_γLast HγLast_ap_xlast]".
