@@ -351,12 +351,12 @@ Proof.
   iMod (Abs_Reach_Alloc x_1 with "Hx1_reach_x1") as (γ_Head) "[HγHead_ap_x1 _]".
   iMod (Abs_Reach_Alloc x_1 with "Hx1_reach_x1") as (γ_Tail) "[HγTail_ap_x1 #Hx1_ar_γTail]".
   iMod (Abs_Reach_Alloc x_1 with "Hx1_reach_x1") as (γ_Last) "[HγLast_ap_x1 #Hx1_ar_γLast]".
-  set (Queue_gnames := {| γ_Abst := γ_Abst;
-                          γ_Head := γ_Head;
-                          γ_Tail := γ_Tail;
-                          γ_Last := γ_Last;
-                       |}).
-  iMod (inv_alloc Ni _ (queue_invariant l_head l_tail Queue_gnames) with "[Hγ_Abst_auth Hl_head Hl_tail Hx1_to_none HγHead_ap_x1 HγTail_ap_x1 HγLast_ap_x1]") as "#HqueueInv".
+  set (G := {| γ_Abst := γ_Abst;
+               γ_Head := γ_Head;
+               γ_Tail := γ_Tail;
+               γ_Last := γ_Last;
+            |}).
+  iMod (inv_alloc Ni _ (queue_invariant l_head l_tail G) with "[Hγ_Abst_auth Hl_head Hl_tail Hx1_to_none HγHead_ap_x1 HγTail_ap_x1 HγLast_ap_x1]") as "#HqueueInv".
   {
     iNext.
     iExists []; iFrame "Hγ_Abst_auth"; simpl.
@@ -366,7 +366,7 @@ Proof.
   }
   wp_alloc l_queue as "Hl_queue".
   iMod (pointsto_persist with "Hl_queue") as "#Hl_queue".
-  iApply ("HΦ" $! #l_queue Queue_gnames).
+  iApply ("HΦ" $! #l_queue G).
   iModIntro.
   iFrame.
   iExists l_queue, l_head, l_tail.

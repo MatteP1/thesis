@@ -199,17 +199,17 @@ Proof.
   iMod token_alloc as (γ_After) "Hγ_After".
   (* CHANGE: allocate the abstract state of the queue as empty *)
   iMod (queue_contents_alloc []) as (γ_Abst) "[Hγ_Abst_auth Hγ_Abst_frac]".
-  set (Queue_gnames := {| γ_Abst := γ_Abst;
-                          γ_Hlock := γ_Hlock;
-                          γ_Tlock := γ_Tlock;
-                          γ_E := γ_E;
-                          γ_nE := γ_nE;
-                          γ_D := γ_D;
-                          γ_nD := γ_nD;
-                          γ_Before := γ_Before;
-                          γ_After := γ_After
-                       |}).
-  iMod (inv_alloc Ni _ (queue_invariant l_head l_tail Queue_gnames) with "[Hγ_Abst_auth Hl_head Hl_tail Hx1_to_none Hγ_nE Hγ_nD Hγ_Before Hγ_After]") as "#HqueueInv".
+  set (G := {| γ_Abst := γ_Abst;
+               γ_Hlock := γ_Hlock;
+               γ_Tlock := γ_Tlock;
+               γ_E := γ_E;
+               γ_nE := γ_nE;
+               γ_D := γ_D;
+               γ_nD := γ_nD;
+               γ_Before := γ_Before;
+               γ_After := γ_After
+            |}).
+  iMod (inv_alloc Ni _ (queue_invariant l_head l_tail G) with "[Hγ_Abst_auth Hl_head Hl_tail Hx1_to_none Hγ_nE Hγ_nD Hγ_Before Hγ_After]") as "#HqueueInv".
   {
     iNext.
     iExists []; iFrame "Hγ_Abst_auth".
@@ -221,7 +221,7 @@ Proof.
   }
   wp_alloc l_queue as "Hl_queue".
   iMod (pointsto_persist with "Hl_queue") as "#Hl_queue".
-  iApply ("HΦ" $! #l_queue Queue_gnames).
+  iApply ("HΦ" $! #l_queue G).
   iModIntro.
   iFrame "Hγ_Abst_frac".
   iExists l_queue, l_head, l_tail, h_lock, t_lock.

@@ -61,15 +61,15 @@ Proof.
   wp_let.
   wp_apply (newlock_spec True); first done.
   iIntros (t_lock γ_Tlock) "Hγ_Tlock".
-  set (Queue_gnames := {| γ_Hlock := γ_Hlock;
-                          γ_Tlock := γ_Tlock;
-                       |}).
+  set (G := {| γ_Hlock := γ_Hlock;
+               γ_Tlock := γ_Tlock;
+            |}).
   wp_let.
   wp_alloc l_tail as "Hl_tail".
   wp_alloc l_head as "Hl_head".
   wp_alloc l_queue as "Hl_queue".
   iMod (pointsto_persist with "Hl_queue") as "#Hl_queue".
-  iApply ("HΦ" $! #l_queue Queue_gnames).
+  iApply ("HΦ" $! #l_queue G).
   iModIntro.
   iExists l_queue, l_head, l_tail, h_lock, t_lock.
   repeat iSplit; try done.

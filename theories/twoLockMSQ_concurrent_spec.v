@@ -192,16 +192,16 @@ Proof.
   iMod token_alloc as (γ_nD) "Hγ_nD".
   iMod token_alloc as (γ_Before) "Hγ_Before".
   iMod token_alloc as (γ_After) "Hγ_After".
-  set (Queue_gnames := {| γ_Hlock := γ_Hlock;
-                          γ_Tlock := γ_Tlock;
-                          γ_E := γ_E;
-                          γ_nE := γ_nE;
-                          γ_D := γ_D;
-                          γ_nD := γ_nD;
-                          γ_Before := γ_Before;
-                          γ_After := γ_After
-                       |}).
-  iMod (inv_alloc N _ (queue_invariant Ψ l_head l_tail Queue_gnames) with "[Hl_head Hl_tail Hx1_to_none Hγ_nE Hγ_nD Hγ_Before Hγ_After]") as "#HqueueInv".
+  set (G := {| γ_Hlock := γ_Hlock;
+               γ_Tlock := γ_Tlock;
+               γ_E := γ_E;
+               γ_nE := γ_nE;
+               γ_D := γ_D;
+               γ_nD := γ_nD;
+               γ_Before := γ_Before;
+               γ_After := γ_After
+            |}).
+  iMod (inv_alloc N _ (queue_invariant Ψ l_head l_tail G) with "[Hl_head Hl_tail Hx1_to_none Hγ_nE Hγ_nD Hγ_Before Hγ_After]") as "#HqueueInv".
   {
     iNext.
     iExists []. iSplit; first done.
@@ -213,7 +213,7 @@ Proof.
   }
   wp_alloc l_queue as "Hl_queue".
   iMod (pointsto_persist with "Hl_queue") as "#Hl_queue".
-  iApply ("HΦ" $! #l_queue Queue_gnames).
+  iApply ("HΦ" $! #l_queue G).
   iModIntro.
   iExists l_queue, l_head, l_tail, h_lock, t_lock.
   by repeat iSplit.
