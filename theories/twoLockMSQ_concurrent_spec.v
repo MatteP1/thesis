@@ -389,7 +389,7 @@ Proof.
   iInv "Hqueue_inv" as "Hqueue_inv_open".
   iPoseProof (queue_invariant_equiv_simple Ψ l_head l_tail G with "Hqueue_inv_open") as "Hqueue_inv_open".
   iDestruct "Hqueue_inv_open" as "(%xs_v & HAll_xs & %xs & %xs_queue & %xs_old & %x_head & %x_tail & >%Hxs_eq & HisLL_xs & >%Hconc_abst_eq & [ [Hl_head HTokND] | [Hl_head >HTokD'] ] & Htail)";
-  last by iCombine "HTokD HTokD'" gives "%H". (* Impossible: TokD*)
+  last by iCombine "HTokD HTokD'" gives "%H". (* Impossible: TokD *)
   wp_load.
   iDestruct "Hl_head" as "[Hl_head1 Hl_head2]".
   iPoseProof (isLL_and_chain with "HisLL_xs") as "[HisLL_xs #HisLL_chain_xs]".
@@ -415,7 +415,7 @@ Proof.
   iInv "Hqueue_inv" as "Hqueue_inv_open".
   iPoseProof (queue_invariant_equiv_simple Ψ l_head l_tail G with "Hqueue_inv_open") as "Hqueue_inv_open".
   iDestruct "Hqueue_inv_open" as "(%xs_v & HAll_xs & %xs & %xs_queue & %xs_old & %x_head' & %x_tail & >%Hxs_eq & HisLL_xs & >%Hconc_abst_eq & [ [Hl_head >HTokND'] | [>Hl_head1 HTokD] ] & Htail)";
-  first by iCombine "HTokND HTokND'" gives "%H". (* Impossible: TokND*)
+  first by iCombine "HTokND HTokND'" gives "%H". (* Impossible: TokND *)
   iPoseProof (isLL_and_chain with "HisLL_xs") as "[HisLL_xs #HisLL_chain_xs]".
   iCombine "Hl_head1 Hl_head2" as "Hl_head" gives "[_ %Hhead_eq]".
   subst.
@@ -450,7 +450,7 @@ Proof.
     iModIntro.
     iApply "HΦ".
     by iLeft.
-  - (* Queue is non-empty*)
+  - (* Queue is non-empty *)
     iAssert (▷(isLL_chain [x_head_next; x_head]))%I as "HisLL_chain_xheadnext".
     {
       iNext.
