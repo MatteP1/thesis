@@ -188,9 +188,11 @@ Proof.
   wp_apply (newlock_spec with "Hγ_E").
   iIntros (t_lock γ_Tlock) "Hγ_Tlock".
   wp_let.
-  (* --- Create head and tail pointers --- *)
+  (* --- Create queue structure --- *)
   wp_alloc l_tail as "Hl_tail".
   wp_alloc l_head as "Hl_head".
+  wp_alloc l_queue as "Hl_queue".
+  iMod (pointsto_persist with "Hl_queue") as "#Hl_queue".
   (* --- Allocate tokens for invariant --- *)
   iMod token_alloc as (γ_nE) "Hγ_nE".
   iMod token_alloc as (γ_nD) "Hγ_nD".
@@ -217,9 +219,6 @@ Proof.
     iFrame.
     by iExists [].
   }
-  (* --- Create queue data structure --- *)
-  wp_alloc l_queue as "Hl_queue".
-  iMod (pointsto_persist with "Hl_queue") as "#Hl_queue".
   (* --- Prove post-condition --- *)
   iApply ("HΦ" $! #l_queue G).
   iModIntro.
@@ -238,8 +237,8 @@ Proof.
                #Hl_queue & #Hqueue_inv & #Hh_lock & #Ht_lock) HΨ_v] HΦ".
   (* --- Step into enqueue function --- *)
   wp_lam.
-  (* --- Create new node: x_new --- *)
   wp_let.
+  (* --- Create new node: x_new --- *)
   wp_pures.
   wp_alloc l_new_out as "Hxnew_to_none".
   wp_alloc l_new_in as "Hxnew_node".
@@ -250,8 +249,8 @@ Proof.
   pose proof (eq_refl : SOMEV v = n_val x_new) as Hxnew_val.
   clearbody x_new.
   iMod (pointsto_persist with "Hxnew_node") as "#Hxnew_node".
-  (* --- Acquire tail lock --- *)
   wp_let.
+  (* --- Acquire tail lock --- *)
   wp_load.
   wp_pures.
   wp_apply (acquire_spec with "Ht_lock").
