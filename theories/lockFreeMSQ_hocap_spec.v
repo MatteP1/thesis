@@ -19,7 +19,7 @@ Context `{!inG Σ (frac_authR (agreeR (listO val)))}.
 Variable N : namespace.
 Notation Ni := (N .@ "internal").
 
-(* ===== Hocap Specification for Lock-Free M&S Queue ===== *)
+(* ===== HOCAP Specification for Lock-Free M&S Queue ===== *)
 
 (* ----- Ghost variable names ----- *)
 Record Qgnames := { γ_Abst : gname;
@@ -123,7 +123,7 @@ Proof.
     iIntros (x_o) "Hxm_reach_xo". done.
   - (* Inductive case: x_n ↦□ x_p, and x_p satisfies transitivity (with x_m) *)
     iIntros (x_o) "Hxm_reach_xo".
-    (* We know x_n steps to x_p, so it suffices to show that x_p ⤳ x_o: *)
+    (* We know x_n steps to x_p, so it suffices to show that x_p ⤳ x_o *)
     rewrite (least_fixpoint_unfold Reach' (x_n, x_o)) {4}/Reach'
             /Reach /curry /=.
     iFrame "Hxn_node".
@@ -244,14 +244,14 @@ Proof.
   iDestruct "Hγm_ap_xm" as "(%s & Hγm_auth & #H_reach_xm)".
   (* Is x_n in s? *)
   destruct (decide (x_n ∈ s)) as [ Hxn_in_s | Hxn_notin_s ].
-  (* Case: x_n ∈ s. It then follows by auth_update_dfrac_alloc *)
-  - iMod (own_update _ _ (● s ⋅ ◯ {[x_n]}) with "Hγm_auth") as "[Hγm_auth #Hxn_ar_γm]".
+  - (* Case: x_n ∈ s. It then follows by auth_update_dfrac_alloc *)
+    iMod (own_update _ _ (● s ⋅ ◯ {[x_n]}) with "Hγm_auth") as "[Hγm_auth #Hxn_ar_γm]".
     + apply (auth_update_dfrac_alloc _ s {[x_n]}).
       rewrite gset_included.
       by apply singleton_subseteq_l.
     + iFrame "Hxn_ar_γm". iExists s. by iFrame.
-  (* Case: x_n ∉ s. We update ● s to ● ({[x_n]} ∪ s) ⋅ ◯ ({[x_n]} ∪ s) *)
-  - iMod (own_update _ _ (● ({[x_n]} ∪ s) ⋅ ◯ ({[x_n]} ∪ s)) with "Hγm_auth") as "(Hγm_auth & #Hγm_frag)".
+  - (* Case: x_n ∉ s. We update ● s to ● ({[x_n]} ∪ s) ⋅ ◯ ({[x_n]} ∪ s) *)
+    iMod (own_update _ _ (● ({[x_n]} ∪ s) ⋅ ◯ ({[x_n]} ∪ s)) with "Hγm_auth") as "(Hγm_auth & #Hγm_frag)".
     + apply auth_update_alloc.
       apply gset_local_update.
       set_solver.
@@ -346,9 +346,11 @@ Proof.
   rewrite {2}Hx1_val.
   clearbody x_1.
   iMod (pointsto_persist with "Hx1_node") as "#Hx1_node".
-  (* --- Create head and tail pointers --- *)
+  (* --- Create queue structure --- *)
   wp_alloc l_tail as "Hl_tail".
   wp_alloc l_head as "Hl_head".
+  wp_alloc l_queue as "Hl_queue".
+  iMod (pointsto_persist with "Hl_queue") as "#Hl_queue".
   (* --- Allocate auth. and frag. views of empty abstract state --- *)
   iMod (queue_contents_alloc []) as (γ_Abst) "[Hγ_Abst_auth Hγ_Abst_frac]".
   (* --- Create the three abstract points-to predicates --- *)
@@ -371,9 +373,6 @@ Proof.
     repeat iSplit; try done.
     by iExists [].
   }
-  (* --- Create queue data structure --- *)
-  wp_alloc l_queue as "Hl_queue".
-  iMod (pointsto_persist with "Hl_queue") as "#Hl_queue".
   (* --- Prove post-condition --- *)
   iApply ("HΦ" $! #l_queue G).
   iModIntro.
@@ -448,8 +447,8 @@ Proof.
                #Hl_queue & #Hqueue_inv) HP] HΦ".
   (* --- Step into enqueue function --- *)
   wp_lam.
-  (* --- Create new node: x_new --- *)
   wp_let.
+  (* --- Create new node: x_new --- *)
   wp_pures.
   wp_alloc l_new_out as "Hxnew_to_none".
   wp_alloc l_new_in as "Hxnew_node".
@@ -593,7 +592,7 @@ Proof.
         destruct HisLast_xlast as [xs_rest ->].
         by iDestruct "HisLL_xs" as "[Hxtail_to_none _]".
       }
-      (* --- x_tail still points to None: the CAS succeeds --- *)
+      (* --- x_tail still points to None: The CAS succeeds --- *)
       (* This adds x_new to the linked list *)
       wp_cmpxchg_suc. (* Linearisation Point *)
       (* --- Apply view-shift and update resources --- *)
@@ -620,7 +619,7 @@ Proof.
       wp_pures.
       wp_load.
       wp_pures.
-      (* --- Attempt to swing tail pointer --- *)
+      (* --- Attempt to swing tail pointer to x_new --- *)
       wp_apply (swing_tail with "[Hqueue_inv Hxtail_reach_xnew Hxnew_ar_γLast]"); first iFrame "#".
       iIntros (w) "_".
       (* --- Prove post-condition --- *)
@@ -673,7 +672,7 @@ Proof.
     wp_load.
     wp_pures.
     iPoseProof (reach_one_step x_tail x_tail_next with "[] [] []") as "Hxtail_reach_xtailnext"; try done.
-    (* --- Attempt to swing tail pointer --- *)
+    (* --- Attempt to swing tail pointer to x_tail_next --- *)
     wp_apply (swing_tail with "[Hqueue_inv Hxtail_reach_xtailnext Hxtailnext_ar_γLast]"); first iFrame "#".
     iIntros (w) "_".
     wp_pures.
@@ -787,9 +786,10 @@ Proof.
     (* --- CASE ANALYSIS: Is x_head last? --- *)
     iDestruct (reach_case with "Hxhead_reach_xlast") as "[><- | (%x_head_next & Hxhead_to_xheadnext & Hxheadnext_reach_xlast)]".
     + (* CASE: x_head is last. I.e. x_head = x_last *)
-      (* --- Deduce equalities between nodes --- *)
+      (* --- Deduce that x_head must point to None --- *)
       destruct HisLast_xlast as [xs_rest ->].
       iDestruct "HisLL_xs" as "[Hxhead_to_none HisLL_chain_xs]".
+      (* --- Deduce equalities between nodes --- *)
       (* x_head ⤳ x_head' *)
       iPoseProof (Abs_Reach_Concr with "Hxhead_ar_γHead HγHead_ap_xhead") as "[Hxhead_reach_xhead' HγHead_ap_xhead]".
       (* x_head ⤳ x_tail' *)
@@ -923,7 +923,7 @@ Proof.
         wp_load.
         wp_pures.
         iPoseProof (reach_one_step x_tail x_head_next with "[] [] []") as "Hxtail_reach_xheadnext"; try done.
-        (* --- Attempt to swing tail pointer --- *)
+        (* --- Attempt to swing tail pointer to x_head_next --- *)
         wp_apply (swing_tail with "[Hqueue_inv Hxtail_reach_xheadnext Hxheadnext_ar_γLast]"); first iFrame "#".
         iIntros (w) "_".
         wp_pures.

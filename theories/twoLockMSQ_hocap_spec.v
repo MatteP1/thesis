@@ -26,7 +26,7 @@ Context `{!inG Σ (frac_authR (agreeR (listO val)))}.
 Variable N : namespace.
 Notation Ni := (N .@ "internal").
 
-(* ===== Hocap Specification for Two-lock M&S Queue ===== *)
+(* ===== HOCAP Specification for Two-lock M&S Queue ===== *)
 
 (* ----- Ghost variable names ----- *)
 Record Qgnames := { γ_Abst    : gname;
@@ -243,7 +243,7 @@ Lemma enqueue_spec v_q (v : val) (G : Qgnames) (P Q : iProp Σ) :
     enqueue v_q v
   {{{ w, RET w; Q }}}.
 Proof.
-  (* CHANGE: assume the viewshift *)
+  (* CHANGE: assume the view-shift *)
   (* --- Assume view-shift and pre-condition --- *)
   iIntros "#Hvs".
   iIntros (Φ) "!> [(%l_queue & %l_head & %l_tail & %h_lock & %t_lock & -> &
@@ -340,7 +340,7 @@ Proof.
     unfold isLL_chain; auto.
   }
   iPoseProof (isLL_and_chain with "HisLL_xs_new") as "[HisLL_xs_new #HisLL_chain_xs_new]".
-  (* CHANGE: The store was a linearisation point. Update the abstract state using the viewshift *)
+  (* CHANGE: The store was a linearisation point. Update the abstract state using the view-shift *)
   (* --- Apply view-shift --- *)
   iMod ("Hvs" $! xs_v with "[HAbst HP]") as "[HAbst_new HQ]"; first by iFrame.
   iModIntro.
@@ -363,7 +363,7 @@ Proof.
   }
   iClear (HisLast xs_fromtail Hconc_abst_eq xs_v Hxs_eq xs_new xs xs_queue x_head xs_old Htail_eq) "HisLL_chain_xs HisLL_chain_xs_new".
   wp_seq.
-  (* --- Swing tail pointer --- *)
+  (* --- Swing tail pointer to x_new --- *)
   wp_load.
   wp_pures.
   (* To perform store, we must have a points-to predicate for l_tail *)
@@ -434,7 +434,7 @@ Lemma dequeue_spec v_q (G : Qgnames) (P : iProp Σ) (Q : val -> iProp Σ):
     dequeue v_q
   {{{ w, RET w; Q w }}}.
 Proof.
-  (* CHANGE: assume the viewshift *)
+  (* CHANGE: assume the view-shift *)
   (* --- Assume view-shift and pre-condition --- *)
   iIntros "#Hvs".
   iIntros (Φ) "!> [(%l_queue & %l_head & %l_tail & %h_lock & %t_lock & -> &
@@ -507,7 +507,7 @@ Proof.
     iDestruct "HisLL_xs" as "[Hxhead_to_none _]".
     (* --- Perform load: x_head points to None --- *)
     wp_load. (* Linearisation Point *)
-    (* CHANGE: The load was a linearisation point. Update the abstract state using the viewshift *)
+    (* CHANGE: The load was a linearisation point. Update resources using the view-shift. *)
     (* --- Apply view-shift --- *)
     iMod ("Hvs" $! xs_v with "[HAbst HP]") as "[(>-> & HAbst & HQ) | (%v & %xs_v' & >-> & HAbst_new & HQ) ]";
     [ by iFrame | |
@@ -612,7 +612,7 @@ Proof.
       iCombine "Hxhead_to_xheadnext Hxhead_to_xheadnext'" gives "[_ %Heq]".
       by iApply n_in_equal.
     }
-    (* CHANGE: The store was a linearisation point. Update the abstract state using the viewshift *)
+    (* CHANGE: The store was a linearisation point. Update the abstract state using the view-shift. *)
     (* --- Apply view-shift --- *)
     iMod ("Hvs" $! xs_v with "[HAbst HP]") as "[(>-> & HAbst & HQ) | (%v & %xs_v' & >-> & HAbst_new & HQ) ]";
     [ by iFrame |

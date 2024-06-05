@@ -81,7 +81,7 @@ Notation "γ ⤇[ q ] xs_v" := (own γ (◯F{ q } (to_agree xs_v)))
   (at level 20, format "γ  ⤇[ q ]  xs_v") : bi_scope.
 
 
-(* ===== Hocap-Style Queue Specification ===== *)
+(* ===== HOCAP-Style Queue Specification ===== *)
 Class queue := Queue {
   initialize : val;
   enqueue : val;
@@ -104,20 +104,20 @@ Class queue := Queue {
   (* isQueue must be persistent *)
   #[global] isQueue_persistent `{!heapGS Σ} {L : queueG Σ} `{!inG Σ (frac_authR (agreeR (listO val)))} v_q G :: Persistent (isQueue (L:=L) v_q G);
 
-  (* Hocap-Style Initialise Specifictaion *)
+  (* HOCAP-Style Initialise Specifictaion *)
   initialize_spec `{!heapGS Σ} {L : queueG Σ} `{!inG Σ (frac_authR (agreeR (listO val)))} :
   {{{ True }}}
     initialize #()
   {{{ v_q G, RET v_q; isQueue (L:=L) v_q G ∗ G.(γ_Abst) ⤇◯ [] }}};
 
-  (* Hocap-Style Enqueue Specifictaion *)
+  (* HOCAP-Style Enqueue Specifictaion *)
   enqueue_spec `{!heapGS Σ} {L : queueG Σ} `{!inG Σ (frac_authR (agreeR (listO val)))} (v_q v : val) (G : Qgnames) (P Q : iProp Σ) :
   □(∀xs_v, (G.(γ_Abst) ⤇● xs_v ∗ P ={⊤ ∖ ↑Ni}=∗ ▷ (G.(γ_Abst) ⤇● (v :: xs_v) ∗ Q))) -∗
   {{{ isQueue (L:=L) v_q G ∗ P}}}
     enqueue v_q v
   {{{ w, RET w; Q }}};
 
-  (* Hocap-Style Dequeue Specifictaion *)
+  (* HOCAP-Style Dequeue Specifictaion *)
   dequeue_spec `{!heapGS Σ} {L : queueG Σ} `{!inG Σ (frac_authR (agreeR (listO val)))} (v_q : val) (G : Qgnames) (P : iProp Σ) (Q : val -> iProp Σ):
   □(∀xs_v, (G.(γ_Abst) ⤇● xs_v ∗ P
               ={⊤ ∖ ↑Ni}=∗
@@ -164,7 +164,7 @@ Proof.
   set (P := ((γ_Abst G) ⤇◯ xs_v)%I).
   set (Q := ((γ_Abst G) ⤇◯ (v :: xs_v))%I).
   wp_apply (enqueue_spec v_q v G P Q with "[] [Hfrag]").
-  (* Proving viewshift *)
+  (* Proving view-shift *)
   {
     iIntros (xs_v') "!>".
     unfold P, Q.
@@ -192,7 +192,7 @@ Proof.
                   (∃v xs_v', ⌜xs_v = xs_v' ++ [v]⌝ ∗
                     ⌜w = SOMEV v⌝ ∗ (γ_Abst G) ⤇◯ xs_v'))%I).
   wp_apply (dequeue_spec v_q G P Q with "[] [Hfrag]" ).
-  (* Proving viewshift *)
+  (* Proving view-shift *)
   {
     iIntros (xs_v') "!>".
     iIntros "[Hauth Hfrag]".
@@ -273,7 +273,7 @@ Proof.
   set (P := Ψ v).
   set (Q := True%I).
   wp_apply (enqueue_spec v_q v G P Q with "[] [HΨ]").
-  (* Proving viewshift *)
+  (* Proving view-shift *)
   {
     iIntros (xs_v') "!>".
     unfold P, Q.
@@ -303,7 +303,7 @@ Proof.
   set (P := True%I : iProp Σ).
   set (Q := λ w, (⌜w = NONEV⌝ ∨ (∃v, ⌜w = SOMEV v⌝ ∗ Ψ v))%I).
   wp_apply (dequeue_spec v_q G P Q).
-  (* Proving viewshift *)
+  (* Proving view-shift *)
   {
     iIntros (xs_v') "!>".
     iIntros "[Hauth _]".

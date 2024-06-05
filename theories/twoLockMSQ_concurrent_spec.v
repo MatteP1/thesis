@@ -347,7 +347,7 @@ Proof.
   }
   iClear (HisLast xs_fromtail Hconc_abst_eq xs_v Hxs_eq xs_new xs xs_queue x_head xs_old Htail_eq) "HisLL_chain_xs HisLL_chain_xs_new".
   wp_seq.
-  (* --- Swing tail pointer --- *)
+  (* --- Swing tail pointer to x_new --- *)
   wp_load.
   wp_pures.
   (* To perform store, we must have a points-to predicate for l_tail *)

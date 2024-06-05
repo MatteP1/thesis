@@ -10,34 +10,34 @@ Local Existing Instance spin_lock.
 
 Definition initialize : val :=
   rec: "initialize" <> :=
-    let: "node" := ref (NONE, ref (NONE)) in
-    let: "H_lock" := newlock #() in
-    let: "T_lock" := newlock #() in
-    ref ((ref "node", ref "node"), ("H_lock", "T_lock")).
+    let: "node" := ref (NONE, ref (NONE)) in (* Create initial Head node *)
+    let: "H_lock" := newlock #() in (* Create Head lock *)
+    let: "T_lock" := newlock #() in (* Create Tail lock *)
+    ref ((ref "node", ref "node"), ("H_lock", "T_lock")). (* Create queue *)
 
 Definition enqueue : val :=
   rec: "enqueue" "Q" "value" :=
-    let: "node" := ref (SOME "value", ref(NONE)) in
-    acquire (Snd (Snd (!"Q"))) ;; (* Acqurie T_lock *)
-    Snd (!(!(Snd (Fst(!"Q"))))) <- "node" ;;
-    Snd (Fst (!"Q")) <- "node" ;;
-    release (Snd (Snd (!"Q"))).
+    let: "node" := ref (SOME "value", ref(NONE)) in (* Create new node *)
+    acquire (Snd (Snd (!"Q"))) ;; (* Acqurie Tail lock *)
+    Snd (!(!(Snd (Fst(!"Q"))))) <- "node" ;; (* Add new node to linked list *)
+    Snd (Fst (!"Q")) <- "node" ;; (* Swing Tail to new node *)
+    release (Snd (Snd (!"Q"))). (* Release Tail lock *)
 
 Definition dequeue : val :=
   rec: "dequeue" "Q" :=
-    acquire (Fst (Snd (!"Q")));; (* Acquire H_lock *)
+    acquire (Fst (Snd (!"Q")));; (* Acquire Head lock *)
     let: "node" := !(Fst (Fst (!"Q"))) in (* Get Head node *)
-    let: "new_head" := !(Snd(!"node")) in (* Find Head.Next *)
+    let: "new_head" := !(Snd(!"node")) in (* Find Head node's successor *)
     if: "new_head" = NONE then (* Check if Queue is empty *)
-      (* No Next node. Queue is empty. *)
+      (* No successor node. Queue is empty. *)
       release (Fst (Snd(!"Q"))) ;;
       NONEV
     else
       (* Queue not empty. Pop first element in Queue *)
       let: "value" := Fst (!"new_head") in (* Get its value *)
-      Fst (Fst (!"Q")) <- "new_head" ;; (* Swing Head to next node *)
-      release (Fst (Snd (!"Q"))) ;; (* Release H_lock *)
-      "value". (* Return value *)
+      Fst (Fst (!"Q")) <- "new_head" ;; (* Swing Head to successor node *)
+      release (Fst (Snd (!"Q"))) ;; (* Release Head lock *)
+      "value". (* Return dequeued value *)
 
 Section tests.
 

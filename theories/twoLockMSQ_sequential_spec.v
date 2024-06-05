@@ -127,7 +127,7 @@ Proof.
   wp_pures.
   wp_store.
   iMod (pointsto_persist with "Hxtail_to_none") as "#Hxtail_to_xnew".
-  (* --- Swing tail pointer --- *)
+  (* --- Swing tail pointer to x_new --- *)
   wp_load.
   wp_pures.
   wp_store.

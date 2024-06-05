@@ -56,7 +56,7 @@ Definition contentsInv G Ga a b : iProp Σ :=
   (γ_Abst G) ⤇◯ [a; b] ∗ TokA Ga ∗ TokB Ga ∨
   (γ_Abst G) ⤇◯ [b; a] ∗ TokB Ga ∗ TokA Ga.
 
-(* ----- Case distinction definition ----- *)
+(* ----- Case Distinction Definition ----- *)
 Definition case_a_b (c a b : val) Ga : iProp Σ := ⌜c = a⌝ ∗ TokA Ga ∨ ⌜c = b⌝ ∗ TokB Ga.
 
 (* ----- Specification for enqdeq ----- *)
@@ -72,7 +72,7 @@ Proof.
   set (P := (case_a_b #c #a #b Ga)%I).
   set (Q := (TokD1 Ga ∨ TokD2 Ga)%I).
   wp_apply (enqueue_spec v_q #c G P Q with "[] [Hcase]").
-  (* Proving viewshift *)
+  (* Proving view-shift *)
   {
     iModIntro.
     iIntros (xs_v) "[Hauth Hcase]".
@@ -86,7 +86,7 @@ Proof.
     try (by iCombine "HTokA HTokA'" gives "%Hcontra");
     try (by iCombine "HTokB HTokB'" gives "%Hcontra");
     (* The possible cases are handled similarly: *)
-    (* Update the abstract state to include the newly enqueue element *)
+    (* Update the abstract state to include the newly enqueued element *)
     iPoseProof (queue_contents_auth_frag_agree with "Hauth Hfrag") as "<-";
     [ iMod (queue_contents_update _ _ _ [ #a ] with "Hauth Hfrag") as "[Hauth Hfrag]"
     | iMod (queue_contents_update _ _ _ [ #b ] with "Hauth Hfrag") as "[Hauth Hfrag]"
@@ -109,7 +109,7 @@ Proof.
   set (P' := Q).
   set (Q' := λ w, (case_a_b w (SOMEV #a) (SOMEV #b) Ga)%I : iProp Σ).
   wp_apply (dequeue_spec v_q G P' Q' with "[] [HQ]").
-  (* Proving viewshift *)
+  (* Proving view-shift *)
   {
     iModIntro.
     iIntros (xs_v) "[Hauth HP']".
