@@ -187,7 +187,7 @@ Proof.
   simplify_eq.
 Qed.
 
-(* if both x_n and x_m are nodes and x_n points to x_m, then x_n ⤳ x_m *)
+(* If both x_n and x_m are nodes and x_n points to x_m, then x_n ⤳ x_m *)
 Lemma reach_one_step : ∀ (x_n x_m : nodeO),
   n_in x_n ↦□ (n_val x_n, #(n_out x_n)) -∗
   n_in x_m ↦□ (n_val x_m, #(n_out x_m)) -∗

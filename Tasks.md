@@ -185,9 +185,16 @@
     - [x] Argue for need of hocap spec since concurrent and spawning thread
     - [x] Mention idea of proofs. Maybe show invariant
 
-- [ ] Improvements for introduction
+- [x] Improvements for introduction
   - [x] More layman stuff in introduction
-    - [x] queues in general are used a lot for different things. mention
-    - [x] mention importance of michael scott queue (used in many places)
-  - [ ] Try to describe where your work is placed in the field 
-        (See https://en.wikipedia.org/wiki/Interference_freedom)
+  - [x] queues in general are used a lot for different things. mention
+  - [x] mention importance of michael scott queue (used in many places)
+
+- [x] Finalise report
+  - [x] Fix grammar
+  - [x] Consistency
+  - [x] Proofread report
+- [x] Finalise Coq files
+  - [x] Proofread coq files
+  - [x] Write comments explaining proof structure
+  - [x] Ensure consistency between related files
