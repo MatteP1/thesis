@@ -1,0 +1,576 @@
+\documentclass[9pt]{beamer}
+
+\usetheme{Rochester}
+\usecolortheme{beaver}
+
+\setbeamersize{text margin left=5mm,text margin right=5mm} 
+
+\usepackage{minted}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage{latexsym}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{thm-restate}
+\usepackage{mathpartir}
+\usepackage{epsfig}
+\usepackage{stmaryrd}
+\usepackage{color}
+\usepackage{epstopdf}
+\usepackage{microtype}
+\usepackage{hyperref}
+\usepackage[en-GB]{datetime2}
+\DTMlangsetup[en-GB]{showdayofmonth=false}
+\usepackage{lipsum}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{pftools}
+\usepackage{iris}
+\usepackage{heaplang}
+\usepackage{tikz}
+\usetikzlibrary{calc,shapes.multipart,chains,arrows,scopes,decorations.markings}
+\usepackage{xspace}
+\usepackage{lineno}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{multirow}
+\usepackage{adjustbox}
+\usepackage{csquotes}
+\usepackage{natbib}
+\usepackage{mathpartir}
+
+\renewcommand*\sfdefault{lmss}
+\renewcommand*\ttdefault{txtt}
+\definecolor{codebg}{HTML}{f0f0f0}
+
+\newcommand{\isLock}{\operatorname{isLock}}
+\newcommand{\locked}{\operatorname{locked}}
+\newcommand{\issued}{\operatorname{issued}}
+\newcommand{\newLock}{\operatorname{newLock}}
+\newcommand{\acquire}{\operatorname{acquire}}
+\newcommand{\wait}{\operatorname{wait}}
+\newcommand{\release}{\operatorname{release}}
+\newcommand{\lockInv}{\operatorname{lockInv}}
+\newcommand{\initialise}{\operatorname{initialize}}
+\newcommand{\enqueue}{\operatorname{enqueue}}
+\newcommand{\dequeue}{\operatorname{dequeue}}
+\newcommand{\unwrap}{\operatorname{unwrap}}
+\newcommand{\enqdeq}{\operatorname{enqdeq}}
+\newcommand{\queueAdd}{\operatorname{queueAdd}}
+\newcommand{\parcomp}{\ensuremath{\mathbin{||}}}
+
+\newcommand{\msq}{M\&S Queue}
+\newcommand{\tlmsq}{Two-Lock \msq{}}
+\newcommand{\lfmsq}{Lock-Free \msq{}}
+
+\newcommand{\isqueue}{\operatorname{isQueue}}
+\newcommand{\isqueueseq}{\operatorname{isQueue_{S}}}
+\newcommand{\isqueueconc}{\operatorname{isQueue_{C}}}
+\newcommand{\TLQueueInvariantConc}{\operatorname{I_{TLC}}}
+\newcommand{\TLQueueInvariantConcSimpl}{\operatorname{I^{\prime}_{TLC}}}
+\newcommand{\TLQueueInvariantHocap}{\operatorname{I_{TLH}}}
+\newcommand{\LFQueueInvariantHocap}{\operatorname{I_{LFH}}}
+\newcommand{\SeqQgnames}{SeqQgnames}
+\newcommand{\ConcQgnames}{ConcQgnames}
+\newcommand{\Qgnames}{Qgnames}
+\newcommand{\QueueAddInvariant}{I_{QA}}
+
+\newcommand{\vq}{v_q}
+\newcommand{\xsc}{xs}
+\newcommand{\xsqueue}{xs_{\mathrm{queue}}}
+\newcommand{\xsold}{xs_{\mathrm{old}}}
+
+\newcommand{\isLLchain}{\operatorname{isLL\_chain}}
+\newcommand{\isLL}{\operatorname{isLL}}
+\newcommand{\AllP}{\operatorname{All}}
+\newcommand{\projval}{\operatorname{projVal}}
+\newcommand{\wrapsome}{\operatorname{wrapSome}}
+\newcommand{\isFirst}{\operatorname{isFirst}}
+\newcommand{\isLast}{\operatorname{isLast}}
+\newcommand{\isSndLast}{\operatorname{isSndLast}}
+\newcommand{\projqgnamesseq}{\operatorname{projQgnames_{S}}}
+\newcommand{\projqgnamesconc}{\operatorname{projQgnames_{C}}}
+
+\newcommand{\locin}{\loc_{\mathrm{in}}}
+\newcommand{\locinM}[1]{\loc_{#1\_\mathrm{in}}}
+\newcommand{\locout}{\loc_{\mathrm{out}}}
+\newcommand{\locoutM}[1]{\loc_{#1\_\mathrm{out}}}
+
+\newcommand{\locN}[1]{\loc_{\mathrm{#1}}}
+\newcommand{\lochead}{\locN{head}}
+\newcommand{\loctail}{\locN{tail}}
+\newcommand{\locqueue}{\locN{queue}}
+
+\newcommand{\nodeval}{\valB}
+\newcommand{\nodevalM}[1]{\nodeval_{#1}}
+
+\newcommand{\nIn}[1]{\operatorname{in}(#1)}
+\newcommand{\nVal}[1]{\operatorname{val}(#1)}
+\newcommand{\nOut}[1]{\operatorname{out}(#1)}
+
+\newcommand{\node}{x}
+\newcommand{\nodeM}[1]{\node_{#1}}
+\newcommand{\nodeN}[1]{\node_{\mathrm{#1}}}
+\newcommand{\nodehead}{\nodeN{head}}
+\newcommand{\nodetail}{\nodeN{tail}}
+\newcommand{\nodelast}{\nodeN{last}}
+\newcommand{\nodenew}{\nodeN{new}}
+\newcommand{\nodeheadnext}{\nodeN{head\_next}}
+\newcommand{\nodetailnext}{\nodeN{tail\_next}}
+\newcommand{\nodenewtail}{\nodeN{newtail}}
+
+\newcommand{\absvalue}{\val}
+\newcommand{\absvalueList}{xs_v}
+
+\newcommand{\Hlock}{h_{\mathrm{lock}}}
+\newcommand{\Tlock}{t_{\mathrm{lock}}}
+\newcommand{\Hlockvar}{H\_lock}
+\newcommand{\Tlockvar}{T\_lock}
+
+\newcommand{\prophval}{\val_p}
+
+\newcommand{\StaticState}{\textbf{Static}\xspace}
+\newcommand{\EnqueueState}{\textbf{Enqueue}\xspace}
+\newcommand{\DequeueState}{\textbf{Dequeue}\xspace}
+\newcommand{\BothState}{\textbf{Both}\xspace}
+
+\newcommand{\Qg}{G}
+\newcommand{\Qgseq}{G_{S}}
+\newcommand{\Qgconc}{G_{C}}
+\newcommand{\Qghocap}{G_{H}}
+\newcommand{\QAg}{Ga}
+
+\newcommand{\ghlock}{\gname_{\mathrm{Hlock}}}
+\newcommand{\gtlock}{\gname_{\mathrm{Tlock}}}
+\newcommand{\gabst}{\gname_{\mathrm{Abst}}}
+\newcommand{\ghead}{\gname_{\mathrm{Head}}}
+\newcommand{\gtail}{\gname_{\mathrm{Tail}}}
+\newcommand{\glast}{\gname_{\mathrm{Last}}}
+
+\newcommand{\Token}[1]{\operatorname{Token}(#1)}
+\newcommand{\TokE}[1]{\operatorname{TokE} ~ #1}
+\newcommand{\TokEQg}{\TokE{\Qg}}
+\newcommand{\TokNE}[1]{\operatorname{TokNE} ~ #1}
+\newcommand{\TokNEQg}{\TokNE{\Qg}}
+\newcommand{\TokD}[1]{\operatorname{TokD} ~ #1}
+\newcommand{\TokDQg}{\TokD{\Qg}}
+\newcommand{\TokND}[1]{\operatorname{TokND} ~ #1}
+\newcommand{\TokNDQg}{\TokND{\Qg}}
+\newcommand{\TokBefore}[1]{\operatorname{TokBefore} ~ #1}
+\newcommand{\TokBeforeQg}{\TokBefore{\Qg}}
+\newcommand{\TokAfter}[1]{\operatorname{TokAfter} ~ #1}
+\newcommand{\TokAfterQg}{\TokAfter{\Qg}}
+\newcommand{\TokUpdated}[1]{\operatorname{TokUpdated} ~ #1}
+\newcommand{\TokUpdatedQg}{\TokUpdated{\Qg}}
+\newcommand{\TokDo}[1]{\operatorname{TokD1} ~ #1}
+\newcommand{\TokDoQAg}{\TokDo{\QAg}}
+\newcommand{\TokDt}[1]{\operatorname{TokD2} ~ #1}
+\newcommand{\TokDtQAg}{\TokDt{\QAg}}
+\newcommand{\TokA}[1]{\operatorname{TokA} ~ #1}
+\newcommand{\TokAQAg}{\TokA{\QAg}}
+\newcommand{\TokB}[1]{\operatorname{TokB} ~ #1}
+\newcommand{\TokBQAg}{\TokB{\QAg}}
+
+\newcommand\catenate{\mathbin{\text{\ttfamily\upshape ++}}}
+
+\newcommand{\BB}{\ensuremath{\mathbb{B}}}
+\newcommand{\Cc}{\ensuremath{\mathbf{C}}}
+\newcommand{\El}{\ensuremath{\mathcal{E}}}
+\newcommand{\Sl}{\ensuremath{\mathcal{S}}}
+\newcommand{\Ul}{\ensuremath{\mathcal{U}}}
+\newcommand{\Dl}{\ensuremath{\mathcal{D}}}
+\newcommand{\Fl}{\ensuremath{\mathcal{F}}}
+\newcommand{\Pl}{\ensuremath{\mathcal{P}}}
+\newcommand{\Tl}{\ensuremath{\mathcal{T}}}
+\newcommand{\CC}{\ensuremath{\mathbb{C}}}
+\newcommand{\KK}{\ensuremath{\mathbb{K}}}
+\newcommand{\PP}{\ensuremath{\mathbb{P}}}
+\newcommand{\VV}{\ensuremath{\mathbb{V}}}
+\newcommand{\UU}{\ensuremath{\mathbb{U}}}
+\newcommand{\DD}{\ensuremath{\mathbb{D}}}
+\newcommand{\Ml}{\ensuremath{\mathcal{M}}}
+\newcommand{\Vl}{\ensuremath{\mathcal{V}}}
+\newcommand{\Il}{\ensuremath{\mathcal{I}}}
+\newcommand{\Cl}{\ensuremath{\mathcal{C}}}
+\newcommand{\Bl}{\ensuremath{\mathcal{B}}}
+\newcommand{\Al}{\ensuremath{\mathcal{A}}}
+\newcommand{\Gl}{\ensuremath{\mathcal{G}}}
+\newcommand{\Nl}{\ensuremath{\mathcal{N}}}
+\newcommand{\AAA}{\ensuremath{\mathbb{A}}}
+\newcommand{\EE}{\ensuremath{\mathbb{E}}}
+
+\newcommand{\isNode}[1]{\nIn{#1} \mapsto^{\persistently} (\nVal{#1}, \nOut{#1})}
+
+\newcommand{\abstractstatefrac}[3]{#1 \Mapsto\kern-0.5ex\tfrac{1}{#2} #3}
+\newcommand{\abstractstate}[3]{#1 \Mapsto^{#2}_{\circ} #3}
+\newcommand{\abstractstatefullfrag}[2]{#1 \Mapsto_{\circ} #2}
+\newcommand{\abstractstateauth}[2]{#1 \Mapsto_{\bullet} #2}
+
+\newcommand{\reach}[2]{#1 \leadsto #2}
+\newcommand{\ar}[2]{#1 \dashrightarrow #2}
+\newcommand{\ap}[2]{#1 \rightarrowtail #2}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Specifications
+
+% ------ Sequential Specification ------
+% Initialise
+
+\newcommand{\seqspecinitHTGen}[2]{\hoare{\TRUE}{\initialise \ \TT}{#1 . \Exists #2. \isqueueseq(#1, [], #2)}}
+
+\newcommand{\seqspecinitGen}[2]{\seqspecinitHTGen{#1}{#2}}
+
+\newcommand{\seqspecinit}{\seqspecinitGen{\vq}{\Qg}}
+
+% Enqueue
+\newcommand{\seqspecenqHT}[4]{\hoare{\isqueueseq(#1, #3, #4)}{\enqueue \ #1 \ #2}{\valB . \isqueueseq(#1, (#2 :: #3), #4)}}
+
+\newcommand{\seqspecenqGen}[4]{\All #1, #2, #3, #4. \seqspecenqHT{#1}{#2}{#3}{#4}}
+
+\newcommand{\seqspecenq}{\seqspecenqGen{\vq}{\absvalue}{\absvalueList}{\Qg}}
+
+% Dequeue
+\newcommand{\seqspecdeqHT}[3]{\hoareV[t]{\isqueueseq(#1, #2, #3)}{\dequeue \ #1}{\nodeval . \begin{array}{l}(#2 = [] \star{} \nodeval = \None \star{} \isqueueseq(#1, #2, #3)) \lor{}\\ (\Exists \absvalue, #2' . #2 = #2' \catenate [\absvalue] \star{} \nodeval = \Some \absvalue \star{} \isqueueseq(#1, #2', #3)) \end{array}}}
+
+\newcommand{\seqspecdeqGen}[3]{\All #1, #2, #3. \seqspecdeqHT{#1}{#2}{#3}}
+
+\newcommand{\seqspecdeq}{\seqspecdeqGen{\vq}{\absvalueList}{\Qg}}
+
+
+% ------ Concurrent Specification ------
+% Initialise
+\newcommand{\concspecinitHTGen}[3]{\hoare{\TRUE}{\initialise \ \TT}{#2 . \Exists #3. \isqueueconc(#1, #2, #3)}}
+
+\newcommand{\concspecinitGen}[3]{\concspecinitHTGen{#1}{#2}{#3}}
+
+\newcommand{\concspecinit}[1]{\concspecinitGen{#1}{\vq}{\Qg}}
+
+% Enqueue
+\newcommand{\concspecenqHT}[4]{\hoare{\isqueueconc(#1, #2, #4) \star{} #1(#3)}{\enqueue \ #2 \ #3}{\valB . \TRUE}}
+
+\newcommand{\concspecenqGen}[4]{\All #2, #3, #4. \concspecenqHT{#1}{#2}{#3}{#4}}
+
+\newcommand{\concspecenq}[1]{\concspecenqGen{#1}{\vq}{\absvalue}{\Qg}}
+
+% Dequeue
+\newcommand{\concspecdeqHT}[3]{\hoare{\isqueueconc(#1, #2, #3)}{\dequeue \ #2}{\nodeval . \nodeval = \None \lor{} (\Exists \absvalue . \nodeval = \Some \absvalue \star{} #1(\absvalue))}}
+
+\newcommand{\concspecdeqGen}[3]{\All #2, #3. \concspecdeqHT{#1}{#2}{#3}}
+
+\newcommand{\concspecdeq}[1]{\concspecdeqGen{#1}{\vq}{\Qg}}
+
+
+% ------ HOCAP-style Specification ------
+% Initialise
+\newcommand{\hocapspecinitHTGen}[2]{\hoare{\TRUE}{\initialise \ \TT}{#1 . \Exists #2 . \isqueue(#1, #2) \star{} \abstractstatefullfrag{#2.\gabst}{[]}}}
+
+\newcommand{\hocapspecinitGen}[2]{\hocapspecinitHTGen{#1}{#2}}
+
+\newcommand{\hocapspecinit}{\hocapspecinitGen{\vq}{\Qg}}
+
+% Enqueue
+\newcommand{\hocapspecenqVS}[5]{\abstractstateauth{#2.\gabst}{#5} \star{} #3 \vs[\mask\setminus\Nl.i^\uparrow] \later \abstractstateauth{#2.\gabst}{(#1 :: #5)} \star{} #4}
+
+\newcommand{\hocapspecenqHT}[5]{\hoare{\isqueue(#1, #3) \star{} #4}{\enqueue \ #1 \ #2}{\valB . #5}}
+
+\newcommand{\hocapspecenqGen}[6]{\All #1, #2, #3, #4, #5.
+\begin{array}[t]{l}
+\left(\All #6 . \hocapspecenqVS{#2}{#3}{#4}{#5}{#6} \right)
+\wand\\
+\hocapspecenqHT{#1}{#2}{#3}{#4}{#5}
+\end{array}}
+
+\newcommand{\hocapspecenq}{\hocapspecenqGen{\vq}{\absvalue}{\Qg}{P}{Q}{\absvalueList}}
+
+% Dequeue
+\newcommand{\hocapspecdeqVSGen}[6]{
+  \abstractstateauth{#1.\gabst}{#4} \star{} #2 \vs[\mask\setminus\Nl.i^\uparrow] \later
+  \left(
+    \begin{array}{l}
+      (#4 = [] \star{} \abstractstateauth{#1.\gabst}{#4} \star{} #3(\None))\\
+      \lor{}
+      \left(
+        \begin{array}{l}
+          \Exists #5, #6 . #4 = #6 \catenate [#5] \star{}\\
+          \abstractstateauth{#1.\gabst}{#6} \star{} #3(\Some{#5})
+        \end{array}
+        \right)
+    \end{array}
+  \right)
+}
+\newcommand{\hocapspecdeqVS}[4]{\hocapspecdeqVSGen{#1}{#2}{#3}{#4}{\absvalue}{#4'}}
+
+\newcommand{\hocapspecdeqHT}[4]{\hoare{\isqueue(#1, #2) \star{} #3}{\dequeue \ #1}{\nodeval . #4(\nodeval)}}
+
+\newcommand{\hocapspecdeqGen}[5]{\begin{array}[t]{l}
+  \All #1, #2, #3, #4.\\
+  \begin{array}[t]{l}
+  \quad\left(\All #5 . \hocapspecdeqVS{#2}{#3}{#4}{#5} \right) \wand\\
+  \quad\hocapspecdeqHT{#1}{#2}{#3}{#4}
+  \end{array}
+\end{array}}
+
+\newcommand{\hocapspecdeq}{\hocapspecdeqGen{\vq}{\Qg}{P}{Q}{\absvalueList}}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Inferences Rules
+% From https://github.com/logsem/iris-lecture-notes
+
+%% Macros for constructing iterated inference rules with similar labels
+% Constructs a rule with name #2, label #3 (with postfix #1; default empty),
+% hypotheses #4 and conclusion #5
+% ex: \rulegenhref[-app]{$\ast$-weak}{star-weak}{ }{P_1 \ast P_2 \proves P_1}
+\newcommand{\rulegenhref}[5][]{\inferhref{#2}{#3#1}{#4}{#5}}
+% Variant for constructing bi-inference rules
+\newcommand{\rulegenhrefb}[5][]{\inferhrefB{#2}{#3#1}{#4}{#5}}
+% Variant where name and label coincide
+\newcommand{\rulegen}[4][]{\rulegenhref[#1]{#2}{#2}{#3}{#4}}
+% Variant of bi-inference where name and label coincide
+\newcommand{\rulegenb}[4][]{\rulegenhrefb[#1]{#2}{#2}{#3}{#4}}
+
+\newcommand{\logicstarweakrule}[1][]
+{ \rulegenhref[#1]{$\ast$-weak}{star-weak}
+  { }
+  {P_1 \ast P_2 \proves P_1}}
+
+\newcommand{\logicstarassocrule}[1][]
+{ \rulegenhref[#1]{$\ast$-assoc}{star-assoc}
+  { }
+  {P_1 \ast (P_2 \ast P_3) \provesIff (P_1 \ast P_2) \ast P_3}}
+
+\newcommand{\logicstarcommrule}[1][]
+{ \rulegenhref[#1]{$\ast$-comm}{star-comm}
+  { }
+  {P_1 \ast P_2 \provesIff P_2 \ast P_1}}
+
+\newcommand{\logicstarintrorule}[1][]
+{ \rulegenhref[#1]{$\ast$I}{star-I}
+  {P_1 \proves Q_1 \and P_2 \proves Q_2 }
+  {P_1 \ast P_2 \proves Q_1 \ast Q_2 }}
+
+\newcommand{\logicwandintrorule}[1][]
+{ \rulegenhref[#1]{$\wand$I}{wand-I}
+  {R \ast \prop \proves \propB}
+  {R \proves \prop \wand \propB}}
+
+\newcommand{\logicwandelimrule}[1][]
+{ \rulegenhref[#1]{$\wand$E}{wand-E}
+  {R_1 \proves \prop \wand \propB \and R_2 \proves \prop}
+  {R_1 \ast R_2 \proves \propB}}
+
+\newcommand{\persduprule}[1][]
+{ \rulegen[#1]{persistently-dup}
+  {}{\persistently P \provesIff \persistently P \ast P}}
+
+\newcommand{\persintrorule}[1][]
+{ \rulegen[#1]{persistently-intro}
+  {\persistently P \proves Q}{\persistently P \proves \persistently Q}}
+
+\newcommand{\perskeeprule}[1][]
+{ \rulegen[#1]{persistently-keep}
+  {P \proves \persistently Q}{P \proves \persistently Q \ast P}}
+
+\newcommand{\pershtrule}[1][]
+{ \rulegen[#1]{persistently-Ht}{}{\hoare{P}{e}{\Phi} \provesIff \persistently \hoare{P}{e}{\Phi}}}
+
+\newcommand{\lobrule}[1][]
+{ \rulegenhref[#1]{L{\"o}b}{Loeb}
+  {Q \land \later\prop \proves \prop}
+  {Q \proves \prop}}
+
+\newcommand{\latermonorule}[1][]
+{ \rulegenhref[#1]{later-mono}{Later-Mono}
+  {Q \proves \prop}
+  {\later Q \proves \later\prop}}
+
+\newcommand{\laterweakrule}[1][]
+{ \rulegenhref[#1]{later-weak}{Later-weak}
+  {Q \proves \prop}
+  {Q \proves \later{\prop}}}
+
+\newcommand{\htframe}[1][]
+{ \rulegen[#1]{Ht-frame}
+  {S \proves \hoare{P}{e}{v.Q}}
+  {S \proves \hoare{P \ast R}{e}{v.Q \ast R}}}
+
+\newcommand{\htret}[1][]
+{ \rulegen[#1]{Ht-ret}
+  {w \text{ is a value }}
+  {S \proves \hoare{\TRUE}{\valB}{v. v = \valB}}}
+
+\newcommand{\htbind}[1][]
+{\rulegen[#1]{Ht-bind}
+  { \text{$\lctx$ is an eval. context} \and
+    S \proves \hoare{\prop}{\expr}{\Ret\val. \propB} \and
+    S \proves \All \val. \hoare{\propB}{\lctx[\val]}{\Ret\valB.\propC}}
+  { S \proves \hoare{\prop}{\lctx[\expr]}{\Ret\valB.\propC}}}
+
+\newcommand{\htloadgen}[2][]
+{ \rulegen[#1]{Ht-load}
+  { }
+  { S \proves \hoare{#2 \ell \pointsto u}{\deref \ell}{v . v = u \land \ell \pointsto u}}}
+
+\newcommand{\htloadtemp}[1][]
+{ \htloadgen[-temp#1]{ }}
+
+\newcommand{\htalloc}[1][]
+{ \rulegen[#1]{Ht-alloc}
+  { }
+  { S \proves \hoare{\TRUE}{\Ref(u)}{v . \Exists \ell . v = \ell\land \ell \pointsto u}}}
+
+\newcommand{\htstoregen}[2][]
+{ \rulegen[#1]{Ht-store}
+  { }
+  { S \proves \hoare{#2 \ell \pointsto -}{\ell \gets w }{v . v = \TT \land \ell \pointsto w}}}
+
+\newcommand{\htstoretemp}[1][]
+{\htstoregen[-temp#1]{ }}
+
+
+%% Generic command for constructing variations of the consequence rule
+\newcommand{\htcsq}[1][]
+{ \rulegen[#1]{Ht-csq}
+  { S \text{ persistent } \and
+  S \proves \prop \Rightarrow{} \prop' \and
+  S \proves \hoare{\prop'}{\expr}{\Ret\val.\propB'} \and
+  S \proves \All u. \propB'[u/v] \Rightarrow{} \propB[u/v]}
+  {S \proves \hoare{\prop}{\expr}{\Ret\val.\propB}}}
+
+\newcommand{\htcsqvsrule}[1][]
+{ \rulegen[#1]{Ht-csq-vs}
+  { S \proves \prop \vs \prop' \and
+    S \proves \hoare{\prop'}{\expr}{\Ret\val.\propB'} \and
+    S \proves \All u. \propB'[u/v] \vs \propB[u/v]}
+  {S \proves \hoare{\prop}{\expr}{\Ret\val.\propB}}}
+
+\newcommand{\htbetagen}[4][]
+{ \rulegen[#1]{Ht-beta#1}
+  {S \proves \hoare{P}{e\left[v/x\right]}{u.Q}[#3]}
+  {S \proves \hoare{#2 P}{(\lambda x . e) v}{u.Q}[#3]}}
+
+\newcommand{\htbeta}[1][]{\htbetagen[#1]{ }{ }}
+
+\newcommand{\htbetalater}[1][]{\htbetagen[-later#1]{\later}{}}
+
+\newcommand{\htloadlaterrule}[1][]{\htloadgen[#1]{\later}}
+
+\newcommand{\htstorelaterrule}[1][]{\htstoregen[#1]{\later}}
+
+\newcommand{\Htpar}[1][]
+{ \rulegen[#1]{Ht-par}
+    {S \proves \hoare{P_1}{e_1}{v.Q_1} \and S \proves \hoare{P_2}{e_2}{v.Q_2}}
+    {S \proves \hoare{P_1 \ast P_2}{e_1 \parcomp e_2}{v.\Exists v_1 v_2.v = (v_1,v_2) \ast Q_1[v_1/v] \ast Q_2[v_2/v]}}}
+
+\newcommand{\fpurule}[1][]
+{ \rulegen[#1]{frame-preserving-update}
+  {}{a \mupd b \iff \forall x \in \Ml, a \cdot x \in \Vl \implies b \cdot x \in \Vl.}}
+
+\newcommand{\updmonorule}[1][]
+{\rulegen[#1]{upd-mono}
+  {P \proves Q}
+  {\pvs P \proves \pvs Q}}
+
+\newcommand{\updintrorule}[1][]
+{\rulegen[#1]{upd-intro}{ }
+  {P \proves \pvs P}}
+
+\newcommand{\updidemprule}[1][]
+{\rulegen[#1]{upd-idemp}
+  { }
+  {\pvs \pvs P \proves \pvs P}}
+
+\newcommand{\updframerule}[1][]
+{\rulegen[#1]{upd-frame}
+  { }
+  {P \ast \pvs Q \proves \pvs (P \ast Q)}}
+
+\newcommand{\ghostallocrule}[1][]
+{\rulegen[#1]{Ghost-alloc}
+  {a \in \Vl}
+  {\TRUE \proves \pvs \Exists \gamma . \ownGhost{\gamma}{a}}}
+
+\newcommand{\ghostupdaterule}[1][]
+{\rulegen[#1]{Ghost-update}
+  {a \mupd b}
+  { \ownGhost{\gamma}{a} \proves \pvs \ownGhost{\gamma}{b}}}
+
+\newcommand{\ownoprule}[1][]
+{ \rulegen[#1]{Own-op}
+  { }
+  {\ownGhost{\gamma}{a} \ast \ownGhost{\gamma}{b} \provesIff \ownGhost{\gamma}{a \cdot b}}}
+
+\newcommand{\ownvalidrule}[1][]
+{ \rulegen[#1]{Own-valid}
+  { }
+  {\ownGhost{\gamma}{a} \proves a \in \Vl}}
+
+\newcommand{\invalloc}
+{ \rulegen[]{Inv-alloc}
+  {}
+  {\later P \proves \pvs[\emptyset] \knowInv{\Nl}{P}}}
+
+\newcommand{\wpinvopen}[1][]
+{ \rulegen[#1]{wp-inv-open-namespace}
+  {e \text{ is an atomic expression } \and \Nl^\uparrow \subseteq \mask}
+  {\knowInv{\Nl}{P} \ast \left(\later P \wand \wpre{e}[\mask\setminus\Nl^\uparrow]{v.\later P \ast \Phi(v)}\right)
+    \proves{}
+    \wpre{e}[\mask]{\Phi}}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\AtBeginSection[]{
+  \begin{frame}
+  \vfill
+  \centering
+  \begin{beamercolorbox}[sep=8pt,center,shadow=true,rounded=true]{title}
+    \usebeamerfont{title}\insertsectionhead\par%
+  \end{beamercolorbox}
+  \vfill
+  \end{frame}
+}
+
+
+\addtobeamertemplate{navigation symbols}{}{%
+    \usebeamerfont{footline}%
+    \usebeamercolor[fg]{footline}%
+    \hspace{1em}%
+    \insertframenumber/\inserttotalframenumber
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\title{Master's Thesis Exam\\
+Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms}
+\author{
+  Mathias Pedersen, 201808137 \texorpdfstring{\\}{with}
+  {\small Advisor: Amin Timany}
+}
+\institute{Aarhus University}
+\date{\today}
+\titlegraphic { 
+\begin{tikzpicture}[overlay,remember picture]
+\node[right=0.3cm] at (current page.210){
+    \includegraphics[scale=0.7]{../thesis/logo.eps}
+};
+\end{tikzpicture}
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newcommand{\todo}[1]{{\color[rgb]{.5,0,0}\textbf{$\blacktriangleright$#1$\blacktriangleleft$}}}
+
+\begin{document}
+
+\frame{\titlepage}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{frame}
+  \todo{create all slides}
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\end{document}

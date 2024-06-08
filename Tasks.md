@@ -199,8 +199,11 @@
   - [x] Write comments explaining proof structure
   - [x] Ensure consistency between related files
 
-- [ ] make a presentation (30min)
-  - [x] figure out slide structure
-  - [ ] create slides in latex
+- [ ] Make a presentation (30min)
+  - [x] Figure out slide structure
+  - [x] Create basic slides file in latex
+  - [ ] Create slide structure
+  - [ ] Fill out slides
+  - [ ] Practice presentation
 
-- [ ] read up on referenced literature
+- [ ] Read up on referenced literature
