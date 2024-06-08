@@ -571,6 +571,57 @@ Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms}
   \todo{create all slides}
 \end{frame}
 
+% SLIDE STRUCTURE
+
+% Contributions
+% - take from list in introduction
+
+% Contents
+
+% Queue specifications
+% - nature of specifications
+% + written in Iris
+% + In terms of hoare triples
+% + Partial correctness
+% + In particular, doesn't crash
+% + Concurrent clients and need for preconditions
+% - seq
+% - Conc
+% - Hocap
+% - Client
+
+% TLMSQ
+% - code
+% - Illustrations
+% - observations
+
+% TLMSQ satisfies HOCAP spec: proof
+% - invariant
+% - Queue predicate
+% - Proof of init
+% - Proof of enq xor deq
+% + Start with the code. Add lines with {...} in between lines of code to signify which propositions hold during execution. Copy propositions from proof outlines in report.
+
+% LFMSQ
+% - code
+% - Illustrations (mention differences with TLMSQ)
+% - consistency checks, linearisation points, and prophecies
+% + need prophecy in proof of adherence to HOCAP
+% + Linearisation point can depend on future computation
+% + can remove consistency checks due to garbage collected language
+% - LCCFMSQ
+% + code
+
+% LCCFMSQ satisfies HOCAP spec: proof
+% - reachability
+% - Invariant
+% - Queue predicate
+% - Proof of init and (enq xor deq) in coq
+% + go over contents of file, but skip swing tail proof, and many of the results about reachability.
+
+% Resource Algebras (if time permits, otherwise mention definitions on slides where they are introduced)
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \end{document}
