@@ -198,3 +198,9 @@
   - [x] Proofread coq files
   - [x] Write comments explaining proof structure
   - [x] Ensure consistency between related files
+
+- [ ] make a presentation (30min)
+  - [x] figure out slide structure
+  - [ ] create slides in latex
+
+- [ ] read up on referenced literature
