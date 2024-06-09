@@ -567,60 +567,242 @@ Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\begin{frame}
-  \todo{create all slides}
+\begin{frame}{Overview of the Project and Contributions}
+  \todo{create slide}
+  % - Motivation
+  % - Take contributions from list in introduction
 \end{frame}
 
-% SLIDE STRUCTURE
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% Contributions
-% - take from list in introduction
+% Outline
+\begin{frame}{Outline}
+  \tableofcontents
+\end{frame}
 
-% Contents
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% Queue specifications
-% - nature of specifications
-% + written in Iris
-% + In terms of hoare triples
-% + Partial correctness
-% + In particular, doesn't crash
-% + Concurrent clients and need for preconditions
-% - seq
-% - Conc
-% - Hocap
-% - Client
+\section{Queue Specifications}
 
-% TLMSQ
-% - code
-% - Illustrations
-% - observations
+%=====================================================================
+\begin{frame}{Nature of Specifications}
+  \todo{create slide}
+  % - written in Iris, a Higher order CSL
+  % - In terms of Hoare triples
+  % - Partial correctness
+  % + In particular, doesn't crash
+  % - Clients use the Hoare triples specifications to prove results about their own code
+  %   Must obtain resources describe by pre-condition to apply Hoare triple
+  %   Obtains resources describe by post-condition after invocation
+\end{frame}
 
-% TLMSQ satisfies HOCAP spec: proof
-% - invariant
-% - Queue predicate
-% - Proof of init
-% - Proof of enq xor deq
-% + Start with the code. Add lines with {...} in between lines of code to signify which propositions hold during execution. Copy propositions from proof outlines in report.
+%=====================================================================
+\begin{frame}{Sequential Specification}
+  \todo{create slide}
+  % - Basics of queue algorithms: Consist of initialise, enqueue, dequeue
+  % - Initialise creates basic data structure. Enqueue adds element. Dequeue pops element, if queue is non-empty. Otherwise returns None.
+  % - Show specification
+\end{frame}
 
-% LFMSQ
-% - code
-% - Illustrations (mention differences with TLMSQ)
-% - consistency checks, linearisation points, and prophecies
-% + need prophecy in proof of adherence to HOCAP
-% + Linearisation point can depend on future computation
-% + can remove consistency checks due to garbage collected language
-% - LCCFMSQ
-% + code
+%=====================================================================
+\begin{frame}{Concurrent Specification}
+  \todo{create slide}
+  % - Support for concurrent through persistency of queue predicate
+  % - Show specification
+\end{frame}
 
-% LCCFMSQ satisfies HOCAP spec: proof
-% - reachability
-% - Invariant
-% - Queue predicate
-% - Proof of init and (enq xor deq) in coq
-% + go over contents of file, but skip swing tail proof, and many of the results about reachability.
+%=====================================================================
+\begin{frame}{HOCAP-style Specification}
+  \todo{create slide}
+  % - Resource Algebra for Abstract State
+  % - Authoritative and Fragmental predicates for tracking abstract state
+  % - Specification
+\end{frame}
 
-% Resource Algebras (if time permits, otherwise mention definitions on slides where they are introduced)
+%=====================================================================
+\begin{frame}{Queue Client}
+  \todo{create slide}
+  % - PoC client
+  % - Code
+  % - Specification
+  % - Idea: client is complex enough to require HOCAP
+  % + Uses concurrency, so Sequential is not strong enough
+  % + Importance of invocations to dequeue not returning None
+  % * Concurrent spec only tells us that queue either returns Some or None.
+  % * HOCAP allows us to track exact contents
+  % * Idea of proof: create invariant that captures possible states of queue contents
+  %   Show invariant
+\end{frame}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{The Two-Lock Michael-Scott Queue}
+
+%=====================================================================
+\begin{frame}{Implementation: $\initialise$}
+  \todo{create slide}
+  % - Show code
+  % - Show figure
+\end{frame}
+
+%=====================================================================
+\begin{frame}{Implementation: $\enqueue$}
+  \todo{create slide}
+  % - Show code
+  % - Show figure
+\end{frame}
+
+%=====================================================================
+\begin{frame}{Implementation: $\dequeue$}
+  \todo{create slide}
+  % - Show code
+  % - Show figure
+\end{frame}
+
+%=====================================================================
+\begin{frame}{Observations on Behaviour of the \tlmsq}
+  \todo{create slide}
+  % - Include main observations from section on observations
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Proving that the Two-Lock Michael-Scott Queue Satisfies the HOCAP-style Specification}
+
+%=====================================================================
+\begin{frame}{Invariant}
+  \todo{create slide}
+  % - Motivate the need for invariant
+  % + Queue Predicate must be persistent (according to spec)
+  % + The queue relies on non-persistent resources
+  % + Solution is to identify an invariant for the queue, which describes the resources
+  % + Invariants are persistent
+  % - Show invariant
+\end{frame}
+
+%=====================================================================
+\begin{frame}{The isLL Predicate}
+  \todo{create slide}
+  % - Idea, capture the linked list structure with Iris points-to predicates
+  % - Show a figure (from an implementation slide)
+  % - Show definition
+  % - Show example from report
+\end{frame}
+
+%=====================================================================
+\begin{frame}{Queue Predicate}
+  \todo{create slide}
+  % - Remind that the HOCAP-style spec requires the existence of some queue predicate
+  % - Show queue predicate
+  % - Queue predicate is persistent
+  % - Proving that TLMSQ satisfies HOCAP spec then consists of proving the Hoare triples for initialise, enqueue, and dequeue.
+  % - We here focus on initialise and \todo{enqueue xor dequeue}
+\end{frame}
+
+%=====================================================================
+\begin{frame}{Proof of Initialise}
+  \todo{create slide}
+  % Start with the code. Add lines with {...} in between lines of code to signify which propositions hold during execution. Copy propositions from proof outlines in report.
+\end{frame}
+
+%=====================================================================
+\begin{frame}{Proof of \todo{$\enqueue$ xor $\dequeue$} }
+  \todo{create slide}
+  % Start with the code. Add lines with {...} in between lines of code to signify which propositions hold during execution. Copy propositions from proof outlines in report.
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{The Lock-Free Michael-Scott Queue}
+
+%=====================================================================
+\begin{frame}{Implementation: $\initialise$}
+  \todo{create slide}
+  % - Show code
+  % - Show figure (mention differences with TLMSQ)
+\end{frame}
+
+%=====================================================================
+\begin{frame}{Implementation: $\enqueue$}
+  \todo{create slide}
+  % - Show code
+  % - Show figure (mention differences with TLMSQ)
+\end{frame}
+
+%=====================================================================
+\begin{frame}{Implementation: $\dequeue$}
+  \todo{create slide}
+  % - Show code
+  % - Show figure (mention differences with TLMSQ)
+\end{frame}
+
+%=====================================================================
+\begin{frame}{Prophecies}
+  \todo{create slide}
+  % - consistency checks, linearisation points, and prophecies
+  % + need prophecy in proof of adherence to HOCAP
+  % + Linearisation point can depend on future computation
+  % + Reason for consistency checks: ABA problem in original
+  % + can remove consistency checks due to garbage collected language
+\end{frame}
+
+%=====================================================================
+\begin{frame}{The Lock-and-CC-Free Michael-Scott Queue}
+  \todo{create slide}
+  % - Show code
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Proving that the Lock-and-CC-Free Michael-Scott Queue Satisfies the HOCAP-style Specification}
+
+%=====================================================================
+\begin{frame}{Reachability}
+  \todo{create slide}
+  % - Motivate why we need the notion:
+  %   Captures important aspects of the queue that are essential for correctness
+  %   Specifically:
+  % + The linked list only ever grows (and at the end):
+  %   The set of nodes that a particular node can reach only grows
+  % + The head and tail are only moved forward in the linked list:
+  %   If a node can reach current head/tail, can reach any future head/tail.
+  % + The tail cannot lag behind the head
+  % - Introduce Concrete and Abstract reachability to capture these Points
+  % + Concrete reachability
+  % * essentially a proposition of points-to predicates capturing a section of the linked list (kinda like isLL)
+  % * Definition of Concrete reachability
+  % + Abstract reachability
+  % * Above talks about special ``types of nodes''
+  % * head, tail, last
+  % * Resource Algebra for Abstract Reachability
+  % * Definition of Abstract Points-to
+  % * Definition of Abstract Reachability
+  % * The four lemmas
+\end{frame}
+
+%=====================================================================
+\begin{frame}{Invariant}
+  \todo{create slide}
+  % - Need for invariant is same as for TLMSQ: need persistent queue predicate
+  % - Show invariant
+  % - head can ALWAYS abstractly reach tail. I.e. tail never lags behind
+\end{frame}
+
+%=====================================================================
+\begin{frame}{Queue Predicate}
+  \todo{create slide}
+  % - Show predicate
+  % - Queue predicate is persistent
+  % - Proving that LFMSQ satisfies HOCAP spec then consists of proving the Hoare triples for initialise, enqueue, and dequeue.
+  % - We here focus on initialise and \todo{enqueue xor dequeue}
+\end{frame}
+
+%=====================================================================
+\begin{frame}{Proof of $\initialise$ and \todo{$\enqueue$ xor $\dequeue$}}
+  \todo{create slide}
+  % - In Coq!
+  %   go over contents of file, but skip swing tail proof, and many of the results about reachability.
+\end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
