@@ -202,7 +202,7 @@
 - [ ] Make a presentation (30min)
   - [x] Figure out slide structure
   - [x] Create basic slides file in latex
-  - [ ] Create slide structure
+  - [x] Create slide structure
   - [ ] Fill out slides
   - [ ] Practice presentation
 
