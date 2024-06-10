@@ -677,14 +677,14 @@ Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms}
 \end{frame}
 
 %=====================================================================
-\begin{frame}[containsverbatim]{Queue Client - A PoC Client}
+\begin{frame}[fragile]{Queue Client - A PoC Client}
   \begin{itemize}
     \item Idea: a minimal client complex enough to require HOCAP specification
-    \item Concurrent, so sequential specification insufficient
+    \item Uses parallel composition, so sequential specification insufficient
     \item Relies on dequeues not returning $\None$, so concurrent specification insufficient
     \item HOCAP specification supports consistency and allows us to track queue contents, allowing us to exclude cases where dequeue returns $\None$ 
   \end{itemize}
-  \begin{minted}[linenos=true, escapeinside=||, mathescape=true, bgcolor=codebg, frame=lines]{ocaml}
+  \begin{minted}[escapeinside=||, mathescape=true, bgcolor=codebg, frame=lines]{ocaml}
   |$\label{UNW:def}$|  |$ \unwrap \ w \eqdef \langkw{match}\spac w \spac\langkw{with}\spac \None \Ra \TT \ \TT \mid \Some v \Ra v \spac\langkw{end} $|
   
   |$\label{EDQ:def}$|  |$ \enqdeq \ \vq \ c \eqdef \enqueue \ \vq \ c; \unwrap (\dequeue \ \vq)$|
@@ -697,7 +697,7 @@ Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms}
 \end{frame}
 
 %=====================================================================
-\begin{frame}[containsverbatim]{Queue Client - A PoC Client (continued)}
+\begin{frame}[fragile]{Queue Client - A PoC Client (continued)}
   
   \begin{lemma}[QueueAdd Specification]\label{QueueSpecs:spec:queueadd}
     \begin{equation*}
@@ -727,30 +727,224 @@ Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms}
 \section{The Two-Lock Michael-Scott Queue}
 
 %=====================================================================
-\begin{frame}{Implementation: $\initialise$}
-  \todo{create slide}
-  % - Show code
-  % - Show figure
+\begin{frame}[fragile]{Implementation: $\initialise$}
+  \begin{minted}[escapeinside=||, mathescape=true, bgcolor=codebg, frame=lines]{ocaml}
+    |$\label{TLI:fun}$|  |$ \initialise \eqdef $|
+    |$\label{TLI:nod}$|    |$ \Let node = \Ref(\None, \Ref(\None)) in $|
+    |$\label{TLI:hlo}$|    |$ \Let \Hlockvar = \newLock \TT in $|
+    |$\label{TLI:tlo}$|    |$ \Let \Tlockvar = \newLock \TT in $|
+    |$\label{TLI:que}$|    |$ \Ref((\Ref(node), \Ref(node)), (\Hlockvar, \Tlockvar)) $|
+  \end{minted}
+  \begin{center}
+  \scalebox{0.8}{
+  \begin{tikzpicture}[
+    pair/.style = {
+      on chain,
+      rectangle split,
+      rectangle split horizontal,
+      rectangle split parts=2,
+      draw,
+      anchor=center,
+      text height=1.5ex,
+    },
+    perspointer/.style = {
+      on chain,
+      rectangle,
+      draw,
+      anchor=center,
+      text height=1.5ex,
+    },
+    pointer/.style = {
+      rectangle,
+      draw,
+      anchor=center,
+      text height=1.5ex,
+    },
+    start chain=going right,
+    decoration={
+      markings,
+      mark=at position .5 with {\arrow{Square[length=5pt,sep=-2.5pt]}}
+    },
+  ]
+
+  % Linked List
+  \node (l'1) [join={by ->}, perspointer,on chain] {$\locinM{1}$};
+  \node (l1pair) [join={by ->, draw=blue, postaction={decorate}}, pair,on chain] {$\None$ \nodepart{two} $\locoutM{1}$};
+  \node (null) [join={by ->, draw=black}, rectangle,on chain] {$\None$};
+
+  % Head and tail
+  \node (head) [pointer, above left=of l'1] {$\lochead$};
+  \node (tail) [pointer, above right=of l'1] {$\loctail$};
+  \draw[->] (head) -- (l'1);
+  \draw[->] (tail) -- (l'1);
+
+  \end{tikzpicture}
+  }
+  \end{center}
 \end{frame}
 
 %=====================================================================
-\begin{frame}{Implementation: $\enqueue$}
-  \todo{create slide}
-  % - Show code
-  % - Show figure
+\begin{frame}[fragile]{Implementation: $\enqueue$}
+  \begin{minted}[escapeinside=||, mathescape=true, bgcolor=codebg, frame=lines]{ocaml}
+    |$\label{TLE:fun}$|  |$ \enqueue \ Q \ value \eqdef $|
+    |$\label{TLE:nod}$|    |$ \Let node = \Ref(\Some value, \Ref(\None)) in $|
+    |$\label{TLE:acq}$|    |$ \acquire (\Snd (\Snd (\deref Q))); $|
+    |$\label{TLE:add}$|    |$ \Snd (\deref(\deref(\Snd (\Fst(\deref Q))))) \gets node; $|
+    |$\label{TLE:sts}$|    |$ \Snd (\Fst (\deref Q)) \gets node; $|
+    |$\label{TLE:rel}$|    |$ \release (\Snd (\Snd (\deref Q))) $|
+  \end{minted}
+  \begin{center}
+  \scalebox{0.8}{
+  \begin{tikzpicture}[
+    pair/.style = {
+      on chain,
+      rectangle split,
+      rectangle split horizontal,
+      rectangle split parts=2,
+      draw,
+      anchor=center,
+      text height=1.5ex,
+    },
+    perspointer/.style = {
+      on chain,
+      rectangle,
+      draw,
+      anchor=center,
+      text height=1.5ex,
+    },
+    pointer/.style = {
+      rectangle,
+      draw,
+      anchor=center,
+      text height=1.5ex,
+    },
+    start chain=going right,
+    decoration={
+      markings,
+      mark=at position .5 with {\arrow{Square[length=5pt,sep=-2.5pt]}}
+    },
+  ]
+
+  % Linked List
+  \node (l'1) [join={by ->}, perspointer,on chain] {$\locinM{1}$};
+  \node (l1pair) [join={by ->, draw=blue, postaction={decorate}}, pair,on chain] {$\nodevalM{1}$ \nodepart{two} $\locoutM{1}$};
+  \node (l'2) [join={by ->, draw=blue, postaction={decorate}}, perspointer,on chain] {$\locinM{2}$};
+  \node (l2pair) [join={by ->, draw=blue, postaction={decorate}}, pair,on chain] {$\nodevalM{2}$ \nodepart{two} $\locoutM{2}$};
+  \only<1-2>{\node (null) [join={by ->, draw=black}, rectangle,on chain] {$\None$};}
+  \only<3-4>{\node (null) [join={by ->, dotted, draw=black}, rectangle,on chain] {\textcolor{gray}{$\None$}};}
+
+  \only<1>{
+  \node (l'3) [perspointer, above right=of l2pair, draw=none] {\phantom{$\locinM{3}$}};
+  \node (l3pair) [join={by ->, draw=none}, pair,on chain, draw=none] {\phantom{$\nodevalM{3}$} \nodepart{two} \phantom{$\locoutM{3}$}};
+  \node (null) [join={by ->, draw=none}, rectangle,on chain] {\phantom{$\None$}};}
+
+  \only<2->{
+  \node (l'3) [perspointer, above right=of l2pair] {$\locinM{3}$};
+  \node (l3pair) [join={by ->, draw=blue, postaction={decorate}}, pair,on chain] {$\nodevalM{3}$ \nodepart{two} $\locoutM{3}$};
+  \node (null) [join={by ->, draw=black}, rectangle,on chain] {$\None$};}
+
+  \only<3->{\draw[->, draw=blue, postaction={decorate}] (l2pair) -- (l'3);}
+
+  % Head and tail
+  \node (head) [pointer, above=of l'1] {$\lochead$};
+  \node (tail) [pointer, above=of l'2] {$\loctail$};
+  \draw[->] (head) -- (l'1);
+  \onslide<1-3>
+  \draw[->] (tail) -- (l'2);
+  \onslide<4->
+  \draw[->, dotted] (tail) -- (l'2);
+  \draw[->] (tail) -- (l'3);
+
+  \end{tikzpicture}
+  }
+  \end{center}
 \end{frame}
 
 %=====================================================================
-\begin{frame}{Implementation: $\dequeue$}
-  \todo{create slide}
-  % - Show code
-  % - Show figure
+\begin{frame}[fragile]{Implementation: $\dequeue$}
+  \begin{minted}[escapeinside=||, mathescape=true, bgcolor=codebg, frame=lines]{ocaml}
+    |$\label{TLD:fun}$|  |$ \dequeue \ Q \eqdef $|
+    |$\label{TLD:acq}$|    |$ \acquire (\Fst (\Snd (\deref Q))); $|
+    |$\label{TLD:nod}$|    |$ \Let node = \deref (\Fst (\Fst (\deref Q))) in $|
+    |$\label{TLD:new}$|    |$ \Let new\_head = \deref (\Snd(\deref node)) in $|
+    |$\label{TLD:ifn}$|    |$ \If new\_head = \None then $|
+    |$\label{TLD:re1}$|      |$ \release (\Fst (\Snd(\deref Q))); $|
+    |$\label{TLD:non}$|      |$ \None $|
+    |$\label{TLD:els}$|    |$ \Else $|
+    |$\label{TLD:vde}$|      |$ \Let value = \Fst (\deref new\_head) in $|
+    |$\label{TLD:shs}$|      |$ \Fst (\Fst (\deref Q)) \gets new\_head; $|
+    |$\label{TLD:re2}$|      |$ \release (\Fst (\Snd (\deref Q))); $|
+    |$\label{TLD:val}$|      |$ value $|
+  \end{minted}
+  \begin{center}
+  \scalebox{0.8}{
+  \begin{tikzpicture}[
+    pair/.style = {
+      on chain,
+      rectangle split,
+      rectangle split horizontal,
+      rectangle split parts=2,
+      draw,
+      anchor=center,
+      text height=1.5ex,
+    },
+    perspointer/.style = {
+      on chain,
+      rectangle,
+      draw,
+      anchor=center,
+      text height=1.5ex,
+    },
+    pointer/.style = {
+      rectangle,
+      draw,
+      anchor=center,
+      text height=1.5ex,
+    },
+    start chain=going right,
+    decoration={
+      markings,
+      mark=at position .5 with {\arrow{Square[length=5pt,sep=-2.5pt]}}
+    },
+  ]
+
+  % Linked List
+  \node (l1in) [join={by ->}, perspointer,on chain] {$\locinM{1}$};
+  \node (l1pair) [join={by ->, draw=blue, postaction={decorate}}, pair,on chain] {$\nodevalM{1}$ \nodepart{two} $\locoutM{1}$};
+  \node (l2in) [join={by ->, draw=blue, postaction={decorate}}, perspointer,on chain] {$\locinM{2}$};
+  \node (l2pair) [join={by ->, draw=blue, postaction={decorate}}, pair,on chain] {$\nodevalM{2}$ \nodepart{two} $\locoutM{2}$};
+  \node (l3in) [join={by ->, draw=blue, postaction={decorate}}, perspointer,on chain] {$\locinM{3}$};
+  \node (l3pair) [join={by ->, draw=blue, postaction={decorate}}, pair,on chain] {$\nodevalM{3}$ \nodepart{two} $\locoutM{3}$};
+  \node (null) [join={by ->, draw=black}, rectangle,on chain] {$\None$};
+
+  % Head and tail
+  \node (head) [pointer, above=of l1pair] {$\lochead$};
+  \node (tail) [pointer, above=of l3in] {$\loctail$};
+  \onslide<1>{\draw[->] (head) -- (l1in);}
+  \onslide<2>{\draw[->, dotted] (head) -- (l1in); \draw[->] (head) -- (l2in);}
+  \draw[->] (tail) -- (l3in);
+
+  \end{tikzpicture}
+  }
+  \end{center}
 \end{frame}
 
 %=====================================================================
 \begin{frame}{Observations on Behaviour of the \tlmsq}
-  \todo{create slide}
-  % - Include main observations from section on observations
+  \todo{format and simplify}
+  \begin{enumerate}
+    \item\label{TLMSQ:insights:tail} The tail node is always either the last or second last node in the linked list.
+    \item\label{TLMSQ:insights:persistent} All but the last pointer in the linked list (the pointer to $\None$) never change.
+    \item\label{TLMSQ:insights:oldnodes} Nodes in the linked list are never deleted. Hence, the linked list only ever grows.
+    \item\label{TLMSQ:insights:lag} The tail can lag one node behind the head.
+    \item\label{TLMSQ:insights:states} At any given time, the queue is in one of four states:
+      \begin{enumerate}
+        \item\label{TLMSQ:insights:state:static} No threads are interacting with the queue (\StaticState).
+        \item\label{TLMSQ:insights:state:enqueue} A thread is enqueueing (\EnqueueState).
+        \item\label{TLMSQ:insights:state:dequeue} A thread is dequeueing (\DequeueState).
+        \item\label{TLMSQ:insights:state:both} A thread is enqueueing and a thread is dequeueing (\BothState).
+      \end{enumerate}
+  \end{enumerate}
 \end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -804,24 +998,218 @@ Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms}
 \section{The Lock-Free Michael-Scott Queue}
 
 %=====================================================================
-\begin{frame}{Implementation: $\initialise$}
-  \todo{create slide}
-  % - Show code
-  % - Show figure (mention differences with TLMSQ)
+\begin{frame}[fragile]{Implementation: $\initialise$}
+  \begin{minted}[escapeinside=||, mathescape=true, bgcolor=codebg, frame=lines]{ocaml}
+    |$\label{LFI:fun}$|  |$ \initialise \eqdef $|
+    |$\label{LFI:nod}$|    |$ \Let node = \Ref(\None, \Ref(\None)) in $|
+    |$\label{LFI:que}$|    |$ \Ref(\Ref(node), \Ref(node)) $|
+  \end{minted}
+  \begin{center}
+    \scalebox{0.8}{
+    \begin{tikzpicture}[
+      pair/.style = {
+        on chain,
+        rectangle split,
+        rectangle split horizontal,
+        rectangle split parts=2,
+        draw,
+        anchor=center,
+        text height=1.5ex,
+      },
+      perspointer/.style = {
+        on chain,
+        rectangle,
+        draw,
+        anchor=center,
+        text height=1.5ex,
+      },
+      pointer/.style = {
+        rectangle,
+        draw,
+        anchor=center,
+        text height=1.5ex,
+      },
+      start chain=going right,
+      decoration={
+        markings,
+        mark=at position .5 with {\arrow{Square[length=5pt,sep=-2.5pt]}}
+      },
+    ]
+  
+    % Linked List
+    \node (l'1) [join={by ->}, perspointer,on chain] {$\locinM{1}$};
+    \node (l1pair) [join={by ->, draw=blue, postaction={decorate}}, pair,on chain] {$\None$ \nodepart{two} $\locoutM{1}$};
+    \node (null) [join={by ->, draw=black}, rectangle,on chain] {$\None$};
+  
+    % Head and tail
+    \node (head) [pointer, above left=of l'1] {$\lochead$};
+    \node (tail) [pointer, above right=of l'1] {$\loctail$};
+    \draw[->] (head) -- (l'1);
+    \draw[->] (tail) -- (l'1);
+  
+    \end{tikzpicture}
+    }
+    \end{center}
 \end{frame}
 
 %=====================================================================
-\begin{frame}{Implementation: $\enqueue$}
-  \todo{create slide}
-  % - Show code
-  % - Show figure (mention differences with TLMSQ)
+\begin{frame}[fragile]{Implementation: $\enqueue$}
+  \begin{minted}[escapeinside=||, mathescape=true, bgcolor=codebg, frame=lines, fontsize=\scriptsize]{ocaml}
+    |$\label{LFE:fun}$|  |$ \enqueue \ Q \ value \eqdef $|
+    |$\label{LFE:nod}$|    |$ \Let node = \Ref(\Some value, \Ref(\None)) in $|
+    |$\label{LFE:lop}$|    |$ (\Rec {loop} \_ = $|
+    |$\label{LFE:tal}$|      |$ \Let tail = \deref (\Snd (\deref Q)) in$|
+    |$\label{LFE:nex}$|      |$ \Let next = \deref (\Snd (\deref tail)) in $|
+    |$\label{LFE:cct}$|      |$ \If tail = \deref (\Snd (\deref Q)) then $|
+    |$\label{LFE:nen}$|        |$ \If next = \None then $|
+    |$\label{LFE:add}$|          |$ \If \CAS \ (\Snd (\deref tail)) \ next \ node then $|
+    |$\label{LFE:sts}$|            |$ \CAS \ (\Snd (\deref Q)) \ tail \ node $|
+    |$\label{LFE:re1}$|          |$ \Else loop \ \TT $|
+    |$\label{LFE:stl}$|        |$ \Else \CAS \ (\Snd (\deref Q)) \ tail \ next; loop \ \TT $|
+    |$\label{LFE:re2}$|      |$ \Else loop \ \TT $|
+    |$\label{LFE:app}$|    |$ ) \ \TT $|
+  \end{minted}
+  \begin{center}
+    \scalebox{0.8}{
+    \begin{tikzpicture}[
+      pair/.style = {
+        on chain,
+        rectangle split,
+        rectangle split horizontal,
+        rectangle split parts=2,
+        draw,
+        anchor=center,
+        text height=1.5ex,
+      },
+      perspointer/.style = {
+        on chain,
+        rectangle,
+        draw,
+        anchor=center,
+        text height=1.5ex,
+      },
+      pointer/.style = {
+        rectangle,
+        draw,
+        anchor=center,
+        text height=1.5ex,
+      },
+      start chain=going right,
+      decoration={
+        markings,
+        mark=at position .5 with {\arrow{Square[length=5pt,sep=-2.5pt]}}
+      },
+    ]
+  
+    % Linked List
+    \node (l'1) [join={by ->}, perspointer,on chain] {$\locinM{1}$};
+    \node (l1pair) [join={by ->, draw=blue, postaction={decorate}}, pair,on chain] {$\nodevalM{1}$ \nodepart{two} $\locoutM{1}$};
+    \node (l'2) [join={by ->, draw=blue, postaction={decorate}}, perspointer,on chain] {$\locinM{2}$};
+    \node (l2pair) [join={by ->, draw=blue, postaction={decorate}}, pair,on chain] {$\nodevalM{2}$ \nodepart{two} $\locoutM{2}$};
+    \only<1-2>{\node (null) [join={by ->, draw=black}, rectangle,on chain] {$\None$};}
+    \only<3-4>{\node (null) [join={by ->, dotted, draw=black}, rectangle,on chain] {\textcolor{gray}{$\None$}};}
+  
+    \only<1>{
+    \node (l'3) [perspointer, above right=of l2pair, draw=none] {\phantom{$\locinM{3}$}};
+    \node (l3pair) [join={by ->, draw=none}, pair,on chain, draw=none] {\phantom{$\nodevalM{3}$} \nodepart{two} \phantom{$\locoutM{3}$}};
+    \node (null) [join={by ->, draw=none}, rectangle,on chain] {\phantom{$\None$}};}
+  
+    \only<2->{
+    \node (l'3) [perspointer, above right=of l2pair] {$\locinM{3}$};
+    \node (l3pair) [join={by ->, draw=blue, postaction={decorate}}, pair,on chain] {$\nodevalM{3}$ \nodepart{two} $\locoutM{3}$};
+    \node (null) [join={by ->, draw=black}, rectangle,on chain] {$\None$};}
+  
+    \only<3->{\draw[->, draw=blue, postaction={decorate}] (l2pair) -- (l'3);}
+  
+    % Head and tail
+    \node (head) [pointer, above=of l'1] {$\lochead$};
+    \node (tail) [pointer, above=of l'2] {$\loctail$};
+    \draw[->] (head) -- (l'1);
+    \onslide<1-3>
+    \draw[->] (tail) -- (l'2);
+    \onslide<4->
+    \draw[->, dotted] (tail) -- (l'2);
+    \draw[->] (tail) -- (l'3);
+  
+    \end{tikzpicture}
+    }
+    \end{center}
 \end{frame}
 
 %=====================================================================
-\begin{frame}{Implementation: $\dequeue$}
-  \todo{create slide}
-  % - Show code
-  % - Show figure (mention differences with TLMSQ)
+\begin{frame}[fragile]{Implementation: $\dequeue$}
+  \begin{minted}[escapeinside=||, mathescape=true, bgcolor=codebg, frame=lines, fontsize=\scriptsize]{ocaml}
+    |$\label{LFD:fun}$|  |$ \dequeue \ Q \eqdef $|
+    |$\label{LFD:lop}$|    |$ (\Rec {loop} \_ = $|
+    |$\label{LFD:hed}$|      |$ \Let head = \deref (\Fst (\deref Q)) in $|
+    |$\label{LFD:tal}$|      |$ \Let tail = \deref (\Snd (\deref Q)) in $|
+    |$\label{LFD:pro}$|      |$ \Let \prophid = \NewProph in $|
+    |$\label{LFD:nex}$|      |$ \Let next = \deref (\Snd (\deref head)) in $|
+    |$\label{LFD:cch}$|      |$ \If head = \langkw{Resolve} (\deref(\Fst (\deref Q)), \prophid, \TT) then $|
+    |$\label{LFD:hte}$|        |$ \If head = tail then $|
+    |$\label{LFD:nen}$|          |$ \If next = \None then $|
+    |$\label{LFD:non}$|            |$ \None $|
+    |$\label{LFD:el1}$|          |$ \Else $|
+    |$\label{LFD:stl}$|            |$ \CAS (\Snd (\deref Q)) \ tail \ next; loop \ \TT $|
+    |$\label{LFD:el2}$|        |$ \Else $|
+    |$\label{LFD:vde}$|          |$ \Let value = \Fst (\deref next) in $|
+    |$\label{LFD:shs}$|          |$ \If \CAS \ (\Fst (\deref Q)) \ head \ next then $|
+    |$\label{LFD:val}$|            |$ value $|
+    |$\label{LFD:re1}$|          |$ \Else loop \ \TT $|
+    |$\label{LFD:re2}$|      |$ \Else loop \ \TT $|
+    |$\label{LFD:app}$|      |$ ) \TT $|
+  \end{minted}
+  \begin{center}
+    \scalebox{0.8}{
+    \begin{tikzpicture}[
+      pair/.style = {
+        on chain,
+        rectangle split,
+        rectangle split horizontal,
+        rectangle split parts=2,
+        draw,
+        anchor=center,
+        text height=1.5ex,
+      },
+      perspointer/.style = {
+        on chain,
+        rectangle,
+        draw,
+        anchor=center,
+        text height=1.5ex,
+      },
+      pointer/.style = {
+        rectangle,
+        draw,
+        anchor=center,
+        text height=1.5ex,
+      },
+      start chain=going right,
+      decoration={
+        markings,
+        mark=at position .5 with {\arrow{Square[length=5pt,sep=-2.5pt]}}
+      },
+    ]
+  
+    % Linked List
+    \node (l1in) [join={by ->}, perspointer,on chain] {$\locinM{1}$};
+    \node (l1pair) [join={by ->, draw=blue, postaction={decorate}}, pair,on chain] {$\nodevalM{1}$ \nodepart{two} $\locoutM{1}$};
+    \node (l2in) [join={by ->, draw=blue, postaction={decorate}}, perspointer,on chain] {$\locinM{2}$};
+    \node (l2pair) [join={by ->, draw=blue, postaction={decorate}}, pair,on chain] {$\nodevalM{2}$ \nodepart{two} $\locoutM{2}$};
+    \node (l3in) [join={by ->, draw=blue, postaction={decorate}}, perspointer,on chain] {$\locinM{3}$};
+    \node (l3pair) [join={by ->, draw=blue, postaction={decorate}}, pair,on chain] {$\nodevalM{3}$ \nodepart{two} $\locoutM{3}$};
+    \node (null) [join={by ->, draw=black}, rectangle,on chain] {$\None$};
+  
+    % Head and tail
+    \node (head) [pointer, above=of l1pair] {$\lochead$};
+    \node (tail) [pointer, above=of l3in] {$\loctail$};
+    \onslide<1>{\draw[->] (head) -- (l1in);}
+    \onslide<2>{\draw[->, dotted] (head) -- (l1in); \draw[->] (head) -- (l2in);}
+    \draw[->] (tail) -- (l3in);
+  
+    \end{tikzpicture}
+    }
+    \end{center}
 \end{frame}
 
 %=====================================================================
@@ -835,42 +1223,42 @@ Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms}
 \end{frame}
 
 %=====================================================================
-\begin{frame}[containsverbatim]{The Lock-and-CC-Free Michael-Scott Queue}
+\begin{frame}[fragile]{The Lock-and-CC-Free Michael-Scott Queue}
   \todo{format}
   \begin{figure}
   \begin{minted}[escapeinside=||, mathescape=true, bgcolor=codebg, frame=lines, fontsize=\scriptsize]{ocaml}
-  |$\label{LFI:fun}$|  |$ \initialise \eqdef $|
-  |$\label{LFI:nod}$|    |$ \Let node = \Ref(\None, \Ref(\None)) in $|
-  |$\label{LFI:que}$|    |$ \Ref(\Ref(node), \Ref(node)) $|
+  |$\label{CFI:fun}$|  |$ \initialise \eqdef $|
+  |$\label{CFI:nod}$|    |$ \Let node = \Ref(\None, \Ref(\None)) in $|
+  |$\label{CFI:que}$|    |$ \Ref(\Ref(node), \Ref(node)) $|
 
-  |$\label{LFE:fun}$|  |$ \enqueue \ Q \ value \eqdef $|
-  |$\label{LFE:nod}$|    |$ \Let node = \Ref(\Some value, \Ref(\None)) in $|
-  |$\label{LFE:lop}$|    |$ (\Rec {loop} \_ = $|
-  |$\label{LFE:tal}$|      |$ \Let tail = \deref (\Snd (\deref Q)) in$|
-  |$\label{LFE:nex}$|      |$ \Let next = \deref (\Snd (\deref tail)) in $|
-  |$\label{LFE:nen}$|      |$ \If next = \None then $|
-  |$\label{LFE:add}$|        |$ \If \CAS \ (\Snd (\deref tail)) \ next \ node then $|
-  |$\label{LFE:sts}$|          |$ \CAS \ (\Snd (\deref Q)) \ tail \ node $|
-  |$\label{LFE:re1}$|        |$ \Else loop \ \TT $|
-  |$\label{LFE:stl}$|      |$ \Else \CAS \ (\Snd (\deref Q)) \ tail \ next; loop \ \TT $|
-  |$\label{LFE:app}$|    |$ ) \ \TT $|
+  |$\label{CFE:fun}$|  |$ \enqueue \ Q \ value \eqdef $|
+  |$\label{CFE:nod}$|    |$ \Let node = \Ref(\Some value, \Ref(\None)) in $|
+  |$\label{CFE:lop}$|    |$ (\Rec {loop} \_ = $|
+  |$\label{CFE:tal}$|      |$ \Let tail = \deref (\Snd (\deref Q)) in$|
+  |$\label{CFE:nex}$|      |$ \Let next = \deref (\Snd (\deref tail)) in $|
+  |$\label{CFE:nen}$|      |$ \If next = \None then $|
+  |$\label{CFE:add}$|        |$ \If \CAS \ (\Snd (\deref tail)) \ next \ node then $|
+  |$\label{CFE:sts}$|          |$ \CAS \ (\Snd (\deref Q)) \ tail \ node $|
+  |$\label{CFE:re1}$|        |$ \Else loop \ \TT $|
+  |$\label{CFE:stl}$|      |$ \Else \CAS \ (\Snd (\deref Q)) \ tail \ next; loop \ \TT $|
+  |$\label{CFE:app}$|    |$ ) \ \TT $|
 
-  |$\label{LFD:fun}$|  |$ \dequeue \ Q \eqdef $|
-  |$\label{LFD:lop}$|    |$ (\Rec {loop} \_ = $|
-  |$\label{LFD:hed}$|      |$ \Let head = \deref (\Fst (\deref Q)) in $|
-  |$\label{LFD:tal}$|      |$ \Let tail = \deref (\Snd (\deref Q)) in $|
-  |$\label{LFD:nex}$|      |$ \Let next = \deref (\Snd (\deref head)) in $|
-  |$\label{LFD:hte}$|      |$ \If head = tail then $|
-  |$\label{LFD:nen}$|        |$ \If next = \None then $|
-  |$\label{LFD:non}$|          |$ \None $|
-  |$\label{LFD:el1}$|        |$ \Else $|
-  |$\label{LFD:stl}$|          |$ \CAS (\Snd (\deref Q)) \ tail \ next; loop \ \TT $|
-  |$\label{LFD:el2}$|      |$ \Else $|
-  |$\label{LFD:vde}$|        |$ \Let value = \Fst (\deref next) in $|
-  |$\label{LFD:shs}$|        |$ \If \CAS \ (\Fst (\deref Q)) \ head \ next then $|
-  |$\label{LFD:val}$|          |$ value $|
-  |$\label{LFD:re1}$|        |$ \Else loop \ \TT $|
-  |$\label{LFD:app}$|      |$ ) \TT $|
+  |$\label{CFD:fun}$|  |$ \dequeue \ Q \eqdef $|
+  |$\label{CFD:lop}$|    |$ (\Rec {loop} \_ = $|
+  |$\label{CFD:hed}$|      |$ \Let head = \deref (\Fst (\deref Q)) in $|
+  |$\label{CFD:tal}$|      |$ \Let tail = \deref (\Snd (\deref Q)) in $|
+  |$\label{CFD:nex}$|      |$ \Let next = \deref (\Snd (\deref head)) in $|
+  |$\label{CFD:hte}$|      |$ \If head = tail then $|
+  |$\label{CFD:nen}$|        |$ \If next = \None then $|
+  |$\label{CFD:non}$|          |$ \None $|
+  |$\label{CFD:el1}$|        |$ \Else $|
+  |$\label{CFD:stl}$|          |$ \CAS (\Snd (\deref Q)) \ tail \ next; loop \ \TT $|
+  |$\label{CFD:el2}$|      |$ \Else $|
+  |$\label{CFD:vde}$|        |$ \Let value = \Fst (\deref next) in $|
+  |$\label{CFD:shs}$|        |$ \If \CAS \ (\Fst (\deref Q)) \ head \ next then $|
+  |$\label{CFD:val}$|          |$ value $|
+  |$\label{CFD:re1}$|        |$ \Else loop \ \TT $|
+  |$\label{CFD:app}$|      |$ ) \TT $|
   \end{minted}
   \caption{Implementation of the \lfmsq{} in \heaplang.}
   \label{LFMSQ:implementation:code}
