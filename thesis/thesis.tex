@@ -1130,11 +1130,11 @@ The program is quite simple: it takes two integers, $a$ and $b$, as input and cr
 \end{figure}
 
 The specification for $\queueAdd$ essentially asserts that the return value is the sum of the inputs.
-\begin{definition}[QueueAdd Specification]\label{QueueSpecs:spec:queueadd}
+\begin{lemma}[QueueAdd Specification]\label{QueueSpecs:spec:queueadd}
   \begin{equation*}
     \All a, b \in \mathbb{Z} . \hoare{\TRUE}{\queueAdd \ a \ b}{v . v = a + b}
   \end{equation*}
-\end{definition}
+\end{lemma}
 \noindent This also implies that the program does not crash; the first case in the $\unwrap$ function never occurs.
 
 Note first that if we had not used parallel composition and simply executed $\enqdeq$ twice in sequence, then the sequential specification would have sufficed in proving the specification. We would always have the $\isqueueseq$ predicate at hand to step through the $\enqueue$ and $\dequeue$ in the $\enqdeq$ function, and this would allow us to track the exact contents. This means that we could deduce that we never invoke $\dequeue$ when the queue is empty, and the dequeued values are exactly $a$ and $b$.\\

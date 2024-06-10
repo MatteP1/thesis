@@ -585,53 +585,141 @@ Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms}
 \section{Queue Specifications}
 
 %=====================================================================
-\begin{frame}{Nature of Specifications}
-  \todo{create slide}
-  % - written in Iris, a Higher order CSL
-  % - In terms of Hoare triples
-  % - Partial correctness
-  % + In particular, doesn't crash
-  % - Clients use the Hoare triples specifications to prove results about their own code
-  %   Must obtain resources describe by pre-condition to apply Hoare triple
-  %   Obtains resources describe by post-condition after invocation
+\begin{frame}{Specifications for Queues}
+  \begin{block}{Assumptions on Queues}
+    \begin{itemize}
+      \item Queues consists of $\initialise$, $\enqueue$, and $\dequeue$
+      \item $\initialise$ creates an empty queue: $[]$
+      \item $\enqueue$ adds a value, $\absvalue$, to the beginning of the queue $\absvalueList$: $\absvalue :: \absvalueList$
+      \item $\dequeue$ depends on whether queue is empty:
+        \begin{itemize}
+          \item If non-empty, $\absvalueList \catenate \absvalue$, remove $\absvalue$ and return $\Some \absvalue$
+          \item If empty, $[]$, return $\None$
+        \end{itemize}
+    \end{itemize}
+  \end{block}
+  \begin{block}{Nature of Specifications}
+    \begin{itemize}
+      \item Specifications written in Iris, a higher order CSL
+      \item Expressed in terms of \textit{Hoare triples}: $\hoare{P}{e}{v. \Phi ~ v}$
+      \item Hoare triples prove partial correctness of programs, $e$
+      \item In particular: safety
+      \item Idea: clients can use Hoare triples to prove results about their own code
+    \end{itemize}
+  \end{block}
 \end{frame}
 
 %=====================================================================
 \begin{frame}{Sequential Specification}
-  \todo{create slide}
-  % - Basics of queue algorithms: Consist of initialise, enqueue, dequeue
-  % - Initialise creates basic data structure. Enqueue adds element. Dequeue pops element, if queue is non-empty. Otherwise returns None.
-  % - Show specification
+  \begin{definition}[Sequential Specification]\label{QueueSpecs:spec:seq}
+    \begin{align*}
+      &\Exists \isqueueseq : \Val \to \List ~ \Val \to \SeqQgnames \to \Prop.\\
+      &\quad\quad\seqspecinit\\
+      &\land{}\quad\seqspecenq\\
+      &\land{}\quad\seqspecdeq
+    \end{align*}
+  \end{definition}
+  \begin{itemize}
+    \item The proposition $\isqueueseq(\vq, \absvalueList, \Qg)$, states that value $\vq$ represents the queue, which contains elements $\absvalueList$
+    \item $G \in \SeqQgnames{}$ is a collection of ghost names (depends on specific queue)
+    \item Specification consists of three Hoare triples -- one for each queue function
+    \item Important: $\isqueueseq$ not required to be persistent!
+  \end{itemize}
 \end{frame}
 
 %=====================================================================
 \begin{frame}{Concurrent Specification}
-  \todo{create slide}
   % - Support for concurrent through persistency of queue predicate
-  % - Show specification
+  \begin{definition}[Concurrent Specification]\label{QueueSpecs:spec:conc}
+    \begin{align*}
+      &\Exists \isqueueconc : (\Val \to \Prop) \to \Val \to \ConcQgnames \to \Prop.\\
+      &\All \Psi : \Val \to \Prop.\\
+      &\quad\quad \All \vq, \Qg . \isqueueconc(\Psi, \vq, \Qg) \implies \persistently \isqueueconc(\Psi, \vq, \Qg)\\
+      &\land{}\quad\concspecinit{\Psi}\\
+      &\land{}\quad\concspecenq{\Psi}\\
+      &\land{}\quad\concspecdeq{\Psi}
+    \end{align*}
+  \end{definition}
+\end{frame}
+
+
+%=====================================================================
+\begin{frame}{HOCAP-style Specification - Abstract State RA}
+  \begin{itemize}
+    \item \todo{Introduce Auth and Frag predicates for tracking abstract state}
+    \item \todo{Show Resource Algebra}
+  \end{itemize}
+  \begin{block}{Lemmas on the Abstract State RA}
+    \begin{align*}
+      &\proves \pvs \Exists \gname . \abstractstateauth{\gname}{\absvalueList} \star{} \abstractstatefullfrag{\gname}{\absvalueList} & \text{(Abstract State Alloc)}\\[0.8ex]
+      &\abstractstateauth{\gname}{\absvalueList'} \star{}
+      \abstractstatefullfrag{\gname}{\absvalueList} \proves
+      \absvalueList = \absvalueList' & \text{(Abstract State Agree)}\\[0.8ex]
+      &\abstractstateauth{\gname}{\absvalueList'} \star{}
+      \abstractstatefullfrag{\gname}{\absvalueList} \vs
+      \abstractstateauth{\gname}{\absvalueList''} \star{}
+      \abstractstatefullfrag{\gname}{\absvalueList''} & \text{(Abstract State Update)}
+    \end{align*}
+  \end{block}
 \end{frame}
 
 %=====================================================================
 \begin{frame}{HOCAP-style Specification}
-  \todo{create slide}
-  % - Resource Algebra for Abstract State
-  % - Authoritative and Fragmental predicates for tracking abstract state
-  % - Specification
+  \begin{definition}[HOCAP Specification]\label{QueueSpecs:spec:hocap}
+    \begin{align*}
+      &\Exists \isqueue : \Val \to \Qgnames \to \Prop.\\
+      &\quad\quad \All \vq, \Qg . \isqueue(\vq, \Qg) \implies \persistently \isqueue(\vq, \Qg)\\
+      &\land{}\quad\hocapspecinit\\
+      &\land{}\quad\hocapspecenq\\
+      &\land{}\quad\hocapspecdeq
+    \end{align*}
+  \end{definition}
 \end{frame}
 
 %=====================================================================
-\begin{frame}{Queue Client}
-  \todo{create slide}
-  % - PoC client
-  % - Code
-  % - Specification
-  % - Idea: client is complex enough to require HOCAP
-  % + Uses concurrency, so Sequential is not strong enough
-  % + Importance of invocations to dequeue not returning None
-  % * Concurrent spec only tells us that queue either returns Some or None.
-  % * HOCAP allows us to track exact contents
-  % * Idea of proof: create invariant that captures possible states of queue contents
-  %   Show invariant
+\begin{frame}[containsverbatim]{Queue Client - A PoC Client}
+  \begin{itemize}
+    \item Idea: a minimal client complex enough to require HOCAP specification
+    \item Concurrent, so sequential specification insufficient
+    \item Relies on dequeues not returning $\None$, so concurrent specification insufficient
+    \item HOCAP specification supports consistency and allows us to track queue contents, allowing us to exclude cases where dequeue returns $\None$ 
+  \end{itemize}
+  \begin{minted}[linenos=true, escapeinside=||, mathescape=true, bgcolor=codebg, frame=lines]{ocaml}
+  |$\label{UNW:def}$|  |$ \unwrap \ w \eqdef \langkw{match}\spac w \spac\langkw{with}\spac \None \Ra \TT \ \TT \mid \Some v \Ra v \spac\langkw{end} $|
+  
+  |$\label{EDQ:def}$|  |$ \enqdeq \ \vq \ c \eqdef \enqueue \ \vq \ c; \unwrap (\dequeue \ \vq)$|
+  
+  |$\label{QAD:def}$|  |$ \queueAdd \ a \ b \eqdef $|
+  |$\label{QAD:que}$|    |$ \Let \vq = \initialise \ \TT in $|
+  |$\label{QAD:spw}$|    |$ \Let p = (\enqdeq \ \vq \ a) \parcomp (\enqdeq \ \vq \ b) in $|
+  |$\label{QAD:add}$|    |$ \Fst p + \Snd p $|
+  \end{minted}
+\end{frame}
+
+%=====================================================================
+\begin{frame}[containsverbatim]{Queue Client - A PoC Client (continued)}
+  
+  \begin{lemma}[QueueAdd Specification]\label{QueueSpecs:spec:queueadd}
+    \begin{equation*}
+      \All a, b \in \mathbb{Z} . \hoare{\TRUE}{\queueAdd \ a \ b}{v . v = a + b}
+    \end{equation*}
+  \end{lemma}
+
+  \begin{itemize}
+    \item Proof idea: Create invariant capturing possible states of queue contents
+    \item Tokens are used to reason about which state we are in
+  \end{itemize}
+  
+  \begin{definition}[Invariant for QueueAdd]\label{QueueSpecs:queueadd:invariant}
+    \begin{align*}
+      \QueueAddInvariant(\Qg, \QAg, a, b) \eqdef~
+      &\abstractstatefullfrag{\Qg.\gabst}{[]}~\star~\TokDoQAg~\star~\TokDtQAg~\lor\\
+      &\abstractstatefullfrag{\Qg.\gabst}{[a]}~\star~\TokAQAg~\star~(\TokDoQAg~\lor~\TokDtQAg)~\lor\\
+      &\abstractstatefullfrag{\Qg.\gabst}{[b]}~\star~\TokBQAg~\star~(\TokDoQAg~\lor~\TokDtQAg)~\lor\\
+      &\abstractstatefullfrag{\Qg.\gabst}{[a; b]}~\star~\TokAQAg~\star~\TokBQAg~\lor\\
+      &\abstractstatefullfrag{\Qg.\gabst}{[b; a]}~\star~\TokBQAg~\star~\TokAQAg~\lor
+    \end{align*}
+  \end{definition}
 \end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -747,9 +835,46 @@ Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms}
 \end{frame}
 
 %=====================================================================
-\begin{frame}{The Lock-and-CC-Free Michael-Scott Queue}
-  \todo{create slide}
-  % - Show code
+\begin{frame}[containsverbatim]{The Lock-and-CC-Free Michael-Scott Queue}
+  \todo{format}
+  \begin{figure}
+  \begin{minted}[escapeinside=||, mathescape=true, bgcolor=codebg, frame=lines, fontsize=\scriptsize]{ocaml}
+  |$\label{LFI:fun}$|  |$ \initialise \eqdef $|
+  |$\label{LFI:nod}$|    |$ \Let node = \Ref(\None, \Ref(\None)) in $|
+  |$\label{LFI:que}$|    |$ \Ref(\Ref(node), \Ref(node)) $|
+
+  |$\label{LFE:fun}$|  |$ \enqueue \ Q \ value \eqdef $|
+  |$\label{LFE:nod}$|    |$ \Let node = \Ref(\Some value, \Ref(\None)) in $|
+  |$\label{LFE:lop}$|    |$ (\Rec {loop} \_ = $|
+  |$\label{LFE:tal}$|      |$ \Let tail = \deref (\Snd (\deref Q)) in$|
+  |$\label{LFE:nex}$|      |$ \Let next = \deref (\Snd (\deref tail)) in $|
+  |$\label{LFE:nen}$|      |$ \If next = \None then $|
+  |$\label{LFE:add}$|        |$ \If \CAS \ (\Snd (\deref tail)) \ next \ node then $|
+  |$\label{LFE:sts}$|          |$ \CAS \ (\Snd (\deref Q)) \ tail \ node $|
+  |$\label{LFE:re1}$|        |$ \Else loop \ \TT $|
+  |$\label{LFE:stl}$|      |$ \Else \CAS \ (\Snd (\deref Q)) \ tail \ next; loop \ \TT $|
+  |$\label{LFE:app}$|    |$ ) \ \TT $|
+
+  |$\label{LFD:fun}$|  |$ \dequeue \ Q \eqdef $|
+  |$\label{LFD:lop}$|    |$ (\Rec {loop} \_ = $|
+  |$\label{LFD:hed}$|      |$ \Let head = \deref (\Fst (\deref Q)) in $|
+  |$\label{LFD:tal}$|      |$ \Let tail = \deref (\Snd (\deref Q)) in $|
+  |$\label{LFD:nex}$|      |$ \Let next = \deref (\Snd (\deref head)) in $|
+  |$\label{LFD:hte}$|      |$ \If head = tail then $|
+  |$\label{LFD:nen}$|        |$ \If next = \None then $|
+  |$\label{LFD:non}$|          |$ \None $|
+  |$\label{LFD:el1}$|        |$ \Else $|
+  |$\label{LFD:stl}$|          |$ \CAS (\Snd (\deref Q)) \ tail \ next; loop \ \TT $|
+  |$\label{LFD:el2}$|      |$ \Else $|
+  |$\label{LFD:vde}$|        |$ \Let value = \Fst (\deref next) in $|
+  |$\label{LFD:shs}$|        |$ \If \CAS \ (\Fst (\deref Q)) \ head \ next then $|
+  |$\label{LFD:val}$|          |$ value $|
+  |$\label{LFD:re1}$|        |$ \Else loop \ \TT $|
+  |$\label{LFD:app}$|      |$ ) \TT $|
+  \end{minted}
+  \caption{Implementation of the \lfmsq{} in \heaplang.}
+  \label{LFMSQ:implementation:code}
+  \end{figure}
 \end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -799,9 +924,13 @@ Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms}
 
 %=====================================================================
 \begin{frame}{Proof of $\initialise$ and \todo{$\enqueue$ xor $\dequeue$}}
-  \todo{create slide}
-  % - In Coq!
-  %   go over contents of file, but skip swing tail proof, and many of the results about reachability.
+  \begin{center}
+    {\fontsize{40}{60}\selectfont In Coq!}\\
+  \end{center}
+  \begin{center}
+    \includegraphics[width=0.15\textwidth]{coq-logo-large.png}
+  \end{center}
+  % go over contents of file, but skip swing tail proof, and many of the results about reachability.
 \end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
