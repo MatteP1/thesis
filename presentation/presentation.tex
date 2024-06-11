@@ -569,9 +569,33 @@ Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \begin{frame}{Overview of the Project and Contributions}
-  \todo{create slide}
-  % - Motivation
-  % - Take contributions from list in introduction
+  \begin{itemize}
+    \item Initial goal was to prove soundness of the two \msq{}s
+    \item The project later generalised the results to apply to queues in general
+    \item In particular, three different specifications for queues were given
+    \begin{itemize}
+      \item Sequential specification
+        \begin{itemize}
+          \item Useful for sequential clients
+        \end{itemize}
+      \item Concurrent specification
+        \begin{itemize}
+          \item Proves soundness of concurrent queues
+          \item Useful for some concurrent clients
+        \end{itemize}
+      \item HOCAP-style specification
+        \begin{itemize}
+          \item Stronger specification, useful for more complex clients
+          \item Demonstrated with a specific queue client ($\queueAdd$)
+        \end{itemize}
+    \end{itemize}
+    \item It was demonstrated that the HOCAP-style specification derives the other two specifications
+    \item Implementations of the \msq{}s in \heaplang{} were proven to meet the three specifications
+      \begin{itemize}
+        \item In particular, both version are sound
+      \end{itemize}
+    \item All proofs have been mechanised in the Coq proof assistant
+  \end{itemize}
 \end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -630,7 +654,13 @@ Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms}
 
 %=====================================================================
 \begin{frame}{Concurrent Specification}
-  % - Support for concurrent through persistency of queue predicate
+  \begin{itemize}
+    \item To support concurrent clients, we shall require the queue predicate be persistent
+    \item Tracking the contents of queue in the way that the sequential specification did doesn't work
+    \item Threads will start disagreeing on contents of queue, as they have only local view of contents
+    \item Give up on tracking contents for now
+    \item Instead, promise that all elements satisfy client-defined predicate, $\Psi$
+  \end{itemize}
   \begin{definition}[Concurrent Specification]\label{QueueSpecs:spec:conc}
     \begin{align*}
       &\Exists \isqueueconc : (\Val \to \Prop) \to \Val \to \ConcQgnames \to \Prop.\\
@@ -1446,26 +1476,55 @@ Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms}
 
 %=====================================================================
 \begin{frame}{Reachability}
-  \todo{create slide}
-  % - Motivate why we need the notion:
-  %   Captures important aspects of the queue that are essential for correctness
-  %   Specifically:
-  % + The linked list only ever grows (and at the end):
-  %   The set of nodes that a particular node can reach only grows
-  % + The head and tail are only moved forward in the linked list:
-  %   If a node can reach current head/tail, can reach any future head/tail.
-  % + The tail cannot lag behind the head
-  % - Introduce Concrete and Abstract reachability to capture these Points
-  % + Concrete reachability
-  % * essentially a proposition of points-to predicates capturing a section of the linked list (kinda like isLL)
-  % * Definition of Concrete reachability
-  % + Abstract reachability
-  % * Above talks about special ``types of nodes''
-  % * head, tail, last
-  % * Resource Algebra for Abstract Reachability
-  % * Definition of Abstract Points-to
-  % * Definition of Abstract Reachability
-  % * The four lemmas
+  \begin{itemize}
+    \item The queue relies on some important properties to function correctly:
+      \begin{itemize}
+        \item The set of nodes reachable from a particular node only grows
+        \item The head and tail are only moved forward in the linked list
+        \item The tail cannot lag behind the head (unlike in the two-lock version)
+      \end{itemize}
+    \item We capture all these properties with a notion of \textit{reachability}
+    \item Consists of a concrete and abstract version of reachability
+  \end{itemize}
+  \begin{block}{Concrete Reachability}
+    \begin{itemize}
+      \item Concrete reachability essentially captures a section of the linked list (á la $\isLL$)
+      \item The proposition $\reach{\nodeM{n}}{\nodeM{m}}$ asserts that $\nodeM{n}$ can reach $\nodeM{m}$ through the linked list
+      \item Defined inductively as follows
+    \begin{equation*}
+      \hspace{-2em}\reach{\nodeM{n}}{\nodeM{m}} \eqdef \isNode{\nodeM{n}} \star{} (\nodeM{n} = \nodeM{m} \lor{} \Exists \nodeM{p} . \nOut{\nodeM{n}} \mapsto^{\persistently} \nIn{\nodeM{p}} \star{} \reach{\nodeM{p}}{\nodeM{m}})
+    \end{equation*}
+      \item Concrete reachability is reflexive and transitive
+    \end{itemize}
+  \end{block}
+\end{frame}
+
+%=====================================================================
+\begin{frame}{Reachability (continued)}
+  \begin{block}{Abstract Reachability}
+    \begin{itemize}
+      \item Abstract reachability is concerned with tracking specific \textit{types} of nodes, such as the head node, the tail node, and the last node
+      \item Tracked using ghost names, e.g. $\ghead$, $\gtail$, and $\glast$
+        \begin{itemize}
+          \item Implemented using the resource algebra $\authm(\mathcal{P}(\Node))$
+        \end{itemize}
+      \item Defined in two parts: Abstract Points-to ($\ap{\gname}{\node}$) and Abstract Reach ($\ar{\node}{\gname}$)
+      \item For instance, $\ap{\gtail}{\nodeM{n}}$ means that the current tail node is $\nodeM{n}$
+      \item And $\ar{\nodeM{m}}{\gtail}$ means that node $\nodeM{m}$ can always reach the tail node
+    \end{itemize}
+  \end{block}
+
+  \begin{block}{Lemmas for Reachability (simplified)}
+    \begin{align*}
+      &\reach{\node}{\node} \vs \Exists \gname . \ap{\gname}{\node} & \text{(Abs Reach Alloc)}\\[0.8ex]
+      &\ar{\nodeM{n}}{\gname_m} \star{} \ap{\gname_m}{\nodeM{m}} \wand
+      \reach{\nodeM{n}}{\nodeM{m}} & \text{(Abs Reach Concr)}\\[0.8ex]
+      &\reach{\nodeM{n}}{\nodeM{m}} \star{} \ap{\gname_m}{\nodeM{m}} \vs
+      \ar{\nodeM{n}}{\gname_m} & \text{(Abs Reach Abs)}\\[0.8ex]
+      &\ap{\gname_m}{\nodeM{m}} \star{} \reach{\nodeM{m}}{\nodeM{o}} \vs
+      \ap{\gname_m}{\nodeM{o}} & \text{(Abs Reach Advance)}
+    \end{align*}
+  \end{block}
 \end{frame}
 
 %=====================================================================
