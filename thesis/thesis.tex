@@ -1970,7 +1970,7 @@ With this, we now give our definition of the queue predicate, $\isqueueconc$. In
   &\vq = \locqueue \star{} \locqueue \mapsto^{\persistently} ((\lochead, \loctail), (\Hlock, \Tlock)) \star{}\\
 	&\knowInv{\Nl.queue}{\TLQueueInvariantConc(\Psi, \lochead, \loctail, \Qg)} \star{}\\
 	&\isLock(\Qg.\ghlock, \Hlock, \TokDQg) \star{}\\
-	&\isLock(\Qg.\gtlock, \Tlock, \TokEQg).
+	&\isLock(\Qg.\gtlock, \Tlock, \TokEQg)
 \end{align*}
 \end{definition}
 
@@ -2147,9 +2147,9 @@ For the queue predicate, the only real difference is that we no longer take the 
     &\vq = \locqueue \star{} \locqueue \mapsto^{\persistently} ((\lochead, \loctail), (\Hlock, \Tlock)) \star{}\\
     &\knowInv{\Nl.queue}{\TLQueueInvariantHocap(\lochead, \loctail, \Qg)} \star{}\\
     &\isLock(\Qg.\ghlock, \Hlock, \TokDQg) \star{}\\
-    &\isLock(\Qg.\gtlock, \Tlock, \TokEQg).
+    &\isLock(\Qg.\gtlock, \Tlock, \TokEQg)
   \end{align*}
-  \end{definition}
+\end{definition}
 
 \subsection{Proof Sketch}
 \label{TLMSQSPECS:hocap:sub:proof-Sketch}

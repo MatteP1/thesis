@@ -204,6 +204,12 @@
   - [x] Create basic slides file in latex
   - [x] Create slide structure
   - [ ] Fill out slides
+  - [ ] Consistency and formatting
+    - [ ] Make all code blocks be same text size
+    - [ ] Remove space in front of code in code blocks
+    - [ ] Remove space around equations in blocks
+    - [ ] Get everything to fit on slides and in blocks
+  - [ ] Highlight important words with colours
   - [ ] Practice presentation
 
 - [ ] Read up on referenced literature
