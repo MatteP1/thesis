@@ -203,13 +203,18 @@
   - [x] Figure out slide structure
   - [x] Create basic slides file in latex
   - [x] Create slide structure
-  - [ ] Fill out slides
+  - [x] Fill out slides
   - [ ] Consistency and formatting
     - [ ] Make all code blocks be same text size
     - [ ] Remove space in front of code in code blocks
     - [ ] Remove space around equations in blocks
     - [ ] Get everything to fit on slides and in blocks
   - [ ] Highlight important words with colours
+  - [ ] Polish slides
   - [ ] Practice presentation
+  - [ ] Possible reductions to save time
+    - [ ] Only show example for isLL predicate (remove definitions of isLLchain and isLL)
+    - [ ] In-line observation about Two-Lock MSQ in implementations
+    - [ ] Move Queue client to end, and have as "optional extra content"
 
 - [ ] Read up on referenced literature

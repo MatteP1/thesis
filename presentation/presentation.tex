@@ -1441,19 +1441,40 @@ Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms}
 \end{frame}
 
 %=====================================================================
-\begin{frame}{Prophecies}
-  \todo{create slide}
-  % - consistency checks, linearisation points, and prophecies
-  % + need prophecy in proof of adherence to HOCAP
-  % + Linearisation point can depend on future computation
-  % + Reason for consistency checks: ABA problem in original
-  % + can remove consistency checks due to garbage collected language
+\begin{frame}[fragile]{Prophecies}
+  \begin{itemize}
+    \item Proving adherence to HOCAP-style specification requires applying the view-shift at some point (must update $P$ to $Q$)
+    \item View-shift is applied at \textit{Linearisation Points} -- points where the effect of the function takes place
+    \item When the queue is empty, the linearisation point is when reading $next$ (specifically, the dereference instruction)
+    \item We deduce that at exactly that read, the queue was empty
+    \item But we only conclude the queue is empty if consistency check on next line succeeds
+    \item The dereference is only the linearisation point if consistency check succeeds
+    \item Prophecies: reason about future computations (e.g. the consistency check)
+      \begin{itemize}
+        \item $\deref(\Fst (\deref Q))$ will evaluate to some $\prophval$ (later proof obligation)
+        \item Before reading $next$, reason about whether $head = \prophval$
+      \end{itemize}
+  \end{itemize}
+
+  \begin{minted}[escapeinside=||, mathescape=true, bgcolor=codebg, frame=lines, fontsize=\scriptsize]{ocaml}
+    |$ \dots $|
+    |$ \Let \prophid = \NewProph in $|
+    |$ \Let next = \deref (\Snd (\deref head)) in $|
+    |$ \If head = \langkw{Resolve} (\deref(\Fst (\deref Q)), \prophid, \TT) then $|
+      |$ \If head = tail then $|
+        |$ \If next = \None then $|
+          |$ \None $|
+    |$ \dots $|
+    |$ \Else loop \ \TT $|
+    |$ \dots $|
+  \end{minted}
 \end{frame}
 
 %=====================================================================
 \begin{frame}[fragile]{The Lock-and-CC-Free Michael-Scott Queue}
   \begin{itemize}
-    \item Consistency checks and associated loops gone
+    \item Reason for consistency checks: ABA problem in original implementation
+    \item \heaplang{} is garbage collected language, so we can remove consistency checks
     \item Can also remove prophecy in $\dequeue$
       \begin{itemize}
         \item When we read $next$, we know immediately whether $\dequeue$ will conclude empty queue
