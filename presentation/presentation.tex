@@ -677,8 +677,31 @@ Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms}
 %=====================================================================
 \begin{frame}{HOCAP-style Specification - Abstract State RA}
   \begin{itemize}
-    \item \todo{Introduce Auth and Frag predicates for tracking abstract state}
-    \item \todo{Show Resource Algebra}
+    \item We will need a construction to allow clients to track contents of queue
+    \item Idea: have two ``views'' of the abstract state of the queue
+    \begin{columns}
+      \begin{column}{0.5\textwidth}
+        \begin{center}
+          \textbf{Authoritative view}\\
+          $\abstractstateauth{\gname}{\absvalueList}$\\
+          Owned by queue\\
+        \end{center}
+      \end{column}
+      \begin{column}{0.5\textwidth}
+        \begin{center}
+          \textbf{Fragmental view}\\
+          $\abstractstatefullfrag{\gname}{\absvalueList}$\\
+          Owned by client\\
+        \end{center}
+      \end{column}
+    \end{columns}
+    \item Construction ensures:
+      \begin{itemize}
+        \item authoritative and fragmental views always agree on abstract state of queue
+        \item views can only be updated in unison
+      \end{itemize}
+    \item Implemented using the resource algebra: $\authm(\option{(\fracm \times \agm(\List ~ \Val))})$
+    \item The desirables are captured by the following lemmas
   \end{itemize}
   \begin{block}{Lemmas on the Abstract State RA}
     \begin{align*}
@@ -696,6 +719,16 @@ Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms}
 
 %=====================================================================
 \begin{frame}{HOCAP-style Specification}
+  \begin{itemize}
+    \item Post-condition of $\initialise$ specification now gives fragmental view to clients
+    \item Hoare triples for $\enqueue$ and $\dequeue$ are conditioned on view-shifts
+    \item Clients must show that they can supply the fragmental view, so that the abstract (and concrete) state can be updated
+    \item View-shifts and Hoare-triples parametrised by predicates $P$ and $Q$
+      \begin{itemize}
+        \item Client might have resources that need to be updated as a result of $\enqueue$/$\dequeue$
+        \item $P$ is the clients resources before $\enqueue$/$\dequeue$ and $Q$ the resources after
+      \end{itemize}
+  \end{itemize}
   \begin{definition}[HOCAP Specification]\label{QueueSpecs:spec:hocap}
     \begin{align*}
       &\Exists \isqueue : \Val \to \Qgnames \to \Prop.\\
