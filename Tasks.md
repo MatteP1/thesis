@@ -205,16 +205,19 @@
   - [x] Create slide structure
   - [x] Fill out slides
   - [ ] Consistency and formatting
-    - [ ] Make all code blocks be same text size
-    - [ ] Remove space in front of code in code blocks
+    - [x] Change size of code blocks
+    - [x] Remove space in front of code in code blocks
     - [ ] Remove space around equations in blocks
     - [ ] Get everything to fit on slides and in blocks
   - [ ] Highlight important words with colours
   - [ ] Polish slides
+    - [ ] Add pauses
+    - [ ] fix mistakes
+    - [ ] formatting
   - [ ] Practice presentation
   - [ ] Possible reductions to save time
     - [ ] Only show example for isLL predicate (remove definitions of isLLchain and isLL)
-    - [ ] In-line observation about Two-Lock MSQ in implementations
+    - [x] In-line observation about Two-Lock MSQ in implementations
     - [ ] Move Queue client to end, and have as "optional extra content"
 
 - [ ] Read up on referenced literature

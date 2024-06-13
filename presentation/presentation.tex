@@ -749,14 +749,14 @@ Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms}
     \item HOCAP specification supports consistency and allows us to track queue contents, allowing us to exclude cases where dequeue returns $\None$ 
   \end{itemize}
   \begin{minted}[escapeinside=||, mathescape=true, bgcolor=codebg, frame=lines]{ocaml}
-  |$\label{UNW:def}$|  |$ \unwrap \ w \eqdef \langkw{match}\spac w \spac\langkw{with}\spac \None \Ra \TT \ \TT \mid \Some v \Ra v \spac\langkw{end} $|
+|$ \unwrap \ w \eqdef \langkw{match}\spac w \spac\langkw{with}\spac \None \Ra \TT \ \TT \mid \Some v \Ra v \spac\langkw{end} $|
   
-  |$\label{EDQ:def}$|  |$ \enqdeq \ \vq \ c \eqdef \enqueue \ \vq \ c; \unwrap (\dequeue \ \vq)$|
+|$ \enqdeq \ \vq \ c \eqdef \enqueue \ \vq \ c; \unwrap (\dequeue \ \vq)$|
   
-  |$\label{QAD:def}$|  |$ \queueAdd \ a \ b \eqdef $|
-  |$\label{QAD:que}$|    |$ \Let \vq = \initialise \ \TT in $|
-  |$\label{QAD:spw}$|    |$ \Let p = (\enqdeq \ \vq \ a) \parcomp (\enqdeq \ \vq \ b) in $|
-  |$\label{QAD:add}$|    |$ \Fst p + \Snd p $|
+|$ \queueAdd \ a \ b \eqdef $|
+  |$ \Let \vq = \initialise \ \TT in $|
+  |$ \Let p = (\enqdeq \ \vq \ a) \parcomp (\enqdeq \ \vq \ b) in $|
+  |$ \Fst p + \Snd p $|
   \end{minted}
 \end{frame}
 
@@ -792,26 +792,27 @@ Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms}
 
 %=====================================================================
 \begin{frame}[fragile]{Implementation: $\initialise$}
-  \todo{format}
   \begin{itemize}
-    \item The data structure is a linked list
-    \item A node $\node$ in the linked list is a triple, $\node = (\locin, \nodeval, \locout)$, with $\locin$ pointing to $(\nodeval, \locout)$
+    \item The queue data structure is a linked list
+    \item A node $\node$ in the linked list is a triple, $\node = (\locin, \nodeval, \locout)$ with $\locin \mapsto (\nodeval, \locout)$
     \item We use the following notation for nodes
     \begin{align*}
       &\nIn{\node} = \locin& &\nVal{\node} = \nodeval& &\nOut{\node} = \locout
     \end{align*}
     \item The $\initialise$ function first creates an initial head node, $\nodehead$
-    \item Then a lock protecting the head pointer, and a lock protecting the tail pointer
+    \item Then, a lock protecting the head pointer, and a lock protecting the tail pointer
     \item Finally, it creates the head and tail pointers, $\lochead$ and $\loctail$, both pointing to $\nodehead$
   \end{itemize}
-  \begin{minted}[escapeinside=||, mathescape=true, bgcolor=codebg, frame=lines]{ocaml}
-    |$\label{TLI:fun}$|  |$ \initialise \eqdef $|
-    |$\label{TLI:nod}$|    |$ \Let node = \Ref(\None, \Ref(\None)) in $|
-    |$\label{TLI:hlo}$|    |$ \Let \Hlockvar = \newLock \TT in $|
-    |$\label{TLI:tlo}$|    |$ \Let \Tlockvar = \newLock \TT in $|
-    |$\label{TLI:que}$|    |$ \Ref((\Ref(node), \Ref(node)), (\Hlockvar, \Tlockvar)) $|
+  \vspace{-8pt}
+  \begin{minted}[escapeinside=||, mathescape=true, bgcolor=codebg, frame=lines, fontsize=\footnotesize]{ocaml}
+|$ \initialise \eqdef $|
+  |$ \Let node = \Ref(\None, \Ref(\None)) in $|
+  |$ \Let \Hlockvar = \newLock \TT in $|
+  |$ \Let \Tlockvar = \newLock \TT in $|
+  |$ \Ref((\Ref(node), \Ref(node)), (\Hlockvar, \Tlockvar)) $|
   \end{minted}
   \begin{center}
+  \vspace{-6pt}
   \scalebox{0.8}{
   \begin{tikzpicture}[
     pair/.style = {
@@ -870,16 +871,21 @@ Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms}
       \item Swing tail pointer to $\nodenew$
       \item Release the tail lock
     \end{enumerate}
+    \item Once a node is enqueued, its position in the linked list is fixed
+    \item Adding and swinging not atomic $\rightarrow$ Tail node is either last or second last
+    \item $\dequeue$ ignores tail pointer $\rightarrow$ Tail node can lag behind head node
   \end{itemize}
-  \begin{minted}[escapeinside=||, mathescape=true, bgcolor=codebg, frame=lines]{ocaml}
-    |$\label{TLE:fun}$|  |$ \enqueue \ Q \ value \eqdef $|
-    |$\label{TLE:nod}$|    |$ \Let node = \Ref(\Some value, \Ref(\None)) in $|
-    |$\label{TLE:acq}$|    |$ \acquire (\Snd (\Snd (\deref Q))); $|
-    |$\label{TLE:add}$|    |$ \Snd (\deref(\deref(\Snd (\Fst(\deref Q))))) \gets node; $|
-    |$\label{TLE:sts}$|    |$ \Snd (\Fst (\deref Q)) \gets node; $|
-    |$\label{TLE:rel}$|    |$ \release (\Snd (\Snd (\deref Q))) $|
+  \vspace{-8pt}
+  \begin{minted}[escapeinside=||, mathescape=true, bgcolor=codebg, frame=lines, fontsize=\footnotesize]{ocaml}
+|$ \enqueue \ Q \ value \eqdef $|
+  |$ \Let node = \Ref(\Some value, \Ref(\None)) in $|
+  |$ \acquire (\Snd (\Snd (\deref Q))); $|
+  |$ \Snd (\deref(\deref(\Snd (\Fst(\deref Q))))) \gets node; $|
+  |$ \Snd (\Fst (\deref Q)) \gets node; $|
+  |$ \release (\Snd (\Snd (\deref Q))) $|
   \end{minted}
   \begin{center}
+  \vspace{-6pt}
   \scalebox{0.8}{
   \begin{tikzpicture}[
     pair/.style = {
@@ -948,29 +954,31 @@ Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms}
 
 %=====================================================================
 \begin{frame}[fragile]{Implementation: $\dequeue$}
-  \todo{format}
   \begin{itemize}
     \item The $\dequeue$ function checks if queue is empty
       \begin{itemize}
         \item If empty, return $None$
         \item Else, swing head pointer to new head, and return dequeued value
       \end{itemize}
+    \item Dequeued node not freed $\rightarrow$ linked list only grows
   \end{itemize}
-  \begin{minted}[escapeinside=||, mathescape=true, bgcolor=codebg, frame=lines]{ocaml}
-    |$\label{TLD:fun}$|  |$ \dequeue \ Q \eqdef $|
-    |$\label{TLD:acq}$|    |$ \acquire (\Fst (\Snd (\deref Q))); $|
-    |$\label{TLD:nod}$|    |$ \Let node = \deref (\Fst (\Fst (\deref Q))) in $|
-    |$\label{TLD:new}$|    |$ \Let new\_head = \deref (\Snd(\deref node)) in $|
-    |$\label{TLD:ifn}$|    |$ \If new\_head = \None then $|
-    |$\label{TLD:re1}$|      |$ \release (\Fst (\Snd(\deref Q))); $|
-    |$\label{TLD:non}$|      |$ \None $|
-    |$\label{TLD:els}$|    |$ \Else $|
-    |$\label{TLD:vde}$|      |$ \Let value = \Fst (\deref new\_head) in $|
-    |$\label{TLD:shs}$|      |$ \Fst (\Fst (\deref Q)) \gets new\_head; $|
-    |$\label{TLD:re2}$|      |$ \release (\Fst (\Snd (\deref Q))); $|
-    |$\label{TLD:val}$|      |$ value $|
+  \vspace{-8pt}
+  \begin{minted}[escapeinside=||, mathescape=true, bgcolor=codebg, frame=lines, fontsize=\footnotesize]{ocaml}
+|$ \dequeue \ Q \eqdef $|
+  |$ \acquire (\Fst (\Snd (\deref Q))); $|
+  |$ \Let node = \deref (\Fst (\Fst (\deref Q))) in $|
+  |$ \Let new\_head = \deref (\Snd(\deref node)) in $|
+  |$ \If new\_head = \None then $|
+    |$ \release (\Fst (\Snd(\deref Q))); $|
+    |$ \None $|
+  |$ \Else $|
+    |$ \Let value = \Fst (\deref new\_head) in $|
+    |$ \Fst (\Fst (\deref Q)) \gets new\_head; $|
+    |$ \release (\Fst (\Snd (\deref Q))); $|
+    |$ value $|
   \end{minted}
   \begin{center}
+  \vspace{-6pt}
   \scalebox{0.8}{
   \begin{tikzpicture}[
     pair/.style = {
@@ -1021,24 +1029,6 @@ Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms}
   \end{tikzpicture}
   }
   \end{center}
-\end{frame}
-
-%=====================================================================
-\begin{frame}{Observations on Behaviour of the \tlmsq}
-  \todo{format and simplify}
-  \begin{enumerate}
-    \item\label{TLMSQ:insights:tail} The tail node is always either the last or second last node in the linked list.
-    \item\label{TLMSQ:insights:persistent} All but the last pointer in the linked list (the pointer to $\None$) never change.
-    \item\label{TLMSQ:insights:oldnodes} Nodes in the linked list are never deleted. Hence, the linked list only ever grows.
-    \item\label{TLMSQ:insights:lag} The tail can lag one node behind the head.
-    \item\label{TLMSQ:insights:states} At any given time, the queue is in one of four states:
-      \begin{enumerate}
-        \item\label{TLMSQ:insights:state:static} No threads are interacting with the queue (\StaticState).
-        \item\label{TLMSQ:insights:state:enqueue} A thread is enqueueing (\EnqueueState).
-        \item\label{TLMSQ:insights:state:dequeue} A thread is dequeueing (\DequeueState).
-        \item\label{TLMSQ:insights:state:both} A thread is enqueueing and a thread is dequeueing (\BothState).
-      \end{enumerate}
-  \end{enumerate}
 \end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1121,36 +1111,55 @@ Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms}
 
 %=====================================================================
 \begin{frame}{Invariant}
-  \todo{format slide}
   \begin{itemize}
     \item Queue predicate must be persistent (according to specification)
     \item The queue relies on non-persistent resources (e.g. $\lochead \mapsto \locin$)
-    \item Solution: identify a \textit{queue invariant}, describing the resources
-    \item Invariants are persistent in Iris
+    \item Solution: identify an \textit{invariant} (persistent), describing the resources
+    \begin{itemize}
+      \item Contains abstract state of queue -- existentially quantified as it can change
+      \item Defines structure of the concrete linked list, $xsc$
+      \item Asserts relation between abstract state and concrete state
+      \item Identifies four possible queue states -- see next slide
+    \end{itemize}
   \end{itemize}
   \begin{definition}[\tlmsq{} HOCAP Invariant]\label{TLMSQ:spec:hocap:invariant}
     \begin{align*}
-      &\TLQueueInvariantHocap(\lochead, \loctail, \Qg) \eqdef\\
+      \TLQueueInvariantHocap(\lochead, \loctail, \Qg) \ \eqdef \
       &\Exists \absvalueList. \abstractstateauth{\Qg.\gabst}{\absvalueList} \star{}\\
       &\Exists \xsc, \xsqueue, \xsold, \nodehead, \nodetail .\\
       &\xsc = \xsqueue \catenate [\nodehead] \catenate \xsold \star{}\\
       &\isLL(\xsc) \star{}\\
       &\projval(\xsqueue) = \wrapsome(\absvalueList) \star{}\\
-      &(\\
-      &\quad\quad\lochead \mapsto \nIn{\nodehead} \star{} \loctail \mapsto \nIn{\nodetail} \star{} \isLast(\nodetail, \xsc) \star{} &&\text{(\StaticState)}\\
-      &\quad\quad \TokNEQg \star{} \TokNDQg \star{} \TokUpdatedQg\\
-      &\quad\lor{}\\
-      &\quad\quad\lochead \mapsto \nIn{\nodehead} \star{} \loctail \mapsto^{\frac{1}{2}} \nIn{\nodetail} \star{} &&\text{(\EnqueueState)}\\
-      &\quad\quad (\isLast(\nodetail, \xsc) \star{} \TokBeforeQg \lor{} \isSndLast(\nodetail, \xsc) \star{} \TokAfterQg) \star{}\\
-      &\quad\quad \TokEQg \star{} \TokNDQg\\
-      &\quad\lor{}\\
-      &\quad\quad\lochead \mapsto^{\frac{1}{2}} \nIn{\nodehead} \star{} \loctail \mapsto \nIn{\nodetail} \star{} \isLast(\nodetail, \xsc) \star{} &&\text{(\DequeueState)}\\
-      &\quad\quad \TokNEQg \star{} \TokDQg \star{} \TokUpdatedQg\\
-      &\quad\lor{}\\
-      &\quad\quad\lochead \mapsto^{\frac{1}{2}} \nIn{\nodehead} \star{} \loctail \mapsto^{\frac{1}{2}} \nIn{\nodetail} \star{} &&\text{(\BothState)}\\
-      &\quad\quad (\isLast(\nodetail, \xsc) \star{} \TokBeforeQg \lor{} \isSndLast(\nodetail, \xsc) \star{} \TokAfterQg) \star{} \\
-      &\quad\quad \TokEQg \star{} \TokDQg\\
-      &)
+      &\dots
+    \end{align*}
+  \end{definition}
+\end{frame}
+
+%=====================================================================
+\begin{frame}{Invariant (Queue States)}
+  \begin{itemize}
+    \item Two locks $\rightarrow$ four queue states: \StaticState, \EnqueueState, \DequeueState, and \BothState
+    \item Idea: the enqueueing thread keeps half of tail pointer between invariant openings
+    \item Guarantees that the pointer is not updated (full pointer needed for update)
+    \item Similarly for the dequeueing thread
+    \item $\EnqueueState$ and $\BothState$ also captures ``gap'' between adding $\nodenew$ and swinging $\loctail$
+    \item Tokens used to reason about which state queue is in
+  \end{itemize}
+  \vspace{-6pt}
+  \begin{definition}[\tlmsq{} HOCAP Invariant -- continued]
+    \fontsize{6pt}{0pt}\selectfont
+    \begin{align*}
+      \dots\\
+      &\quad\lochead \mapsto \nIn{\nodehead} \star{} \loctail \mapsto \nIn{\nodetail} \star{} \isLast(\nodetail, \xsc) \star{} &&\text{\textcolor{gray}{(\StaticState)}}\\
+      &\quad \TokNEQg \star{} \TokNDQg \star{} \TokUpdatedQg\\
+      \lor{} &\quad\lochead \mapsto \nIn{\nodehead} \star{} \loctail \mapsto^{\frac{1}{2}} \nIn{\nodetail} \star{} &&\text{\textcolor{gray}{(\EnqueueState)}}\\
+      &\quad (\isLast(\nodetail, \xsc) \star{} \TokBeforeQg \lor{} \isSndLast(\nodetail, \xsc) \star{} \TokAfterQg) \star{}\\
+      &\quad \TokEQg \star{} \TokNDQg\\
+      \lor{} &\quad\lochead \mapsto^{\frac{1}{2}} \nIn{\nodehead} \star{} \loctail \mapsto \nIn{\nodetail} \star{} \isLast(\nodetail, \xsc) \star{} &&\text{\textcolor{gray}{(\DequeueState)}}\\
+      &\quad \TokNEQg \star{} \TokDQg \star{} \TokUpdatedQg\\
+      \lor{} &\quad\lochead \mapsto^{\frac{1}{2}} \nIn{\nodehead} \star{} \loctail \mapsto^{\frac{1}{2}} \nIn{\nodetail} \star{} &&\text{\textcolor{gray}{(\BothState)}}\\
+      &\quad (\isLast(\nodetail, \xsc) \star{} \TokBeforeQg \lor{} \isSndLast(\nodetail, \xsc) \star{} \TokAfterQg) \star{} \\
+      &\quad \TokEQg \star{} \TokDQg
     \end{align*}
   \end{definition}
 \end{frame}
@@ -1181,26 +1190,30 @@ Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms}
 \end{frame}
 
 %=====================================================================
-\begin{frame}[fragile]{Proof Sketch of the Hoare triple for $\enqueue$}
-  \todo{format}
-  Must prove:
-  \begin{equation*}
-    \hocapspecenq
-  \end{equation*}
-  Assume the view-shift, and the persistent information in $\isqueue(\vq, \Qgnames)$: $\vq = \locqueue \star{} \locqueue \mapsto^{\persistently} ((\lochead, \loctail), (\Hlock, \Tlock))$, the invariant $\knowInv{\Nl.queue}{\TLQueueInvariantHocap(\lochead, \loctail, \Qg)}$, and $\isLock(\Qg.\gtlock, \Tlock, \TokEQg)$
-  \begin{minted}[escapeinside=||, mathescape=true, bgcolor=codebg, frame=lines, fontsize=\scriptsize]{ocaml}
+\begin{frame}[fragile]{Proof Sketch of the Hoare Triple for $\enqueue$}
+  $\hocapspecenq$
+  \pause
+  \noindent (Proof) \rule{0.9\textwidth}{2pt}\\
+  Assume the view-shift, and the persistent information in $\isqueue(\vq, \Qgnames)$:
+  \begin{itemize}
+    \item $\vq = \locqueue \star{} \locqueue \mapsto^{\persistently} ((\lochead, \loctail), (\Hlock, \Tlock))$
+    \item $\knowInv{\Nl.queue}{\TLQueueInvariantHocap(\lochead, \loctail, \Qg)}$
+    \item $\isLock(\Qg.\gtlock, \Tlock, \TokEQg)$
+  \end{itemize}
+  \pause
+  \begin{minted}[escapeinside=||, mathescape=true, bgcolor=codebg, frame=lines, fontsize=\scriptsize, baselinestretch=1.3]{ocaml}
 |$ \color{purple} \{ P \} $|
   |$ \Let node = \Ref(\Some \absvalue, \Ref(\None)) in \quad \textcolor{lightgray}{\text{(create node $\nodenew$)}} $|
 |$ \color{purple} \{ P \star{} \nOut{\nodenew} \mapsto \None \} $|
-  |$ \acquire (\Snd (\Snd (\deref \vq))); \quad \textcolor{lightgray}{\text{(acquire tail lock)}} $|
+  |$ \pause \acquire (\Snd (\Snd (\deref \vq))); \quad \textcolor{lightgray}{\text{(acquire tail lock)}} $|
 |$ \color{purple} \{ P \star{} \nOut{\nodenew} \mapsto \None \star{} \TokEQg \} $|
-  |$ \expr_{t} = \deref(\Snd (\Fst(\deref \vq))) \quad \textcolor{lightgray}{\text{(find current tail, $\nodetail$. $\TLQueueInvariantHocap$: \StaticState{}/\DequeueState{} $\rightarrow$ \EnqueueState{}/\BothState{} (before))}} $|
+  |$ \pause \expr_{t} = \deref(\Snd (\Fst(\deref \vq))) \quad \textcolor{lightgray}{\text{(find current tail, $\nodetail$. $\TLQueueInvariantHocap$: \StaticState{}/\DequeueState{} $\rightarrow$ \EnqueueState{}/\BothState{} (before))}} $|
 |$ \color{purple} \{ P \star{} \nOut{\nodenew} \mapsto \None \star{} \loctail \mapsto^{\frac{1}{2}} \nIn{\nodetail} \star{} \TokNEQg \star{} \TokAfterQg \} $|
-  |$ \Snd (\deref(\expr_{t})) \gets node; \quad \textcolor{lightgray}{\text{(make $\nodetail$ point to $\nodenew$. $\TLQueueInvariantHocap$: \EnqueueState{}/\BothState{} (before) $\rightarrow$ \EnqueueState{}/\BothState{} (after))}} $|
+  |$ \pause \Snd (\deref(\expr_{t})) \gets node; \quad \textcolor{lightgray}{\text{(make $\nodetail$ point to $\nodenew$. $\TLQueueInvariantHocap$: \EnqueueState{}/\BothState{} (before) $\rightarrow$ \EnqueueState{}/\BothState{} (after))}} $|
 |$ \color{purple} \{ Q \star{} \loctail \mapsto^{\frac{1}{2}} \nIn{\nodetail} \star{} \TokNEQg \star{} \TokBeforeQg \} $|
-  |$ \Snd (\Fst (\deref \vq)) \gets node; \quad \textcolor{lightgray}{\text{(swing tail pointer to $\nodenew$. $\TLQueueInvariantHocap$: \EnqueueState{}/\BothState{} (after) $\rightarrow$ \StaticState{}/\DequeueState{})}} $|
+  |$ \pause \Snd (\Fst (\deref \vq)) \gets node; \quad \textcolor{lightgray}{\text{(swing tail pointer to $\nodenew$. $\TLQueueInvariantHocap$: \EnqueueState{}/\BothState{} (after) $\rightarrow$ \StaticState{}/\DequeueState{})}} $|
 |$ \color{purple} \{ Q \star{} \TokEQg \} $|
-  |$ \release (\Snd (\Snd (\deref \vq))) \quad \textcolor{lightgray}{\text{(release tail lock)}}$|
+  |$ \pause \release (\Snd (\Snd (\deref \vq))) \quad \textcolor{lightgray}{\text{(release tail lock)}}$|
 |$ \color{purple} \{ Q \} $|
   \end{minted}
 \end{frame}
@@ -1214,13 +1227,13 @@ Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms}
   \begin{itemize}
     \item Queue data structure is still a linked list
     \item The lock-free versions of $\initialise$, $\enqueue$, and $\dequeue$ perform the same manipulations of the linked list as two-lock versions
-    \item Difference is how the manipulations take place: $\CAS$
+    \item Difference is how the manipulations take place -- now with $\CAS$ instructions
     \item No longer need locks
   \end{itemize}
   \begin{minted}[escapeinside=||, mathescape=true, bgcolor=codebg, frame=lines]{ocaml}
-    |$\label{LFI:fun}$|  |$ \initialise \eqdef $|
-    |$\label{LFI:nod}$|    |$ \Let node = \Ref(\None, \Ref(\None)) in $|
-    |$\label{LFI:que}$|    |$ \Ref(\Ref(node), \Ref(node)) $|
+|$ \initialise \eqdef $|
+  |$ \Let node = \Ref(\None, \Ref(\None)) in $|
+  |$ \Ref(\Ref(node), \Ref(node)) $|
   \end{minted}
   \begin{center}
     \scalebox{0.8}{
@@ -1277,22 +1290,24 @@ Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms}
     \item Ensures that no other thread has performed an enqueue while we have been working
     \item Swinging tail to $\nodenew$ might fail: another thread has helped us
   \end{itemize}
-  \begin{minted}[escapeinside=||, mathescape=true, bgcolor=codebg, frame=lines, fontsize=\scriptsize]{ocaml}
-    |$\label{LFE:fun}$|  |$ \enqueue \ Q \ value \eqdef $|
-    |$\label{LFE:nod}$|    |$ \Let node = \Ref(\Some value, \Ref(\None)) in $|
-    |$\label{LFE:lop}$|    |$ (\Rec {loop} \_ = $|
-    |$\label{LFE:tal}$|      |$ \Let tail = \deref (\Snd (\deref Q)) in$|
-    |$\label{LFE:nex}$|      |$ \Let next = \deref (\Snd (\deref tail)) in $|
-    |$\label{LFE:cct}$|      |$ \If tail = \deref (\Snd (\deref Q)) then $|
-    |$\label{LFE:nen}$|        |$ \If next = \None then $|
-    |$\label{LFE:add}$|          |$ \If \CAS \ (\Snd (\deref tail)) \ next \ node then $|
-    |$\label{LFE:sts}$|            |$ \CAS \ (\Snd (\deref Q)) \ tail \ node $|
-    |$\label{LFE:re1}$|          |$ \Else loop \ \TT $|
-    |$\label{LFE:stl}$|        |$ \Else \CAS \ (\Snd (\deref Q)) \ tail \ next; loop \ \TT $|
-    |$\label{LFE:re2}$|      |$ \Else loop \ \TT $|
-    |$\label{LFE:app}$|    |$ ) \ \TT $|
+  \vspace{-8pt}
+  \begin{minted}[escapeinside=||, mathescape=true, bgcolor=codebg, frame=lines, fontsize=\footnotesize]{ocaml}
+|$ \enqueue \ Q \ value \eqdef $|
+  |$ \Let node = \Ref(\Some value, \Ref(\None)) in $|
+  |$ (\Rec {loop} \_ = $|
+    |$ \Let tail = \deref (\Snd (\deref Q)) in$|
+    |$ \Let next = \deref (\Snd (\deref tail)) in $|
+    |$ \If tail = \deref (\Snd (\deref Q)) then $|
+      |$ \If next = \None then $|
+        |$ \If \CAS \ (\Snd (\deref tail)) \ next \ node then $|
+          |$ \CAS \ (\Snd (\deref Q)) \ tail \ node $|
+        |$ \Else loop \ \TT $|
+      |$ \Else \CAS \ (\Snd (\deref Q)) \ tail \ next; loop \ \TT $|
+    |$ \Else loop \ \TT $|
+  |$ ) \ \TT $|
   \end{minted}
   \begin{center}
+    \vspace{-4pt}
     \scalebox{0.8}{
     \begin{tikzpicture}[
       pair/.style = {
@@ -1362,32 +1377,33 @@ Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms}
 %=====================================================================
 \begin{frame}[fragile]{Implementation: $\dequeue$}
   \begin{itemize}
-    \item Head now swung with $\CAS$
+    \item Head now swung with $\CAS$ instruction
     \item Ensures that another thread hasn't dequeued the element we are trying to dequeue
   \end{itemize}
+  \vspace{-8pt}
   \begin{minted}[escapeinside=||, mathescape=true, bgcolor=codebg, frame=lines, fontsize=\scriptsize]{ocaml}
-    |$\label{LFD:fun}$|  |$ \dequeue \ Q \eqdef $|
-    |$\label{LFD:lop}$|    |$ (\Rec {loop} \_ = $|
-    |$\label{LFD:hed}$|      |$ \Let head = \deref (\Fst (\deref Q)) in $|
-    |$\label{LFD:tal}$|      |$ \Let tail = \deref (\Snd (\deref Q)) in $|
-    |$\label{LFD:pro}$|      |$ \Let \prophid = \NewProph in $|
-    |$\label{LFD:nex}$|      |$ \Let next = \deref (\Snd (\deref head)) in $|
-    |$\label{LFD:cch}$|      |$ \If head = \langkw{Resolve} (\deref(\Fst (\deref Q)), \prophid, \TT) then $|
-    |$\label{LFD:hte}$|        |$ \If head = tail then $|
-    |$\label{LFD:nen}$|          |$ \If next = \None then $|
-    |$\label{LFD:non}$|            |$ \None $|
-    |$\label{LFD:el1}$|          |$ \Else $|
-    |$\label{LFD:stl}$|            |$ \CAS (\Snd (\deref Q)) \ tail \ next; loop \ \TT $|
-    |$\label{LFD:el2}$|        |$ \Else $|
-    |$\label{LFD:vde}$|          |$ \Let value = \Fst (\deref next) in $|
-    |$\label{LFD:shs}$|          |$ \If \CAS \ (\Fst (\deref Q)) \ head \ next then $|
-    |$\label{LFD:val}$|            |$ value $|
-    |$\label{LFD:re1}$|          |$ \Else loop \ \TT $|
-    |$\label{LFD:re2}$|      |$ \Else loop \ \TT $|
-    |$\label{LFD:app}$|      |$ ) \TT $|
+|$ \dequeue \ Q \eqdef $|
+  |$ (\Rec {loop} \_ = $|
+    |$ \Let head = \deref (\Fst (\deref Q)) in $|
+    |$ \Let tail = \deref (\Snd (\deref Q)) in $|
+    |$ \Let \prophid = \NewProph in $|
+    |$ \Let next = \deref (\Snd (\deref head)) in $|
+    |$ \If head = \langkw{Resolve} (\deref(\Fst (\deref Q)), \prophid, \TT) then $|
+      |$ \If head = tail then $|
+        |$ \If next = \None then $|
+          |$ \None $|
+        |$ \Else $|
+          |$ \CAS (\Snd (\deref Q)) \ tail \ next; loop \ \TT $|
+      |$ \Else $|
+        |$ \Let value = \Fst (\deref next) in $|
+        |$ \If \CAS \ (\Fst (\deref Q)) \ head \ next then $|
+          |$ value $|
+        |$ \Else loop \ \TT $|
+    |$ \Else loop \ \TT $|
+    |$ ) \TT $|
   \end{minted}
-  \vspace{-2em}
   \begin{center}
+    \vspace{-6pt}
     \scalebox{0.8}{
     \begin{tikzpicture}[
       pair/.style = {
@@ -1455,7 +1471,7 @@ Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms}
         \item Before reading $next$, reason about whether $head = \prophval$
       \end{itemize}
   \end{itemize}
-
+  \vspace{-8pt}
   \begin{minted}[escapeinside=||, mathescape=true, bgcolor=codebg, frame=lines, fontsize=\scriptsize]{ocaml}
     |$ \dots $|
     |$ \Let \prophid = \NewProph in $|
@@ -1483,42 +1499,42 @@ Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms}
   \end{itemize}
   \begin{columns}
     \begin{column}{0.5\textwidth}
-  \begin{minted}[escapeinside=||, mathescape=true, bgcolor=codebg, frame=lines, fontsize=\scriptsize]{ocaml}
-  |$\label{CFI:fun}$|  |$ \initialise \eqdef $|
-  |$\label{CFI:nod}$|    |$ \Let node = \Ref(\None, \Ref(\None)) in $|
-  |$\label{CFI:que}$|    |$ \Ref(\Ref(node), \Ref(node)) $|
+      \begin{minted}[escapeinside=||, mathescape=true, bgcolor=codebg, frame=lines, fontsize=\footnotesize]{ocaml}
+|$ \initialise \eqdef $|
+  |$ \Let node = \Ref(\None, \Ref(\None)) in $|
+  |$ \Ref(\Ref(node), \Ref(node)) $|
 
-  |$\label{CFE:fun}$|  |$ \enqueue \ Q \ value \eqdef $|
-  |$\label{CFE:nod}$|    |$ \Let node = \Ref(\Some value, \Ref(\None)) in $|
-  |$\label{CFE:lop}$|    |$ (\Rec {loop} \_ = $|
-  |$\label{CFE:tal}$|      |$ \Let tail = \deref (\Snd (\deref Q)) in$|
-  |$\label{CFE:nex}$|      |$ \Let next = \deref (\Snd (\deref tail)) in $|
-  |$\label{CFE:nen}$|      |$ \If next = \None then $|
-  |$\label{CFE:add}$|        |$ \If \CAS \ (\Snd (\deref tail)) \ next \ node then $|
-  |$\label{CFE:sts}$|          |$ \CAS \ (\Snd (\deref Q)) \ tail \ node $|
-  |$\label{CFE:re1}$|        |$ \Else loop \ \TT $|
-  |$\label{CFE:stl}$|      |$ \Else \CAS \ (\Snd (\deref Q)) \ tail \ next; loop \ \TT $|
-  |$\label{CFE:app}$|    |$ ) \ \TT $|
-  \end{minted}
+|$ \enqueue \ Q \ value \eqdef $|
+  |$ \Let node = \Ref(\Some value, \Ref(\None)) in $|
+  |$ (\Rec {loop} \_ = $|
+    |$ \Let tail = \deref (\Snd (\deref Q)) in$|
+    |$ \Let next = \deref (\Snd (\deref tail)) in $|
+    |$ \If next = \None then $|
+      |$ \If \CAS \ (\Snd (\deref tail)) \ next \ node then $|
+        |$ \CAS \ (\Snd (\deref Q)) \ tail \ node $|
+      |$ \Else loop \ \TT $|
+    |$ \Else \CAS \ (\Snd (\deref Q)) \ tail \ next; loop \ \TT $|
+  |$ ) \ \TT $|
+      \end{minted}
     \end{column}
     \begin{column}{0.5\textwidth}
-      \begin{minted}[escapeinside=||, mathescape=true, bgcolor=codebg, frame=lines, fontsize=\scriptsize]{ocaml}
-        |$\label{CFD:fun}$|  |$ \dequeue \ Q \eqdef $|
-        |$\label{CFD:lop}$|    |$ (\Rec {loop} \_ = $|
-        |$\label{CFD:hed}$|      |$ \Let head = \deref (\Fst (\deref Q)) in $|
-        |$\label{CFD:tal}$|      |$ \Let tail = \deref (\Snd (\deref Q)) in $|
-        |$\label{CFD:nex}$|      |$ \Let next = \deref (\Snd (\deref head)) in $|
-        |$\label{CFD:hte}$|      |$ \If head = tail then $|
-        |$\label{CFD:nen}$|        |$ \If next = \None then $|
-        |$\label{CFD:non}$|          |$ \None $|
-        |$\label{CFD:el1}$|        |$ \Else $|
-        |$\label{CFD:stl}$|          |$ \CAS (\Snd (\deref Q)) \ tail \ next; loop \ \TT $|
-        |$\label{CFD:el2}$|      |$ \Else $|
-        |$\label{CFD:vde}$|        |$ \Let value = \Fst (\deref next) in $|
-        |$\label{CFD:shs}$|        |$ \If \CAS \ (\Fst (\deref Q)) \ head \ next then $|
-        |$\label{CFD:val}$|          |$ value $|
-        |$\label{CFD:re1}$|        |$ \Else loop \ \TT $|
-        |$\label{CFD:app}$|      |$ ) \TT $|
+      \begin{minted}[escapeinside=||, mathescape=true, bgcolor=codebg, frame=lines, fontsize=\footnotesize]{ocaml}
+|$ \dequeue \ Q \eqdef $|
+  |$ (\Rec {loop} \_ = $|
+    |$ \Let head = \deref (\Fst (\deref Q)) in $|
+    |$ \Let tail = \deref (\Snd (\deref Q)) in $|
+    |$ \Let next = \deref (\Snd (\deref head)) in $|
+    |$ \If head = tail then $|
+      |$ \If next = \None then $|
+        |$ \None $|
+      |$ \Else $|
+        |$ \CAS (\Snd (\deref Q)) \ tail \ next; loop \ \TT $|
+    |$ \Else $|
+      |$ \Let value = \Fst (\deref next) in $|
+      |$ \If \CAS \ (\Fst (\deref Q)) \ head \ next then $|
+        |$ value $|
+      |$ \Else loop \ \TT $|
+    |$ ) \TT $|
         \end{minted}
     \end{column}
   \end{columns}
