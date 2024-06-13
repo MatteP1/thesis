@@ -204,11 +204,12 @@
   - [x] Create basic slides file in latex
   - [x] Create slide structure
   - [x] Fill out slides
-  - [ ] Consistency and formatting
+  - [x] Consistency and formatting
     - [x] Change size of code blocks
     - [x] Remove space in front of code in code blocks
-    - [ ] Remove space around equations in blocks
-    - [ ] Get everything to fit on slides and in blocks
+    - [x] Remove space around equations in blocks
+    - [x] Get everything to fit on slides and in blocks
+    - [x] Format slide on isLL predicate
   - [ ] Highlight important words with colours
   - [ ] Polish slides
     - [ ] Add pauses

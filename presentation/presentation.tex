@@ -637,6 +637,8 @@ Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms}
 %=====================================================================
 \begin{frame}{Sequential Specification}
   \begin{definition}[Sequential Specification]\label{QueueSpecs:spec:seq}
+    \setlength\abovedisplayskip{-8pt}
+    \setlength\belowdisplayskip{2pt}
     \begin{align*}
       &\Exists \isqueueseq : \Val \to \List ~ \Val \to \SeqQgnames \to \Prop.\\
       &\quad\quad\seqspecinit\\
@@ -662,6 +664,9 @@ Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms}
     \item Instead, promise that all elements satisfy client-defined predicate, $\Psi$
   \end{itemize}
   \begin{definition}[Concurrent Specification]\label{QueueSpecs:spec:conc}
+    \setlength\abovedisplayskip{-8pt}
+    \setlength\belowdisplayskip{2pt}
+    \fontsize{8pt}{10}\selectfont
     \begin{align*}
       &\Exists \isqueueconc : (\Val \to \Prop) \to \Val \to \ConcQgnames \to \Prop.\\
       &\All \Psi : \Val \to \Prop.\\
@@ -704,6 +709,8 @@ Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms}
     \item The desirables are captured by the following lemmas
   \end{itemize}
   \begin{block}{Lemmas on the Abstract State RA}
+    \setlength\abovedisplayskip{-8pt}
+    \setlength\belowdisplayskip{2pt}
     \begin{align*}
       &\proves \pvs \Exists \gname . \abstractstateauth{\gname}{\absvalueList} \star{} \abstractstatefullfrag{\gname}{\absvalueList} & \text{(Abstract State Alloc)}\\[0.8ex]
       &\abstractstateauth{\gname}{\absvalueList'} \star{}
@@ -729,7 +736,11 @@ Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms}
         \item $P$ is the clients resources before $\enqueue$/$\dequeue$ and $Q$ the resources after
       \end{itemize}
   \end{itemize}
+  \vspace{-4pt}
   \begin{definition}[HOCAP Specification]\label{QueueSpecs:spec:hocap}
+    \setlength\abovedisplayskip{-8pt}
+    \setlength\belowdisplayskip{2pt}
+    \fontsize{7pt}{9}\selectfont
     \begin{align*}
       &\Exists \isqueue : \Val \to \Qgnames \to \Prop.\\
       &\quad\quad \All \vq, \Qg . \isqueue(\vq, \Qg) \implies \persistently \isqueue(\vq, \Qg)\\
@@ -762,19 +773,20 @@ Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms}
 
 %=====================================================================
 \begin{frame}[fragile]{Queue Client - A PoC Client (continued)}
-  
   \begin{lemma}[QueueAdd Specification]\label{QueueSpecs:spec:queueadd}
-    \begin{equation*}
+    \setlength\abovedisplayskip{-8pt}
+    \setlength\belowdisplayskip{2pt}
+    \begin{align*}
       \All a, b \in \mathbb{Z} . \hoare{\TRUE}{\queueAdd \ a \ b}{v . v = a + b}
-    \end{equation*}
+    \end{align*}
   \end{lemma}
-
   \begin{itemize}
     \item Proof idea: Create invariant capturing possible states of queue contents
     \item Tokens are used to reason about which state we are in
   \end{itemize}
-  
   \begin{definition}[Invariant for QueueAdd]\label{QueueSpecs:queueadd:invariant}
+    \setlength\abovedisplayskip{-8pt}
+    \setlength\belowdisplayskip{2pt}
     \begin{align*}
       \QueueAddInvariant(\Qg, \QAg, a, b) \eqdef~
       &\abstractstatefullfrag{\Qg.\gabst}{[]}~\star~\TokDoQAg~\star~\TokDtQAg~\lor\\
@@ -960,7 +972,7 @@ Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms}
         \item If empty, return $None$
         \item Else, swing head pointer to new head, and return dequeued value
       \end{itemize}
-    \item Dequeued node not freed $\rightarrow$ linked list only grows
+    \item Dequeued node not freed $\rightarrow$ Linked list only grows
   \end{itemize}
   \vspace{-8pt}
   \begin{minted}[escapeinside=||, mathescape=true, bgcolor=codebg, frame=lines, fontsize=\footnotesize]{ocaml}
@@ -1037,28 +1049,33 @@ Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms}
 
 %=====================================================================
 \begin{frame}{The isLL Predicate}
-  \todo{format slide}
   \begin{itemize}
     \item Idea: express the structure of the linked list in terms of points-to predicates
     \item Also captures persistent and non-persistent parts of the linked list
   \end{itemize}
-  \begin{definition}[Linked List Chain Predicate]
+  \begin{definition}[Linked List Predicate]
+    \setlength\abovedisplayskip{-2pt}
+    \setlength\belowdisplayskip{2pt}
+    \fontsize{7pt}{4pt}\selectfont
     \begin{align*}
       \isLLchain([]) \eqdef& \TRUE\\
       \isLLchain([\node]) \eqdef& \isNode{\node}\\
       \isLLchain(\node :: \node' :: \xsc) \eqdef& \isNode{\node} \star{} \nOut{\node'} \mapsto^{\persistently} \nIn{\node} \star{} \isLLchain(\node' :: \xsc)
     \end{align*}
-  \end{definition}
-  \begin{definition}[Linked List Predicate]
+    \hrulefill
+    \setlength\abovedisplayskip{2pt}
     \begin{align*}
       \isLL([]) \eqdef& \TRUE\\
       \isLL(\node :: \xsc) \eqdef& \nOut{\node} \mapsto \None \star{} \isLLchain(\node :: \xsc)
     \end{align*}
   \end{definition}
   \begin{exampleblock}{Example}
+    \setlength\abovedisplayskip{6pt}
+    \setlength\belowdisplayskip{6pt}
+    \fontsize{8pt}{4pt}\selectfont
     Consider the list: $\xsc = [(\locinM{3}, \nodevalM{3}, \locoutM{3}); (\locinM{2}, \nodevalM{2}, \locoutM{2});  (\locinM{1}, \nodevalM{1}, \locoutM{1})]$.
     \begin{align*}
-      \isLL(\xsc) = &\locoutM{3} \mapsto \None \star{}\\
+      \isLL(\xsc) = \ \locoutM{3} \mapsto \None \ \star{} \ 
       &\locinM{3} \mapsto^{\persistently} (\nodevalM{3}, \locoutM{3}) \star{} \locoutM{2}	\mapsto^{\persistently} \locinM{3}\star{}\\
       &\locinM{2} \mapsto^{\persistently} (\nodevalM{2}, \locoutM{2}) \star{} \locoutM{1}\mapsto^{\persistently} \locinM{2} \star{}\\
       &\locinM{1} \mapsto^{\persistently} (\nodevalM{1}, \locoutM{1})
@@ -1105,7 +1122,8 @@ Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms}
       \node (null) [join={by ->, draw=black}, rectangle,on chain] {$\None$};
       \end{tikzpicture}
       }
-      \end{center}
+    \end{center}
+    \vspace{-2pt}
   \end{exampleblock}
 \end{frame}
 
@@ -1115,14 +1133,26 @@ Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms}
     \item Queue predicate must be persistent (according to specification)
     \item The queue relies on non-persistent resources (e.g. $\lochead \mapsto \locin$)
     \item Solution: identify an \textit{invariant} (persistent), describing the resources
-    \begin{itemize}
-      \item Contains abstract state of queue -- existentially quantified as it can change
-      \item Defines structure of the concrete linked list, $xsc$
-      \item Asserts relation between abstract state and concrete state
-      \item Identifies four possible queue states -- see next slide
-    \end{itemize}
+  \end{itemize}
+  \vspace{-6pt}
+  \pause
+  \hrulefill
+  \vspace{-2pt}
+  \begin{itemize}
+    \item Contains abstract state of queue -- existentially quantified as it can change
+    \item Defines structure of the concrete linked list, $xsc$
+    \item Asserts relation between abstract state and concrete state
+    \item Identifies possible queue states: \StaticState, \EnqueueState, \DequeueState, and \BothState{}
+      \begin{itemize}
+        \item Two locks $\rightarrow$ Four queue states
+        \item Invariant describes the queue resources in each state
+        \item See next slide
+      \end{itemize}
   \end{itemize}
   \begin{definition}[\tlmsq{} HOCAP Invariant]\label{TLMSQ:spec:hocap:invariant}
+    \setlength\abovedisplayskip{0pt}
+    \setlength\belowdisplayskip{2pt}
+    \fontsize{7pt}{4pt}\selectfont
     \begin{align*}
       \TLQueueInvariantHocap(\lochead, \loctail, \Qg) \ \eqdef \
       &\Exists \absvalueList. \abstractstateauth{\Qg.\gabst}{\absvalueList} \star{}\\
@@ -1138,7 +1168,6 @@ Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms}
 %=====================================================================
 \begin{frame}{Invariant (Queue States)}
   \begin{itemize}
-    \item Two locks $\rightarrow$ four queue states: \StaticState, \EnqueueState, \DequeueState, and \BothState
     \item Idea: the enqueueing thread keeps half of tail pointer between invariant openings
     \item Guarantees that the pointer is not updated (full pointer needed for update)
     \item Similarly for the dequeueing thread
@@ -1147,7 +1176,9 @@ Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms}
   \end{itemize}
   \vspace{-6pt}
   \begin{definition}[\tlmsq{} HOCAP Invariant -- continued]
-    \fontsize{6pt}{0pt}\selectfont
+    \setlength\abovedisplayskip{0pt}
+    \setlength\belowdisplayskip{2pt}
+    \fontsize{7pt}{4pt}\selectfont
     \begin{align*}
       \dots\\
       &\quad\lochead \mapsto \nIn{\nodehead} \star{} \loctail \mapsto \nIn{\nodetail} \star{} \isLast(\nodetail, \xsc) \star{} &&\text{\textcolor{gray}{(\StaticState)}}\\
@@ -1172,6 +1203,8 @@ Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms}
   \end{itemize}
 
   \begin{definition}[\tlmsq{} - $\isqueue$ Predicate]\label{TLMSQ:spec:hocap:isqueue}
+    \setlength\abovedisplayskip{-8pt}
+    \setlength\belowdisplayskip{2pt}
     \begin{align*}
       \isqueue(\vq, \Qg) \eqdef
       &\Exists \locqueue, \lochead, \loctail \in \Loc . \Exists \Hlock, \Tlock \in \Val . \\
@@ -1496,7 +1529,9 @@ Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms}
         \item When we read $next$, we know immediately whether $\dequeue$ will conclude empty queue
         \item both $head$ and $tail$ are already fixed
       \end{itemize}
+    \item Correctness: both versions shown to satisfy HOCAP-style specification...
   \end{itemize}
+  \vspace{-12pt}
   \begin{columns}
     \begin{column}{0.5\textwidth}
       \begin{minted}[escapeinside=||, mathescape=true, bgcolor=codebg, frame=lines, fontsize=\footnotesize]{ocaml}
@@ -1585,6 +1620,8 @@ Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms}
   \end{block}
 
   \begin{block}{Lemmas for Reachability (simplified)}
+    \setlength\abovedisplayskip{-8pt}
+    \setlength\belowdisplayskip{2pt}
     \begin{align*}
       &\reach{\node}{\node} \vs \Exists \gname . \ap{\gname}{\node} & \text{(Abs Reach Alloc)}\\[0.8ex]
       &\ar{\nodeM{n}}{\gname_m} \star{} \ap{\gname_m}{\nodeM{m}} \wand
@@ -1598,7 +1635,7 @@ Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms}
 \end{frame}
 
 %=====================================================================
-\begin{frame}{Queue Predicate, Invariant, and proof of Hoare triples}
+\begin{frame}{Queue Predicate, Invariant, and Proof of Hoare triples}
   \begin{center}
     {\fontsize{40}{60}\selectfont In Coq!}\\
   \end{center}
