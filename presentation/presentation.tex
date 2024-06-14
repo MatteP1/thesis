@@ -1234,20 +1234,20 @@ Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms}
     \item $\isLock(\Qg.\gtlock, \Tlock, \TokEQg)$
   \end{itemize}
   \pause
-  \begin{minted}[escapeinside=||, mathescape=true, bgcolor=codebg, frame=lines, fontsize=\scriptsize, baselinestretch=1.3]{ocaml}
+  \begin{minted}[escapeinside=||, mathescape=true, bgcolor=codebg, frame=lines, fontsize=\scriptsize, baselinestretch=1.3, beameroverlays=true]{ocaml}
 |$ \color{purple} \{ P \} $|
-  |$ \Let node = \Ref(\Some \absvalue, \Ref(\None)) in \quad \textcolor{lightgray}{\text{(create node $\nodenew$)}} $|
-|$ \color{purple} \{ P \star{} \nOut{\nodenew} \mapsto \None \} $|
-  |$ \pause \acquire (\Snd (\Snd (\deref \vq))); \quad \textcolor{lightgray}{\text{(acquire tail lock)}} $|
-|$ \color{purple} \{ P \star{} \nOut{\nodenew} \mapsto \None \star{} \TokEQg \} $|
-  |$ \pause \expr_{t} = \deref(\Snd (\Fst(\deref \vq))) \quad \textcolor{lightgray}{\text{(find current tail, $\nodetail$. $\TLQueueInvariantHocap$: \StaticState{}/\DequeueState{} $\rightarrow$ \EnqueueState{}/\BothState{} (before))}} $|
-|$ \color{purple} \{ P \star{} \nOut{\nodenew} \mapsto \None \star{} \loctail \mapsto^{\frac{1}{2}} \nIn{\nodetail} \star{} \TokNEQg \star{} \TokAfterQg \} $|
-  |$ \pause \Snd (\deref(\expr_{t})) \gets node; \quad \textcolor{lightgray}{\text{(make $\nodetail$ point to $\nodenew$. $\TLQueueInvariantHocap$: \EnqueueState{}/\BothState{} (before) $\rightarrow$ \EnqueueState{}/\BothState{} (after))}} $|
-|$ \color{purple} \{ Q \star{} \loctail \mapsto^{\frac{1}{2}} \nIn{\nodetail} \star{} \TokNEQg \star{} \TokBeforeQg \} $|
-  |$ \pause \Snd (\Fst (\deref \vq)) \gets node; \quad \textcolor{lightgray}{\text{(swing tail pointer to $\nodenew$. $\TLQueueInvariantHocap$: \EnqueueState{}/\BothState{} (after) $\rightarrow$ \StaticState{}/\DequeueState{})}} $|
-|$ \color{purple} \{ Q \star{} \TokEQg \} $|
-  |$ \pause \release (\Snd (\Snd (\deref \vq))) \quad \textcolor{lightgray}{\text{(release tail lock)}}$|
-|$ \color{purple} \{ Q \} $|
+  |$ \Let node = \Ref(\Some \absvalue, \Ref(\None)) in \uncover<4->{\quad \textcolor{lightgray}{\text{(create node $\nodenew$)}}} $|
+|$ \uncover<4->{\color{purple} \{ P \star{} \nOut{\nodenew} \mapsto \None \}} $|
+  |$ \acquire (\Snd (\Snd (\deref \vq))); \uncover<5->{\quad \textcolor{lightgray}{\text{(acquire tail lock)}}} $|
+|$ \uncover<5->{\color{purple} \{ P \star{} \nOut{\nodenew} \mapsto \None \star{} \TokEQg \}} $|
+  |$ \expr_{t} = \deref(\Snd (\Fst(\deref \vq))) \uncover<6->{\quad \textcolor{lightgray}{\text{(find current tail, $\nodetail$. $\TLQueueInvariantHocap$: \StaticState{}/\DequeueState{} $\rightarrow$ \EnqueueState{}/\BothState{} (before))}}} $|
+|$ \uncover<6->{\color{purple} \{ P \star{} \nOut{\nodenew} \mapsto \None \star{} \loctail \mapsto^{\frac{1}{2}} \nIn{\nodetail} \star{} \TokNEQg \star{} \TokAfterQg \}} $|
+  |$ \Snd (\deref(\expr_{t})) \gets node; \uncover<7->{\quad \textcolor{lightgray}{\text{(make $\nodetail$ point to $\nodenew$. $\TLQueueInvariantHocap$: \EnqueueState{}/\BothState{} (before) $\rightarrow$ \EnqueueState{}/\BothState{} (after))}}} $|
+|$ \uncover<7->{\color{purple} \{ Q \star{} \loctail \mapsto^{\frac{1}{2}} \nIn{\nodetail} \star{} \TokNEQg \star{} \TokBeforeQg \}} $|
+  |$ \Snd (\Fst (\deref \vq)) \gets node; \uncover<8->{\quad \textcolor{lightgray}{\text{(swing tail pointer to $\nodenew$. $\TLQueueInvariantHocap$: \EnqueueState{}/\BothState{} (after) $\rightarrow$ \StaticState{}/\DequeueState{})}}} $|
+|$ \uncover<8->{\color{purple} \{ Q \star{} \TokEQg \}} $|
+  |$ \release (\Snd (\Snd (\deref \vq))) \uncover<9->{\quad \textcolor{lightgray}{\text{(release tail lock)}}} $|
+|$ \alt<9->{\color{purple}}{\color{gray}} \{ Q \} $|
   \end{minted}
 \end{frame}
 
