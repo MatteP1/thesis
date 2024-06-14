@@ -213,14 +213,16 @@
   - [x] Highlight important words with colours
     - [x] Change colours
     - [x] Consider making pre- and post-conditions of all Hoare triples purple
-  - [ ] Polish slides
-    - [ ] Add pauses
-    - [ ] fix mistakes
+  - [x] Polish slides
+    - [x] Add pauses
+    - [x] fix mistakes
     - [x] formatting
   - [ ] Practice presentation
   - [ ] Possible reductions to save time
-    - [ ] Only show example for isLL predicate (remove definitions of isLLchain and isLL)
     - [x] In-line observation about Two-Lock MSQ in implementations
+    - [ ] Move isLL predicate slide to end, and have as "optional extra content"
     - [ ] Move Queue client to end, and have as "optional extra content"
+    - [ ] Introduce Lock-and-CC free version directly, mention they are simplified from version with consistency checks, since ABA problem not present as heaplang is garbage collected language
+      - [ ] Move slide on prophecies to optional extras
 
 - [ ] Read up on referenced literature

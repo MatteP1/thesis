@@ -583,6 +583,7 @@ Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms}
   \begin{itemize}
     \item Initial \textcolor{blue}{goal} was to prove \textcolor{blue}{soundness} of the two \textcolor{blue}{\msq{}s}
     \item The project later \textcolor{Turquoise}{generalised} the results to apply to \textcolor{blue}{queues in general}
+    \pause
     \item In particular, three different \textcolor{blue}{specifications for queues} were given
     \begin{itemize}
       \item \textcolor{orange}{Sequential} specification
@@ -600,11 +601,14 @@ Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms}
           \item Demonstrated with a specific queue client ($\queueAdd$)
         \end{itemize}
     \end{itemize}
+    \pause
     \item It was demonstrated that the HOCAP-style specification \textcolor{blue}{derives the sequential and concurrent specifications}
+    \pause
     \item \textcolor{ExampleColour}{Implementations} of the \msq{}s in \textcolor{blue}{\heaplang{}} were proven to meet the three \textcolor{blue}{specifications}
       \begin{itemize}
         \item In particular, both version are \textcolor{blue}{sound}
       \end{itemize}
+    \pause
     \item All proofs have been \textcolor{blue}{mechanised} in the \textcolor[RGB]{199,154,115}{Coq} \textcolor[RGB]{222,196,152}{proof assistant}
   \end{itemize}
 \end{frame}
@@ -633,6 +637,7 @@ Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms}
         \end{itemize}
     \end{itemize}
   \end{block}
+  \pause
   \begin{block}{Nature of Specifications}
     \begin{itemize}
       \item Specifications written in \textcolor{blue}{Iris}, a \textcolor{blue}{higher order CSL}
@@ -651,9 +656,9 @@ Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms}
     \setlength\belowdisplayskip{2pt}
     \begin{align*}
       &\Exists \isqueueseq : \Val \to \List ~ \Val \to \SeqQgnames \to \Prop.\\
-      &\quad\quad\seqspecinit\\
-      &\land{}\quad\seqspecenq\\
-      &\land{}\quad\seqspecdeq
+      &\uncover<2->{\quad\quad\seqspecinit}\\
+      &\uncover<3->{\land{}\quad\seqspecenq}\\
+      &\uncover<4->{\land{}\quad\seqspecdeq}
     \end{align*}
   \end{definition}
   \begin{itemize}
@@ -668,7 +673,7 @@ Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms}
 \begin{frame}{Concurrent Specification}
   \begin{itemize}
     \item To support \textcolor{blue}{concurrent clients}, we shall require the \textcolor{blue}{queue predicate} be \textcolor{blue}{persistent}
-    \textcolor{blue}{Tracking} the contents of queue in the way that the sequential specification did \textcolor{red}{doesn't work}
+    \item \textcolor{blue}{Tracking} the contents of queue in the way that the sequential specification did \textcolor{red}{doesn't work}
     \item \textcolor{blue}{Threads} will start \textcolor{red}{disagreeing on contents of queue}, as they have only \textcolor{blue}{local view} of contents
     \item Give up on tracking contents for now
     \item Instead, \textcolor{blue}{promise} that all elements \textcolor{blue}{satisfy} client-defined \textcolor{RubineRed}{predicate}, $\Psi$
@@ -681,9 +686,9 @@ Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms}
       &\Exists \isqueueconc : (\Val \to \Prop) \to \Val \to \ConcQgnames \to \Prop.\\
       &\All \Psi : \Val \to \Prop.\\
       &\quad\quad \All \vq, \Qg . \isqueueconc(\Psi, \vq, \Qg) \implies \persistently \isqueueconc(\Psi, \vq, \Qg)\\
-      &\land{}\quad\concspecinit{\Psi}\\
-      &\land{}\quad\concspecenq{\Psi}\\
-      &\land{}\quad\concspecdeq{\Psi}
+      &\uncover<2->{\land{}\quad\concspecinit{\Psi}}\\
+      &\uncover<3->{\land{}\quad\concspecenq{\Psi}}\\
+      &\uncover<4->{\land{}\quad\concspecdeq{\Psi}}
     \end{align*}
   \end{definition}
 \end{frame}
@@ -693,6 +698,7 @@ Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms}
 \begin{frame}{HOCAP-style Specification - Abstract State RA}
   \begin{itemize}
     \item We will need a \textcolor{blue}{construction} to allow clients to \textcolor{blue}{track contents of queue}
+    \pause
     \item Idea: have \textcolor{blue}{two} ``\textcolor{blue}{views}'' of the \textcolor{blue}{abstract state} of the queue
     \begin{columns}
       \begin{column}{0.5\textwidth}
@@ -710,13 +716,14 @@ Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms}
         \end{center}
       \end{column}
     \end{columns}
+    \pause
     \item Construction \textcolor{blue}{ensures}:
       \begin{itemize}
         \item \textcolor{blue}{authoritative} and \textcolor{blue}{fragmental} views always \textcolor{blue}{agree} on abstract state of queue
         \item views can only be \textcolor{blue}{updated} in \textcolor{blue}{unison}
       \end{itemize}
     \item \textcolor{blue}{Implemented} using the \textcolor{blue}{resource algebra}: $\authm(\option{(\fracm \times \agm(\List ~ \Val))})$
-      \item The \textcolor{blue}{desirables} are captured by the following \textcolor{blue}{lemmas}
+    \item The \textcolor{blue}{desirables} are captured by the following \textcolor{blue}{lemmas}
   \end{itemize}
   \begin{block}{Lemmas on the Abstract State RA}
     \setlength\abovedisplayskip{-8pt}
@@ -754,9 +761,9 @@ Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms}
     \begin{align*}
       &\Exists \isqueue : \Val \to \Qgnames \to \Prop.\\
       &\quad\quad \All \vq, \Qg . \isqueue(\vq, \Qg) \implies \persistently \isqueue(\vq, \Qg)\\
-      &\land{}\quad\hocapspecinit\\
-      &\land{}\quad\hocapspecenq\\
-      &\land{}\quad\hocapspecdeq
+      &\uncover<2->{\land{}\quad\hocapspecinit}\\
+      &\uncover<3->{\land{}\quad\hocapspecenq}\\
+      &\uncover<4->{\land{}\quad\hocapspecdeq}
     \end{align*}
   \end{definition}
 \end{frame}
@@ -764,10 +771,11 @@ Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms}
 %=====================================================================
 \begin{frame}[fragile]{Queue Client - A PoC Client}
   \begin{itemize}
-    \item Idea: a \textcolor{blue}{minimal} client \textcolor{blue}{complex} enough to require HOCAP-style specification
-    \item Uses \textcolor{blue}{parallel composition}, so \textcolor{blue}{sequential} specification \textcolor{red}{insufficient}
-    \item Relies on dequeues \textcolor{blue}{not returning $\None$}, so \textcolor{blue}{concurrent} specification \textcolor{red}{insufficient}
-    \item \textcolor{blue}{HOCAP-style} specification \textcolor{blue}{supports consistency} and \textcolor{blue}{tracks queue contents}, allowing us to \textcolor{orange}{exclude cases} where dequeue returns $\None$
+    \item \textcolor{blue}{Add two numbers} after having two threads \textcolor{blue}{enqueue} and subsequently \textcolor{blue}{dequeue} them
+    \item<2-> Idea: a \textcolor{blue}{minimal} client \textcolor{blue}{complex} enough to require HOCAP-style specification
+    \item<3-> Uses \textcolor{blue}{parallel composition}, so \textcolor{blue}{sequential} specification \textcolor{red}{insufficient}
+    \item<4-> Relies on dequeues \textcolor{blue}{not returning $\None$}, so \textcolor{blue}{concurrent} specification \textcolor{red}{insufficient}
+    \item<5-> \textcolor{blue}{HOCAP-style} specification \textcolor{blue}{supports consistency} and \textcolor{blue}{tracks queue contents}, allowing us to \textcolor{orange}{exclude cases} where \textcolor{Brown}{$\dequeue$} returns $\None$
   \end{itemize}
   \begin{minted}[escapeinside=||, mathescape=true, bgcolor=codebg, frame=lines]{ocaml}
 |$ \unwrap \ w \eqdef \langkw{match}\spac w \spac\langkw{with}\spac \None \Ra \TT \ \TT \mid \Some v \Ra v \spac\langkw{end} $|
@@ -790,6 +798,7 @@ Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms}
       \All a, b \in \mathbb{Z} . \hoare{\TRUE}{\queueAdd \ a \ b}{v . v = a + b}
     \end{align*}
   \end{lemma}
+  \pause
   \begin{itemize}
     \item \textcolor{blue}{Proof idea}: create \textcolor{blue}{invariant} capturing possible \textcolor{blue}{states of queue contents}
     \item \textcolor{blue}{Tokens} are used to reason about which \textcolor{blue}{state} we are in
@@ -816,14 +825,14 @@ Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms}
 \begin{frame}[fragile]{Implementation: $\initialise$}
   \begin{itemize}
     \item The queue data structure is a \textcolor{blue}{linked list}
-    \item A \textcolor{blue}{node} $\node$ in the linked list is a \textcolor{blue}{triple}, $\node = (\locin, \nodeval, \locout)$, with $\locin \mapsto (\nodeval, \locout)$
-    \item We use the following \textcolor{blue}{notation} for nodes
+    \item<2-> A \textcolor{blue}{node} $\node$ in the linked list is a \textcolor{blue}{triple}, $\node = (\locin, \nodeval, \locout)$, with $\locin \mapsto (\nodeval, \locout)$
+    \item<2-> We use the following \textcolor{blue}{notation} for nodes
     \begin{align*}
       &\nIn{\node} = \locin& &\nVal{\node} = \nodeval& &\nOut{\node} = \locout
     \end{align*}
-    \item The \textcolor{Brown}{$\initialise$} function first creates an \textcolor{blue}{initial head node}, $\nodehead$
-    \item Then, a \textcolor{blue}{lock} protecting the \textcolor{blue}{head pointer}, and a \textcolor{blue}{lock} protecting the \textcolor{blue}{tail pointer}
-    \item Finally, it creates the \textcolor{blue}{head} and \textcolor{blue}{tail pointers}, $\lochead$ and $\loctail$, both \textcolor{blue}{pointing to} $\nodehead$
+    \item<3-> The \textcolor{Brown}{$\initialise$} function first creates an \textcolor{blue}{initial head node}, $\nodehead$
+    \item<3-> Then, a \textcolor{blue}{lock} protecting the \textcolor{blue}{head pointer}, and a \textcolor{blue}{lock} protecting the \textcolor{blue}{tail pointer}
+    \item<3-> Finally, it creates the \textcolor{blue}{head} and \textcolor{blue}{tail pointers}, $\lochead$ and $\loctail$, both \textcolor{blue}{pointing to} $\nodehead$
   \end{itemize}
   \vspace{-8pt}
   \begin{minted}[escapeinside=||, mathescape=true, bgcolor=codebg, frame=lines, fontsize=\footnotesize]{ocaml}
@@ -893,9 +902,9 @@ Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms}
       \item Swing tail pointer to $\nodenew$
       \item Release the tail lock
     \end{enumerate}
-    \item Once a node is enqueued, its \textcolor{blue}{position} in the linked list is \textcolor{blue}{fixed}
-    \item Adding and swinging \textcolor{red}{not atomic} $\rightarrow$ \textcolor{blue}{Tail} node is either \textcolor{blue}{last} or \textcolor{blue}{second last}
-    \item \textcolor{Brown}{$\dequeue$} \textcolor{red}{ignores tail pointer} $\rightarrow$ \textcolor{blue}{Tail} node can \textcolor{orange}{lag} behind \textcolor{blue}{head} node
+    \item<5-> Once a node is enqueued, its \textcolor{blue}{position} in the linked list is \textcolor{blue}{fixed}
+    \item<6-> Adding and swinging \textcolor{red}{not atomic} $\rightarrow$ \textcolor{blue}{Tail} node is either \textcolor{blue}{last} or \textcolor{blue}{second last}
+    \item<7-> \textcolor{Brown}{$\dequeue$} \textcolor{red}{ignores tail pointer} $\rightarrow$ \textcolor{blue}{Tail} node can \textcolor{orange}{lag} behind \textcolor{blue}{head} node
   \end{itemize}
   \vspace{-8pt}
   \begin{minted}[escapeinside=||, mathescape=true, bgcolor=codebg, frame=lines, fontsize=\footnotesize]{ocaml}
@@ -945,7 +954,7 @@ Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms}
   \node (l'2) [join={by ->, draw=blue, postaction={decorate}}, perspointer,on chain] {$\locinM{2}$};
   \node (l2pair) [join={by ->, draw=blue, postaction={decorate}}, pair,on chain] {$\nodevalM{2}$ \nodepart{two} $\locoutM{2}$};
   \only<1-2>{\node (null) [join={by ->, draw=black}, rectangle,on chain] {$\None$};}
-  \only<3-4>{\node (null) [join={by ->, dotted, draw=black}, rectangle,on chain] {\textcolor{gray}{$\None$}};}
+  \only<3->{\node (null) [join={by ->, dotted, draw=black}, rectangle,on chain] {\textcolor{gray}{$\None$}};}
 
   \only<1>{
   \node (l'3) [perspointer, above right=of l2pair, draw=none] {\phantom{$\locinM{3}$}};
@@ -982,7 +991,7 @@ Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms}
         \item If empty, \textcolor{blue}{return} $\None$
         \item Else, \textcolor{blue}{swing head pointer} to new head node, and \textcolor{blue}{return} its value
       \end{itemize}
-    \item Dequeued node \textcolor{red}{not freed} $\rightarrow$ Linked list \textcolor{blue}{only grows}
+    \item<3-> Dequeued node \textcolor{red}{not freed} $\rightarrow$ Linked list \textcolor{blue}{only grows}
   \end{itemize}
   \vspace{-8pt}
   \begin{minted}[escapeinside=||, mathescape=true, bgcolor=codebg, frame=lines, fontsize=\footnotesize]{ocaml}
@@ -1150,9 +1159,9 @@ Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms}
   \vspace{-2pt}
   \begin{itemize}
     \item Contains \textcolor{blue}{abstract state} of queue -- \textcolor{blue}{existentially quantified} as it can change
-    \item Defines \textcolor{blue}{structure} of the \textcolor{blue}{concrete} linked list, $xsc$
-    \item Asserts \textcolor{blue}{relation} between \textcolor{blue}{abstract state} and \textcolor{blue}{concrete state}
-    \item Identifies possible \textcolor{blue}{queue states}: \StaticState, \EnqueueState, \DequeueState, and \BothState{}
+    \item<3-> Defines \textcolor{blue}{structure} of the \textcolor{blue}{concrete} linked list, $xsc$
+    \item<4-> Asserts \textcolor{blue}{relation} between \textcolor{blue}{abstract state} and \textcolor{blue}{concrete state}
+    \item<5-> Identifies possible \textcolor{blue}{queue states}: \StaticState, \EnqueueState, \DequeueState, and \BothState{}
       \begin{itemize}
         \item Two locks $\rightarrow$ Four queue states
         \item Invariant describes the queue resources in each state
@@ -1166,11 +1175,11 @@ Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms}
     \begin{align*}
       \TLQueueInvariantHocap(\lochead, \loctail, \Qg) \ \eqdef \
       &\Exists \absvalueList. \abstractstateauth{\Qg.\gabst}{\absvalueList} \star{} &&\text{\textcolor{gray}{(abstract state)}}\\
-      &\Exists \xsc, \xsqueue, \xsold, \nodehead, \nodetail . &&\text{\textcolor{gray}{(concrete state)}}\\
-      &\xsc = \xsqueue \catenate [\nodehead] \catenate \xsold \star{}\\
-      &\isLL(\xsc) \star{}\\
-      &\projval(\xsqueue) = \wrapsome(\absvalueList) \star{}\\
-      &\dots
+      &\uncover<3->{\Exists \xsc, \xsqueue, \xsold, \nodehead, \nodetail . &&\text{\textcolor{gray}{(concrete state)}}}\\
+      &\uncover<3->{\xsc = \xsqueue \catenate [\nodehead] \catenate \xsold \star{}}\\
+      &\uncover<3->{\isLL(\xsc) \star{}}\\
+      &\uncover<4->{\projval(\xsqueue) = \wrapsome(\absvalueList) \star{}}\\
+      &\uncover<5->{\dots}
     \end{align*}
   \end{definition}
 \end{frame}
@@ -1211,7 +1220,7 @@ Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms}
     \item HOCAP-style specification \textcolor{blue}{requires} the existence of a persistent \textcolor{blue}{queue predicate}
     \item We \textcolor{blue}{define} it in terms of our invariant
   \end{itemize}
-
+  \pause
   \begin{definition}[\tlmsq{} - $\isqueue$ Predicate]\label{TLMSQ:spec:hocap:isqueue}
     \setlength\abovedisplayskip{-8pt}
     \setlength\belowdisplayskip{2pt}
@@ -1224,11 +1233,10 @@ Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms}
       &\isLock(\Qg.\gtlock, \Tlock, \TokEQg)
     \end{align*}
   \end{definition}
-
   \begin{itemize}
-    \item The queue predicate is \textcolor{blue}{persistent}, as all its constituents are
-    \item \textcolor{blue}{Proving} that \tlmsq{} satisfies the \textcolor{blue}{HOCAP-style specification} then consists of proving the \textcolor{blue}{Hoare triples} for \textcolor{Brown}{$\initialise$}, \textcolor{Brown}{$\enqueue$}, and \textcolor{Brown}{$\dequeue$}
-    \item We here \textcolor{blue}{focus} on \textcolor{Brown}{$\enqueue$}
+    \item<3-> The queue predicate is \textcolor{blue}{persistent}, as all its constituents are
+    \item<4-> \textcolor{blue}{Proving} that \tlmsq{} satisfies the \textcolor{blue}{HOCAP-style specification} then consists of proving the \textcolor{blue}{Hoare triples} for \textcolor{Brown}{$\initialise$}, \textcolor{Brown}{$\enqueue$}, and \textcolor{Brown}{$\dequeue$}
+    \item<4-> We here \textcolor{blue}{focus} on \textcolor{Brown}{$\enqueue$}
   \end{itemize}
 \end{frame}
 
@@ -1506,12 +1514,12 @@ Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms}
 \begin{frame}[fragile]{Prophecies}
   \begin{itemize}
     \item \textcolor{blue}{Proving adherence} to HOCAP-style specification \textcolor{orange}{requires} \textcolor{blue}{applying the view-shift} at some point (must update \textcolor{RubineRed}{$P$} to \textcolor{RubineRed}{$Q$})
-    \item \textcolor{blue}{View-shift} is applied at \textcolor{blue}{\textit{Linearisation Points}} -- points where the effect of the function takes place
-    \item When the \textcolor{blue}{queue is empty}, the \textcolor{blue}{linearisation point} is when \textcolor{blue}{reading $next$} (specifically, the dereference instruction)
-    \item We deduce that at \textcolor{blue}{exactly} that read, the queue was \textcolor{blue}{empty}
-    \item But we \textcolor{orange}{only conclude} the queue is \textcolor{blue}{empty} if \textcolor{orange}{consistency check} on next line succeeds
-    \item The dereference is \textcolor{red}{only} the \textcolor{blue}{linearisation point} if \textcolor{orange}{consistency check} succeeds
-    \item \textcolor{blue}{Prophecies}: reason about \textcolor{blue}{future computations} (e.g. \textcolor{ExampleColour}{the consistency check})
+    \item<2-> \textcolor{blue}{View-shift} is applied at \textcolor{blue}{\textit{Linearisation Points}} -- points where the effect of the function takes place
+    \item<3-> When the \textcolor{blue}{queue is empty}, the \textcolor{blue}{linearisation point} is when \textcolor{blue}{reading $next$} (specifically, the dereference instruction)
+    \item<3-> We deduce that at \textcolor{blue}{exactly} that read, the queue was \textcolor{blue}{empty}
+    \item<4-> But we \textcolor{orange}{only conclude} the queue is \textcolor{blue}{empty} if \textcolor{orange}{consistency check} on next line succeeds
+    \item<4-> The dereference is \textcolor{red}{only} the \textcolor{blue}{linearisation point} if \textcolor{orange}{consistency check} succeeds
+    \item<5-> \textcolor{blue}{Prophecies}: reason about \textcolor{blue}{future computations} (e.g. \textcolor{ExampleColour}{the consistency check})
       \begin{itemize}
         \item $\deref(\Fst (\deref Q))$ will evaluate to some $\prophval$ (later proof obligation)
         \item Before reading $next$, reason about whether $head = \prophval$
@@ -1536,13 +1544,14 @@ Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms}
 \begin{frame}[fragile]{The Lock-and-CC-Free Michael-Scott Queue}
   \begin{itemize}
     \item \textcolor{blue}{Reason} for consistency checks: \textcolor{red}{ABA problem} in original implementation
+    \pause
     \item \heaplang{} is \textcolor{blue}{garbage collected} language, so we can \textcolor{orange}{remove} \textcolor{red}{consistency checks}
     \item Can also \textcolor{orange}{remove} \textcolor{red}{prophecy} in \textcolor{Brown}{$\dequeue$}
       \begin{itemize}
         \item When we read $next$, we know immediately whether \textcolor{Brown}{$\dequeue$} will conclude empty queue
         \item both $head$ and $tail$ are already fixed
       \end{itemize}
-    \item \textcolor{blue}{Correctness}: both versions shown to satisfy \textcolor{blue}{HOCAP-style specification}...
+    \item<3-> \textcolor{blue}{Correctness}: both versions shown to satisfy \textcolor{blue}{HOCAP-style specification}...
   \end{itemize}
   \vspace{-12pt}
   \begin{columns}
@@ -1601,18 +1610,20 @@ Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms}
         \item The head and tail are \textcolor{blue}{only moved forward} in the linked list
         \item The \textcolor{blue}{tail} \textcolor{orange}{cannot lag} behind the \textcolor{blue}{head} (unlike in the two-lock version)
       \end{itemize}
+    \pause
     \item We capture all these properties with a notion of \textcolor{blue}{\textit{reachability}}
     \item Consists of a \textcolor{blue}{concrete} and \textcolor{blue}{abstract} version of reachability
   \end{itemize}
+  \pause
   \begin{block}{Concrete Reachability}
     \begin{itemize}
       \item Concrete reachability essentially captures a \textcolor{blue}{section} of the \textcolor{blue}{linked list} (á la $\isLL$)
-      \item The proposition $\reach{\nodeM{n}}{\nodeM{m}}$ asserts that $\nodeM{n}$ can \textcolor{blue}{reach} $\nodeM{m}$ through the \textcolor{blue}{linked list}
-      \item \textcolor{blue}{Defined inductively} as follows
+      \item<4-> The proposition $\reach{\nodeM{n}}{\nodeM{m}}$ asserts that $\nodeM{n}$ can \textcolor{blue}{reach} $\nodeM{m}$ through the \textcolor{blue}{linked list}
+      \item<5-> \textcolor{blue}{Defined inductively} as follows
     \begin{equation*}
       \hspace{-2em}\reach{\nodeM{n}}{\nodeM{m}} \eqdef \isNode{\nodeM{n}} \star{} (\nodeM{n} = \nodeM{m} \lor{} \Exists \nodeM{p} . \nOut{\nodeM{n}} \mapsto^{\persistently} \nIn{\nodeM{p}} \star{} \reach{\nodeM{p}}{\nodeM{m}})
     \end{equation*}
-      \item Concrete reachability is \textcolor{blue}{reflexive} and \textcolor{blue}{transitive}
+      \item<6-> Concrete reachability is \textcolor{blue}{reflexive} and \textcolor{blue}{transitive}
     \end{itemize}
   \end{block}
 \end{frame}
@@ -1622,16 +1633,18 @@ Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms}
   \begin{block}{Abstract Reachability}
     \begin{itemize}
       \item Abstract reachability is concerned with \textcolor{blue}{tracking} specific \textcolor{blue}{\textit{types}} of nodes, such as the \textcolor{ExampleColour}{head} node, the \textcolor{ExampleColour}{tail} node, and the \textcolor{ExampleColour}{last} node
+      \pause
       \item Tracked using \textcolor{blue}{ghost names}, e.g. \textcolor{ExampleColour}{$\ghead$}, \textcolor{ExampleColour}{$\gtail$}, and \textcolor{ExampleColour}{$\glast$}
         \begin{itemize}
           \item Implemented using the resource algebra $\authm(\mathcal{P}(\Node))$
         \end{itemize}
+      \pause
       \item \textcolor{blue}{Defined} in two parts: \textcolor{blue}{Abstract Points-to} ($\ap{\gname}{\node}$) and \textcolor{blue}{Abstract Reach} ($\ar{\node}{\gname}$)
       \item For instance, \textcolor{ExampleColour}{$\ap{\gtail}{\nodeM{n}}$} means that the \textcolor{ExampleColour}{current tail} node is \textcolor{ExampleColour}{$\nodeM{n}$}
       \item And \textcolor{ExampleColour}{$\ar{\nodeM{m}}{\gtail}$} means that node \textcolor{ExampleColour}{$\nodeM{m}$} can always \textcolor{ExampleColour}{reach} the \textcolor{ExampleColour}{tail} node
     \end{itemize}
   \end{block}
-
+  \pause
   \begin{block}{Lemmas for Reachability (simplified)}
     \setlength\abovedisplayskip{-8pt}
     \setlength\belowdisplayskip{2pt}
@@ -1655,7 +1668,7 @@ Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms}
   \begin{center}
     \includegraphics[width=0.15\textwidth]{coq-logo-large.png}
   \end{center}
-  % go over contents of file, but skip swing tail proof, and many of the results about reachability.
+  % go over contents of file, but skip proofs and many of the results about reachability. Show invariant and predicate
 \end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
