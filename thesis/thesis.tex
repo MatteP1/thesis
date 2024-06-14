@@ -1153,7 +1153,7 @@ We thus use the HOCAP-style specification, which allows us to track the contents
     &\abstractstatefullfrag{\Qg.\gabst}{[a]}~\star~\TokAQAg~\star~(\TokDoQAg~\lor~\TokDtQAg)~\lor\\
     &\abstractstatefullfrag{\Qg.\gabst}{[b]}~\star~\TokBQAg~\star~(\TokDoQAg~\lor~\TokDtQAg)~\lor\\
     &\abstractstatefullfrag{\Qg.\gabst}{[a; b]}~\star~\TokAQAg~\star~\TokBQAg~\lor\\
-    &\abstractstatefullfrag{\Qg.\gabst}{[b; a]}~\star~\TokBQAg~\star~\TokAQAg~\lor
+    &\abstractstatefullfrag{\Qg.\gabst}{[b; a]}~\star~\TokBQAg~\star~\TokAQAg~
   \end{align*}
 \end{definition}
 Since invariants are persistent, we can give both the invariant and the HOCAP-style queue predicate to both threads, which grants the threads sufficient resources to use the HOCAP-style specifications for $\enqueue$ and $\dequeue$ when stepping through $\enqdeq$. The invariant also mentions four \textit{tokens}: $\TokDoQAg$, $\TokDtQAg$, $\TokAQAg$, and $\TokBQAg$. We discuss tokens further in Section \ref{TLMSQSPECS:concurrent:sub:conc-queue-pred} and give the formal definition in Section \ref{RA:sections:tokens}, but for this section, it suffices to know that new tokens can always be created, and ownership of a token is \textit{exclusive}.\\

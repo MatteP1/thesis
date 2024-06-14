@@ -210,11 +210,13 @@
     - [x] Remove space around equations in blocks
     - [x] Get everything to fit on slides and in blocks
     - [x] Format slide on isLL predicate
-  - [ ] Highlight important words with colours
+  - [x] Highlight important words with colours
+    - [x] Change colours
+    - [x] Consider making pre- and post-conditions of all Hoare triples purple
   - [ ] Polish slides
     - [ ] Add pauses
     - [ ] fix mistakes
-    - [ ] formatting
+    - [x] formatting
   - [ ] Practice presentation
   - [ ] Possible reductions to save time
     - [ ] Only show example for isLL predicate (remove definitions of isLLchain and isLL)

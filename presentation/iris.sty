@@ -284,9 +284,9 @@
 
 \newcommand{\bracket}[4][]{%
   \setbox0=\hbox{$\mathsurround=0pt{#1}{#4}\mathstrut$}%
-  \scalerel*[1ex]{#2}{\copy0}%
+  \scalerel*[1ex]{\textcolor{RubineRed}{#2}}{\copy0}%
   {#4}%
-  \scalerel*[1ex]{#3}{\copy0}}
+  \scalerel*[1ex]{\textcolor{RubineRed}{#3}}{\copy0}}
 % \curlybracket[other] x
 \newcommand{\curlybracket}[2][]{\bracket[{#1}]\{\}{#2}}
 \newcommand{\anglebracket}[2][]{\bracket[{#1}]\langle\rangle{#2}}
