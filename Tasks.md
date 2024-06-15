@@ -220,9 +220,10 @@
   - [ ] Practice presentation
   - [ ] Possible reductions to save time
     - [x] In-line observation about Two-Lock MSQ in implementations
-    - [ ] Move isLL predicate slide to end, and have as "optional extra content"
-    - [ ] Move Queue client to end, and have as "optional extra content"
+    - [x] Add sequential and concurrent specifications to optional extra content
+    - [x] Add Queue client to optional extra content
+    - [ ] Add isLL predicate slide to optional extra content
     - [ ] Introduce Lock-and-CC free version directly, mention they are simplified from version with consistency checks, since ABA problem not present as heaplang is garbage collected language
       - [ ] Move slide on prophecies to optional extras
 
-- [ ] Read up on referenced literature
+- [x] Read up on referenced literature

@@ -581,7 +581,7 @@ Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms}
 
 \begin{frame}{Overview of the Project and Contributions}
   \begin{itemize}
-    \item Initial \textcolor{blue}{goal} was to prove \textcolor{blue}{soundness} of the two \textcolor{blue}{\msq{}s}
+    \item Initial \textcolor{blue}{goal} was to prove \textcolor{blue}{safety} of the two \textcolor{blue}{\msq{}s}
     \item The project later \textcolor{Turquoise}{generalised} the results to apply to \textcolor{blue}{queues in general}
     \pause
     \item In particular, three different \textcolor{blue}{specifications for queues} were given
@@ -592,13 +592,15 @@ Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms}
         \end{itemize}
       \item \textcolor{orange}{Concurrent} specification
         \begin{itemize}
-          \item Proves \textcolor{blue}{soundness of concurrent queues}
-          \item Useful for some concurrent clients
+          \item Proves \textcolor{blue}{safety of concurrent queues}
+          \item Useful for \textit{some} concurrent clients
+          \item \textcolor{red}{Doesn't track} queue contents
         \end{itemize}
       \item \textcolor{orange}{HOCAP-style} specification
         \begin{itemize}
           \item Stronger specification, useful for more \textcolor{blue}{complex clients}
-          \item Demonstrated with a specific queue client ($\queueAdd$)
+          \item \textcolor{blue}{Tracks} queue contents
+          \item Demonstrated with a PoC queue client, QueueAdd
         \end{itemize}
     \end{itemize}
     \pause
@@ -606,7 +608,7 @@ Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms}
     \pause
     \item \textcolor{ExampleColour}{Implementations} of the \msq{}s in \textcolor{blue}{\heaplang{}} were proven to meet the three \textcolor{blue}{specifications}
       \begin{itemize}
-        \item In particular, both version are \textcolor{blue}{sound}
+        \item In particular, both version are \textcolor{blue}{safe}
       \end{itemize}
     \pause
     \item All proofs have been \textcolor{blue}{mechanised} in the \textcolor[RGB]{199,154,115}{Coq} \textcolor[RGB]{222,196,152}{proof assistant}
@@ -648,51 +650,6 @@ Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms}
     \end{itemize}
   \end{block}
 \end{frame}
-
-%=====================================================================
-\begin{frame}{Sequential Specification}
-  \begin{definition}[Sequential Specification]\label{QueueSpecs:spec:seq}
-    \setlength\abovedisplayskip{-8pt}
-    \setlength\belowdisplayskip{2pt}
-    \begin{align*}
-      &\Exists \isqueueseq : \Val \to \List ~ \Val \to \SeqQgnames \to \Prop.\\
-      &\uncover<2->{\quad\quad\seqspecinit}\\
-      &\uncover<3->{\land{}\quad\seqspecenq}\\
-      &\uncover<4->{\land{}\quad\seqspecdeq}
-    \end{align*}
-  \end{definition}
-  \begin{itemize}
-    \item The proposition \textcolor{RubineRed}{$\isqueueseq(\vq, \absvalueList, \Qg)$}, states that value \textcolor{blue}{$\vq$ represents the queue}, which \textcolor{blue}{contains elements $\absvalueList$}
-    \item $G \in \SeqQgnames{}$ is a \textcolor{blue}{collection} of \textcolor{blue}{ghost names} (depends on specific queue)
-    \item Specification consists of \textcolor{blue}{three Hoare triples} -- one for each \textcolor{blue}{queue function}
-    \item \textcolor{red}{Important}: $\isqueueseq$ \textit{not} required to be \textcolor{blue}{persistent}!
-  \end{itemize}
-\end{frame}
-
-%=====================================================================
-\begin{frame}{Concurrent Specification}
-  \begin{itemize}
-    \item To support \textcolor{blue}{concurrent clients}, we shall require the \textcolor{blue}{queue predicate} be \textcolor{blue}{persistent}
-    \item \textcolor{blue}{Tracking} the contents of queue in the way that the sequential specification did \textcolor{red}{doesn't work}
-    \item \textcolor{blue}{Threads} will start \textcolor{red}{disagreeing on contents of queue}, as they have only \textcolor{blue}{local view} of contents
-    \item Give up on tracking contents for now
-    \item Instead, \textcolor{blue}{promise} that all elements \textcolor{blue}{satisfy} client-defined \textcolor{RubineRed}{predicate}, $\Psi$
-  \end{itemize}
-  \begin{definition}[Concurrent Specification]\label{QueueSpecs:spec:conc}
-    \setlength\abovedisplayskip{-8pt}
-    \setlength\belowdisplayskip{2pt}
-    \fontsize{8pt}{10}\selectfont
-    \begin{align*}
-      &\Exists \isqueueconc : (\Val \to \Prop) \to \Val \to \ConcQgnames \to \Prop.\\
-      &\All \Psi : \Val \to \Prop.\\
-      &\quad\quad \All \vq, \Qg . \isqueueconc(\Psi, \vq, \Qg) \implies \persistently \isqueueconc(\Psi, \vq, \Qg)\\
-      &\uncover<2->{\land{}\quad\concspecinit{\Psi}}\\
-      &\uncover<3->{\land{}\quad\concspecenq{\Psi}}\\
-      &\uncover<4->{\land{}\quad\concspecdeq{\Psi}}
-    \end{align*}
-  \end{definition}
-\end{frame}
-
 
 %=====================================================================
 \begin{frame}{HOCAP-style Specification - Abstract State RA}
@@ -744,7 +701,7 @@ Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms}
 %=====================================================================
 \begin{frame}{HOCAP-style Specification}
   \begin{itemize}
-    \item Post-condition of \textcolor{Brown}{$\initialise$} specification now gives \textcolor{blue}{fragmental view} to \textcolor{blue}{clients}
+    \item Post-condition of \textcolor{Brown}{$\initialise$} specification gives \textcolor{blue}{fragmental view} to \textcolor{blue}{clients}
     \item Hoare triples for \textcolor{Brown}{$\enqueue$} and \textcolor{Brown}{$\dequeue$} are conditioned on \textcolor{blue}{view-shifts}
     \item Clients must show that they can \textcolor{blue}{supply} the \textcolor{blue}{fragmental view}, so that the \textcolor{blue}{abstract} (and concrete) \textcolor{blue}{state} can be \textcolor{blue}{updated}
     \item View-shifts and Hoare-triples \textcolor{blue}{parametrised} by predicates \textcolor{RubineRed}{$P$} and \textcolor{RubineRed}{$Q$}
@@ -764,55 +721,6 @@ Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms}
       &\uncover<2->{\land{}\quad\hocapspecinit}\\
       &\uncover<3->{\land{}\quad\hocapspecenq}\\
       &\uncover<4->{\land{}\quad\hocapspecdeq}
-    \end{align*}
-  \end{definition}
-\end{frame}
-
-%=====================================================================
-\begin{frame}[fragile]{Queue Client - A PoC Client}
-  \begin{itemize}
-    \item \textcolor{blue}{Add two numbers} after having two threads \textcolor{blue}{enqueue} and subsequently \textcolor{blue}{dequeue} them
-    \item<2-> Idea: a \textcolor{blue}{minimal} client \textcolor{blue}{complex} enough to require HOCAP-style specification
-    \item<3-> Uses \textcolor{blue}{parallel composition}, so \textcolor{blue}{sequential} specification \textcolor{red}{insufficient}
-    \item<4-> Relies on dequeues \textcolor{blue}{not returning $\None$}, so \textcolor{blue}{concurrent} specification \textcolor{red}{insufficient}
-    \item<5-> \textcolor{blue}{HOCAP-style} specification \textcolor{blue}{supports consistency} and \textcolor{blue}{tracks queue contents}, allowing us to \textcolor{orange}{exclude cases} where \textcolor{Brown}{$\dequeue$} returns $\None$
-  \end{itemize}
-  \begin{minted}[escapeinside=||, mathescape=true, bgcolor=codebg, frame=lines]{ocaml}
-|$ \unwrap \ w \eqdef \langkw{match}\spac w \spac\langkw{with}\spac \None \Ra \TT \ \TT \mid \Some v \Ra v \spac\langkw{end} $|
-
-|$ \enqdeq \ \vq \ c \eqdef \enqueue \ \vq \ c; \unwrap (\dequeue \ \vq)$|
-
-|$ \queueAdd \ a \ b \eqdef $|
-  |$ \Let \vq = \initialise \ \TT in $|
-  |$ \Let p = (\enqdeq \ \vq \ a) \parcomp (\enqdeq \ \vq \ b) in $|
-  |$ \Fst p + \Snd p $|
-  \end{minted}
-\end{frame}
-
-%=====================================================================
-\begin{frame}[fragile]{Queue Client - A PoC Client (continued)}
-  \begin{lemma}[QueueAdd Specification]\label{QueueSpecs:spec:queueadd}
-    \setlength\abovedisplayskip{-8pt}
-    \setlength\belowdisplayskip{2pt}
-    \begin{align*}
-      \All a, b \in \mathbb{Z} . \hoare{\TRUE}{\queueAdd \ a \ b}{v . v = a + b}
-    \end{align*}
-  \end{lemma}
-  \pause
-  \begin{itemize}
-    \item \textcolor{blue}{Proof idea}: create \textcolor{blue}{invariant} capturing possible \textcolor{blue}{states of queue contents}
-    \item \textcolor{blue}{Tokens} are used to reason about which \textcolor{blue}{state} we are in
-  \end{itemize}
-  \begin{definition}[Invariant for QueueAdd]\label{QueueSpecs:queueadd:invariant}
-    \setlength\abovedisplayskip{-8pt}
-    \setlength\belowdisplayskip{2pt}
-    \begin{align*}
-      \QueueAddInvariant(\Qg, \QAg, a, b) \eqdef~
-      &\abstractstatefullfrag{\Qg.\gabst}{[]}~\star~\TokDoQAg~\star~\TokDtQAg~\lor\\
-      &\abstractstatefullfrag{\Qg.\gabst}{[a]}~\star~\TokAQAg~\star~(\TokDoQAg~\lor~\TokDtQAg)~\lor\\
-      &\abstractstatefullfrag{\Qg.\gabst}{[b]}~\star~\TokBQAg~\star~(\TokDoQAg~\lor~\TokDtQAg)~\lor\\
-      &\abstractstatefullfrag{\Qg.\gabst}{[a; b]}~\star~\TokAQAg~\star~\TokBQAg~\lor\\
-      &\abstractstatefullfrag{\Qg.\gabst}{[b; a]}~\star~\TokBQAg~\star~\TokAQAg~
     \end{align*}
   \end{definition}
 \end{frame}
@@ -1054,7 +962,7 @@ Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms}
   \node (head) [pointer, above=of l1pair] {$\lochead$};
   \node (tail) [pointer, above=of l3in] {$\loctail$};
   \onslide<1>{\draw[->] (head) -- (l1in);}
-  \onslide<2>{\draw[->, dotted] (head) -- (l1in); \draw[->] (head) -- (l2in);}
+  \onslide<2->{\draw[->, dotted] (head) -- (l1in); \draw[->] (head) -- (l2in);}
   \draw[->] (tail) -- (l3in);
 
   \end{tikzpicture}
