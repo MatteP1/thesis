@@ -623,7 +623,7 @@ Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\section{Queue Specifications}
+\section{Queue Specifications (HOCAP)}
 
 %=====================================================================
 \begin{frame}{Specifications for Queues}
@@ -646,7 +646,6 @@ Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms}
       \item Expressed in terms of \textcolor{blue}{\textit{Hoare triples}}: $\hoare{P}{e}{v. \Phi ~ v}$
       \item Hoare triples prove \textcolor{blue}{partial correctness} of programs, $e$
       \item In particular: \textcolor{blue}{safety}
-      \item Idea: clients can use Hoare triples to prove results about their own code
     \end{itemize}
   \end{block}
 \end{frame}
@@ -1067,7 +1066,7 @@ Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms}
   \vspace{-2pt}
   \begin{itemize}
     \item Contains \textcolor{blue}{abstract state} of queue -- \textcolor{blue}{existentially quantified} as it can change
-    \item<3-> Defines \textcolor{blue}{structure} of the \textcolor{blue}{concrete} linked list, $xsc$
+    \item<3-> Defines \textcolor{blue}{structure} of the \textcolor{blue}{concrete} linked list, $\xsc$
     \item<4-> Asserts \textcolor{blue}{relation} between \textcolor{blue}{abstract state} and \textcolor{blue}{concrete state}
     \item<5-> Identifies possible \textcolor{blue}{queue states}: \StaticState, \EnqueueState, \DequeueState, and \BothState{}
       \begin{itemize}
@@ -1125,10 +1124,8 @@ Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms}
 %=====================================================================
 \begin{frame}{Queue Predicate}
   \begin{itemize}
-    \item HOCAP-style specification \textcolor{blue}{requires} the existence of a persistent \textcolor{blue}{queue predicate}
-    \item We \textcolor{blue}{define} it in terms of our invariant
+    \item We now define the \textcolor{blue}{queue predicate} in terms of our \textcolor{blue}{invariant}
   \end{itemize}
-  \pause
   \begin{definition}[\tlmsq{} - $\isqueue$ Predicate]\label{TLMSQ:spec:hocap:isqueue}
     \setlength\abovedisplayskip{-8pt}
     \setlength\belowdisplayskip{2pt}
@@ -1142,9 +1139,9 @@ Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms}
     \end{align*}
   \end{definition}
   \begin{itemize}
-    \item<3-> The queue predicate is \textcolor{blue}{persistent}, as all its constituents are
-    \item<4-> \textcolor{blue}{Proving} that \tlmsq{} satisfies the \textcolor{blue}{HOCAP-style specification} then consists of proving the \textcolor{blue}{Hoare triples} for \textcolor{Brown}{$\initialise$}, \textcolor{Brown}{$\enqueue$}, and \textcolor{Brown}{$\dequeue$}
-    \item<4-> We here \textcolor{blue}{focus} on \textcolor{Brown}{$\enqueue$}
+    \item<2-> The queue predicate is \textcolor{blue}{persistent}, as all its constituents are
+    \item<3-> \textcolor{blue}{Proving} that \tlmsq{} satisfies the \textcolor{blue}{HOCAP-style specification} then consists of proving the \textcolor{blue}{Hoare triples} for \textcolor{Brown}{$\initialise$}, \textcolor{Brown}{$\enqueue$}, and \textcolor{Brown}{$\dequeue$}
+    \item<3-> We here \textcolor{blue}{focus} on \textcolor{Brown}{$\enqueue$}
   \end{itemize}
 \end{frame}
 
@@ -1182,284 +1179,12 @@ Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms}
 \section{The Lock-Free Michael-Scott Queue}
 
 %=====================================================================
-\begin{frame}[fragile]{Implementation: $\initialise$}
+\begin{frame}[fragile]{Implementation (Consistency-Check Free)}
   \begin{itemize}
     \item Queue data structure is \textcolor{blue}{still} a \textcolor{blue}{linked list}
     \item The \textcolor{blue}{lock-free versions} of \textcolor{Brown}{$\initialise$}, \textcolor{Brown}{$\enqueue$}, and \textcolor{Brown}{$\dequeue$} perform the \textcolor{blue}{same manipulations} of the linked list as \textcolor{blue}{two-lock versions}
-    \item \textcolor{orange}{Difference} is how the manipulations take place -- now with $\CAS$ instructions
-    \item No longer need locks
-  \end{itemize}
-  \begin{minted}[escapeinside=||, mathescape=true, bgcolor=codebg, frame=lines]{ocaml}
-|$ \initialise \eqdef $|
-  |$ \Let node = \Ref(\None, \Ref(\None)) in $|
-  |$ \Ref(\Ref(node), \Ref(node)) $|
-  \end{minted}
-  \begin{center}
-    \scalebox{0.8}{
-    \begin{tikzpicture}[
-      pair/.style = {
-        on chain,
-        rectangle split,
-        rectangle split horizontal,
-        rectangle split parts=2,
-        draw,
-        anchor=center,
-        text height=1.5ex,
-      },
-      perspointer/.style = {
-        on chain,
-        rectangle,
-        draw,
-        anchor=center,
-        text height=1.5ex,
-      },
-      pointer/.style = {
-        rectangle,
-        draw,
-        anchor=center,
-        text height=1.5ex,
-      },
-      start chain=going right,
-      decoration={
-        markings,
-        mark=at position .5 with {\arrow{Square[length=5pt,sep=-2.5pt]}}
-      },
-    ]
-
-    % Linked List
-    \node (l'1) [join={by ->}, perspointer,on chain] {$\locinM{1}$};
-    \node (l1pair) [join={by ->, draw=blue, postaction={decorate}}, pair,on chain] {$\None$ \nodepart{two} $\locoutM{1}$};
-    \node (null) [join={by ->, draw=black}, rectangle,on chain] {$\None$};
-
-    % Head and tail
-    \node (head) [pointer, above left=of l'1] {$\lochead$};
-    \node (tail) [pointer, above right=of l'1] {$\loctail$};
-    \draw[->] (head) -- (l'1);
-    \draw[->] (tail) -- (l'1);
-
-    \end{tikzpicture}
-    }
-    \end{center}
-\end{frame}
-
-%=====================================================================
-\begin{frame}[fragile]{Implementation: $\enqueue$}
-  \begin{itemize}
-    \item \textcolor{blue}{Appending} $\nodenew$ to linked list is now done with $\CAS$
-    \item \textcolor{blue}{Ensures} that no other thread has \textcolor{red}{performed an enqueue} during own enqueue
-    \begin{itemize}
-      \item Otherwise, we might ``\textcolor{red}{overwrite}'' another threads enqueued node
-    \end{itemize}
-    \item \textcolor{blue}{Swinging} tail to $\nodenew$ \textcolor{red}{might fail} -- another thread has \textcolor{blue}{helped us}
-  \end{itemize}
-  \vspace{-8pt}
-  \begin{minted}[escapeinside=||, mathescape=true, bgcolor=codebg, frame=lines, fontsize=\footnotesize]{ocaml}
-|$ \enqueue \ Q \ value \eqdef $|
-  |$ \Let node = \Ref(\Some value, \Ref(\None)) in $|
-  |$ (\Rec {loop} \_ = $|
-    |$ \Let tail = \deref (\Snd (\deref Q)) in$|
-    |$ \Let next = \deref (\Snd (\deref tail)) in $|
-    |$ \If tail = \deref (\Snd (\deref Q)) then $|
-      |$ \If next = \None then $|
-        |$ \If \CAS \ (\Snd (\deref tail)) \ next \ node then $|
-          |$ \CAS \ (\Snd (\deref Q)) \ tail \ node $|
-        |$ \Else loop \ \TT $|
-      |$ \Else \CAS \ (\Snd (\deref Q)) \ tail \ next; loop \ \TT $|
-    |$ \Else loop \ \TT $|
-  |$ ) \ \TT $|
-  \end{minted}
-  \begin{center}
-    \vspace{-4pt}
-    \scalebox{0.8}{
-    \begin{tikzpicture}[
-      pair/.style = {
-        on chain,
-        rectangle split,
-        rectangle split horizontal,
-        rectangle split parts=2,
-        draw,
-        anchor=center,
-        text height=1.5ex,
-      },
-      perspointer/.style = {
-        on chain,
-        rectangle,
-        draw,
-        anchor=center,
-        text height=1.5ex,
-      },
-      pointer/.style = {
-        rectangle,
-        draw,
-        anchor=center,
-        text height=1.5ex,
-      },
-      start chain=going right,
-      decoration={
-        markings,
-        mark=at position .5 with {\arrow{Square[length=5pt,sep=-2.5pt]}}
-      },
-    ]
-
-    % Linked List
-    \node (l'1) [join={by ->}, perspointer,on chain] {$\locinM{1}$};
-    \node (l1pair) [join={by ->, draw=blue, postaction={decorate}}, pair,on chain] {$\nodevalM{1}$ \nodepart{two} $\locoutM{1}$};
-    \node (l'2) [join={by ->, draw=blue, postaction={decorate}}, perspointer,on chain] {$\locinM{2}$};
-    \node (l2pair) [join={by ->, draw=blue, postaction={decorate}}, pair,on chain] {$\nodevalM{2}$ \nodepart{two} $\locoutM{2}$};
-    \only<1-2>{\node (null) [join={by ->, draw=black}, rectangle,on chain] {$\None$};}
-    \only<3-4>{\node (null) [join={by ->, dotted, draw=black}, rectangle,on chain] {\textcolor{gray}{$\None$}};}
-
-    \only<1>{
-    \node (l'3) [perspointer, above right=of l2pair, draw=none] {\phantom{$\locinM{3}$}};
-    \node (l3pair) [join={by ->, draw=none}, pair,on chain, draw=none] {\phantom{$\nodevalM{3}$} \nodepart{two} \phantom{$\locoutM{3}$}};
-    \node (null) [join={by ->, draw=none}, rectangle,on chain] {\phantom{$\None$}};}
-
-    \only<2->{
-    \node (l'3) [perspointer, above right=of l2pair] {$\locinM{3}$};
-    \node (l3pair) [join={by ->, draw=blue, postaction={decorate}}, pair,on chain] {$\nodevalM{3}$ \nodepart{two} $\locoutM{3}$};
-    \node (null) [join={by ->, draw=black}, rectangle,on chain] {$\None$};}
-
-    \only<3->{\draw[->, draw=blue, postaction={decorate}] (l2pair) -- (l'3);}
-
-    % Head and tail
-    \node (head) [pointer, above=of l'1] {$\lochead$};
-    \node (tail) [pointer, above=of l'2] {$\loctail$};
-    \draw[->] (head) -- (l'1);
-    \onslide<1-3>
-    \draw[->] (tail) -- (l'2);
-    \onslide<4->
-    \draw[->, dotted] (tail) -- (l'2);
-    \draw[->] (tail) -- (l'3);
-
-    \end{tikzpicture}
-    }
-    \end{center}
-\end{frame}
-
-%=====================================================================
-\begin{frame}[fragile]{Implementation: $\dequeue$}
-  \begin{itemize}
-    \item Head now \textcolor{blue}{swung} with $\CAS$ instruction
-    \item \textcolor{blue}{Ensures} that no other thread has \textcolor{red}{dequeued the element} we are trying to dequeue
-  \end{itemize}
-  \vspace{-8pt}
-  \begin{minted}[escapeinside=||, mathescape=true, bgcolor=codebg, frame=lines, fontsize=\scriptsize]{ocaml}
-|$ \dequeue \ Q \eqdef $|
-  |$ (\Rec {loop} \_ = $|
-    |$ \Let head = \deref (\Fst (\deref Q)) in $|
-    |$ \Let tail = \deref (\Snd (\deref Q)) in $|
-    |$ \Let \prophid = \NewProph in $|
-    |$ \Let next = \deref (\Snd (\deref head)) in $|
-    |$ \If head = \langkw{Resolve} (\deref(\Fst (\deref Q)), \prophid, \TT) then $|
-      |$ \If head = tail then $|
-        |$ \If next = \None then $|
-          |$ \None $|
-        |$ \Else $|
-          |$ \CAS (\Snd (\deref Q)) \ tail \ next; loop \ \TT $|
-      |$ \Else $|
-        |$ \Let value = \Fst (\deref next) in $|
-        |$ \If \CAS \ (\Fst (\deref Q)) \ head \ next then $|
-          |$ value $|
-        |$ \Else loop \ \TT $|
-    |$ \Else loop \ \TT $|
-    |$ ) \TT $|
-  \end{minted}
-  \begin{center}
-    \vspace{-6pt}
-    \scalebox{0.8}{
-    \begin{tikzpicture}[
-      pair/.style = {
-        on chain,
-        rectangle split,
-        rectangle split horizontal,
-        rectangle split parts=2,
-        draw,
-        anchor=center,
-        text height=1.5ex,
-      },
-      perspointer/.style = {
-        on chain,
-        rectangle,
-        draw,
-        anchor=center,
-        text height=1.5ex,
-      },
-      pointer/.style = {
-        rectangle,
-        draw,
-        anchor=center,
-        text height=1.5ex,
-      },
-      start chain=going right,
-      decoration={
-        markings,
-        mark=at position .5 with {\arrow{Square[length=5pt,sep=-2.5pt]}}
-      },
-    ]
-
-    % Linked List
-    \node (l1in) [join={by ->}, perspointer,on chain] {$\locinM{1}$};
-    \node (l1pair) [join={by ->, draw=blue, postaction={decorate}}, pair,on chain] {$\nodevalM{1}$ \nodepart{two} $\locoutM{1}$};
-    \node (l2in) [join={by ->, draw=blue, postaction={decorate}}, perspointer,on chain] {$\locinM{2}$};
-    \node (l2pair) [join={by ->, draw=blue, postaction={decorate}}, pair,on chain] {$\nodevalM{2}$ \nodepart{two} $\locoutM{2}$};
-    \node (l3in) [join={by ->, draw=blue, postaction={decorate}}, perspointer,on chain] {$\locinM{3}$};
-    \node (l3pair) [join={by ->, draw=blue, postaction={decorate}}, pair,on chain] {$\nodevalM{3}$ \nodepart{two} $\locoutM{3}$};
-    \node (null) [join={by ->, draw=black}, rectangle,on chain] {$\None$};
-
-    % Head and tail
-    \node (head) [pointer, above=4mm of l1pair] {$\lochead$};
-    \node (tail) [pointer, above=4mm of l3in] {$\loctail$};
-    \onslide<1>{\draw[->] (head) -- (l1in);}
-    \onslide<2>{\draw[->, dotted] (head) -- (l1in); \draw[->] (head) -- (l2in);}
-    \draw[->] (tail) -- (l3in);
-
-    \end{tikzpicture}
-    }
-    \end{center}
-\end{frame}
-
-%=====================================================================
-\begin{frame}[fragile]{Prophecies}
-  \begin{itemize}
-    \item \textcolor{blue}{Proving adherence} to HOCAP-style specification \textcolor{orange}{requires} \textcolor{blue}{applying the view-shift} at some point (must update \textcolor{RubineRed}{$P$} to \textcolor{RubineRed}{$Q$})
-    \item<2-> \textcolor{blue}{View-shift} is applied at \textcolor{blue}{\textit{Linearisation Points}} -- points where the effect of the function takes place
-    \item<3-> When the \textcolor{blue}{queue is empty}, the \textcolor{blue}{linearisation point} is when \textcolor{blue}{reading $next$} (specifically, the dereference instruction)
-    \item<3-> We deduce that at \textcolor{blue}{exactly} that read, the queue was \textcolor{blue}{empty}
-    \item<4-> But we \textcolor{orange}{only conclude} the queue is \textcolor{blue}{empty} if \textcolor{orange}{consistency check} on next line succeeds
-    \item<4-> The dereference is \textcolor{red}{only} the \textcolor{blue}{linearisation point} if \textcolor{orange}{consistency check} succeeds
-    \item<5-> \textcolor{blue}{Prophecies}: reason about \textcolor{blue}{future computations} (e.g. \textcolor{ExampleColour}{the consistency check})
-      \begin{itemize}
-        \item $\deref(\Fst (\deref Q))$ will evaluate to some $\prophval$ (later proof obligation)
-        \item Before reading $next$, reason about whether $head = \prophval$
-      \end{itemize}
-  \end{itemize}
-  \vspace{-8pt}
-  \begin{minted}[escapeinside=||, mathescape=true, bgcolor=codebg, frame=lines, fontsize=\scriptsize]{ocaml}
-    |$ \dots $|
-    |$ \Let \prophid = \NewProph in $|
-    |$ \Let next = \deref (\Snd (\deref head)) in $|
-    |$ \If head = \langkw{Resolve} (\deref(\Fst (\deref Q)), \prophid, \TT) then $|
-      |$ \If head = tail then $|
-        |$ \If next = \None then $|
-          |$ \None $|
-    |$ \dots $|
-    |$ \Else loop \ \TT $|
-    |$ \dots $|
-  \end{minted}
-\end{frame}
-
-%=====================================================================
-\begin{frame}[fragile]{The Lock-and-CC-Free Michael-Scott Queue}
-  \begin{itemize}
-    \item \textcolor{blue}{Reason} for consistency checks: \textcolor{red}{ABA problem} in original implementation
-    \pause
-    \item \heaplang{} is \textcolor{blue}{garbage collected} language, so we can \textcolor{orange}{remove} \textcolor{red}{consistency checks}
-    \item Can also \textcolor{orange}{remove} \textcolor{red}{prophecy} in \textcolor{Brown}{$\dequeue$}
-      \begin{itemize}
-        \item When we read $next$, we know immediately whether \textcolor{Brown}{$\dequeue$} will conclude empty queue
-        \item both $head$ and $tail$ are already fixed
-      \end{itemize}
-    \item<3-> \textcolor{blue}{Correctness}: both versions shown to satisfy \textcolor{blue}{HOCAP-style specification}...
+    \item \textcolor{orange}{Difference} is how the manipulations take place \pause -- now with $\CAS$ instructions
+    \item \textcolor{blue}{Ensures} no \textcolor{red}{overwrites} of enqueued nodes, and no node \textcolor{red}{dequeued twice}
   \end{itemize}
   \vspace{-12pt}
   \begin{columns}
@@ -1505,9 +1230,66 @@ Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms}
   \end{columns}
 \end{frame}
 
+%=====================================================================
+\begin{frame}[fragile]{Consistency Checks and Prophecies}
+  \begin{itemize}
+    \item Original implementation has \textcolor{blue}{consistency checks} to deal with \textcolor{red}{ABA problem}
+    \item Creates \textcolor{red}{complications} when proving adherence to \textcolor{blue}{HOCAP-style specification}
+    \item In \textcolor{brown}{$\dequeue$}, the point at which to apply the \textcolor{blue}{view-shift} (to update \textcolor{RubineRed}{$P$} to \textcolor{RubineRed}{$Q$}) depends on whether \textcolor{orange}{queue is empty} and result of \textcolor{orange}{future consistency check}
+    \item \textcolor{blue}{Prophecies} allow us to reason about future computations (e.g. \textcolor{ExampleColour}{consistency check})
+  \end{itemize}
+  \vspace{-12pt}
+  \begin{columns}
+    \begin{column}{0.5\textwidth}
+      \begin{minted}[escapeinside=||, mathescape=true, bgcolor=codebg, frame=lines, fontsize=\footnotesize]{ocaml}
+|$ \initialise \eqdef $|
+  |$ \Let node = \Ref(\None, \Ref(\None)) in $|
+  |$ \Ref(\Ref(node), \Ref(node)) $|
+
+|$ \enqueue \ Q \ value \eqdef $|
+  |$ \Let node = \Ref(\Some value, \Ref(\None)) in $|
+  |$ (\Rec {loop} \_ = $|
+    |$ \Let tail = \deref (\Snd (\deref Q)) in$|
+    |$ \Let next = \deref (\Snd (\deref tail)) in $|
+    |$ \If tail = \deref (\Snd (\deref Q)) then $|
+      |$ \If next = \None then $|
+        |$ \If \CAS \ (\Snd (\deref tail)) \ next \ node then $|
+          |$ \CAS \ (\Snd (\deref Q)) \ tail \ node $|
+        |$ \Else loop \ \TT $|
+      |$ \Else \CAS \ (\Snd (\deref Q)) \ tail \ next; loop \ \TT $|
+    |$ \Else loop \ \TT $|
+  |$ ) \ \TT $|
+      \end{minted}
+    \end{column}
+    \begin{column}{0.5\textwidth}
+      \begin{minted}[escapeinside=||, mathescape=true, bgcolor=codebg, frame=lines, fontsize=\footnotesize]{ocaml}
+|$ \dequeue \ Q \eqdef $|
+  |$ (\Rec {loop} \_ = $|
+    |$ \Let head = \deref (\Fst (\deref Q)) in $|
+    |$ \Let tail = \deref (\Snd (\deref Q)) in $|
+    |$ \Let \prophid = \NewProph in $|
+    |$ \Let next = \deref (\Snd (\deref head)) in $|
+    |$ \If head = \langkw{Resolve} (\deref(\Fst (\deref Q)), \prophid, \TT) then $|
+      |$ \If head = tail then $|
+        |$ \If next = \None then $|
+          |$ \None $|
+        |$ \Else $|
+          |$ \CAS (\Snd (\deref Q)) \ tail \ next; loop \ \TT $|
+      |$ \Else $|
+        |$ \Let value = \Fst (\deref next) in $|
+        |$ \If \CAS \ (\Fst (\deref Q)) \ head \ next then $|
+          |$ value $|
+        |$ \Else loop \ \TT $|
+    |$ \Else loop \ \TT $|
+    |$ ) \TT $|
+        \end{minted}
+    \end{column}
+  \end{columns}
+\end{frame}
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\section{Proving that the Lock-and-CC-Free Michael-Scott Queue Satisfies the HOCAP-style Specification}
+\section{Proving that the Lock-Free Michael-Scott Queue Satisfies the HOCAP-style Specification}
 
 %=====================================================================
 \begin{frame}{Reachability}
@@ -1576,7 +1358,6 @@ Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms}
   \begin{center}
     \includegraphics[width=0.15\textwidth]{coq-logo-large.png}
   \end{center}
-  % go over contents of file, but skip proofs and many of the results about reachability. Show invariant and predicate
 \end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

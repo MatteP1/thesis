@@ -199,7 +199,7 @@
   - [x] Write comments explaining proof structure
   - [x] Ensure consistency between related files
 
-- [ ] Make a presentation (30min)
+- [x] Make a presentation (30min)
   - [x] Figure out slide structure
   - [x] Create basic slides file in latex
   - [x] Create slide structure
@@ -217,13 +217,14 @@
     - [x] Add pauses
     - [x] fix mistakes
     - [x] formatting
-  - [ ] Practice presentation
-  - [ ] Possible reductions to save time
+  - [x] Possible reductions to save time
     - [x] In-line observation about Two-Lock MSQ in implementations
     - [x] Add sequential and concurrent specifications to optional extra content
     - [x] Add Queue client to optional extra content
-    - [ ] Add isLL predicate slide to optional extra content
-    - [ ] Introduce Lock-and-CC free version directly, mention they are simplified from version with consistency checks, since ABA problem not present as heaplang is garbage collected language
-      - [ ] Move slide on prophecies to optional extras
+    - [x] Merge LFMSQ impl slides into one
+    - [x] Introduce Lock-and-CC-Free version directly, mention they are simplified from version with consistency checks, since ABA problem not present as heaplang is garbage collected language
+      - [x] Move slide on prophecies to optional extras
+
+- [x] Practice presentation
 
 - [x] Read up on referenced literature
