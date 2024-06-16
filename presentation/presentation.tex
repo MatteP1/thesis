@@ -1165,7 +1165,7 @@ Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms}
 |$ \uncover<5->{\color{RubineRed} \{ P \star{} \nOut{\nodenew} \mapsto \None \star{} \TokEQg \}} $|
   |$ \expr_{t} = \deref(\Snd (\Fst(\deref \vq))) \uncover<6->{\quad \textcolor{lightgray}{\text{(find current tail, $\nodetail$. $\TLQueueInvariantHocap$: \StaticState{}/\DequeueState{} $\rightarrow$ \EnqueueState{}/\BothState{} (before))}}} $|
 |$ \uncover<6->{\color{RubineRed} \{ P \star{} \nOut{\nodenew} \mapsto \None \star{} \loctail \mapsto^{\frac{1}{2}} \nIn{\nodetail} \star{} \TokNEQg \star{} \TokAfterQg \}} $|
-  |$ \Snd (\deref(\expr_{t})) \gets node; \uncover<7->{\quad \textcolor{lightgray}{\text{(make $\nodetail$ point to $\nodenew$. $\TLQueueInvariantHocap$: \EnqueueState{}/\BothState{} (before) $\rightarrow$ \EnqueueState{}/\BothState{} (after))}}} $|
+  |$ \Snd (\deref(\expr_{t})) \gets node; \uncover<7->{\quad \textcolor{lightgray}{\text{(make $\nodetail$ point to $\nodenew$. VS. $\TLQueueInvariantHocap$: \EnqueueState{}/\BothState{} (before) $\rightarrow$ \EnqueueState{}/\BothState{} (after))}}} $|
 |$ \uncover<7->{\color{RubineRed} \{ Q \star{} \loctail \mapsto^{\frac{1}{2}} \nIn{\nodetail} \star{} \TokNEQg \star{} \TokBeforeQg \}} $|
   |$ \Snd (\Fst (\deref \vq)) \gets node; \uncover<8->{\quad \textcolor{lightgray}{\text{(swing tail pointer to $\nodenew$. $\TLQueueInvariantHocap$: \EnqueueState{}/\BothState{} (after) $\rightarrow$ \StaticState{}/\DequeueState{})}}} $|
 |$ \uncover<8->{\color{RubineRed} \{ Q \star{} \TokEQg \}} $|
