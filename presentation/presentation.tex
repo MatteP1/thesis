@@ -1187,7 +1187,7 @@ Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms}
     \item \textcolor{blue}{Ensures} no \textcolor{red}{overwrites} of enqueued nodes, and no node \textcolor{red}{dequeued twice}
   \end{itemize}
   \vspace{-12pt}
-  \begin{columns}
+  \begin{columns}[t]
     \begin{column}{0.5\textwidth}
       \begin{minted}[escapeinside=||, mathescape=true, bgcolor=codebg, frame=lines, fontsize=\footnotesize]{ocaml}
 |$ \initialise \eqdef $|
@@ -1239,7 +1239,7 @@ Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms}
     \item \textcolor{blue}{Prophecies} allow us to reason about future computations (e.g. \textcolor{ExampleColour}{consistency check})
   \end{itemize}
   \vspace{-12pt}
-  \begin{columns}
+  \begin{columns}[t]
     \begin{column}{0.5\textwidth}
       \begin{minted}[escapeinside=||, mathescape=true, bgcolor=codebg, frame=lines, fontsize=\footnotesize]{ocaml}
 |$ \initialise \eqdef $|
@@ -1350,13 +1350,50 @@ Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms}
 \end{frame}
 
 %=====================================================================
-\begin{frame}{Queue Predicate, Invariant, and Proof of Hoare triples}
-  \begin{center}
-    {\fontsize{40}{60}\selectfont \textcolor[RGB]{206,186,142}{In} \textcolor[RGB]{222,196,152}{Coq}\textcolor[RGB]{199,154,115}{!}}\\
-  \end{center}
-  \begin{center}
-    \includegraphics[width=0.15\textwidth]{coq-logo-large.png}
-  \end{center}
+\begin{frame}{Invariant and Queue Predicate}
+  \begin{itemize}
+    \item Invariant is \textit{very} \textcolor{blue}{similar} to \textcolor{blue}{Two-Lock variant}
+    \item Main \textcolor{orange}{difference}: instead of \textcolor{red}{the four state}, we now capture the \textcolor{blue}{afforemention properties} using abstract reachability
+    \item \textcolor{blue}{Queue predicate} is as before, but we now reflects that the \textcolor{blue}{absence of locks}
+    \item Proving rest of \textcolor{blue}{HOCAP-style specification} is now \textcolor{blue}{fairly straightforward}\dots
+  \end{itemize}
+  \vspace{-12pt}
+  \begin{columns}[t]
+    \begin{column}{0.5\textwidth}
+      \begin{definition}[Invariant]\label{LFMSQSPECS:pred:invariant}
+        \setlength\abovedisplayskip{0pt}
+        \setlength\belowdisplayskip{2pt}
+        \fontsize{7pt}{4pt}\selectfont
+        \begin{align*}
+          &\LFQueueInvariantHocap(\lochead, \loctail, \Qg) \eqdef\\
+          &\Exists \absvalueList. \abstractstateauth{\Qg.\gabst}{\absvalueList} \star{}\\
+          &\Exists \xsc, \xsqueue, \nodehead, \nodetail \nodelast .\\
+          &\xsc = \xsqueue \catenate [\nodehead] \star{}\\
+          &\isLL(\xsc) \star{}\\
+          &\isLast(\nodelast, \xsc) \star{}\\
+          &\projval(\xsqueue) = \wrapsome(\absvalueList) \star{}\\
+          &\lochead \mapsto \nIn{\nodehead} \star{}\\
+          &\loctail \mapsto \nIn{\nodetail} \star{}\\
+          &\ap{\Qg.\ghead}{\nodehead} \star{} \ar{\nodehead}{\Qg.\gtail} \star{}\\
+          &\ap{\Qg.\gtail}{\nodetail} \star{} \ar{\nodetail}{\Qg.\glast} \star{}\\
+          &\ap{\Qg.\glast}{\nodelast}
+        \end{align*}
+      \end{definition}
+    \end{column}
+    \begin{column}{0.5\textwidth}
+      \begin{definition}[$\isqueue$ Predicate]\label{LFMSQSPECS:pred:isqueue}
+        \setlength\abovedisplayskip{0pt}
+        \setlength\belowdisplayskip{2pt}
+        \fontsize{7pt}{4pt}\selectfont
+        \begin{align*}
+          \isqueue(\vq, \Qg) \eqdef &\Exists \locqueue, \lochead, \loctail \in \Loc . \\
+          &\vq = \locqueue \star{}\\
+          &\locqueue \mapsto^{\persistently} (\lochead, \loctail) \star{}\\
+          &\knowInv{\Nl.queue}{\LFQueueInvariantHocap(\lochead, \loctail, \Qg)}
+        \end{align*}
+      \end{definition}      
+    \end{column}
+  \end{columns}
 \end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
