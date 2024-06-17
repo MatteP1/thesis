@@ -634,7 +634,7 @@ Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms}
       \item \textcolor{Brown}{$\enqueue$} adds a value, $\absvalue$, to the \textcolor{blue}{beginning of the queue} $\absvalueList$: $\absvalue :: \absvalueList$
       \item \textcolor{Brown}{$\dequeue$} depends on whether queue is empty:
         \begin{itemize}
-          \item If \textcolor{blue}{non-empty}, $\absvalueList \catenate \absvalue$, remove value $\absvalue$ at \textcolor{blue}{end of queue} and return \textcolor{blue}{$\Some \absvalue$}
+          \item If \textcolor{blue}{non-empty}, $\absvalueList \catenate [\absvalue]$, remove value $\absvalue$ at \textcolor{blue}{end of queue} and return \textcolor{blue}{$\Some \absvalue$}
           \item If \textcolor{blue}{empty}, $[]$, return \textcolor{blue}{$\None$}
         \end{itemize}
     \end{itemize}
@@ -1296,12 +1296,11 @@ Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms}
   \begin{itemize}
     \item The queue relies on some \textcolor{blue}{important properties} to function \textcolor{blue}{correctly}:
       \begin{itemize}
-        \item The set of nodes reachable from a particular node \textcolor{blue}{only grows}
         \item The head and tail are \textcolor{blue}{only moved forward} in the linked list
         \item The \textcolor{blue}{tail} \textcolor{orange}{cannot lag} behind the \textcolor{blue}{head} (unlike in the two-lock version)
       \end{itemize}
     \pause
-    \item We capture all these properties with a notion of \textcolor{blue}{\textit{reachability}}
+    \item We capture these properties with a notion of \textcolor{blue}{\textit{reachability}}
     \item Consists of a \textcolor{blue}{concrete} and \textcolor{blue}{abstract} version of reachability
   \end{itemize}
   \pause
