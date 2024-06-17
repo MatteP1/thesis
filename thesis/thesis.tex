@@ -2419,7 +2419,7 @@ We proceed to define the invariant.
   \begin{align*}
     &\LFQueueInvariantHocap(\lochead, \loctail, \Qg) \eqdef\\
     &\Exists \absvalueList. \abstractstateauth{\Qg.\gabst}{\absvalueList} \star{} &&\text{(abstract state)}\\
-    &\Exists \xsc, \xsqueue, \nodehead, \nodetail \nodelast . &&\text{(concrete state)}\\
+    &\Exists \xsc, \xsqueue, \nodehead, \nodetail, \nodelast . &&\text{(concrete state)}\\
     &\xsc = \xsqueue \catenate [\nodehead] \star{}\\
     &\isLL(\xsc) \star{}\\
     &\isLast(\nodelast, \xsc) \star{}\\

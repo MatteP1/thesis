@@ -1367,7 +1367,7 @@ Verification of the Blocking and Non-Blocking Michael-Scott Queue Algorithms}
         \begin{align*}
           &\LFQueueInvariantHocap(\lochead, \loctail, \Qg) \eqdef\\
           &\Exists \absvalueList. \abstractstateauth{\Qg.\gabst}{\absvalueList} \star{}\\
-          &\Exists \xsc, \xsqueue, \nodehead, \nodetail \nodelast .\\
+          &\Exists \xsc, \xsqueue, \nodehead, \nodetail, \nodelast .\\
           &\xsc = \xsqueue \catenate [\nodehead] \star{}\\
           &\isLL(\xsc) \star{}\\
           &\isLast(\nodelast, \xsc) \star{}\\
