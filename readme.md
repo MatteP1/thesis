@@ -20,7 +20,7 @@ Alternatively, one can generate the Coq Makefile manually using the following co
 
 	coq_makefile -f _CoqProject -o CoqMakefile
 
-The project is then compiled the project with:
+The project is then compiled with:
 
 	make -f CoqMakefile
 
