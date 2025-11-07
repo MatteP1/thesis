@@ -817,11 +817,11 @@
       \hline
       \textbf{Spec\textbackslash{}Feature} & Supports Tracking & Supports Concurrency & \onslide<2->{Price}\\
       \hline
-      Sequential & \checkmark & \ding{55} & \onslide<2->{199\$} \\
+      Sequential & \checkmark & \ding{55} & \onslide<2->{\$199} \\
       \hline
-      Concurrent & \ding{55} & \checkmark & \onslide<2->{249\$} \\
+      Concurrent & \ding{55} & \checkmark & \onslide<2->{\$249} \\
       \hline
-      HOCAP      & \checkmark & \checkmark & \onslide<2->{399\$} \\
+      HOCAP      & \checkmark & \checkmark & \onslide<2->{\$399} \\
       \hline
     \end{tabular}
   \end{center}
@@ -829,7 +829,7 @@
 
   \onslide<3->{
     \begin{itemize}
-      \item HOCAP generalises Sequential and Concurrent Specs
+      \item HOCAP generalises Sequential and Concurrent specs
       \item In fact, they are provably derivable from HOCAP
     \end{itemize}
   }
@@ -869,6 +869,8 @@
   \begin{itemize}
     \item Chose $\isqueueseq(\vq,xs_v,\Qg) = \isqueue(v_q,\Qg) \star{} \abstractstatefullfrag{\Qg.\gabst}{xs_v}$
       \pause
+    \item Initialise then follows directly
+      \pause
     \item For enqueue, pick
       \begin{itemize}
         \item $P = \abstractstatefullfrag{\Qg.\gabst}{xs_v}$
@@ -878,7 +880,7 @@
     \item For dequeue, pick
       \begin{itemize}
         \item $P = \abstractstatefullfrag{\Qg.\gabst}{xs_v}$
-        \item $Q = \abstractstatefullfrag{\Qg.\gabst}{[]} \lor (\exists v, xs_v'. xs_v = xs_v' \catenate [v] \star{} \abstractstatefullfrag{\Qg.\gabst}{xs_v'})$
+        \item $Q(w) = (\abstractstatefullfrag{\Qg.\gabst}{[]} \star w = \None) \lor (\exists v, xs_v'. xs_v = xs_v' \catenate [v] \star{} w = \Some v \star{} \abstractstatefullfrag{\Qg.\gabst}{xs_v'})$
       \end{itemize}
   \end{itemize}
 
