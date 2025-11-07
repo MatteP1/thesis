@@ -40,6 +40,7 @@
 \usepackage{csquotes}
 \usepackage{natbib}
 \usepackage{mathpartir}
+\usepackage{pifont}
 
 \renewcommand*\sfdefault{lmss}
 \renewcommand*\ttdefault{txtt}
@@ -808,6 +809,94 @@
 
 %=====================================================================
 
+
+\begin{frame}[fragile]{Queue Specifications Overview}
+
+  \begin{center}
+    \begin{tabular}{l|c|c|c|}
+      \hline
+      \textbf{Spec\textbackslash{}Feature} & Supports Tracking & Supports Concurrency & \onslide<2->{Price}\\
+      \hline
+      Sequential & \checkmark & \ding{55} & \onslide<2->{199\$} \\
+      \hline
+      Concurrent & \ding{55} & \checkmark & \onslide<2->{249\$} \\
+      \hline
+      HOCAP      & \checkmark & \checkmark & \onslide<2->{399\$} \\
+      \hline
+    \end{tabular}
+  \end{center}
+
+
+  \onslide<3->{
+    \begin{itemize}
+      \item HOCAP generalises Sequential and Concurrent Specs
+      \item In fact, they are provably derivable from HOCAP
+    \end{itemize}
+  }
+
+\end{frame}
+
+\begin{frame}{HOCAP derives Sequential}
+
+	\begin{definition}[Sequential Specification (reminder)]
+	  \setlength\abovedisplayskip{-8pt}
+	  \setlength\belowdisplayskip{2pt}
+	  \begin{align*}
+		&\Exists \isqueueseq : \Val \to \List ~ \Val \to \SeqQgnames \to \Prop.\\
+		&{\quad\quad\seqspecinit}\\
+		&{\land{}\quad\seqspecenq}\\
+		&{\land{}\quad\seqspecdeq}
+	  \end{align*}
+	\end{definition}
+
+\end{frame}
+
+\begin{frame}{HOCAP derives Sequential}
+
+  \begin{definition}[HOCAP Specification]
+    \setlength\abovedisplayskip{-8pt}
+    \setlength\belowdisplayskip{2pt}
+    \fontsize{7pt}{9}\selectfont
+    \begin{align*}
+      &\Exists \isqueue : \Val \to \Qgnames \to \Prop.\\
+      &\quad\quad \All \vq, \Qg . \isqueue(\vq, \Qg) \implies \persistently \isqueue(\vq, \Qg)\\
+      &{\land{}\quad\hocapspecinit}\\
+      &{\land{}\quad\hocapspecenq}\\
+      &{\land{}\quad\hocapspecdeq}
+    \end{align*}
+  \end{definition}
+
+  \begin{itemize}
+    \item Chose $\isqueueseq(\vq,xs_v,\Qg) = \isqueue(v_q,\Qg) \star{} \abstractstatefullfrag{\Qg.\gabst}{xs_v}$
+      \pause
+    \item For enqueue, pick
+      \begin{itemize}
+        \item $P = \abstractstatefullfrag{\Qg.\gabst}{xs_v}$
+        \item $Q = \abstractstatefullfrag{\Qg.\gabst}{v :: xs_v}$
+      \end{itemize}
+      \pause
+    \item For dequeue, pick
+      \begin{itemize}
+        \item $P = \abstractstatefullfrag{\Qg.\gabst}{xs_v}$
+        \item $Q = \abstractstatefullfrag{\Qg.\gabst}{[]} \lor (\exists v, xs_v'. xs_v = xs_v' \catenate [v] \star{} \abstractstatefullfrag{\Qg.\gabst}{xs_v'})$
+      \end{itemize}
+  \end{itemize}
+
+\end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{frame}{HOCAP derives Concurrent}
+  \pause
+  \begin{center}
+    \Huge{Left as an exercise :)}
+  \end{center}
+\end{frame}
+
+\begin{frame}{Q.E.D}
+  \begin{center}
+    \Huge Thanks for your time\bigskip{}\\
+    \Huge Questions?
+  \end{center}
+\end{frame}
 
 \end{document}
