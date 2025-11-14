@@ -1,5 +1,6 @@
-The primary goal of my Master's Thesis was to give formal (and mechanised) safety results for two concurrent queue data structures.
+Proving that our claims are correct presupposes that we can state precisely what those claims are. And when we are dealing with complex features such as concurrency, formulating the right specification can be quite challenging.
+In my Master's Thesis, I were to give formal (and mechanised) safety results for two concurrent queue data structures.
 The strategy for reaching this goal was to formulate a specification for queues in Iris, and prove that the queues satisfied the specification.
-However, developing an adequately expressive queue specification turned out to be a challenge in its own right, and in the end, I developed three separate queue specifications – each with its own merits.
-In this presentation, I will present and discuss the queue specifications and give results about how they relate to one another. This will serve as an exercise in how we can give generic and expressive specifications.
+However, developing an adequately expressive queue specification turned out to be a challenge in its own right. Ultimately, I developed three separate queue specifications – each with its own merits.
+In this talk, I will introduce and discuss the queue specifications and give results about how they relate to one another. This will serve as case study in how we can give generic and expressive specifications.
 
